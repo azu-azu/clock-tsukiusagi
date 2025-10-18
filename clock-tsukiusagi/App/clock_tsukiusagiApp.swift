@@ -2,7 +2,7 @@
 //  clock_tsukiusagiApp.swift
 //  clock-tsukiusagi
 //
-//  Created by 松本和実 on 2025/10/18.
+//  Created by azu on 2025/10/18.
 //
 
 import SwiftUI
