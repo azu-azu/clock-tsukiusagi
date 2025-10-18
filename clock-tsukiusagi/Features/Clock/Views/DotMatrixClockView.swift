@@ -13,7 +13,7 @@ struct DotMatrixClockView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             // 1) 表示文字列（24h/12h切り替えはお好みで）
-            let time = Self.formatter.string(from: context.date)
+            let time = Self.formatTime(context.date)
 
             ZStack {
                 // 2) 背景（お好みで）
@@ -35,15 +35,14 @@ struct DotMatrixClockView: View {
         .statusBarHidden(true)
     }
 
-    private static let formatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "H:mm" // 12時間表記なら "hh:mm"
-        // f.dateFormat = "HH:mm:ss" // 12時間表記なら "hh:mm:ss"
-        return f
-    }()
+    private static func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "H:mm"
+        return formatter.string(from: date)
+    }
 }
 
-// DotGrid is now defined in QuietClockView.swift
+// DotGrid is now defined in Features/Clock/Components/DotGrid.swift
 
 #Preview {
     DotMatrixClockView()

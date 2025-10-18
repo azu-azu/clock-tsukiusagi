@@ -1,36 +1,15 @@
 import SwiftUI
 
-// MARK: - DotGrid (reusable component)
-struct DotGrid: View {
-    let dotSize: CGFloat
-    let spacing: CGFloat
-    let color: Color
-
-    var body: some View {
-        GeometryReader { geo in
-            Canvas { context, size in
-                let cols = Int(ceil(size.width / spacing))
-                let rows = Int(ceil(size.height / spacing))
-                let radius = dotSize / 2.0
-
-                var path = Path()
-                for r in 0..<rows {
-                    let y = CGFloat(r) * spacing + spacing/2
-                    for c in 0..<cols {
-                        let x = CGFloat(c) * spacing + spacing/2
-                        let rect = CGRect(x: x - radius, y: y - radius, width: dotSize, height: dotSize)
-                        path.addEllipse(in: rect)
-                    }
-                }
-                context.fill(path, with: .color(color))
-            }
-        }
-    }
-}
-
 struct QuietClockView: View {
     @StateObject private var vm = QuietClockVM()
     @State private var useDotMatrix: Bool = true  // 切り替えフラグ
+    @State private var use24HourFormat: Bool = true  // 24時間表記切り替えフラグ
+
+    private var formatter: DateFormatter {
+        let f = DateFormatter()
+        f.dateFormat = use24HourFormat ? "H:mm" : "h:mm a" // 24時間表記 or 12時間表記
+        return f
+    }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -55,8 +34,8 @@ struct QuietClockView: View {
                 // 時刻 + 一言
                 VStack(spacing: 8) {
                     // 時刻表示（同じTextコンポーネント、見た目だけ変更）
-                    Text(snapshot.time, style: .time)
-                        .font(.system(size: 56, weight: .semibold, design: .rounded))
+                    Text(formatter.string(from: snapshot.time))
+                        .font(.system(size: 56, weight: .semibold, design: useDotMatrix ? .monospaced : .rounded))
                         .monospacedDigit()
                         .foregroundStyle(useDotMatrix ? .clear : .white.opacity(0.95))
                         .overlay(
@@ -64,8 +43,8 @@ struct QuietClockView: View {
                             useDotMatrix ?
                             DotGrid(dotSize: 2, spacing: 2, color: .white.opacity(0.95))
                                 .mask(
-                                    Text(snapshot.time, style: .time)
-                                        .font(.system(size: 56, weight: .semibold, design: .rounded))
+                                    Text(formatter.string(from: snapshot.time))
+                                        .font(.system(size: 56, weight: .semibold, design: .monospaced))
                                         .monospacedDigit()
                                 )
                                 .shadow(color: .white.opacity(0.25), radius: 6, x: 0, y: 0)
@@ -87,6 +66,11 @@ struct QuietClockView: View {
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     useDotMatrix.toggle()
+                }
+            }
+            .onLongPressGesture {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    use24HourFormat.toggle()
                 }
             }
         }
