@@ -14,28 +14,28 @@ struct SkyTone: Equatable {
         default:      return .night
         }
     }
-    
+
     static let dawn = SkyTone(
-        gradStart: Color(hex: "#121826"), 
-        gradEnd: Color(hex: "#1B2330"), 
+        gradStart: Color(hex: "#121826"),
+        gradEnd: Color(hex: "#1B2330"),
         captionKey: "caption_dawn"
     )
-    
+
     static let day = SkyTone(
-        gradStart: Color(hex: "#DDE3F0"), 
-        gradEnd: Color(hex: "#EEF2F7"), 
+        gradStart: Color(hex: "#DDE3F0"),
+        gradEnd: Color(hex: "#EEF2F7"),
         captionKey: "caption_day"
     )
-    
+
     static let dusk = SkyTone(
-        gradStart: Color(hex: "#0F1420"), 
-        gradEnd: Color(hex: "#1A2030"), 
+        gradStart: Color(hex: "#0F1420"),
+        gradEnd: Color(hex: "#1A2030"),
         captionKey: "caption_dusk"
     )
-    
+
     static let night = SkyTone(
-        gradStart: Color(hex: "#0B0F18"), 
-        gradEnd: Color(hex: "#141A26"), 
+        gradStart: Color(hex: "#0B0F18"),
+        gradEnd: Color(hex: "#141A26"),
         captionKey: "caption_night"
     )
 }
