@@ -10,7 +10,7 @@ struct SkyTone: Equatable {
         switch h {
         case 4..<8:   return .dawn
         case 8..<16:  return .day
-        case 16..<20: return .dusk
+        case 16..<18: return .dusk
         default:      return .night
         }
     }
