@@ -86,7 +86,7 @@ QuietClockView (SwiftUI)
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/clock-tsukiusagi.git
+   git clone https://github.com/azu-azu/clock-tsukiusagi.git
    cd clock-tsukiusagi
    ```
 2. Open the project in Xcode:
@@ -172,7 +172,7 @@ Before contributing, please review the following steps:
 ## 📞 Support
 
 If you encounter issues or have questions, please open a ticket in
-[Issues](https://github.com/your-username/clock-tsukiusagi/issues).
+[Issues](https://github.com/azu-azu/clock-tsukiusagi/issues).
 
 ---
 
