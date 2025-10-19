@@ -9,23 +9,21 @@ struct SkyTone: Equatable {
     static func forHour(_ h: Int) -> SkyTone {
         switch h {
         case 4..<8:   return .dawn
-        case 8..<16:  return .day
+        case 8..<16:  return .dusk
         case 16..<18: return .dusk
         default:      return .night
         }
     }
 
     static let dawn = SkyTone(
+        // 少し紫っぽい
         gradStart: Color(hex: "#293f72"),
         gradEnd: Color(hex: "#ca9cff"),
-
-        // 夜明けにしては暗い
-        // gradStart: Color(hex: "#121826"),
-        // gradEnd: Color(hex: "#1B2330"),
         captionKey: "caption_dawn"
     )
 
     static let day = SkyTone(
+        // 全体的に水色
         gradStart: Color(hex: "#3a61a1"),
         gradEnd: Color(hex: "#b6d7ff"),
 
@@ -36,11 +34,9 @@ struct SkyTone: Equatable {
     )
 
     static let dusk = SkyTone(
-        gradStart: Color(hex: "#273b69"),
-        gradEnd: Color(hex: "#ca9cff"),
-
-        // gradStart: Color(hex: "#0F1420"),
-        // gradEnd: Color(hex: "#1A2030"),
+        // 濃紺
+        gradStart: Color(hex: "#0F1420"),
+        gradEnd: Color(hex: "#1A2030"),
         captionKey: "caption_dusk"
     )
 
