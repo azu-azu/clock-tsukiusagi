@@ -19,8 +19,8 @@ struct BunnyClockView: View {
                 // やわらかいミント系グラデ（TsukiUsagiっぽい淡色）
                 LinearGradient(
                     colors: [
-                        Color(hex: "#0F1420"),
-                        Color(hex: "#1A2030")
+                        SkyTone.dusk.gradStart,
+                        SkyTone.dusk.gradEnd
                     ],
                     startPoint: .top, endPoint: .bottom
                 )
