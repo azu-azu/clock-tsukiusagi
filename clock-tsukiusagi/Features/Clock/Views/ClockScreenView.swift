@@ -1,7 +1,7 @@
 import SwiftUI
 
-struct QuietClockView: View {
-    @StateObject private var vm = QuietClockVM()
+struct ClockScreenView: View {
+    @StateObject private var vm = ClockScreenVM()
     @State private var useDotMatrix: Bool = true  // 切り替えフラグ
     @State private var use24HourFormat: Bool = true  // 24時間表記切り替えフラグ
 
@@ -78,7 +78,7 @@ struct QuietClockView: View {
 }
 
 // MARK: - ViewModel（導出専用・副作用なし）
-final class QuietClockVM: ObservableObject {
+final class ClockScreenVM: ObservableObject {
     struct Snapshot {
         let time: Date
         let phaseAngle: Double
@@ -97,5 +97,5 @@ final class QuietClockVM: ObservableObject {
 }
 
 #Preview {
-    QuietClockView()
+    ClockScreenView()
 }

@@ -5,7 +5,7 @@ public struct ContentView: View {
 
     public var body: some View {
         ZStack(alignment: .bottom) {
-            QuietClockView()
+            ClockScreenView()
 
             // 底辺に重ねる波アニメーション（背景は描かない）
             WavyBottomView()
