@@ -5,6 +5,14 @@ struct DotGrid: View {
     let dotSize: CGFloat
     let spacing: CGFloat
     let color: Color
+    let enableGlow: Bool
+
+    init(dotSize: CGFloat, spacing: CGFloat, color: Color, enableGlow: Bool = false) {
+        self.dotSize = dotSize
+        self.spacing = spacing
+        self.color = color
+        self.enableGlow = enableGlow
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -24,6 +32,22 @@ struct DotGrid: View {
                 }
                 context.fill(path, with: .color(color))
             }
+        }
+        .modifier(GlowModifier(enabled: enableGlow))
+    }
+}
+
+// MARK: - Glow Effect Modifier
+private struct GlowModifier: ViewModifier {
+    let enabled: Bool
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content
+                .shadow(color: .white.opacity(0.25), radius: 6, x: 0, y: 0)
+                .shadow(color: .white.opacity(0.12), radius: 16, x: 0, y: 0)
+        } else {
+            content
         }
     }
 }

@@ -3,11 +3,11 @@ import SwiftUI
 struct ClockScreenView: View {
     @StateObject private var vm = ClockScreenVM()
     @State private var useDotMatrix: Bool = true  // 切り替えフラグ
-    @State private var use24HourFormat: Bool = true  // 24時間表記切り替えフラグ
+    @State private var use24HourFormat: Bool = false  // 24時間表記切り替えフラグ
 
     private var formatter: DateFormatter {
         let f = DateFormatter()
-        f.dateFormat = use24HourFormat ? "H:mm" : "h:mm a" // 24時間表記 or 12時間表記
+        f.dateFormat = use24HourFormat ? "H:mm" : "h:mm" // 24時間表記 or 12時間表記
         return f
     }
 
@@ -33,22 +33,18 @@ struct ClockScreenView: View {
 
                 // 時刻 + 一言
                 VStack(spacing: 8) {
-                    // 時刻表示（同じTextコンポーネント、見た目だけ変更）
-                    Text(formatter.string(from: snapshot.time))
+                    // 時刻表示
+                    let timeText = Text(formatter.string(from: snapshot.time))
                         .font(.system(size: 56, weight: .semibold, design: useDotMatrix ? .monospaced : .rounded))
                         .monospacedDigit()
+
+                    timeText
                         .foregroundStyle(useDotMatrix ? .clear : .white.opacity(0.95))
                         .overlay(
                             // ドットマトリックス表示時のみオーバーレイでDotGridを表示
                             useDotMatrix ?
-                            DotGrid(dotSize: 2, spacing: 2, color: .white.opacity(0.95))
-                                .mask(
-                                    Text(formatter.string(from: snapshot.time))
-                                        .font(.system(size: 56, weight: .semibold, design: .monospaced))
-                                        .monospacedDigit()
-                                )
-                                .shadow(color: .white.opacity(0.25), radius: 6, x: 0, y: 0)
-                                .shadow(color: .white.opacity(0.12), radius: 16, x: 0, y: 0)
+                            DotGrid(dotSize: 2, spacing: 2, color: .white.opacity(0.95), enableGlow: true)
+                                .mask(timeText)
                             : nil
                         )
                         .accessibilityLabel("Current time")
