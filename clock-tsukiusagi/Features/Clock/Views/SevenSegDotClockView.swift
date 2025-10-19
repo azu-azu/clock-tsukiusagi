@@ -4,20 +4,31 @@ import SwiftUI
 struct SevenSegDotClockView: View {
     @State private var now = Date()
 
+    // Sizing constants
+    private let digitWidth: CGFloat = 60
+    private let digitHeight: CGFloat = 90
+    private let digitSpacing: CGFloat = 14
+    private let dotSize: CGFloat = 2
+    private let spacing: CGFloat = 4
+    private let activeOpacity: CGFloat = 0.98
+    private let inactiveOpacity: CGFloat = 0.18
+
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
             let t = Self.fmt.string(from: ctx.date) // "HH:mm"
-            HStack(spacing: 14) {
+            HStack(spacing: digitSpacing) {
                 ForEach(Array(t), id: \.self) { ch in
                     if ch == ":" {
                         ColonDotCell()
                     } else if let d = ch.wholeNumberValue {
                         SevenSegDigitDotCell(
                             lit: SevenSegDigitDotCell.litMap[d],
-                            dotSize: 2, spacing: 4,
-                            activeOpacity: 0.98, inactiveOpacity: 0.18
+                            dotSize: dotSize,
+                            spacing: spacing,
+                            activeOpacity: activeOpacity,
+                            inactiveOpacity: inactiveOpacity
                         )
-                        .frame(width: 60, height: 90)
+                        .frame(width: digitWidth, height: digitHeight)
                     }
                 }
             }
