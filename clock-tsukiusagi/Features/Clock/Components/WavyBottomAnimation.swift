@@ -43,7 +43,7 @@ struct WavyBottomView: View {
                 // 波レイヤ1（ゆっくり）
                 SineWave(phase: t, amplitude: 14)
                     .fill(LinearGradient(
-                        colors: [Color.white.opacity(0.25), Color.white.opacity(0.05)],
+                        colors: [Color(hex: "#fff").opacity(0.25), Color(hex: "#fff").opacity(0.05)],
                         startPoint: .top,
                         endPoint: .bottom
                     ))
@@ -53,7 +53,7 @@ struct WavyBottomView: View {
                 // 波レイヤ2（少し速い＆浅い）— パララックスで奥行き
                 SineWave(phase: t * 1.35, amplitude: 8)
                     .fill(LinearGradient(
-                        colors: [Color.white.opacity(0.18), Color.white.opacity(0.03)],
+                        colors: [Color(hex: "#fff").opacity(0.18), Color(hex: "#fff").opacity(0.03)],
                         startPoint: .top,
                         endPoint: .bottom
                     ))
