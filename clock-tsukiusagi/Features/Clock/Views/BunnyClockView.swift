@@ -2,6 +2,16 @@ import SwiftUI
 import Foundation
 
 struct BunnyClockView: View {
+    // MARK: - Constants
+    static let markerColor = Color.white.opacity(0.75)
+    static let handColor = Color.white.opacity(0.9)
+    static let centerCircleColor = Color.white.opacity(0.9)
+    static let trackColor = Color.white.opacity(0.75)
+    static let trackSize: CGFloat = 12
+    static let moonSize: CGFloat = 34
+    static let starSize: CGFloat = 14
+    static let hareSize: CGFloat = 20 // うさぎ
+
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let date = context.date
@@ -9,8 +19,8 @@ struct BunnyClockView: View {
                 // やわらかいミント系グラデ（TsukiUsagiっぽい淡色）
                 LinearGradient(
                     colors: [
-                        Color(red: 0.94, green: 0.98, blue: 0.95),
-                        Color(red: 0.90, green: 0.97, blue: 0.93)
+                        Color(hex: "#0F1420"),
+                        Color(hex: "#1A2030")
                     ],
                     startPoint: .top, endPoint: .bottom
                 )
@@ -29,7 +39,7 @@ private struct ClockFace: View {
 
     var body: some View {
         GeometryReader { geo in
-            let markerColor = Color(red: 0.43, green: 0.61, blue: 0.73)
+            let markerColor = BunnyClockView.markerColor
 
             let size = geo.size
             let center = CGPoint(x: size.width/2, y: size.height/2)
@@ -48,9 +58,9 @@ private struct ClockFace: View {
                     if i == 0 {
                         // 小さな月
 						let moon = Text(Image(systemName: "moon.fill"))
-                            .font(.system(size: 26))
+                            .font(.system(size: 36))
                         let moonResolved = context.resolve(
-                            moon.foregroundStyle(markerColor.opacity(0.95))
+                            moon.foregroundStyle(markerColor)
                         )
                         // 12時位置より少し左下に寄せる
                         let moonPoint = CGPoint(x: p.x - 10, y: p.y + 3)
@@ -58,9 +68,9 @@ private struct ClockFace: View {
 
                         // 小さな星（月の右上）
 						let star = Text(Image(systemName: "star.fill"))
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: BunnyClockView.starSize, weight: .semibold))
                         let starResolved = context.resolve(
-                            star.foregroundStyle(markerColor.opacity(0.95))
+                            star.foregroundStyle(markerColor)
                         )
                         let starPoint = CGPoint(x: p.x + 12, y: p.y - 8)
                         context.draw(starResolved, at: starPoint, anchor: .center)
@@ -68,26 +78,26 @@ private struct ClockFace: View {
                         } else if i % 3 == 0 {
                             // 🐇 3/6/9 = うさぎ（SF Symbols）
 							let hare = Text(Image(systemName: "hare.fill"))
-                            .font(.system(size: 26))
+                            .font(.system(size: BunnyClockView.hareSize))
                             let hareResolved = context.resolve(
-                                hare.foregroundStyle(markerColor.opacity(0.95))
+                                hare.foregroundStyle(markerColor)
                             )
                             context.draw(hareResolved, at: p, anchor: .center)
                         } else {
 
                         // 🐾 足あと（BunnyTrackGlyph を SwiftUI Image に変換して描画）— UIKit 不使用
-                        let trackView = BunnyTrackGlyph(color: Color(red: 0.43, green: 0.61, blue: 0.73))
+                        let trackView = BunnyTrackGlyph(color: BunnyClockView.trackColor)
                             .opacity(0.9)
-                            .frame(width: 22, height: 22)
+                            .frame(width: BunnyClockView.trackSize, height: BunnyClockView.trackSize)
 
                         let renderer = ImageRenderer(content: trackView)
-                        renderer.proposedSize = .init(CGSize(width: 22, height: 22))
+                        renderer.proposedSize = .init(CGSize(width: BunnyClockView.trackSize, height: BunnyClockView.trackSize))
                         // renderer.scale は指定不要（Canvas 側で解像度管理される）
 
                         if let cg = renderer.cgImage {
                             // ← UIKit いらず：CGImage から SwiftUI.Image を作る
                             let img = Image(decorative: cg, scale: 1, orientation: .up)
-                            let w: CGFloat = 22
+                            let w: CGFloat = BunnyClockView.trackSize
                             let rect = CGRect(x: p.x - w/2, y: p.y - w/2, width: w, height: w)
                             context.draw(img, in: rect)
                         }
@@ -100,7 +110,7 @@ private struct ClockFace: View {
                 let m = Double(cal.component(.minute, from: date)) + s/60.0
                 let h = Double(cal.component(.hour,   from: date) % 12) + m/60.0
 
-                let secAngle  = Angle.degrees(s/60.0 * 360.0 - 90)
+				let secAngle  = Angle.degrees(s/60.0 * 360.0 - 90)
                 let minAngle  = Angle.degrees(m/60.0 * 360.0 - 90)
                 let hourAngle = Angle.degrees(h/12.0 * 360.0 - 90)
 
@@ -119,7 +129,7 @@ private struct ClockFace: View {
                     let style = StrokeStyle(lineWidth: width, lineCap: .round)  // ← ここで指定
                     context.stroke(
                         path,
-                        with: .color(Color(red: 0.30, green: 0.52, blue: 0.70).opacity(alpha)),
+                        with: .color(BunnyClockView.handColor.opacity(alpha)),
                         style: style
                     )
                 }
@@ -131,7 +141,7 @@ private struct ClockFace: View {
 
 
                 let centerCircle = Path(ellipseIn: CGRect(x: center.x - 4, y: center.y - 4, width: 8, height: 8))
-                context.fill(centerCircle, with: .color(Color(red: 0.30, green: 0.52, blue: 0.70)))
+                context.fill(centerCircle, with: .color(BunnyClockView.centerCircleColor))
             }
         }
         .aspectRatio(1, contentMode: .fit)
@@ -140,7 +150,7 @@ private struct ClockFace: View {
 }
 
 struct BunnyTrackGlyph: View {
-    var color: Color = Color(red: 0.43, green: 0.61, blue: 0.73)
+    var color: Color = BunnyClockView.trackColor
     var body: some View {
         GeometryReader { g in
             let w = g.size.width
