@@ -4,22 +4,31 @@ import SwiftUI
 struct SevenSegDotClockView: View {
     @State private var now = Date()
 
-    // Sizing constants
-    private let digitWidth: CGFloat = 60
-    private let digitHeight: CGFloat = 90
-    private let digitSpacing: CGFloat = 14
-    private let dotSize: CGFloat = 2
-    private let spacing: CGFloat = 4
-    private let activeOpacity: CGFloat = 0.98
+    // Sizing parameters
+    private let targetHeight: CGFloat
+    private let formatter: DateFormatter
+
+    init(targetHeight: CGFloat = 90, formatter: DateFormatter) {
+        self.targetHeight = targetHeight
+        self.formatter = formatter
+    }
+
+    // Sizing constants (calculated from targetHeight)
+    private var digitHeight: CGFloat { targetHeight }
+    private var digitWidth: CGFloat { targetHeight * 0.67 }  // 60/90 ratio
+    private var digitSpacing: CGFloat { targetHeight * 0.16 }  // 14/90 ratio
+    private var dotSize: CGFloat { max(2, targetHeight * 0.033) }  // 3/90 ratio (larger dots)
+    private var spacing: CGFloat { max(2, targetHeight * 0.033) }  // 3/90 ratio (tighter spacing)
+    private let activeOpacity: CGFloat = 1
     private let inactiveOpacity: CGFloat = 0.18
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
-            let t = Self.fmt.string(from: ctx.date) // "HH:mm"
+            let t = formatter.string(from: ctx.date)
             HStack(spacing: digitSpacing) {
                 ForEach(Array(t), id: \.self) { ch in
                     if ch == ":" {
-                        ColonDotCell()
+                        ColonDotCell(digitHeight: digitHeight, inactiveOpacity: inactiveOpacity, dotSize: dotSize, spacing: spacing)
                     } else if let d = ch.wholeNumberValue {
                         SevenSegDigitDotCell(
                             lit: SevenSegDigitDotCell.litMap[d],
@@ -33,16 +42,9 @@ struct SevenSegDotClockView: View {
                 }
             }
             .padding(.horizontal, 8)
-            .background(Color.black.ignoresSafeArea())
         }
         .statusBarHidden(true)
     }
-
-    private static let fmt: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm" // 秒が欲しければ "HH:mm:ss"
-        return f
-    }()
 }
 
 // MARK: - 7セグ ドット桁
@@ -80,7 +82,8 @@ struct SevenSegDigitDotCell: View {
             // 現在点灯するセグメントだけ「濃い」レイヤー
             DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: .white.opacity(activeOpacity))
                 .mask(segmentsPath(in: rect, lit: lit))
-                .shadow(color: .white.opacity(0.25), radius: 6) // ほのかな発光
+                .shadow(color: .white.opacity(0.4), radius: 8, x: 0, y: 0)
+                .shadow(color: .white.opacity(0.2), radius: 16, x: 0, y: 0)
         }
     }
 
@@ -102,14 +105,14 @@ struct SevenSegDigitDotCell: View {
                        width: w - inset * 2, height: thickness)
 
         let F = CGRect(x: r.minX, y: r.minY + inset,
-                       width: thickness, height: h/2 - inset - thickness/2)
+                    width: thickness, height: h/2 - inset - thickness/2)
         let E = CGRect(x: r.minX, y: r.midY + thickness/2,
-                       width: thickness, height: h/2 - inset - thickness/2)
+                    width: thickness, height: h/2 - inset - thickness/2)
 
         let B = CGRect(x: r.maxX - thickness, y: r.minY + inset,
-                       width: thickness, height: h/2 - inset - thickness/2)
+                    width: thickness, height: h/2 - inset - thickness/2)
         let C = CGRect(x: r.maxX - thickness, y: r.midY + thickness/2,
-                       width: thickness, height: h/2 - inset - thickness/2)
+                    width: thickness, height: h/2 - inset - thickness/2)
 
         let rects = [A,B,C,D,E,F,G]
         for (i, on) in lit.enumerated() where on {
@@ -121,27 +124,45 @@ struct SevenSegDigitDotCell: View {
 
 // MARK: - コロン（中央に2点）
 struct ColonDotCell: View {
+    let digitHeight: CGFloat
+    let inactiveOpacity: CGFloat
+    let dotSize: CGFloat
+    let spacing: CGFloat
+
+    init(digitHeight: CGFloat, inactiveOpacity: CGFloat, dotSize: CGFloat, spacing: CGFloat) {
+        self.digitHeight = digitHeight
+        self.inactiveOpacity = inactiveOpacity
+        self.dotSize = dotSize
+        self.spacing = spacing
+    }
     var body: some View {
         GeometryReader { geo in
-            let size = min(geo.size.width, geo.size.height)
-            let dot = size * 0.12
-            let spacing = size * 0.28
-            let up = CGRect(x: geo.size.width/2 - dot/2,
-                            y: geo.size.height/2 - spacing - dot/2,
-                            width: dot, height: dot)
-            let down = up.offsetBy(dx: 0, dy: spacing * 2)
+            let size = CGSize(width: geo.size.width, height: geo.size.height)
+
+            // 直径は格子に合わせて整数倍で決める
+            let dot = max(dotSize * 2, spacing)             // 例: ドット2コ分 or ピッチ1コ分
+            let gap = spacing * 3                            // 上下の間隔（お好みで）
+
+            // 中心を格子にスナップ
+            let cx = (round((size.width / 2) / spacing)) * spacing
+            let cy = (round((size.height / 2) / spacing)) * spacing
+
+            let up   = CGRect(x: cx - dot/2, y: cy - gap - dot/2, width: dot, height: dot)
+            let down = CGRect(x: cx - dot/2, y: cy + gap - dot/2, width: dot, height: dot)
 
             ZStack {
-                // 薄い（常時うっすら）
-                DigitalDotGrid(dotSize: 3, spacing: 6, color: .white.opacity(0.18))
+                // 薄い（同じ円をスケールで拡大 → 楕円化しない）
+                DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: .white.opacity(inactiveOpacity))
                     .mask(
                         Path { p in
-                            p.addEllipse(in: up.insetBy(dx: -dot, dy: -dot))
-                            p.addEllipse(in: down.insetBy(dx: -dot, dy: -dot))
+                            p.addEllipse(in: up)
+                            p.addEllipse(in: down)
                         }
+                        .applying(.init(scaleX: 1.6, y: 1.6)) // 中心からスケール
                     )
-                // 濃い（コロン自体は常時点灯扱いでOK）
-                DigitalDotGrid(dotSize: 3, spacing: 6, color: .white.opacity(0.98))
+
+                // 濃い（そのまま）
+                DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: .white.opacity(0.98))
                     .mask(
                         Path { p in
                             p.addEllipse(in: up)
@@ -151,7 +172,8 @@ struct ColonDotCell: View {
                     .shadow(color: .white.opacity(0.25), radius: 6)
             }
         }
-        .frame(width: 30, height: 180)
+        // 幅も格子に寄せるとさらに安定
+        .frame(width: spacing * 5, height: digitHeight)
     }
 }
 
@@ -185,7 +207,8 @@ private struct DigitalDotGrid: View {
 }
 
 #Preview{
-    SevenSegDotClockView()
+    let formatter = DateFormatter()
+    formatter.dateFormat = "HH:mm"
+    return SevenSegDotClockView(targetHeight: 56, formatter: formatter)
         .background(.black)
 }
-

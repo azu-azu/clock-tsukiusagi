@@ -1,9 +1,19 @@
 import SwiftUI
 
+enum ClockDisplayMode {
+    case normal
+    case dotMatrix
+    case sevenSeg
+}
+
 struct ClockScreenView: View {
+    // MARK: - Constants
+    private static let clockFontSize: CGFloat = 56
+    private static let sevenSegHeight: CGFloat = 44
+
+    @State private var displayMode: ClockDisplayMode = .dotMatrix      // 表示モード切り替えフラグ
     @StateObject private var vm = ClockScreenVM()
-    @State private var useDotMatrix: Bool = true  // 切り替えフラグ
-    @State private var use24HourFormat: Bool = false  // 24時間表記切り替えフラグ
+    @State private var use24HourFormat: Bool = true  // 24時間表記切り替えフラグ
 
     private var formatter: DateFormatter {
         let f = DateFormatter()
@@ -33,21 +43,36 @@ struct ClockScreenView: View {
 
                 // 時刻 + 一言
                 VStack(spacing: 8) {
-                    // 時刻表示
-                    let timeText = Text(formatter.string(from: snapshot.time))
-                        .font(.system(size: 56, weight: .semibold, design: useDotMatrix ? .monospaced : .rounded))
-                        .monospacedDigit()
+                    // 時刻表示（表示モードに応じて切り替え）
+                    Group {
+                        switch displayMode {
+                        case .normal:
+                            let timeText = Text(formatter.string(from: snapshot.time))
+                                .font(.system(size: Self.clockFontSize, weight: .semibold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(.white.opacity(0.95))
+                            timeText
 
-                    timeText
-                        .foregroundStyle(useDotMatrix ? .clear : .white.opacity(0.95))
-                        .overlay(
-                            // ドットマトリックス表示時のみオーバーレイでDotGridを表示
-                            useDotMatrix ?
-                            DotGrid(dotSize: 2, spacing: 2, color: .white.opacity(0.95), enableGlow: true)
-                                .mask(timeText)
-                            : nil
-                        )
-                        .accessibilityLabel("Current time")
+                        case .dotMatrix:
+                            let timeText = Text(formatter.string(from: snapshot.time))
+                                .font(.system(size: Self.clockFontSize, weight: .semibold, design: .monospaced))
+                                .monospacedDigit()
+
+                            let textColor = Color.white.opacity(0.95)
+
+                            timeText
+                                .foregroundStyle(.clear)
+                                .overlay(
+                                    DotGrid(dotSize: 2, spacing: 2, color: textColor, enableGlow: true)
+                                        .mask(timeText)
+                                )
+
+                        case .sevenSeg:
+                            SevenSegDotClockView(targetHeight: Self.sevenSegHeight, formatter: formatter)
+                                .offset(y: -8)
+                        }
+                    }
+                    .accessibilityLabel("Current time")
 
                     // キャプション（共通）
                     Text(snapshot.caption)
@@ -61,7 +86,14 @@ struct ClockScreenView: View {
             .animation(.easeInOut(duration: 0.6), value: snapshot.skyTone) // 時間帯フェード
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.3)) {
-                    useDotMatrix.toggle()
+                    switch displayMode {
+                    case .normal:
+                        displayMode = .dotMatrix
+                    case .dotMatrix:
+                        displayMode = .sevenSeg
+                    case .sevenSeg:
+                        displayMode = .normal
+                    }
                 }
             }
             .onLongPressGesture {
