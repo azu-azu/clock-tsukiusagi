@@ -8,7 +8,7 @@ struct SkyTone: Equatable {
 
     static func forHour(_ h: Int) -> SkyTone {
         switch h {
-        case 4..<8:   return .dawn
+        case 4..<8:   return .dusk
         case 8..<16:  return .dusk
         case 16..<18: return .dusk
         default:      return .night

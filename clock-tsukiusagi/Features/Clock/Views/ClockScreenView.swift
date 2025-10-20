@@ -15,6 +15,13 @@ struct ClockScreenView: View {
     @StateObject private var vm = ClockScreenVM()
     @State private var use24HourFormat: Bool = true  // 24時間表記切り替えフラグ
 
+    // DEBUG用途の固定日時（nilの場合は通常通り現在時刻）
+    private let fixedDate: Date?
+
+    init(fixedDate: Date? = nil) {
+        self.fixedDate = fixedDate
+    }
+
     private var formatter: DateFormatter {
         let f = DateFormatter()
         f.dateFormat = use24HourFormat ? "H:mm" : "h:mm" // 24時間表記 or 12時間表記
@@ -23,7 +30,8 @@ struct ClockScreenView: View {
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            let snapshot = vm.snapshot(at: context.date)
+            let now = fixedDate ?? context.date
+            let snapshot = vm.snapshot(at: now)
             ZStack {
                 // 背景（朝/昼/夕/夜でフェード）
                 LinearGradient(
@@ -129,3 +137,27 @@ final class ClockScreenVM: ObservableObject {
 #Preview {
     ClockScreenView()
 }
+
+#if DEBUG
+#Preview("Fixed 05:35 (local)") {
+    var comps = DateComponents()
+    comps.year = 2025; comps.month = 10; comps.day = 20
+    comps.hour = 4; comps.minute = 35
+    comps.timeZone = .current
+    let date = Calendar.current.date(from: comps)!
+    return ClockScreenView(fixedDate: date)
+    .overlay(alignment: .bottom) {
+        WavyBottomView()
+            .allowsHitTesting(false)
+    }
+}
+
+#Preview("Fixed 07:05 (local)") {
+    var comps = DateComponents()
+    comps.year = 2025; comps.month = 10; comps.day = 20
+    comps.hour = 7; comps.minute = 5
+    comps.timeZone = .current
+    let date = Calendar.current.date(from: comps)!
+    return ClockScreenView(fixedDate: date)
+}
+#endif
