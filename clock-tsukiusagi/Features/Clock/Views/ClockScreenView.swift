@@ -66,8 +66,12 @@ struct ClockScreenView: View {
                                 )
 
                         case .sevenSeg:
-                            SevenSegDotClockView(targetHeight: Self.sevenSegHeight, formatter: formatter)
-                                .offset(y: -8)
+                            SevenSegDotClockView(
+                                targetHeight: Self.sevenSegHeight,
+                                formatter: formatter,
+                                textColor: DesignTokens.ClockColors.textPrimary
+                            )
+                            .offset(y: -8)
                         }
                     }
                     .accessibilityLabel("Current time")
