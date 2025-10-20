@@ -6,7 +6,7 @@ struct DotMatrixClockView: View {
     private let clockSize: CGFloat = 100
     private let dotSize: CGFloat = 2
     private let dotSpacing: CGFloat = 2
-    private let dotColor: Color = .white
+    private let dotColor: Color = DesignTokens.ClockColors.textPrimary
     private let dotDesign: Font.Design = .monospaced
     // private let dotDesign: Font.Design = .rounded
 
@@ -27,8 +27,8 @@ struct DotMatrixClockView: View {
                             .monospacedDigit()
                     )
                     // 4) ほのかな発光っぽさ
-                    .shadow(color: .white.opacity(0.25), radius: 6, x: 0, y: 0)
-                    .shadow(color: .white.opacity(0.12), radius: 16, x: 0, y: 0)
+                    .shadow(color: DesignTokens.ClockColors.glow.opacity(0.25), radius: 6, x: 0, y: 0)
+                    .shadow(color: DesignTokens.ClockColors.glow.opacity(0.12), radius: 16, x: 0, y: 0)
                     .padding(.horizontal)
             }
         }

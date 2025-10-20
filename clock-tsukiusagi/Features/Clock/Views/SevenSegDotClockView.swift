@@ -7,10 +7,19 @@ struct SevenSegDotClockView: View {
     // Sizing parameters
     private let targetHeight: CGFloat
     private let formatter: DateFormatter
+    private let textColor: Color
+    private let activeOpacity: CGFloat
+    private let inactiveOpacity: CGFloat
 
-    init(targetHeight: CGFloat = 90, formatter: DateFormatter) {
+    init(targetHeight: CGFloat = 90, formatter: DateFormatter,
+         textColor: Color = DesignTokens.ClockColors.textPrimary,
+         activeOpacity: CGFloat = DesignTokens.ClockColors.activeOpacity,
+         inactiveOpacity: CGFloat = DesignTokens.ClockColors.inactiveOpacity) {
         self.targetHeight = targetHeight
         self.formatter = formatter
+        self.textColor = textColor
+        self.activeOpacity = activeOpacity
+        self.inactiveOpacity = inactiveOpacity
     }
 
     // Sizing constants (calculated from targetHeight)
@@ -19,8 +28,6 @@ struct SevenSegDotClockView: View {
     private var digitSpacing: CGFloat { targetHeight * 0.16 }  // 14/90 ratio
     private var dotSize: CGFloat { max(2, targetHeight * 0.033) }  // 3/90 ratio (larger dots)
     private var spacing: CGFloat { max(2, targetHeight * 0.033) }  // 3/90 ratio (tighter spacing)
-    private let activeOpacity: CGFloat = 1
-    private let inactiveOpacity: CGFloat = 0.18
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
@@ -28,14 +35,15 @@ struct SevenSegDotClockView: View {
             HStack(spacing: digitSpacing) {
                 ForEach(Array(t), id: \.self) { ch in
                     if ch == ":" {
-                        ColonDotCell(digitHeight: digitHeight, inactiveOpacity: inactiveOpacity, dotSize: dotSize, spacing: spacing)
+                        ColonDotCell(digitHeight: digitHeight, inactiveOpacity: inactiveOpacity, dotSize: dotSize, spacing: spacing, textColor: textColor)
                     } else if let d = ch.wholeNumberValue {
                         SevenSegDigitDotCell(
                             lit: SevenSegDigitDotCell.litMap[d],
                             dotSize: dotSize,
                             spacing: spacing,
                             activeOpacity: activeOpacity,
-                            inactiveOpacity: inactiveOpacity
+                            inactiveOpacity: inactiveOpacity,
+                            textColor: textColor
                         )
                         .frame(width: digitWidth, height: digitHeight)
                     }
@@ -55,6 +63,7 @@ struct SevenSegDigitDotCell: View {
     let spacing: CGFloat
     let activeOpacity: CGFloat
     let inactiveOpacity: CGFloat
+    let textColor: Color
 
     // 7セグの各セグメントのオン/オフ定義（0〜9）
     static let litMap: [[Bool]] = [
@@ -76,14 +85,14 @@ struct SevenSegDigitDotCell: View {
             let rect = geo.frame(in: .local)
 
             // 8の形（=全セグメント）を「薄い」レイヤー
-            DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: .white.opacity(inactiveOpacity))
+            DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: textColor.opacity(inactiveOpacity))
                 .mask(segmentsPath(in: rect, lit: Array(repeating: true, count: 7)))
 
             // 現在点灯するセグメントだけ「濃い」レイヤー
-            DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: .white.opacity(activeOpacity))
+            DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: textColor.opacity(activeOpacity))
                 .mask(segmentsPath(in: rect, lit: lit))
-                .shadow(color: .white.opacity(0.4), radius: 8, x: 0, y: 0)
-                .shadow(color: .white.opacity(0.2), radius: 16, x: 0, y: 0)
+                .shadow(color: textColor.opacity(0.4), radius: 8, x: 0, y: 0)
+                .shadow(color: textColor.opacity(0.2), radius: 16, x: 0, y: 0)
         }
     }
 
@@ -128,12 +137,14 @@ struct ColonDotCell: View {
     let inactiveOpacity: CGFloat
     let dotSize: CGFloat
     let spacing: CGFloat
+    let textColor: Color
 
-    init(digitHeight: CGFloat, inactiveOpacity: CGFloat, dotSize: CGFloat, spacing: CGFloat) {
+    init(digitHeight: CGFloat, inactiveOpacity: CGFloat, dotSize: CGFloat, spacing: CGFloat, textColor: Color) {
         self.digitHeight = digitHeight
         self.inactiveOpacity = inactiveOpacity
         self.dotSize = dotSize
         self.spacing = spacing
+        self.textColor = textColor
     }
     var body: some View {
         GeometryReader { geo in
@@ -152,7 +163,7 @@ struct ColonDotCell: View {
 
             ZStack {
                 // 薄い（同じ円をスケールで拡大 → 楕円化しない）
-                DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: .white.opacity(inactiveOpacity))
+                DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: textColor.opacity(inactiveOpacity))
                     .mask(
                         Path { p in
                             p.addEllipse(in: up)
@@ -162,14 +173,14 @@ struct ColonDotCell: View {
                     )
 
                 // 濃い（そのまま）
-                DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: .white.opacity(0.98))
+                DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: textColor.opacity(0.98))
                     .mask(
                         Path { p in
                             p.addEllipse(in: up)
                             p.addEllipse(in: down)
                         }
                     )
-                    .shadow(color: .white.opacity(0.25), radius: 6)
+                    .shadow(color: textColor.opacity(0.25), radius: 6)
             }
         }
         // 幅も格子に寄せるとさらに安定

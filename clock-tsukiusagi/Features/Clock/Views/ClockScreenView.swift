@@ -8,8 +8,8 @@ enum ClockDisplayMode {
 
 struct ClockScreenView: View {
     // MARK: - Constants
-    private static let clockFontSize: CGFloat = 56
-    private static let sevenSegHeight: CGFloat = 44
+    private static let clockFontSize: CGFloat = DesignTokens.ClockTypography.clockFontSize
+    private static let sevenSegHeight: CGFloat = DesignTokens.ClockTypography.sevenSegHeight
 
     @State private var displayMode: ClockDisplayMode = .dotMatrix      // 表示モード切り替えフラグ
     @StateObject private var vm = ClockScreenVM()
@@ -42,7 +42,7 @@ struct ClockScreenView: View {
                 .accessibilityHidden(true)
 
                 // 時刻 + 一言
-                VStack(spacing: 8) {
+                VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
                     // 時刻表示（表示モードに応じて切り替え）
                     Group {
                         switch displayMode {
@@ -50,7 +50,7 @@ struct ClockScreenView: View {
                             let timeText = Text(formatter.string(from: snapshot.time))
                                 .font(.system(size: Self.clockFontSize, weight: .semibold, design: .rounded))
                                 .monospacedDigit()
-                                .foregroundStyle(.white.opacity(0.95))
+                                .foregroundStyle(DesignTokens.ClockColors.textPrimary)
                             timeText
 
                         case .dotMatrix:
@@ -58,12 +58,10 @@ struct ClockScreenView: View {
                                 .font(.system(size: Self.clockFontSize, weight: .semibold, design: .monospaced))
                                 .monospacedDigit()
 
-                            let textColor = Color.white.opacity(0.95)
-
                             timeText
                                 .foregroundStyle(.clear)
                                 .overlay(
-                                    DotGrid(dotSize: 2, spacing: 2, color: textColor, enableGlow: true)
+                                    DotGrid(dotSize: 2, spacing: 2, color: DesignTokens.ClockColors.textPrimary, enableGlow: true)
                                         .mask(timeText)
                                 )
 
@@ -76,11 +74,11 @@ struct ClockScreenView: View {
 
                     // キャプション（共通）
                     Text(snapshot.caption)
-                        .font(.system(size: 16, weight: .regular, design: .serif))
-                        .foregroundStyle(.white.opacity(0.8))
+                        .font(.system(size: DesignTokens.ClockTypography.captionFontSize, weight: .regular, design: .serif))
+                        .foregroundStyle(DesignTokens.ClockColors.textSecondary)
                         .accessibilityLabel("Caption")
                 }
-                .padding(.bottom, 48)
+                .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
                 .frame(maxHeight: .infinity, alignment: .bottom)
             }
             .animation(.easeInOut(duration: 0.6), value: snapshot.skyTone) // 時間帯フェード
