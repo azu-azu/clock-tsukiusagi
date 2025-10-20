@@ -54,16 +54,16 @@ struct ClockScreenView: View {
                             timeText
 
                         case .dotMatrix:
-                            let timeText = Text(formatter.string(from: snapshot.time))
-                                .font(.system(size: Self.clockFontSize, weight: .semibold, design: .monospaced))
-                                .monospacedDigit()
-
-                            timeText
-                                .foregroundStyle(.clear)
-                                .overlay(
-                                    DotGrid(dotSize: 2, spacing: 2, color: DesignTokens.ClockColors.textPrimary, enableGlow: true)
-                                        .mask(timeText)
-                                )
+                            DotMatrixClockView(
+                                timeString: formatter.string(from: snapshot.time),
+                                fontSize: Self.clockFontSize,
+                                fontWeight: .semibold,
+                                fontDesign: .monospaced,
+                                dotSize: 2,
+                                dotSpacing: 2,
+                                color: DesignTokens.ClockColors.textPrimary,
+                                enableGlow: true
+                            )
 
                         case .sevenSeg:
                             SevenSegDotClockView(

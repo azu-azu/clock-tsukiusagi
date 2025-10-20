@@ -1,50 +1,55 @@
 import SwiftUI
 
 struct DotMatrixClockView: View {
-    @State private var now = Date()
+    // Inputs
+    private let timeString: String
+    private let fontSize: CGFloat
+    private let fontWeight: Font.Weight
+    private let fontDesign: Font.Design
+    private let dotSize: CGFloat
+    private let dotSpacing: CGFloat
+    private let color: Color
+    private let enableGlow: Bool
 
-    private let clockSize: CGFloat = 100
-    private let dotSize: CGFloat = 2
-    private let dotSpacing: CGFloat = 2
-    private let dotColor: Color = DesignTokens.ClockColors.textPrimary
-    private let dotDesign: Font.Design = .monospaced
-    // private let dotDesign: Font.Design = .rounded
-
-    var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
-            // 1) 表示文字列（24h/12h切り替えはお好みで）
-            let time = Self.formatTime(context.date)
-
-            ZStack {
-                // 2) 背景（お好みで）
-                Color.black.ignoresSafeArea()
-
-                // 3) ドット格子をテキストでマスク
-                DotGrid(dotSize: dotSize, spacing: dotSpacing, color: dotColor)
-                    .mask(
-                        Text(time)
-                            .font(.system(size: clockSize, weight: .bold, design: dotDesign))
-                            .monospacedDigit()
-                    )
-                    // 4) ほのかな発光っぽさ
-                    .shadow(color: DesignTokens.ClockColors.glow.opacity(0.25), radius: 6, x: 0, y: 0)
-                    .shadow(color: DesignTokens.ClockColors.glow.opacity(0.12), radius: 16, x: 0, y: 0)
-                    .padding(.horizontal)
-            }
-        }
-        .statusBarHidden(true)
+    init(
+        timeString: String,
+        fontSize: CGFloat = DesignTokens.ClockTypography.clockFontSize,
+        fontWeight: Font.Weight = .semibold,
+        fontDesign: Font.Design = .monospaced,
+        dotSize: CGFloat = 2,
+        dotSpacing: CGFloat = 2,
+        color: Color = DesignTokens.ClockColors.textPrimary,
+        enableGlow: Bool = true
+    ) {
+        self.timeString = timeString
+        self.fontSize = fontSize
+        self.fontWeight = fontWeight
+        self.fontDesign = fontDesign
+        self.dotSize = dotSize
+        self.dotSpacing = dotSpacing
+        self.color = color
+        self.enableGlow = enableGlow
     }
 
-    private static func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "H:mm"
-        return formatter.string(from: date)
+    var body: some View {
+        // 元のレイアウトに合わせて、透明テキストへオーバーレイでDotGridを重ねる
+        let timeText = Text(timeString)
+            .font(.system(size: fontSize, weight: fontWeight, design: fontDesign))
+            .monospacedDigit()
+
+        timeText
+            .foregroundStyle(.clear)
+            .overlay(
+                DotGrid(dotSize: dotSize, spacing: dotSpacing, color: color, enableGlow: enableGlow)
+                    .mask(timeText)
+            )
     }
 }
 
 // DotGrid is now defined in Features/Clock/Components/DotGrid.swift
 
 #Preview {
-    DotMatrixClockView()
+    DotMatrixClockView(timeString: "14:30")
         .frame(height: 260)
+        .background(.black)
 }
