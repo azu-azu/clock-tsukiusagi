@@ -5,6 +5,7 @@ enum MoonPainter {
     // MARK: - Colors
     private static let moonCenterColor = Color(hex: "#fff").opacity(0.95)
     private static let moonEdgeColor = Color(hex: "#fff").opacity(0.6)
+    private static let glowColor = Color.cyan
 
     static func draw(in ctx: GraphicsContext, size: CGSize, angle: Double, tone: SkyTone) {
         let radius = min(size.width, size.height) * 0.18
@@ -35,15 +36,15 @@ enum MoonPainter {
         // グロウ（青の影を多層で重ねる）- 月の外側に描画
         var shadowCtx1 = ctx
         shadowCtx1.addFilter(.blur(radius: 12))
-        shadowCtx1.stroke(circle, with: .color(Color.cyan.opacity(0.35)), lineWidth: 8)
+        shadowCtx1.stroke(circle, with: .color(glowColor.opacity(0.35)), lineWidth: 8)
 
         var shadowCtx2 = ctx
         shadowCtx2.addFilter(.blur(radius: 28))
-        shadowCtx2.stroke(circle, with: .color(Color.cyan.opacity(0.25)), lineWidth: 16)
+        shadowCtx2.stroke(circle, with: .color(glowColor.opacity(0.25)), lineWidth: 16)
 
         var shadowCtx3 = ctx
         shadowCtx3.addFilter(.blur(radius: 48))
-        shadowCtx3.stroke(circle, with: .color(Color.cyan.opacity(0.18)), lineWidth: 24)
+        shadowCtx3.stroke(circle, with: .color(glowColor.opacity(0.18)), lineWidth: 24)
 
         // 元のグロー
         var blurredCtx = ctx
