@@ -41,4 +41,28 @@ struct DesignTokens {
         /// 下部パディング
         static let bottomPadding: CGFloat = 48
     }
+
+    // MARK: - Moon Colors
+    enum MoonColors {
+        /// 月の中心色
+        static let centerColor = Color.white.opacity(0.95)
+
+        /// 月の縁色
+        static let edgeColor = Color.white.opacity(0.6)
+
+        /// 月のグロー色（シアン）
+        static let glowCyan = Color.cyan
+
+        /// 月のグロー色（白）
+        static let glowWhite = Color.white
+
+        /// グロー効果の不透明度（ベース）
+        static let glowBaseOpacity: CGFloat = 0.15
+
+        /// グロー効果の不透明度（ソフト）
+        static let glowSoftOpacity: CGFloat = 0.025
+
+        /// グロー効果の不透明度（仕上げ）
+        static let glowFinishOpacity: CGFloat = 0.05
+    }
 }

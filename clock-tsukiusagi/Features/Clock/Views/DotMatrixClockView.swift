@@ -46,7 +46,7 @@ struct DotMatrixClockView: View {
     }
 }
 
-// DotGrid is now defined in Features/Clock/Components/DotGrid.swift
+// DotGrid is now defined in CrossFeatureUI/Visual/Primitives/DotGrid.swift
 
 #Preview {
     DotMatrixClockView(timeString: "14:30")

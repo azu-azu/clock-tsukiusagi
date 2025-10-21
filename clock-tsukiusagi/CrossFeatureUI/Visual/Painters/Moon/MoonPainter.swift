@@ -3,8 +3,8 @@ import SwiftUI
 // MARK: - MoonPainter
 enum MoonPainter {
     // MARK: - Colors
-    private static let moonCenterColor = Color(hex: "#fff").opacity(0.95)
-    private static let moonEdgeColor   = Color(hex: "#fff").opacity(0.6)
+    private static let moonCenterColor = DesignTokens.MoonColors.centerColor
+    private static let moonEdgeColor   = DesignTokens.MoonColors.edgeColor
 
     // === GLOW: 外周アークだけ発光（ストローク→ブラー→内側を消す） ===
     static func draw(in ctx: GraphicsContext, size: CGSize, angle: Double, tone: SkyTone) {
@@ -76,10 +76,10 @@ enum MoonPainter {
 
                 glow.blendMode = .plusLighter
                 glow.addFilter(.blur(radius: radius * 0.35))
-                glow.fill(moonPath, with: .color(Color.cyan.opacity(0.18)))
+                glow.fill(moonPath, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.18)))
 
                 glow.addFilter(.blur(radius: radius * 0.18))
-                glow.fill(moonPath, with: .color(Color.white.opacity(0.05)))
+                glow.fill(moonPath, with: .color(DesignTokens.MoonColors.glowWhite.opacity(0.05)))
             } else {
                 glow.clip(to: ringClip, style: FillStyle(eoFill: true))
                 // Skip glow entirely when extremely thin
@@ -100,7 +100,7 @@ enum MoonPainter {
                     layer.blendMode = .normal
                     layer.stroke(
                         outerArc,
-                        with: .color(Color.cyan.opacity(cyanAlpha)),
+                        with: .color(DesignTokens.MoonColors.glowCyan.opacity(cyanAlpha)),
                         style: StrokeStyle(
                             lineWidth: radius * 0.28,
                             lineCap: .round,
@@ -117,7 +117,7 @@ enum MoonPainter {
                     layer.blendMode = .plusLighter
                     layer.stroke(
                         outerArc,
-                        with: .color(Color.white.opacity(whiteAlpha)),
+                        with: .color(DesignTokens.MoonColors.glowWhite.opacity(whiteAlpha)),
                         style: StrokeStyle(
                             lineWidth: radius * 0.18,
                             lineCap: .round,
@@ -132,7 +132,7 @@ enum MoonPainter {
                     layer.blendMode = .plusLighter
                     layer.stroke(
                         outerArc,
-                        with: .color(Color.cyan.opacity(0.05)),
+                        with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.05)),
                         style: StrokeStyle(
                             lineWidth: radius * 0.18,
                             lineCap: .round,

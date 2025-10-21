@@ -42,11 +42,12 @@ struct ClockScreenView: View {
                 .ignoresSafeArea()
 
                 // 月
-                Canvas { ctx, size in
-                    MoonPainter.draw(in: ctx, size: size,
-                                    angle: snapshot.phaseAngle,
-                                    tone: snapshot.skyTone)
-                }
+                MoonGlyph(
+                    phase: snapshot.phaseAngle / 360.0,
+                    lightAngle: .degrees(snapshot.phaseAngle),
+                    skyTone: snapshot.skyTone
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .accessibilityHidden(true)
 
                 // 時刻 + 一言
