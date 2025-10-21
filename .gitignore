@@ -138,5 +138,5 @@ Temporary Items
 *.backup
 
 architect
-sample.css
-tamesi.swift
+sample*
+tamesi*

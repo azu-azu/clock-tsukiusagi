@@ -29,7 +29,7 @@ struct ClockScreenView: View {
     }
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+		TimelineView(.periodic(from: .now, by: 1)) { context in
             let now = fixedDate ?? context.date
             let snapshot = vm.snapshot(at: now)
             ZStack {
