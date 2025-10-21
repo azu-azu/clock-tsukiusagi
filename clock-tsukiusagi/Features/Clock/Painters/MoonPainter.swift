@@ -17,6 +17,13 @@ enum MoonPainter {
         // 位相とオフセット（実形生成と同一の定義に統一）
         let phase = calculateMoonPhase(from: angle)
         let s = (2 * phase - 1) * radius
+        // Illumination indicator (0=new/thin, 1=full)
+        let illum = max(0, min(1, 1 - abs(s) / radius))
+        let glowSkipThreshold: CGFloat = 0.03
+        // Helpers for interpolation
+        func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat { a + (b - a) * t }
+        func smooth(_ x: CGFloat) -> CGFloat { let t = max(0, min(1, x)); return t * t * (3 - 2 * t) }
+        let t = smooth(illum)
         let isFullish = abs(s) < radius * 0.015 // near-full: shadow overlaps moon
 
         // 満月円 / 影円
@@ -53,9 +60,9 @@ enum MoonPainter {
         ringClip.addEllipse(in: outerRect)
         ringClip.addEllipse(in: innerRect) // even-odd: Rect - (outer - inner) = 薄いリング
 
-        // 点灯側の角度幅（ハードなクリップは行わず、丸キャップで端をぼかす）
+        // 点灯側の角度幅（位相に応じて補間）
         let isRightLit = phase < 0.5
-        let wedgeSweep: Double = 150
+        let wedgeSweep: Double = Double(lerp(120, 150, t))
 
         ctx.drawLayer { glow in
             if isFullish {
@@ -75,6 +82,8 @@ enum MoonPainter {
                 glow.fill(moonPath, with: .color(Color.white.opacity(0.05)))
             } else {
                 glow.clip(to: ringClip, style: FillStyle(eoFill: true))
+                // Skip glow entirely when extremely thin
+                guard illum > glowSkipThreshold else { return }
 
                 // 外周アークに沿ったストロークをぼかして重ねる（内側寄りに見えるよう控えめ）
                 let startDeg: Double = isRightLit ? (360 - wedgeSweep / 2) : (180 - wedgeSweep / 2)
@@ -85,11 +94,13 @@ enum MoonPainter {
 
                 // ベース青（端は丸キャップで自然にフェード）
                 glow.drawLayer { layer in
-                    layer.addFilter(.blur(radius: radius * 0.28))
+                    let blurBase = lerp(radius * 0.18, radius * 0.28, t)
+                    let cyanAlpha = lerp(0.15, 0.11, t)
+                    layer.addFilter(.blur(radius: blurBase))
                     layer.blendMode = .normal
                     layer.stroke(
                         outerArc,
-                        with: .color(Color.cyan.opacity(0.11)),
+                        with: .color(Color.cyan.opacity(cyanAlpha)),
                         style: StrokeStyle(
                             lineWidth: radius * 0.28,
                             lineCap: .round,
@@ -100,11 +111,13 @@ enum MoonPainter {
 
                 // 白加算（ごく薄く）
                 glow.drawLayer { layer in
-                    layer.addFilter(.blur(radius: radius * 0.22))
+                    let blurSoft = lerp(radius * 0.14, radius * 0.22, t)
+                    let whiteAlpha = lerp(0.025, 0.035, t)
+                    layer.addFilter(.blur(radius: blurSoft))
                     layer.blendMode = .plusLighter
                     layer.stroke(
                         outerArc,
-                        with: .color(Color.white.opacity(0.035)),
+                        with: .color(Color.white.opacity(whiteAlpha)),
                         style: StrokeStyle(
                             lineWidth: radius * 0.18,
                             lineCap: .round,
@@ -115,7 +128,7 @@ enum MoonPainter {
 
                 // 仕上げ青（極薄）
                 glow.drawLayer { layer in
-                    layer.addFilter(.blur(radius: radius * 0.36))
+                    layer.addFilter(.blur(radius: lerp(radius * 0.20, radius * 0.36, t)))
                     layer.blendMode = .plusLighter
                     layer.stroke(
                         outerArc,
