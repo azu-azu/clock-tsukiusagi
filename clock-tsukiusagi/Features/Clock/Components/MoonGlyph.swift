@@ -1,38 +1,42 @@
 import SwiftUI
 
 struct MoonGlyph: View {
-    let phase: Double
-    let lightAngle: Angle
-    let skyTone: SkyTone
+    let date: Date
+    let tone: SkyTone
+    private let thinThreshold: Double = 0.02
 
-    init(phase: Double, lightAngle: Angle, skyTone: SkyTone = .night) {
-        self.phase = phase
-        self.lightAngle = lightAngle
-        self.skyTone = skyTone
+    init(date: Date, tone: SkyTone = .night) {
+        self.date = date
+        self.tone = tone
     }
 
     var body: some View {
-        Canvas { ctx, canvasSize in
-            MoonPainter.draw(
-                in: ctx,
-                size: canvasSize,
-                angle: lightAngle.degrees,
-                tone: skyTone
-            )
+        let mp = MoonPhaseCalculator.moonPhase(on: date)
+        if mp.illumination < thinThreshold {
+            Color.clear
+        } else {
+            Canvas { ctx, canvasSize in
+                MoonPainter.draw(
+                    in: ctx,
+                    size: canvasSize,
+                    phase: mp.phase,
+                    tone: tone
+                )
+            }
+            .accessibilityLabel(Text("Moon, phase: \(String(format: "%.0f", mp.illumination * 100))%"))
         }
-        .accessibilityLabel(Text("Moon phase"))
     }
 }
 
 #Preview {
     VStack(spacing: 20) {
-        MoonGlyph(phase: 0.0, lightAngle: .degrees(0), skyTone: .night)
+        MoonGlyph(date: .now, tone: .night)
             .frame(width: 200, height: 200)
-        MoonGlyph(phase: 0.25, lightAngle: .degrees(90), skyTone: .dusk)
+        MoonGlyph(date: Date().addingTimeInterval(7 * 86_400), tone: .dusk)
             .frame(width: 200, height: 200)
-        MoonGlyph(phase: 0.5, lightAngle: .degrees(180), skyTone: .day)
+        MoonGlyph(date: Date().addingTimeInterval(14 * 86_400), tone: .day)
             .frame(width: 200, height: 200)
-        MoonGlyph(phase: 0.75, lightAngle: .degrees(270), skyTone: .dawn)
+        MoonGlyph(date: Date().addingTimeInterval(21 * 86_400), tone: .dawn)
             .frame(width: 200, height: 200)
     }
     .padding()

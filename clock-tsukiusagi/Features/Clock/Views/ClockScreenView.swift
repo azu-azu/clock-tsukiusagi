@@ -41,11 +41,10 @@ struct ClockScreenView: View {
                 )
                 .ignoresSafeArea()
 
-                // 月
+                // 月（UTC位相は内部で計算）
                 MoonGlyph(
-                    phase: snapshot.phaseAngle / 360.0,
-                    lightAngle: .degrees(snapshot.phaseAngle),
-                    skyTone: snapshot.skyTone
+                    date: now,
+                    tone: snapshot.skyTone
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .accessibilityHidden(true)
@@ -87,7 +86,13 @@ struct ClockScreenView: View {
 
                     // キャプション（共通）
                     Text(snapshot.caption)
-                        .font(.system(size: DesignTokens.ClockTypography.captionFontSize, weight: .regular, design: .serif))
+                        .font(
+                            .system(
+                                size: DesignTokens.ClockTypography.captionFontSize,
+                                weight: .regular,
+                                design: .serif
+                            )
+                        )
                         .foregroundStyle(DesignTokens.ClockColors.textSecondary)
                         .accessibilityLabel("Caption")
                 }
@@ -122,18 +127,15 @@ struct ClockScreenView: View {
 final class ClockScreenVM: ObservableObject {
     struct Snapshot {
         let time: Date
-        let phaseAngle: Double
         let skyTone: SkyTone
         let caption: String
     }
 
     func snapshot(at date: Date) -> Snapshot {
         let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
-        let minutes = (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
-        let angle = Double(minutes) / 1440.0 * 360.0
         let tone = SkyTone.forHour(comps.hour ?? 0)
         let cap = tone.captionKey.localized // Localizable対応想定
-        return Snapshot(time: date, phaseAngle: angle, skyTone: tone, caption: cap)
+        return Snapshot(time: date, skyTone: tone, caption: cap)
     }
 }
 
@@ -162,5 +164,49 @@ final class ClockScreenVM: ObservableObject {
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
     return ClockScreenView(fixedDate: date)
+}
+
+#Preview("Full-moon-ish (+14d)") {
+    ClockScreenView(fixedDate: Date().addingTimeInterval(14 * 86_400))
+}
+
+#Preview("True Full Moon") {
+    // Calculate actual full moon date (phase ≈ 0.5)
+    let now = Date()
+    let mp = MoonPhaseCalculator.moonPhase(on: now)
+    let targetPhase = 0.5 // Full moon phase
+
+    // Calculate phase difference considering circular nature (0-1)
+    var phaseDifference = targetPhase - mp.phase
+    if phaseDifference < 0 {
+        phaseDifference += 1.0 // Next full moon
+    }
+
+    let synodicMonthDays: Double = 29.530588853
+    let daysToFullMoon = phaseDifference * synodicMonthDays
+    let fullMoonDate = now.addingTimeInterval(daysToFullMoon * 86_400)
+    return ClockScreenView(fixedDate: fullMoonDate)
+}
+
+#Preview("First Quarter (+7d)") {
+    ClockScreenView(fixedDate: Date().addingTimeInterval(7 * 86_400))
+}
+
+#Preview("True Third Quarter") {
+    // Calculate actual third quarter date (phase ≈ 0.75)
+    let now = Date()
+    let mp = MoonPhaseCalculator.moonPhase(on: now)
+    let targetPhase = 0.75 // Third quarter phase
+
+    // Calculate phase difference considering circular nature (0-1)
+    var phaseDifference = targetPhase - mp.phase
+    if phaseDifference < 0 {
+        phaseDifference += 1.0 // Next third quarter
+    }
+
+    let synodicMonthDays: Double = 29.530588853
+    let daysToThirdQuarter = phaseDifference * synodicMonthDays
+    let thirdQuarterDate = now.addingTimeInterval(daysToThirdQuarter * 86_400)
+    return ClockScreenView(fixedDate: thirdQuarterDate)
 }
 #endif

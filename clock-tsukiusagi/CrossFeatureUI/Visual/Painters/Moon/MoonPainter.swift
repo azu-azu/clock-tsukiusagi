@@ -7,18 +7,19 @@ enum MoonPainter {
     private static let moonEdgeColor   = DesignTokens.MoonColors.edgeColor
 
     // === GLOW: 外周アークだけ発光（ストローク→ブラー→内側を消す） ===
-    static func draw(in ctx: GraphicsContext, size: CGSize, angle: Double, tone: SkyTone) {
+    static func draw(in ctx: GraphicsContext, size: CGSize, phase: Double, tone: SkyTone) {
         let radius = min(size.width, size.height) * 0.18
         let center = CGPoint(
-            x: size.width * 0.5 + cos(angle.radian) * (size.width * 0.25),
-            y: size.height * 0.45 + sin(angle.radian) * (size.height * 0.18)
+            x: size.width * 0.5,
+            y: size.height * 0.45
         )
 
         // 位相とオフセット（実形生成と同一の定義に統一）
-        let phase = calculateMoonPhase(from: angle)
-        let s = (2 * phase - 1) * radius
-        // Illumination indicator (0=new/thin, 1=full)
-        let illum = max(0, min(1, 1 - abs(s) / radius))
+        // Two-circle offset (linear). Add scale to control thickness visually.
+        let shapeOffsetScale: CGFloat = 1.90
+        let s = CGFloat(2 * phase - 1) * radius * shapeOffsetScale
+        // Glow intensity strategy
+        let illum = glowIntensity(phase: phase, s: s, radius: radius)
         let glowSkipThreshold: CGFloat = 0.03
         // Helpers for interpolation
         func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat { a + (b - a) * t }
@@ -61,7 +62,7 @@ enum MoonPainter {
         ringClip.addEllipse(in: innerRect) // even-odd: Rect - (outer - inner) = 薄いリング
 
         // 点灯側の角度幅（位相に応じて補間）
-        let isRightLit = phase < 0.5
+        let isRightLit = s < 0
         let wedgeSweep: Double = Double(lerp(120, 150, t))
 
         ctx.drawLayer { glow in
@@ -86,8 +87,10 @@ enum MoonPainter {
                 guard illum > glowSkipThreshold else { return }
 
                 // 外周アークに沿ったストロークをぼかして重ねる（内側寄りに見えるよう控えめ）
-                let startDeg: Double = isRightLit ? (360 - wedgeSweep / 2) : (180 - wedgeSweep / 2)
-                let endDeg: Double   = isRightLit ? (wedgeSweep / 2)       : (180 + wedgeSweep / 2)
+                // Center on lit side: 0° (right-lit), 180° (left-lit)
+                let centerDeg: Double = isRightLit ? 0.0 : 180.0
+                let startDeg: Double = centerDeg - wedgeSweep / 2
+                let endDeg: Double   = centerDeg + wedgeSweep / 2
                 var outerArc = Path()
                 outerArc.addArc(center: center, radius: radius,
                                 startAngle: .degrees(startDeg), endAngle: .degrees(endDeg), clockwise: false)
@@ -147,7 +150,7 @@ enum MoonPainter {
     // MARK: - Moon Shape Generation
     private static func getActualMoonShape(center: CGPoint, radius: CGFloat, phase: Double) -> Path {
         var path = Path()
-        let s = (2 * phase - 1) * radius
+        let s = CGFloat(sin(2.0 * .pi * phase)) * radius
 
         if phase < 0.5 {
             // 右側が光る（外側は右半分）
@@ -168,15 +171,39 @@ enum MoonPainter {
         return path
     }
 
-    // MARK: - Moon Phase Calculation（簡易）
-    private static func calculateMoonPhase(from angle: Double) -> Double {
-        let hour = (angle / 360.0) * 24.0
-        switch hour {
-        case 0..<6:   return 0.5 + (hour / 6.0) * 0.1
-        case 6..<12:  return 0.1 - (hour - 6) / 6.0 * 0.1
-        case 12..<18: return 0.0 + (hour - 12) / 6.0 * 0.1
-        case 18..<24: return 0.1 + (hour - 18) / 6.0 * 0.4
-        default:      return 0.0
+    // MARK: - Glow Intensity Strategy
+    private enum GlowCurve {
+        case astronomical
+        case legacy
+        case blend(weight: Double) // 0.0=legacy, 1.0=astronomical
+    }
+
+    private static let glowCurveStrategy: GlowCurve = .blend(weight: 0.6)
+
+    @inline(__always)
+    private static func illumAstronomical(_ phase: Double) -> CGFloat {
+        let v = 0.5 * (1.0 - cos(2.0 * .pi * phase))
+        return CGFloat(max(0.0, min(1.0, v)))
+    }
+
+    @inline(__always)
+    private static func illumLegacy(from s: CGFloat, radius r: CGFloat) -> CGFloat {
+        let v = 1.0 - abs(s) / r
+        return max(0.0, min(1.0, v))
+    }
+
+    @inline(__always)
+    private static func glowIntensity(phase: Double, s: CGFloat, radius r: CGFloat) -> CGFloat {
+        switch glowCurveStrategy {
+        case .astronomical:
+            return illumAstronomical(phase)
+        case .legacy:
+            return illumLegacy(from: s, radius: r)
+        case .blend(let w):
+            let a = Double(illumAstronomical(phase))
+            let l = Double(illumLegacy(from: s, radius: r))
+            let v = (1.0 - w) * l + w * a
+            return CGFloat(max(0.0, min(1.0, v)))
         }
     }
 }
