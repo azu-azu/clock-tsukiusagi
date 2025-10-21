@@ -86,7 +86,7 @@ struct WavyBottomView: View {
                     .blur(radius: 0.5)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            .ignoresSafeArea(edges: .bottom)
+            .ignoresSafeArea()
         }
     }
 }

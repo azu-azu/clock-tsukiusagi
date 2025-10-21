@@ -95,6 +95,8 @@ struct ClockScreenView: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
             }
             .animation(.easeInOut(duration: 0.6), value: snapshot.skyTone) // 時間帯フェード
+
+            // タップすると表示モードが変わる
             .onTapGesture {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     switch displayMode {
