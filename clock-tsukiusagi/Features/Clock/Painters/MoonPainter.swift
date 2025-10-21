@@ -6,7 +6,6 @@ enum MoonPainter {
     private static let moonCenterColor = Color(hex: "#fff").opacity(0.95)
     private static let moonEdgeColor   = Color(hex: "#fff").opacity(0.6)
 
-
     // === GLOW: 外周アークだけ発光（ストローク→ブラー→内側を消す） ===
     static func draw(in ctx: GraphicsContext, size: CGSize, angle: Double, tone: SkyTone) {
         let radius = min(size.width, size.height) * 0.18
@@ -18,6 +17,7 @@ enum MoonPainter {
         // 位相とオフセット（実形生成と同一の定義に統一）
         let phase = calculateMoonPhase(from: angle)
         let s = (2 * phase - 1) * radius
+        let isFullish = abs(s) < radius * 0.015 // near-full: shadow overlaps moon
 
         // 満月円 / 影円
         let moonRect   = CGRect(x: center.x - radius,     y: center.y - radius, width: 2*radius, height: 2*radius)
@@ -36,8 +36,10 @@ enum MoonPainter {
                     endRadius: radius
                 )
             )
-            body.blendMode = .destinationOut
-            body.fill(shadowPath, with: .color(.black))
+            if !isFullish {
+                body.blendMode = .destinationOut
+                body.fill(shadowPath, with: .color(.black))
+            }
         }
 
         // --- OUTER GLOW：月の縁に沿った“薄いリング領域”に限定（外へ出さず、内側寄り） ---
@@ -56,58 +58,75 @@ enum MoonPainter {
         let wedgeSweep: Double = 150
 
         ctx.drawLayer { glow in
-            glow.clip(to: ringClip, style: FillStyle(eoFill: true))
+            if isFullish {
+                // Full moon: use a 360° inward-biased ring halo (no wedge cap)
+                let outer = moonRect.insetBy(dx: -radius * 0.02, dy: -radius * 0.02)
+                let inner = moonRect.insetBy(dx:  radius * 0.32, dy:  radius * 0.32)
+                var ring = Path()
+                ring.addEllipse(in: outer)
+                ring.addEllipse(in: inner)
+                glow.clip(to: ring, style: FillStyle(eoFill: true))
 
-            // 外周アークに沿ったストロークをぼかして重ねる（内側寄りに見えるよう控えめ）
-            let startDeg: Double = isRightLit ? (360 - wedgeSweep / 2) : (180 - wedgeSweep / 2)
-            let endDeg: Double   = isRightLit ? (wedgeSweep / 2)       : (180 + wedgeSweep / 2)
-            var outerArc = Path()
-            outerArc.addArc(center: center, radius: radius,
-                            startAngle: .degrees(startDeg), endAngle: .degrees(endDeg), clockwise: false)
+                glow.blendMode = .plusLighter
+                glow.addFilter(.blur(radius: radius * 0.35))
+                glow.fill(moonPath, with: .color(Color.cyan.opacity(0.18)))
 
-            // ベース青（端は丸キャップで自然にフェード）
-            glow.drawLayer { layer in
-                layer.addFilter(.blur(radius: radius * 0.28))
-                layer.blendMode = .normal
-                layer.stroke(
-                    outerArc,
-                    with: .color(Color.cyan.opacity(0.11)),
-                    style: StrokeStyle(
-                        lineWidth: radius * 0.28,
-                        lineCap: .round,
-                        lineJoin: .round
+                glow.addFilter(.blur(radius: radius * 0.18))
+                glow.fill(moonPath, with: .color(Color.white.opacity(0.05)))
+            } else {
+                glow.clip(to: ringClip, style: FillStyle(eoFill: true))
+
+                // 外周アークに沿ったストロークをぼかして重ねる（内側寄りに見えるよう控えめ）
+                let startDeg: Double = isRightLit ? (360 - wedgeSweep / 2) : (180 - wedgeSweep / 2)
+                let endDeg: Double   = isRightLit ? (wedgeSweep / 2)       : (180 + wedgeSweep / 2)
+                var outerArc = Path()
+                outerArc.addArc(center: center, radius: radius,
+                                startAngle: .degrees(startDeg), endAngle: .degrees(endDeg), clockwise: false)
+
+                // ベース青（端は丸キャップで自然にフェード）
+                glow.drawLayer { layer in
+                    layer.addFilter(.blur(radius: radius * 0.28))
+                    layer.blendMode = .normal
+                    layer.stroke(
+                        outerArc,
+                        with: .color(Color.cyan.opacity(0.11)),
+                        style: StrokeStyle(
+                            lineWidth: radius * 0.28,
+                            lineCap: .round,
+                            lineJoin: .round
+                        )
                     )
-                )
-            }
+                }
 
-            // 白加算（ごく薄く）
-            glow.drawLayer { layer in
-                layer.addFilter(.blur(radius: radius * 0.22))
-                layer.blendMode = .plusLighter
-                layer.stroke(
-                    outerArc,
-                    with: .color(Color.white.opacity(0.035)),
-                    style: StrokeStyle(
-                        lineWidth: radius * 0.18,
-                        lineCap: .round,
-                        lineJoin: .round
+                // 白加算（ごく薄く）
+                glow.drawLayer { layer in
+                    layer.addFilter(.blur(radius: radius * 0.22))
+                    layer.blendMode = .plusLighter
+                    layer.stroke(
+                        outerArc,
+                        with: .color(Color.white.opacity(0.035)),
+                        style: StrokeStyle(
+                            lineWidth: radius * 0.18,
+                            lineCap: .round,
+                            lineJoin: .round
+                        )
                     )
-                )
-            }
+                }
 
-            // 仕上げ青（極薄）
-            glow.drawLayer { layer in
-                layer.addFilter(.blur(radius: radius * 0.36))
-                layer.blendMode = .plusLighter
-                layer.stroke(
-                    outerArc,
-                    with: .color(Color.cyan.opacity(0.05)),
-                    style: StrokeStyle(
-                        lineWidth: radius * 0.18,
-                        lineCap: .round,
-                        lineJoin: .round
+                // 仕上げ青（極薄）
+                glow.drawLayer { layer in
+                    layer.addFilter(.blur(radius: radius * 0.36))
+                    layer.blendMode = .plusLighter
+                    layer.stroke(
+                        outerArc,
+                        with: .color(Color.cyan.opacity(0.05)),
+                        style: StrokeStyle(
+                            lineWidth: radius * 0.18,
+                            lineCap: .round,
+                            lineJoin: .round
+                        )
                     )
-                )
+                }
             }
         }
     }
