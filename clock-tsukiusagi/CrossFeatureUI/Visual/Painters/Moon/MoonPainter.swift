@@ -90,7 +90,7 @@ enum MoonPainter {
         let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
         var ctxMutable = ctx
         softenTerminator(&ctxMutable, center: center, radius: radius,
-                        phase: phase, tone: tone, curvature: k, feather: 2.5, jitter: 0.8)
+                        phase: phase, tone: tone, litPath: litPath, curvature: k, feather: 3, jitter: 0.8)
 
         // --- OUTER GLOW：月の縁に沿った"薄いリング領域"に限定（外へ出さず、内側寄り） ---
         // 外側は極小、内側へ広げる
@@ -328,7 +328,7 @@ enum MoonPainter {
         let nearQuarter = abs(phase - 0.25) < 0.1 || abs(phase - 0.75) < 0.1
         guard nearQuarter else { return (Path(), 0) }
 
-        let gradientWidth = radius * 0.2 // グラデーションの幅
+        let gradientWidth = radius * 0.3 // グラデーションの幅
         let gradientDepth = radius * 2  // 内側への深さ
 
         var path = Path()
@@ -363,6 +363,7 @@ enum MoonPainter {
         radius r: CGFloat,
         phase φ: Double,
         tone: SkyTone,
+        litPath: Path,
         curvature k: CGFloat,       // 0 = 直線, 0.1〜0.18 くらいが自然
         feather: CGFloat,           // 3〜10px くらい
         jitter: CGFloat = 0         // 0〜2px（テクスチャのザラつき）
@@ -388,8 +389,10 @@ enum MoonPainter {
                      : terminator.addLine(to: CGPoint(x: x, y: y))
         }
 
-        // ① ぼかしレイヤーを作成（デバッグ用：赤で可視化）
+        // ① ぼかしレイヤーを作成（月の明るい部分のみにクリップ）
         ctx.drawLayer { layer in
+            // 月の明るい部分のみにクリップ
+            layer.clip(to: litPath)
             // くり抜き用ブレンド：描いた部分のアルファを削る
             layer.blendMode = .normal
             // ブラーで"ふち"を柔らかく
