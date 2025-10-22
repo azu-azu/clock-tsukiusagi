@@ -44,6 +44,13 @@ enum MoonPainter {
             )
         }
 
+        // --- ターミネーターの柔らか化（四半期で強調） ---
+        let quarterEmphasis = abs(sin(.pi * 2 * phase))          // 上弦/下弦で最大
+        let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
+        var ctxMutable = ctx
+        softenTerminator(&ctxMutable, center: center, radius: radius,
+                        phase: phase, curvature: k, feather: 6, jitter: 0.8)
+
         // --- OUTER GLOW：月の縁に沿った"薄いリング領域"に限定（外へ出さず、内側寄り） ---
         // 外側は極小、内側へ広げる
         let moonRect = CGRect(x: center.x - radius, y: center.y - radius, width: 2*radius, height: 2*radius)
@@ -271,6 +278,56 @@ enum MoonPainter {
         }
 
         return path
+    }
+
+    // MARK: - Terminator Softening
+    private static func softenTerminator(
+        _ ctx: inout GraphicsContext,
+        center c: CGPoint,
+        radius r: CGFloat,
+        phase φ: Double,
+        curvature k: CGFloat,       // 0 = 直線, 0.1〜0.18 くらいが自然
+        feather: CGFloat,           // 3〜10px くらい
+        jitter: CGFloat = 0         // 0〜2px（テクスチャのザラつき）
+    ) {
+        // Waxing(右が明) / Waning(左が明)
+        let waxing = (φ > 0 && φ < 0.5)
+        let sign: CGFloat = waxing ? 1 : -1
+
+        // ターミネーター曲線 x(y) = sign * k * sqrt(r^2 - y^2)
+        // 境界に重なるよう、中心位置を調整
+        let steps = 96
+        var terminator = Path()
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps)          // 0→1
+            let yy = (t * 2 - 1) * r                     // -r→+r
+            let xr = k * sqrt(max(0, r*r - yy*yy))
+            // 境界に重なるよう、中心から少し外側にオフセット
+            let offset = r * 0.1  // 境界に重なるよう調整
+            let j = (jitter > 0) ? (CGFloat.random(in: -jitter...jitter)) : 0
+            let x = c.x + sign * (xr - offset) + j
+            let y = c.y + yy
+            (i == 0) ? terminator.move(to: CGPoint(x: x, y: y))
+                     : terminator.addLine(to: CGPoint(x: x, y: y))
+        }
+
+        // ① ぼかしレイヤーを作成（デバッグ用：赤で可視化）
+        ctx.drawLayer { layer in
+            // ブラーで"ふち"を柔らかく
+            layer.addFilter(.blur(radius: feather))
+
+            // ② フェザー帯を何回か重ね塗り（中心が濃く端が薄いイメージ）
+            let passes = 5
+            for p in 0..<passes {
+                let w = feather * (1.6 - 0.25 * CGFloat(p))   // 少しずつ細く
+                let a = 0.22 - 0.03 * Double(p)               // 少しずつ薄く
+                layer.stroke(
+                    terminator,
+                    with: .color(.black.opacity(a)),             // デバッグ用：赤で可視化
+                    lineWidth: max(1, w)
+                )
+            }
+        }
     }
 
     // MARK: - Glow Intensity Strategy
