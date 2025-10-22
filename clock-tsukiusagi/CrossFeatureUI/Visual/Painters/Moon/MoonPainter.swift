@@ -190,29 +190,6 @@ enum MoonPainter {
         }
     }
 
-    // MARK: - Moon Shape Generation
-    private static func getActualMoonShape(center: CGPoint, radius: CGFloat, phase: Double) -> Path {
-        var path = Path()
-        let s = CGFloat(sin(2.0 * .pi * phase)) * radius
-
-        if phase < 0.5 {
-            // 右側が光る（外側は右半分）
-            path.addArc(center: center, radius: radius,
-                        startAngle: .degrees(270), endAngle: .degrees(90), clockwise: false)
-            let innerCenter = CGPoint(x: center.x + s, y: center.y)
-            path.addArc(center: innerCenter, radius: radius,
-                        startAngle: .degrees(90), endAngle: .degrees(270), clockwise: true)
-        } else {
-            // 左側が光る（外側は左半分）
-            path.addArc(center: center, radius: radius,
-                        startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
-            let innerCenter = CGPoint(x: center.x - s, y: center.y)
-            path.addArc(center: innerCenter, radius: radius,
-                        startAngle: .degrees(270), endAngle: .degrees(90), clockwise: true)
-        }
-        path.closeSubpath()
-        return path
-    }
 
     // MARK: - Two-Circle Lit Path Generation
     private static func makeLitPath(c0: CGPoint, c1: CGPoint, r: CGFloat, phase: Double, s: CGFloat) -> Path {
@@ -231,10 +208,11 @@ enum MoonPainter {
             return Path(ellipseIn: CGRect(x: c0.x - r, y: c0.y - r, width: 2*r, height: 2*r)) // Full moon
         }
 
-        // Half-moon case (circles nearly coincident)
-        if d < 1e-4 {
-            let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
+        // Determine lighting direction once
+        let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
 
+        // Half-moon case (circles nearly coincident) or circles don't intersect
+        if d < 1e-4 || (d * 0.5) * (d * 0.5) >= r * r {
             var path = Path()
             if isRightLit {
                 // Right-lit: draw right semicircle (-90° to +90°)
@@ -251,23 +229,6 @@ enum MoonPainter {
         // General case: calculate intersection points
         let a = d * 0.5
         let h2 = r * r - a * a
-
-        if h2 <= 0 {
-            // Circles don't intersect - fallback to half-moon
-            let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
-
-            var path = Path()
-            if isRightLit {
-                // Right-lit: draw right semicircle (-90° to +90°)
-                path.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
-            } else {
-                // Left-lit: draw left semicircle (+90° to +270°)
-                path.addArc(center: c0, radius: r, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
-            }
-            path.addLine(to: c0)
-            path.closeSubpath()
-            return path
-        }
 
         let h = sqrt(h2)
 
@@ -299,7 +260,6 @@ enum MoonPainter {
 
         // Determine crescent vs gibbous and waxing vs waning
         let crescent = illum < 0.5
-        let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
 
         var path = Path()
 
@@ -389,22 +349,19 @@ enum MoonPainter {
                      : terminator.addLine(to: CGPoint(x: x, y: y))
         }
 
-        // ① ぼかしレイヤーを作成（月の明るい部分のみにクリップ）
+        // Apply terminator softening with clipping to lit portion
         ctx.drawLayer { layer in
-            // 月の明るい部分のみにクリップ
             layer.clip(to: litPath)
-            // くり抜き用ブレンド：描いた部分のアルファを削る
             layer.blendMode = .normal
-            // ブラーで"ふち"を柔らかく
             layer.addFilter(.blur(radius: feather))
 
-            // ② フェザー帯を何回か重ね塗り（中心が濃く端が薄いイメージ）
+            // Apply multiple stroke passes for feathering effect
             let passes = 5
             for p in 0..<passes {
-                let w = feather * (1.6 - 0.25 * CGFloat(p))   // 少しずつ細く
+                let w = feather * (1.6 - 0.25 * CGFloat(p))
                 layer.stroke(
                     terminator,
-                    with: .color(tone.gradEnd),             // 背景色と同じで境界を「消す」
+                    with: .color(tone.gradEnd),
                     lineWidth: max(1, w)
                 )
             }
