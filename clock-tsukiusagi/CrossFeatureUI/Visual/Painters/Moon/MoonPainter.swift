@@ -14,10 +14,9 @@ enum MoonPainter {
             y: size.height * 0.45
         )
 
-        // 位相とオフセット（実形生成と同一の定義に統一）
-        // Two-circle offset (linear). Add scale to control thickness visually.
-        let shapeOffsetScale: CGFloat = 1.90
-        let s = CGFloat(2 * phase - 1) * radius * shapeOffsetScale
+        // 位相とオフセット（二円法の余弦マッピング）
+        // φ=0.25/0.75 → s=0 (perfect half-moon), φ=0.5 → s=-r (full), φ=0 → s=+r (new)
+        let s = CGFloat(cos(2.0 * .pi * phase)) * radius
         // Glow intensity strategy
         let illum = glowIntensity(phase: phase, s: s, radius: radius)
         let glowSkipThreshold: CGFloat = 0.03
@@ -25,18 +24,17 @@ enum MoonPainter {
         func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat { a + (b - a) * t }
         func smooth(_ x: CGFloat) -> CGFloat { let t = max(0, min(1, x)); return t * t * (3 - 2 * t) }
         let t = smooth(illum)
-        let isFullish = abs(s) < radius * 0.015 // near-full: shadow overlaps moon
+        // Near-full detection: phase-based threshold (near φ=0.5)
+        let isFullish = abs(phase - 0.5) < 0.02
 
-        // 満月円 / 影円
-        let moonRect   = CGRect(x: center.x - radius,     y: center.y - radius, width: 2*radius, height: 2*radius)
-        let shadowRect = CGRect(x: center.x + s - radius, y: center.y - radius, width: 2*radius, height: 2*radius)
-        let moonPath   = Path(ellipseIn: moonRect)
-        let shadowPath = Path(ellipseIn: shadowRect)
+        // 二円法による litPath 生成
+        let shadowCenter = CGPoint(x: center.x + s, y: center.y)
+        let litPath = makeLitPath(c0: center, c1: shadowCenter, r: radius, phase: phase, s: s)
 
-        // --- 月本体（満月→影でくり抜き） ---
+        // --- 月本体（litPath を直接塗る） ---
         ctx.drawLayer { body in
             body.fill(
-                moonPath,
+                litPath,
                 with: .radialGradient(
                     Gradient(colors: [moonCenterColor, moonEdgeColor]),
                     center: .init(x: center.x, y: center.y),
@@ -44,14 +42,11 @@ enum MoonPainter {
                     endRadius: radius
                 )
             )
-            if !isFullish {
-                body.blendMode = .destinationOut
-                body.fill(shadowPath, with: .color(.black))
-            }
         }
 
-        // --- OUTER GLOW：月の縁に沿った“薄いリング領域”に限定（外へ出さず、内側寄り） ---
+        // --- OUTER GLOW：月の縁に沿った"薄いリング領域"に限定（外へ出さず、内側寄り） ---
         // 外側は極小、内側へ広げる
+        let moonRect = CGRect(x: center.x - radius, y: center.y - radius, width: 2*radius, height: 2*radius)
         let outwardMax = radius * 0.01
         let inwardMax  = radius * 0.36
         let outerRect  = moonRect.insetBy(dx: -outwardMax, dy: -outwardMax) // わずかに拡大
@@ -62,12 +57,13 @@ enum MoonPainter {
         ringClip.addEllipse(in: innerRect) // even-odd: Rect - (outer - inner) = 薄いリング
 
         // 点灯側の角度幅（位相に応じて補間）
-        let isRightLit = s < 0
+        let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
         let wedgeSweep: Double = Double(lerp(120, 150, t))
 
         ctx.drawLayer { glow in
             if isFullish {
                 // Full moon: use a 360° inward-biased ring halo (no wedge cap)
+                let moonPath = Path(ellipseIn: moonRect)
                 let outer = moonRect.insetBy(dx: -radius * 0.02, dy: -radius * 0.02)
                 let inner = moonRect.insetBy(dx:  radius * 0.32, dy:  radius * 0.32)
                 var ring = Path()
@@ -168,6 +164,112 @@ enum MoonPainter {
                         startAngle: .degrees(270), endAngle: .degrees(90), clockwise: true)
         }
         path.closeSubpath()
+        return path
+    }
+
+    // MARK: - Two-Circle Lit Path Generation
+    private static func makeLitPath(c0: CGPoint, c1: CGPoint, r: CGFloat, phase: Double, s: CGFloat) -> Path {
+        let dx = c1.x - c0.x
+        let dy = c1.y - c0.y
+        let d = max(0.0, hypot(dx, dy))
+
+        // Calculate illumination
+        let illum = 0.5 * (1.0 - cos(2.0 * .pi * phase))
+
+        // Edge cases
+        if illum < 0.001 {
+            return Path() // New moon - empty
+        }
+        if illum > 0.999 {
+            return Path(ellipseIn: CGRect(x: c0.x - r, y: c0.y - r, width: 2*r, height: 2*r)) // Full moon
+        }
+
+        // Half-moon case (circles nearly coincident)
+        if d < 1e-4 {
+            let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
+
+            var path = Path()
+            if isRightLit {
+                // Right-lit: draw right semicircle (-90° to +90°)
+                path.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
+            } else {
+                // Left-lit: draw left semicircle (+90° to +270°)
+                path.addArc(center: c0, radius: r, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
+            }
+            path.addLine(to: c0)
+            path.closeSubpath()
+            return path
+        }
+
+        // General case: calculate intersection points
+        let a = d * 0.5
+        let h2 = r * r - a * a
+
+        if h2 <= 0 {
+            // Circles don't intersect - fallback to half-moon
+            let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
+
+            var path = Path()
+            if isRightLit {
+                // Right-lit: draw right semicircle (-90° to +90°)
+                path.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
+            } else {
+                // Left-lit: draw left semicircle (+90° to +270°)
+                path.addArc(center: c0, radius: r, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
+            }
+            path.addLine(to: c0)
+            path.closeSubpath()
+            return path
+        }
+
+        let h = sqrt(h2)
+
+        // Unit vector along line connecting centers
+        let ux = dx / d
+        let uy = dy / d
+
+        // Midpoint between centers
+        let mx = c0.x + a * ux
+        let my = c0.y + a * uy
+
+        // Intersection points (perpendicular to line connecting centers)
+        let nx = -uy
+        let ny = ux
+        let px = mx + h * nx
+        let py = my + h * ny
+        let qx = mx - h * nx
+        let qy = my - h * ny
+
+        // Calculate angles for arc generation
+        let angleFromCenter = { (cx: CGFloat, cy: CGFloat, x: CGFloat, y: CGFloat) -> Angle in
+            Angle(radians: atan2(Double(y - cy), Double(x - cx)))
+        }
+
+        let th0P = angleFromCenter(c0.x, c0.y, px, py)
+        let th0Q = angleFromCenter(c0.x, c0.y, qx, qy)
+        let th1P = angleFromCenter(c1.x, c1.y, px, py)
+        let th1Q = angleFromCenter(c1.x, c1.y, qx, qy)
+
+        // Determine crescent vs gibbous and waxing vs waning
+        let crescent = illum < 0.5
+        let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
+
+        var path = Path()
+
+        if crescent {
+            // Crescent: narrow arcs
+            path.move(to: CGPoint(x: px, y: py))
+            path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: isRightLit ? false : true)
+            path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: isRightLit ? false : true)
+            path.closeSubpath()
+        } else {
+            // Gibbous: wide arcs (complement)
+            path.move(to: CGPoint(x: px, y: py))
+            path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: isRightLit ? true : false)
+            path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: isRightLit ? true : false)
+            path.closeSubpath()
+        }
+
         return path
     }
 

@@ -188,8 +188,22 @@ final class ClockScreenVM: ObservableObject {
     return ClockScreenView(fixedDate: fullMoonDate)
 }
 
-#Preview("First Quarter (+7d)") {
-    ClockScreenView(fixedDate: Date().addingTimeInterval(7 * 86_400))
+#Preview("True First Quarter") {
+    // Calculate actual first quarter date (phase ≈ 0.25)
+    let now = Date()
+    let mp = MoonPhaseCalculator.moonPhase(on: now)
+    let targetPhase = 0.25 // First quarter phase
+
+    // Calculate phase difference considering circular nature (0-1)
+    var phaseDifference = targetPhase - mp.phase
+    if phaseDifference < 0 {
+        phaseDifference += 1.0 // Next first quarter
+    }
+
+    let synodicMonthDays: Double = 29.530588853
+    let daysToFirstQuarter = phaseDifference * synodicMonthDays
+    let firstQuarterDate = now.addingTimeInterval(daysToFirstQuarter * 86_400)
+    return ClockScreenView(fixedDate: firstQuarterDate)
 }
 
 #Preview("True Third Quarter") {
