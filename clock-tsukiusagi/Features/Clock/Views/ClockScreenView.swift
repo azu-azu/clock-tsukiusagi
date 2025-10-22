@@ -51,7 +51,7 @@ struct ClockScreenView: View {
 
                 // 時刻 + 一言
                 VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
-                    // 時刻表示（表示モードに応じて切り替え）
+                    //	 時刻表示（表示モードに応じて切り替え）
                     Group {
                         switch displayMode {
                         case .normal:

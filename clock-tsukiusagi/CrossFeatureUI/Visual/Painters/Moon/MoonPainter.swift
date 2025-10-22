@@ -44,12 +44,53 @@ enum MoonPainter {
             )
         }
 
+        // --- 境界グラデーション（直線部分を薄く） ---
+        let isRightLit = phase < 0.5
+        let (boundaryGradient, gradientWidth) = createBoundaryGradient(
+            center: center, radius: radius, phase: phase, isRightLit: isRightLit
+        )
+        ctx.drawLayer { gradient in
+            // 月の明るい部分（litPath）との交差部分のみにグラデーションを適用
+            gradient.clip(to: litPath)
+
+            // 境界で濃く、弧の方に向かって薄くなるグラデーション（段階的フェード）
+            let gradientColors = [
+                tone.gradEnd.opacity(1.0),    // 境界側：濃い背景色
+                tone.gradEnd.opacity(0.8),    // 少し薄く
+                tone.gradEnd.opacity(0.4),    // さらに薄く
+                tone.gradEnd.opacity(0.1),    // ほぼ透明
+                Color.clear                    // 完全に透明
+            ]
+
+            if isRightLit {
+                // 右側が明るい場合：中央（直線境界）から右（弧）へ
+                gradient.fill(
+                    boundaryGradient,
+                    with: .linearGradient(
+                        Gradient(colors: gradientColors),
+                        startPoint: CGPoint(x: center.x, y: center.y),
+                        endPoint: CGPoint(x: center.x + gradientWidth, y: center.y)
+                    )
+                )
+            } else {
+                // 左側が明るい場合：中央（直線境界）から左（弧）へ
+                gradient.fill(
+                    boundaryGradient,
+                    with: .linearGradient(
+                        Gradient(colors: gradientColors),
+                        startPoint: CGPoint(x: center.x, y: center.y),
+                        endPoint: CGPoint(x: center.x - gradientWidth, y: center.y)
+                    )
+                )
+            }
+        }
+
         // --- ターミネーターの柔らか化（四半期で強調） ---
         let quarterEmphasis = abs(sin(.pi * 2 * phase))          // 上弦/下弦で最大
         let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
         var ctxMutable = ctx
         softenTerminator(&ctxMutable, center: center, radius: radius,
-                        phase: phase, curvature: k, feather: 6, jitter: 0.8)
+                        phase: phase, tone: tone, curvature: k, feather: 2.5, jitter: 0.8)
 
         // --- OUTER GLOW：月の縁に沿った"薄いリング領域"に限定（外へ出さず、内側寄り） ---
         // 外側は極小、内側へ広げる
@@ -64,7 +105,6 @@ enum MoonPainter {
         ringClip.addEllipse(in: innerRect) // even-odd: Rect - (outer - inner) = 薄いリング
 
         // 点灯側の角度幅（位相に応じて補間）
-        let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
         let wedgeSweep: Double = Double(lerp(120, 150, t))
 
         ctx.drawLayer { glow in
@@ -280,12 +320,49 @@ enum MoonPainter {
         return path
     }
 
+    // MARK: - Boundary Gradient
+    private static func createBoundaryGradient(
+        center: CGPoint, radius: CGFloat, phase: Double, isRightLit: Bool
+    ) -> (path: Path, width: CGFloat) {
+        // 四半期（φ≈0.25/0.75）でのみ境界グラデーションを適用
+        let nearQuarter = abs(phase - 0.25) < 0.1 || abs(phase - 0.75) < 0.1
+        guard nearQuarter else { return (Path(), 0) }
+
+        let gradientWidth = radius * 0.2 // グラデーションの幅
+        let gradientDepth = radius * 2  // 内側への深さ
+
+        var path = Path()
+
+        if isRightLit {
+            // 右側が明るい場合（First Quarter）：中央（直線境界）から右にグラデーション
+            let gradientRect = CGRect(
+                x: center.x,  // 月の中央（直線境界）から開始
+                y: center.y - radius, // 円の上端から開始
+                width: gradientWidth,
+                height: gradientDepth
+            )
+            path.addRect(gradientRect)
+        } else {
+            // 左側が明るい場合（Third Quarter）：中央（直線境界）から左にグラデーション
+            let gradientRect = CGRect(
+                x: center.x - gradientWidth,  // 月の中央（直線境界）から左にgradientWidth分
+                y: center.y - radius, // 円の上端から開始
+                width: gradientWidth,
+                height: gradientDepth
+            )
+            path.addRect(gradientRect)
+        }
+
+        return (path, gradientWidth)
+    }
+
     // MARK: - Terminator Softening
     private static func softenTerminator(
         _ ctx: inout GraphicsContext,
         center c: CGPoint,
         radius r: CGFloat,
         phase φ: Double,
+        tone: SkyTone,
         curvature k: CGFloat,       // 0 = 直線, 0.1〜0.18 くらいが自然
         feather: CGFloat,           // 3〜10px くらい
         jitter: CGFloat = 0         // 0〜2px（テクスチャのザラつき）
@@ -313,6 +390,8 @@ enum MoonPainter {
 
         // ① ぼかしレイヤーを作成（デバッグ用：赤で可視化）
         ctx.drawLayer { layer in
+            // くり抜き用ブレンド：描いた部分のアルファを削る
+            layer.blendMode = .normal
             // ブラーで"ふち"を柔らかく
             layer.addFilter(.blur(radius: feather))
 
@@ -320,10 +399,9 @@ enum MoonPainter {
             let passes = 5
             for p in 0..<passes {
                 let w = feather * (1.6 - 0.25 * CGFloat(p))   // 少しずつ細く
-                let a = 0.22 - 0.03 * Double(p)               // 少しずつ薄く
                 layer.stroke(
                     terminator,
-                    with: .color(.black.opacity(a)),             // デバッグ用：赤で可視化
+                    with: .color(tone.gradEnd),             // 背景色と同じで境界を「消す」
                     lineWidth: max(1, w)
                 )
             }
