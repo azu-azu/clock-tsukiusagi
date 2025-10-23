@@ -85,12 +85,14 @@ enum MoonPainter {
             }
         }
 
-        // --- ターミネーターの柔らか化（四半期で強調） ---
-        let quarterEmphasis = abs(sin(.pi * 2 * phase))          // 上弦/下弦で最大
-        let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
-        var ctxMutable = ctx
-        softenTerminator(&ctxMutable, center: center, radius: radius,
-                        phase: phase, tone: tone, litPath: litPath, curvature: k, feather: 3, jitter: 0.8)
+        // --- ターミネーターの柔らか化（四半期で強調、満月では無効） ---
+        if !isFullish {
+            let quarterEmphasis = abs(sin(.pi * 2 * phase))          // 上弦/下弦で最大
+            let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
+            var ctxMutable = ctx
+            softenTerminator(&ctxMutable, center: center, radius: radius,
+                            phase: phase, tone: tone, litPath: litPath, curvature: k, feather: 3, jitter: 0.8)
+        }
 
         // --- OUTER GLOW：月の縁に沿った"薄いリング領域"に限定（外へ出さず、内側寄り） ---
         // 外側は極小、内側へ広げる
@@ -109,21 +111,29 @@ enum MoonPainter {
 
         ctx.drawLayer { glow in
             if isFullish {
-                // Full moon: use a 360° inward-biased ring halo (no wedge cap)
+                // Full moon: クリップなしで直接ぼかし効果を適用
                 let moonPath = Path(ellipseIn: moonRect)
-                let outer = moonRect.insetBy(dx: -radius * 0.02, dy: -radius * 0.02)
-                let inner = moonRect.insetBy(dx:  radius * 0.32, dy:  radius * 0.32)
-                var ring = Path()
-                ring.addEllipse(in: outer)
-                ring.addEllipse(in: inner)
-                glow.clip(to: ring, style: FillStyle(eoFill: true))
 
-                glow.blendMode = .plusLighter
-                glow.addFilter(.blur(radius: radius * 0.35))
-                glow.fill(moonPath, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.18)))
+                // 内側のブルーグロー（ぼかし効果付き）
+                glow.drawLayer { layer in
+                    layer.blendMode = .normal
+                    layer.addFilter(.blur(radius: radius * 0.25))
+                    layer.fill(moonPath, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.15)))
+                }
 
-                glow.addFilter(.blur(radius: radius * 0.18))
-                glow.fill(moonPath, with: .color(DesignTokens.MoonColors.glowWhite.opacity(0.05)))
+                // 外側の白いグロー（ぼかし効果付き）
+                glow.drawLayer { layer in
+                    layer.blendMode = .plusLighter
+                    layer.addFilter(.blur(radius: radius * 0.18))
+                    layer.fill(moonPath, with: .color(DesignTokens.MoonColors.glowWhite.opacity(0.05)))
+                }
+
+                // 外側への拡散グロー
+                glow.drawLayer { layer in
+                    layer.blendMode = .plusLighter
+                    layer.addFilter(.blur(radius: radius * 0.45))
+                    layer.fill(moonPath, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.08)))
+                }
             } else {
                 glow.clip(to: ringClip, style: FillStyle(eoFill: true))
                 // Skip glow entirely when extremely thin
