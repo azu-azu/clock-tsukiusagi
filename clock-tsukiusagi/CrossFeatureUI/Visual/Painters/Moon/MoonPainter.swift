@@ -25,7 +25,7 @@ enum MoonPainter {
         func smooth(_ x: CGFloat) -> CGFloat { let t = max(0, min(1, x)); return t * t * (3 - 2 * t) }
         let t = smooth(illum)
         // Near-full detection: phase-based threshold (near φ=0.5)
-        let isFullish = abs(phase - 0.5) < 0.02
+        let isFullish = abs(phase - 0.5) < 0.03
 
         // 二円法による litPath 生成
         let shadowCenter = CGPoint(x: center.x + s, y: center.y)
@@ -214,7 +214,7 @@ enum MoonPainter {
         if illum < 0.001 {
             return Path() // New moon - empty
         }
-        if illum > 0.999 {
+        if illum > 0.95 {
             return Path(ellipseIn: CGRect(x: c0.x - r, y: c0.y - r, width: 2*r, height: 2*r)) // Full moon
         }
 
