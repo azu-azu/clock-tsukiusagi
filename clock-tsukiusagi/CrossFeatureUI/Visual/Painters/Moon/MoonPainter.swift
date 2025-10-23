@@ -17,19 +17,20 @@ enum MoonPainter {
         // 位相とオフセット（二円法の余弦マッピング）
         // φ=0.25/0.75 → s=0 (perfect half-moon), φ=0.5 → s=-r (full), φ=0 → s=+r (new)
         let s = CGFloat(cos(2.0 * .pi * phase)) * radius
-        // Glow intensity strategy
+        // Glow intensity for halo strength (visual only) and astronomical illumination for geometry
         let illum = glowIntensity(phase: phase, s: s, radius: radius)
+        let astroIllum = illumAstronomical(phase)
         let glowSkipThreshold: CGFloat = 0.03
         // Helpers for interpolation
         func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat { a + (b - a) * t }
         func smooth(_ x: CGFloat) -> CGFloat { let t = max(0, min(1, x)); return t * t * (3 - 2 * t) }
         let t = smooth(illum)
-        // Near-full detection: phase-based threshold (near φ=0.5)
-        let isFullish = abs(phase - 0.5) < 0.03
+        // Near-full detection: combine phase proximity and astronomical illumination
+        let isFullish = (abs(phase - 0.5) < 0.03) || (astroIllum > 0.95)
 
-        // 二円法による litPath 生成
+        // 二円法による litPath 生成（幾何は天文的イルミネーション基準）
         let shadowCenter = CGPoint(x: center.x + s, y: center.y)
-        let litPath = makeLitPath(c0: center, c1: shadowCenter, r: radius, phase: phase, s: s)
+        let litPath = makeLitPath(c0: center, c1: shadowCenter, r: radius, phase: phase, s: s, illumination: astroIllum)
 
         // --- 月本体（litPath を直接塗る） ---
         ctx.drawLayer { body in
@@ -85,9 +86,13 @@ enum MoonPainter {
             }
         }
 
-        // --- ターミネーターの柔らか化（四半期で強調、満月では無効） ---
-        if !isFullish {
-            let quarterEmphasis = abs(sin(.pi * 2 * phase))          // 上弦/下弦で最大
+        // --- ターミネーターの柔らか化（半月近辺のみ適用） ---
+        // φ が 0.25±δ または 0.75±δ の範囲のみ許可し、それ以外は適用しない
+        let delta: Double = 0.035
+        let nearFirstQuarter  = abs(phase - 0.25) < delta
+        let nearThirdQuarter  = abs(phase - 0.75) < delta
+        if nearFirstQuarter || nearThirdQuarter {
+            let quarterEmphasis = CGFloat(1.0) // 四半期のみなので常に最大で良い
             let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
             var ctxMutable = ctx
             softenTerminator(&ctxMutable, center: center, radius: radius,
@@ -202,24 +207,26 @@ enum MoonPainter {
 
 
     // MARK: - Two-Circle Lit Path Generation
-    private static func makeLitPath(c0: CGPoint, c1: CGPoint, r: CGFloat, phase: Double, s: CGFloat) -> Path {
+    private static func makeLitPath(c0: CGPoint, c1: CGPoint, r: CGFloat, phase: Double, s: CGFloat, illumination: CGFloat) -> Path {
         let dx = c1.x - c0.x
         let dy = c1.y - c0.y
         let d = max(0.0, hypot(dx, dy))
 
-        // Calculate illumination
-        let illum = 0.5 * (1.0 - cos(2.0 * .pi * phase))
+        // Use the illumination value passed from caller
+        let illum = illumination
 
         // Edge cases
         if illum < 0.001 {
             return Path() // New moon - empty
         }
+        // Near full: when astronomical illumination is very high, render a single disc
         if illum > 0.95 {
             return Path(ellipseIn: CGRect(x: c0.x - r, y: c0.y - r, width: 2*r, height: 2*r)) // Full moon
         }
 
-        // Determine lighting direction once
-        let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
+        // Determine lighting direction once (consistent across file)
+        // First Half (φ < 0.5) = waxing = right lit, Second Half = left lit
+        let isRightLit = phase < 0.5
 
         // Half-moon case (circles nearly coincident) or circles don't intersect
         if d < 1e-4 || (d * 0.5) * (d * 0.5) >= r * r {
