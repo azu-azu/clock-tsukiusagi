@@ -27,6 +27,9 @@ enum MoonPainter {
         func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat { a + (b - a) * t }
         func smooth(_ x: CGFloat) -> CGFloat { let t = max(0, min(1, x)); return t * t * (3 - 2 * t) }
         let t = smooth(illum)
+        // Half-moon proximity by geometry (robust): |s| small when nearly half
+        let halfEpsRatio: CGFloat = 0.05 // 5% of radius
+        let isNearHalf = abs(s) / radius < halfEpsRatio
         // Near-full detection: より滑らかな遷移
         let fullMoonThreshold: Double = 0.95
         let fullMoonTransition: Double = 0.08  // より広い遷移範囲
@@ -39,14 +42,17 @@ enum MoonPainter {
         // ※ 幾何も左右も s に従わせて"同じソース"にする
         let shadowCenter = CGPoint(x: center.x + s, y: center.y)
         let isRightLit = s < 0   // 影円を +s に置くなら、明部は s<0 が右、s>0 は左
-        let litPath = isThinCrescent ?
-            makeSmoothThinCrescentPath(center: center, radius: radius, isRightLit: isRightLit, illumination: astroIllum) :
-            makeLitPath(c0: center, c1: shadowCenter, r: radius, phase: phase, s: s, illumination: astroIllum, isRightLit: isRightLit)
+        // 極細でも二円法の単一輪郭（P/Q）で生成して尖りを自然に保つ
+        let litPath = makeLitPath(
+            c0: center, c1: shadowCenter, r: radius,
+            phase: phase, s: s, illumination: astroIllum,
+            isRightLit: isRightLit
+        )
 
         // --- 月本体（litPath を直接塗る） ---
         ctx.drawLayer { body in
             if isThinCrescent {
-                // 極細三日月: 明るい部分だけを描画、ストロークは一切描画しない
+                // 極細三日月: 先端を尖らせたテーパー形状を塗りで描画
                 body.fill(
                     litPath,
                     with: .radialGradient(
@@ -56,7 +62,6 @@ enum MoonPainter {
                         endRadius: radius
                     )
                 )
-                // ストロークを完全に無効化（境界線を一切描画しない）
             } else {
                 // 通常の月: 従来通りの描画
                 body.fill(
@@ -72,8 +77,8 @@ enum MoonPainter {
         }
 
         // --- 境界グラデーション（直線部分を薄く） ---
-        // 極細三日月では境界グラデーションを無効化（ターミネーターを目立たせない）
-        if !isThinCrescent {
+        // 極細三日月や半月以外では無効化（ターミネーターを目立たせない）
+        if isNearHalf && !isThinCrescent {
             let (boundaryGradient, gradientWidth) = createBoundaryGradient(
                 center: center, radius: radius, phase: phase, isRightLit: isRightLit
             )
@@ -115,12 +120,7 @@ enum MoonPainter {
         }
 
         // --- ターミネーターの柔らか化（半月近辺のみ適用、極細三日月では無効化） ---
-        // φ が 0.25±δ または 0.75±δ の範囲のみ許可し、極細三日月では適用しない
-        let delta: Double = 0.035
-        let nearFirstQuarter  = abs(phase - 0.25) < delta
-        let nearThirdQuarter  = abs(phase - 0.75) < delta
-
-        if (nearFirstQuarter || nearThirdQuarter) && !isThinCrescent {
+        if isNearHalf && !isThinCrescent {
             let quarterEmphasis = CGFloat(1.0) // 四半期のみなので常に最大で良い
             let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
             var ctxMutable = ctx
@@ -234,44 +234,6 @@ enum MoonPainter {
             }
             // 極細三日月ではグロー効果を完全に無効化（境界線を目立たせない）
         }
-    }
-
-
-    // MARK: - Smooth Thin Crescent Path Generation
-    private static func makeSmoothThinCrescentPath(
-        center: CGPoint, radius: CGFloat, isRightLit: Bool, illumination: CGFloat
-    ) -> Path {
-        // 極細三日月: 単純な弧を使用して鋭い境界線を避ける
-        let crescentWidth = radius * CGFloat(illumination) * 2.0  // 照明度に応じた幅
-
-        var path = Path()
-
-        if isRightLit {
-            // 右側が明るい: 右側の弧を描画
-            let startAngle: Angle = .degrees(-90)
-            let endAngle: Angle = .degrees(90)
-            path.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: false)
-
-            // 内側の弧で三日月の形を作る
-            let innerRadius = radius - crescentWidth
-            if innerRadius > 0 {
-                path.addArc(center: center, radius: innerRadius, startAngle: endAngle, endAngle: startAngle, clockwise: true)
-            }
-        } else {
-            // 左側が明るい: 左側の弧を描画
-            let startAngle: Angle = .degrees(90)
-            let endAngle: Angle = .degrees(270)
-            path.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: false)
-
-            // 内側の弧で三日月の形を作る
-            let innerRadius = radius - crescentWidth
-            if innerRadius > 0 {
-                path.addArc(center: center, radius: innerRadius, startAngle: endAngle, endAngle: startAngle, clockwise: true)
-            }
-        }
-
-        path.closeSubpath()
-        return path
     }
 
     // MARK: - Two-Circle Lit Path Generation (final & robust)
