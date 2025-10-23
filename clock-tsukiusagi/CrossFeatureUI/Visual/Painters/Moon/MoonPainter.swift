@@ -20,82 +20,107 @@ enum MoonPainter {
         // Glow intensity for halo strength (visual only) and astronomical illumination for geometry
         let illum = glowIntensity(phase: phase, s: s, radius: radius)
         let astroIllum = illumAstronomical(phase)
-        let glowSkipThreshold: CGFloat = 0.03
+        // 動的な閾値調整: 極細の時はより厳しく、通常時は緩く
+        let baseGlowThreshold: CGFloat = 0.03
+        let dynamicGlowThreshold = astroIllum < 0.1 ? baseGlowThreshold * 2.0 : baseGlowThreshold
         // Helpers for interpolation
         func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat { a + (b - a) * t }
         func smooth(_ x: CGFloat) -> CGFloat { let t = max(0, min(1, x)); return t * t * (3 - 2 * t) }
         let t = smooth(illum)
-        // Near-full detection: combine phase proximity and astronomical illumination
-        let isFullish = (abs(phase - 0.5) < 0.03) || (astroIllum > 0.95)
+        // Near-full detection: より滑らかな遷移
+        let fullMoonThreshold: Double = 0.95
+        let fullMoonTransition: Double = 0.08  // より広い遷移範囲
+        let isFullish = (abs(phase - 0.5) < fullMoonTransition) || (astroIllum > fullMoonThreshold)
+
+        // 極細三日月の判定（早期定義）
+        let thinCrescentThreshold: Double = 0.15  // 15%以下は極細とみなす
+        let isThinCrescent = astroIllum <= thinCrescentThreshold
 
         // ※ 幾何も左右も s に従わせて"同じソース"にする
         let shadowCenter = CGPoint(x: center.x + s, y: center.y)
         let isRightLit = s < 0   // 影円を +s に置くなら、明部は s<0 が右、s>0 は左
-        let litPath = makeLitPath(
-            c0: center, c1: shadowCenter, r: radius,
-            phase: phase, s: s, illumination: astroIllum,
-            isRightLit: isRightLit
-        )
+        let litPath = isThinCrescent ?
+            makeSmoothThinCrescentPath(center: center, radius: radius, isRightLit: isRightLit, illumination: astroIllum) :
+            makeLitPath(c0: center, c1: shadowCenter, r: radius, phase: phase, s: s, illumination: astroIllum, isRightLit: isRightLit)
 
         // --- 月本体（litPath を直接塗る） ---
         ctx.drawLayer { body in
-            body.fill(
-                litPath,
-                with: .radialGradient(
-                    Gradient(colors: [moonCenterColor, moonEdgeColor]),
-                    center: .init(x: center.x, y: center.y),
-                    startRadius: radius * 0.08,
-                    endRadius: radius
-                )
-            )
-        }
-
-        // --- 境界グラデーション（直線部分を薄く） ---
-        let (boundaryGradient, gradientWidth) = createBoundaryGradient(
-            center: center, radius: radius, phase: phase, isRightLit: isRightLit
-        )
-        ctx.drawLayer { gradient in
-            // 月の明るい部分（litPath）との交差部分のみにグラデーションを適用
-            gradient.clip(to: litPath)
-
-            // 境界で濃く、弧の方に向かって薄くなるグラデーション（段階的フェード）
-            let gradientColors = [
-                tone.gradEnd.opacity(1.0),    // 境界側：濃い背景色
-                tone.gradEnd.opacity(0.8),    // 少し薄く
-                tone.gradEnd.opacity(0.4),    // さらに薄く
-                tone.gradEnd.opacity(0.1),    // ほぼ透明
-                Color.clear                    // 完全に透明
-            ]
-
-            if isRightLit {
-                // 右側が明るい場合：中央（直線境界）から右（弧）へ
-                gradient.fill(
-                    boundaryGradient,
-                    with: .linearGradient(
-                        Gradient(colors: gradientColors),
-                        startPoint: CGPoint(x: center.x, y: center.y),
-                        endPoint: CGPoint(x: center.x + gradientWidth, y: center.y)
+            if isThinCrescent {
+                // 極細三日月: 明るい部分だけを描画、ストロークは一切描画しない
+                body.fill(
+                    litPath,
+                    with: .radialGradient(
+                        Gradient(colors: [moonCenterColor, moonEdgeColor]),
+                        center: .init(x: center.x, y: center.y),
+                        startRadius: radius * 0.08,
+                        endRadius: radius
                     )
                 )
+                // ストロークを完全に無効化（境界線を一切描画しない）
             } else {
-                // 左側が明るい場合：中央（直線境界）から左（弧）へ
-                gradient.fill(
-                    boundaryGradient,
-                    with: .linearGradient(
-                        Gradient(colors: gradientColors),
-                        startPoint: CGPoint(x: center.x, y: center.y),
-                        endPoint: CGPoint(x: center.x - gradientWidth, y: center.y)
+                // 通常の月: 従来通りの描画
+                body.fill(
+                    litPath,
+                    with: .radialGradient(
+                        Gradient(colors: [moonCenterColor, moonEdgeColor]),
+                        center: .init(x: center.x, y: center.y),
+                        startRadius: radius * 0.08,
+                        endRadius: radius
                     )
                 )
             }
         }
 
-        // --- ターミネーターの柔らか化（半月近辺のみ適用） ---
-        // φ が 0.25±δ または 0.75±δ の範囲のみ許可し、それ以外は適用しない
+        // --- 境界グラデーション（直線部分を薄く） ---
+        // 極細三日月では境界グラデーションを無効化（ターミネーターを目立たせない）
+        if !isThinCrescent {
+            let (boundaryGradient, gradientWidth) = createBoundaryGradient(
+                center: center, radius: radius, phase: phase, isRightLit: isRightLit
+            )
+            ctx.drawLayer { gradient in
+                // 月の明るい部分（litPath）との交差部分のみにグラデーションを適用
+                gradient.clip(to: litPath)
+
+                // 境界で濃く、弧の方に向かって薄くなるグラデーション（段階的フェード）
+                let gradientColors = [
+                    tone.gradEnd.opacity(1.0),    // 境界側：濃い背景色
+                    tone.gradEnd.opacity(0.8),    // 少し薄く
+                    tone.gradEnd.opacity(0.4),    // さらに薄く
+                    tone.gradEnd.opacity(0.1),    // ほぼ透明
+                    Color.clear                    // 完全に透明
+                ]
+
+                if isRightLit {
+                    // 右側が明るい場合：中央（直線境界）から右（弧）へ
+                    gradient.fill(
+                        boundaryGradient,
+                        with: .linearGradient(
+                            Gradient(colors: gradientColors),
+                            startPoint: CGPoint(x: center.x, y: center.y),
+                            endPoint: CGPoint(x: center.x + gradientWidth, y: center.y)
+                        )
+                    )
+                } else {
+                    // 左側が明るい場合：中央（直線境界）から左（弧）へ
+                    gradient.fill(
+                        boundaryGradient,
+                        with: .linearGradient(
+                            Gradient(colors: gradientColors),
+                            startPoint: CGPoint(x: center.x, y: center.y),
+                            endPoint: CGPoint(x: center.x - gradientWidth, y: center.y)
+                        )
+                    )
+                }
+            }
+        }
+
+        // --- ターミネーターの柔らか化（半月近辺のみ適用、極細三日月では無効化） ---
+        // φ が 0.25±δ または 0.75±δ の範囲のみ許可し、極細三日月では適用しない
         let delta: Double = 0.035
         let nearFirstQuarter  = abs(phase - 0.25) < delta
         let nearThirdQuarter  = abs(phase - 0.75) < delta
-        if nearFirstQuarter || nearThirdQuarter {
+
+        if (nearFirstQuarter || nearThirdQuarter) && !isThinCrescent {
             let quarterEmphasis = CGFloat(1.0) // 四半期のみなので常に最大で良い
             let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
             var ctxMutable = ctx
@@ -143,10 +168,11 @@ enum MoonPainter {
                     layer.addFilter(.blur(radius: radius * 0.45))
                     layer.fill(moonPath, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.08)))
                 }
-            } else {
+            } else if !isThinCrescent {
+                // 極細三日月以外: 通常のグロー処理
                 glow.clip(to: ringClip, style: FillStyle(eoFill: true))
-                // Skip glow entirely when extremely thin
-                guard illum > glowSkipThreshold else { return }
+                // Skip glow entirely when extremely thin (動的閾値使用)
+                guard illum > dynamicGlowThreshold else { return }
 
                 // 外周アークに沿ったストロークをぼかして重ねる（内側寄りに見えるよう控えめ）
                 // Center on lit side: 0° (right-lit), 180° (left-lit)
@@ -206,9 +232,47 @@ enum MoonPainter {
                     )
                 }
             }
+            // 極細三日月ではグロー効果を完全に無効化（境界線を目立たせない）
         }
     }
 
+
+    // MARK: - Smooth Thin Crescent Path Generation
+    private static func makeSmoothThinCrescentPath(
+        center: CGPoint, radius: CGFloat, isRightLit: Bool, illumination: CGFloat
+    ) -> Path {
+        // 極細三日月: 単純な弧を使用して鋭い境界線を避ける
+        let crescentWidth = radius * CGFloat(illumination) * 2.0  // 照明度に応じた幅
+
+        var path = Path()
+
+        if isRightLit {
+            // 右側が明るい: 右側の弧を描画
+            let startAngle: Angle = .degrees(-90)
+            let endAngle: Angle = .degrees(90)
+            path.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: false)
+
+            // 内側の弧で三日月の形を作る
+            let innerRadius = radius - crescentWidth
+            if innerRadius > 0 {
+                path.addArc(center: center, radius: innerRadius, startAngle: endAngle, endAngle: startAngle, clockwise: true)
+            }
+        } else {
+            // 左側が明るい: 左側の弧を描画
+            let startAngle: Angle = .degrees(90)
+            let endAngle: Angle = .degrees(270)
+            path.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: false)
+
+            // 内側の弧で三日月の形を作る
+            let innerRadius = radius - crescentWidth
+            if innerRadius > 0 {
+                path.addArc(center: center, radius: innerRadius, startAngle: endAngle, endAngle: startAngle, clockwise: true)
+            }
+        }
+
+        path.closeSubpath()
+        return path
+    }
 
     // MARK: - Two-Circle Lit Path Generation (final & robust)
     private static func makeLitPath(

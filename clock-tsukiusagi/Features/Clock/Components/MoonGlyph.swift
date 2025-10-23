@@ -4,6 +4,7 @@ struct MoonGlyph: View {
     let date: Date
     let tone: SkyTone
     private let thinThreshold: Double = 0.02
+    private let fadeStartThreshold: Double = 0.05  // 5%からフェード開始
 
     init(date: Date, tone: SkyTone = .night) {
         self.date = date
@@ -12,6 +13,7 @@ struct MoonGlyph: View {
 
     var body: some View {
         let mp = MoonPhaseCalculator.moonPhase(on: date)
+
         if mp.illumination < thinThreshold {
             Color.clear
         } else {
@@ -23,7 +25,21 @@ struct MoonGlyph: View {
                     tone: tone
                 )
             }
+            .opacity(calculateOpacity(illumination: mp.illumination))
             .accessibilityLabel(Text("Moon, phase: \(String(format: "%.0f", mp.illumination * 100))%"))
+        }
+    }
+
+    private func calculateOpacity(illumination: Double) -> Double {
+        if illumination >= fadeStartThreshold {
+            return 1.0  // 完全に表示
+        } else if illumination <= thinThreshold {
+            return 0.0  // 完全に透明
+        } else {
+            // 段階的フェード: thinThreshold から fadeStartThreshold の間で滑らかに変化
+            let fadeRange = fadeStartThreshold - thinThreshold
+            let fadeProgress = (illumination - thinThreshold) / fadeRange
+            return fadeProgress
         }
     }
 }
