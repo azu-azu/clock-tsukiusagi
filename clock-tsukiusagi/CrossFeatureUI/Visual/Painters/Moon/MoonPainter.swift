@@ -30,7 +30,12 @@ enum MoonPainter {
 
         // 二円法による litPath 生成（幾何は天文的イルミネーション基準）
         let shadowCenter = CGPoint(x: center.x + s, y: center.y)
-        let litPath = makeLitPath(c0: center, c1: shadowCenter, r: radius, phase: phase, s: s, illumination: astroIllum)
+        let isRightLit = phase < 0.5
+        let litPath = makeLitPath(
+            c0: center, c1: shadowCenter, r: radius,
+            phase: phase, s: s, illumination: astroIllum,
+            isRightLit: isRightLit
+        )
 
         // --- 月本体（litPath を直接塗る） ---
         ctx.drawLayer { body in
@@ -207,7 +212,11 @@ enum MoonPainter {
 
 
     // MARK: - Two-Circle Lit Path Generation
-    private static func makeLitPath(c0: CGPoint, c1: CGPoint, r: CGFloat, phase: Double, s: CGFloat, illumination: CGFloat) -> Path {
+    private static func makeLitPath(
+        c0: CGPoint, c1: CGPoint, r: CGFloat,
+        phase: Double, s: CGFloat, illumination: CGFloat,
+        isRightLit: Bool
+    ) -> Path {
         let dx = c1.x - c0.x
         let dy = c1.y - c0.y
         let d = max(0.0, hypot(dx, dy))
@@ -275,24 +284,22 @@ enum MoonPainter {
         let th1P = angleFromCenter(c1.x, c1.y, px, py)
         let th1Q = angleFromCenter(c1.x, c1.y, qx, qy)
 
-        // Determine crescent vs gibbous and waxing vs waning
+        // Determine crescent vs gibbous.
         let crescent = illum < 0.5
 
         var path = Path()
+        path.move(to: CGPoint(x: px, y: py))
 
         if crescent {
-            // Crescent: narrow arcs
-            path.move(to: CGPoint(x: px, y: py))
+            // Always traverse c0: P->Q, c1: Q->P with a fixed clockwise rule
             path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: isRightLit ? false : true)
             path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: isRightLit ? false : true)
-            path.closeSubpath()
         } else {
-            // Gibbous: wide arcs (complement)
-            path.move(to: CGPoint(x: px, y: py))
-            path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: isRightLit ? true : false)
-            path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: isRightLit ? true : false)
-            path.closeSubpath()
+            // Complement side: c0: Q->P, c1: P->Q with the same clockwise rule base
+            path.addArc(center: c0, radius: r, startAngle: th0Q, endAngle: th0P, clockwise: isRightLit ? false : true)
+            path.addArc(center: c1, radius: r, startAngle: th1P, endAngle: th1Q, clockwise: isRightLit ? false : true)
         }
+        path.closeSubpath()
 
         return path
     }
