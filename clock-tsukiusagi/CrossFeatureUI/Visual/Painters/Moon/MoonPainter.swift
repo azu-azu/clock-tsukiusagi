@@ -28,9 +28,9 @@ enum MoonPainter {
         // Near-full detection: combine phase proximity and astronomical illumination
         let isFullish = (abs(phase - 0.5) < 0.03) || (astroIllum > 0.95)
 
-        // 二円法による litPath 生成（幾何は天文的イルミネーション基準）
+        // ※ 幾何も左右も s に従わせて"同じソース"にする
         let shadowCenter = CGPoint(x: center.x + s, y: center.y)
-        let isRightLit = phase < 0.5
+        let isRightLit = s < 0   // 影円を +s に置くなら、明部は s<0 が右、s>0 は左
         let litPath = makeLitPath(
             c0: center, c1: shadowCenter, r: radius,
             phase: phase, s: s, illumination: astroIllum,
@@ -51,7 +51,6 @@ enum MoonPainter {
         }
 
         // --- 境界グラデーション（直線部分を薄く） ---
-        let isRightLit = phase < 0.5
         let (boundaryGradient, gradientWidth) = createBoundaryGradient(
             center: center, radius: radius, phase: phase, isRightLit: isRightLit
         )
@@ -211,96 +210,82 @@ enum MoonPainter {
     }
 
 
-    // MARK: - Two-Circle Lit Path Generation
+    // MARK: - Two-Circle Lit Path Generation (final & robust)
     private static func makeLitPath(
         c0: CGPoint, c1: CGPoint, r: CGFloat,
-        phase: Double, s: CGFloat, illumination: CGFloat,
+        phase: Double, s: CGFloat, illumination illum: CGFloat,
         isRightLit: Bool
     ) -> Path {
-        let dx = c1.x - c0.x
-        let dy = c1.y - c0.y
-        let d = max(0.0, hypot(dx, dy))
 
-        // Use the illumination value passed from caller
-        let illum = illumination
-
-        // Edge cases
-        if illum < 0.001 {
-            return Path() // New moon - empty
-        }
-        // Near full: when astronomical illumination is very high, render a single disc
-        if illum > 0.95 {
-            return Path(ellipseIn: CGRect(x: c0.x - r, y: c0.y - r, width: 2*r, height: 2*r)) // Full moon
+        // 1) 端ケース
+        if illum < 0.001 { return Path() } // new
+        if illum > 0.999 { // full
+            return Path(ellipseIn: CGRect(x: c0.x - r, y: c0.y - r, width: 2*r, height: 2*r))
         }
 
-        // Determine lighting direction once (consistent across file)
-        // First Half (φ < 0.5) = waxing = right lit, Second Half = left lit
-        let isRightLit = phase < 0.5
-
-        // Half-moon case (circles nearly coincident) or circles don't intersect
-        if d < 1e-4 || (d * 0.5) * (d * 0.5) >= r * r {
-            var path = Path()
+        // 幾何
+        let dx = c1.x - c0.x, dy = c1.y - c0.y
+        let d  = max(0.0, hypot(dx, dy))
+        // 同心（≒半月）近傍は半円で出す
+        if d < 1e-4 {
+            var p = Path()
             if isRightLit {
-                // Right-lit: draw right semicircle (-90° to +90°)
-                path.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
+                p.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
             } else {
-                // Left-lit: draw left semicircle (+90° to +270°)
-                path.addArc(center: c0, radius: r, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
+                p.addArc(center: c0, radius: r, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
             }
-            path.addLine(to: c0)
-            path.closeSubpath()
-            return path
+            p.addLine(to: c0); p.closeSubpath()
+            return p
         }
 
-        // General case: calculate intersection points
-        let a = d * 0.5
-        let h2 = r * r - a * a
+        // 2) 交点計算
+        let a  = d * 0.5
+        let h2 = max(0, r*r - a*a)
+        let h  = sqrt(h2)
+        let ux = dx/d,  uy = dy/d
+        let mx = c0.x + a*ux, my = c0.y + a*uy
+        let nx = -uy, ny = ux
+        let px = mx + h*nx, py = my + h*ny
+        let qx = mx - h*nx, qy = my - h*ny
 
-        let h = sqrt(h2)
-
-        // Unit vector along line connecting centers
-        let ux = dx / d
-        let uy = dy / d
-
-        // Midpoint between centers
-        let mx = c0.x + a * ux
-        let my = c0.y + a * uy
-
-        // Intersection points (perpendicular to line connecting centers)
-        let nx = -uy
-        let ny = ux
-        let px = mx + h * nx
-        let py = my + h * ny
-        let qx = mx - h * nx
-        let qy = my - h * ny
-
-        // Calculate angles for arc generation
-        let angleFromCenter = { (cx: CGFloat, cy: CGFloat, x: CGFloat, y: CGFloat) -> Angle in
-            Angle(radians: atan2(Double(y - cy), Double(x - cx)))
+        func ang(_ cx: CGFloat, _ cy: CGFloat, _ x: CGFloat, _ y: CGFloat) -> Angle {
+            .radians(atan2(Double(y - cy), Double(x - cx)))
         }
+        let th0P = ang(c0.x, c0.y, px, py)
+        let th0Q = ang(c0.x, c0.y, qx, qy)
+        let th1P = ang(c1.x, c1.y, px, py)
+        let th1Q = ang(c1.x, c1.y, qx, qy)
 
-        let th0P = angleFromCenter(c0.x, c0.y, px, py)
-        let th0Q = angleFromCenter(c0.x, c0.y, qx, qy)
-        let th1P = angleFromCenter(c1.x, c1.y, px, py)
-        let th1Q = angleFromCenter(c1.x, c1.y, qx, qy)
+        // 3) 明るさタイプ
+        let crescent = illum < 0.5   // 三日月系 / 凸月系
 
-        // Determine crescent vs gibbous.
-        let crescent = illum < 0.5
-
+        // 4) 単一輪郭で確実に閉じる（P→Q→P）
         var path = Path()
         path.move(to: CGPoint(x: px, y: py))
 
         if crescent {
-            // Always traverse c0: P->Q, c1: Q->P with a fixed clockwise rule
-            path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: isRightLit ? false : true)
-            path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: isRightLit ? false : true)
+            if isRightLit {
+                // 右が点灯の三日月: c0(P→Q, CCW) + c1(Q→P, CW)
+                path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: false)
+                path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: true)
+            } else {
+                // 左が点灯の三日月: c0(Q→P, CW) + c1(P→Q, CCW)
+                path.addArc(center: c0, radius: r, startAngle: th0Q, endAngle: th0P, clockwise: true)
+                path.addArc(center: c1, radius: r, startAngle: th1P, endAngle: th1Q, clockwise: false)
+            }
         } else {
-            // Complement side: c0: Q->P, c1: P->Q with the same clockwise rule base
-            path.addArc(center: c0, radius: r, startAngle: th0Q, endAngle: th0P, clockwise: isRightLit ? false : true)
-            path.addArc(center: c1, radius: r, startAngle: th1P, endAngle: th1Q, clockwise: isRightLit ? false : true)
+            if isRightLit {
+                // 右が点灯の凸月: c0(Q→P, CW) + c1(Q→P, CW)（補側）
+                path.addArc(center: c0, radius: r, startAngle: th0Q, endAngle: th0P, clockwise: true)
+                path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: true)
+            } else {
+                // 左が点灯の凸月: c0(P→Q, CCW) + c1(P→Q, CCW)
+                path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: false)
+                path.addArc(center: c1, radius: r, startAngle: th1P, endAngle: th1Q, clockwise: false)
+            }
         }
-        path.closeSubpath()
 
+        path.closeSubpath()
         return path
     }
 
@@ -352,8 +337,10 @@ enum MoonPainter {
         feather: CGFloat,           // 3〜10px くらい
         jitter: CGFloat = 0         // 0〜2px（テクスチャのザラつき）
     ) {
-        // Waxing(右が明) / Waning(左が明)
-        let waxing = (φ > 0 && φ < 0.5)
+        // Waxing(右が明) / Waning(左が明) - sの符号で統一
+        let s = CGFloat(cos(2.0 * .pi * φ)) * r
+        let isRightLit = s < 0   // 影円を +s に置くなら、明部は s<0 が右、s>0 は左
+        let waxing = isRightLit   // 右が明るい＝waxing と定義を合わせる
         let sign: CGFloat = waxing ? 1 : -1
 
         // ターミネーター曲線 x(y) = sign * k * sqrt(r^2 - y^2)
