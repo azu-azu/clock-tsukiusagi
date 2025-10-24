@@ -60,7 +60,8 @@ enum MoonPainter {
         let d = max(0.0, hypot(dx, dy))
 
         // ほぼ半月（d≈0）は直線ターミネーターの半円
-        if d < 1e-4 {
+        // より広い範囲で半月判定（約±2日程度）
+        if d < r * 0.1 {
             var p = Path()
             if isRightLit {
                 p.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
