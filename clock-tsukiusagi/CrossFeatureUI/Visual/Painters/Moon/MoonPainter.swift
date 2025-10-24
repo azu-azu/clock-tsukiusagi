@@ -50,8 +50,8 @@ enum MoonPainter {
 
         // 幾何オフセット s はあくまで形状用。左右判定は位相で一意に決める（sin符号方式で境界に強い）
         let shadowCenter = CGPoint(x: center.x + s, y: center.y)
-        // Phase-based: sin(2πφ) > 0 ⇒ waxing (right-lit), sin < 0 ⇒ waning (left-lit)
-        let isRightLit = sin(2.0 * .pi * φ) > 0
+        // Geometric rule consistent with c1 = c0 + s: s < 0 ⇒ right-lit, s > 0 ⇒ left-lit
+        let isRightLit = s < 0
         // 極細でも二円法の単一輪郭（P/Q）で生成して尖りを自然に保つ
         let litPath = makeLitPath(
             c0: center, c1: shadowCenter, r: radius,
@@ -375,8 +375,8 @@ enum MoonPainter {
     ) {
         // Waxing(右が明) / Waning(左が明) - 位相ベース（sin符号）で統一
         let φn = MoonPainter.normalizePhase(φ)
-        let waxing = sin(2.0 * .pi * φn) > 0
-        let isRightLit = waxing
+        let sTerm = CGFloat(cos(2.0 * .pi * φn)) * r
+        let waxing = sTerm < 0
         let sign: CGFloat = waxing ? 1 : -1
 
         // ターミネーター曲線 x(y) = sign * k * sqrt(r^2 - y^2)
