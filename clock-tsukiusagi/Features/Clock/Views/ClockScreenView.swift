@@ -144,9 +144,9 @@ final class ClockScreenVM: ObservableObject {
 }
 
 #if DEBUG
-#Preview("Fixed 05:35 (local)") {
+#Preview("Fixed 10/9 左明") {
     var comps = DateComponents()
-    comps.year = 2025; comps.month = 10; comps.day = 9
+    comps.year = 2025; comps.month = 10; comps.day = 8
     comps.hour = 5; comps.minute = 35
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
@@ -157,9 +157,27 @@ final class ClockScreenVM: ObservableObject {
     }
 }
 
-#Preview("Fixed 07:05 (local)") {
+#Preview("Fixed 10/13 左明,third") {
     var comps = DateComponents()
     comps.year = 2025; comps.month = 10; comps.day = 13
+    comps.hour = 7; comps.minute = 5
+    comps.timeZone = .current
+    let date = Calendar.current.date(from: comps)!
+    return ClockScreenView(fixedDate: date)
+}
+
+#Preview("Fixed 10/29 右明,first") {
+    var comps = DateComponents()
+    comps.year = 2025; comps.month = 10; comps.day = 29
+    comps.hour = 7; comps.minute = 5
+    comps.timeZone = .current
+    let date = Calendar.current.date(from: comps)!
+    return ClockScreenView(fixedDate: date)
+}
+
+#Preview("Fixed 10/30 右明") {
+    var comps = DateComponents()
+    comps.year = 2025; comps.month = 10; comps.day = 30
     comps.hour = 7; comps.minute = 5
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
