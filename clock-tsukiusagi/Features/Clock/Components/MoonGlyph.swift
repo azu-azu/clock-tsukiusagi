@@ -18,6 +18,7 @@ struct MoonGlyph: View {
         let _ = {
             #if DEBUG
             print("MoonGlyph: illumination=\(mp.illumination), thinThreshold=\(thinThreshold)")
+            print("MoonGlyph: phase=\(mp.phase), date=\(date)")
             #endif
         }()
 

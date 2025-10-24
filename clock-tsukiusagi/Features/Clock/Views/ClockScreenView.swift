@@ -146,7 +146,7 @@ final class ClockScreenVM: ObservableObject {
 #if DEBUG
 #Preview("Fixed 10/11 デバッグ") {
     var comps = DateComponents()
-    comps.year = 2025; comps.month = 10; comps.day = 6
+    comps.year = 2025; comps.month = 10; comps.day = 11
     comps.hour = 21; comps.minute = 0
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
