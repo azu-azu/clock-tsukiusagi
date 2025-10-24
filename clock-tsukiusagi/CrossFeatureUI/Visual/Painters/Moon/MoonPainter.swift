@@ -2,6 +2,13 @@ import SwiftUI
 
 // MARK: - MoonPainter
 enum MoonPainter {
+    // Normalize an incoming phase value to [0,1), accepting radians as well
+    @inline(__always)
+    private static func normalizePhase(_ p: Double) -> Double {
+        let x = (abs(p) > 2.0) ? (p / (2.0 * .pi)) : p
+        let n = x - floor(x)
+        return n < 0 ? n + 1.0 : n
+    }
     // MARK: - Colors
     private static let moonCenterColor = DesignTokens.MoonColors.centerColor
     private static let moonEdgeColor   = DesignTokens.MoonColors.edgeColor
@@ -15,11 +22,13 @@ enum MoonPainter {
         )
 
         // 位相とオフセット（二円法の余弦マッピング）
+        // φを[0,1)に正規化（入力が full-zero の場合へも対応：+0.5 で new-zero に変換）
+        let φ = MoonPainter.normalizePhase(phase + 0.5)
         // φ=0.25/0.75 → s=0 (perfect half-moon), φ=0.5 → s=-r (full), φ=0 → s=+r (new)
-        let s = CGFloat(cos(2.0 * .pi * phase)) * radius
+        let s = CGFloat(cos(2.0 * .pi * φ)) * radius
         // Glow intensity for halo strength (visual only) and astronomical illumination for geometry
-        let illum = glowIntensity(phase: phase, s: s, radius: radius)
-        let astroIllum = illumAstronomical(phase)
+        let illum = glowIntensity(phase: φ, s: s, radius: radius)
+        let astroIllum = illumAstronomical(φ)
         // 動的な閾値調整: 極細の時はより厳しく、通常時は緩く
         let baseGlowThreshold: CGFloat = 0.03
         let dynamicGlowThreshold = astroIllum < 0.1 ? baseGlowThreshold * 2.0 : baseGlowThreshold
@@ -33,19 +42,20 @@ enum MoonPainter {
         // Near-full detection: より滑らかな遷移
         let fullMoonThreshold: Double = 0.95
         let fullMoonTransition: Double = 0.08  // より広い遷移範囲
-        let isFullish = (abs(phase - 0.5) < fullMoonTransition) || (astroIllum > fullMoonThreshold)
+        let isFullish = (abs(φ - 0.5) < fullMoonTransition) || (astroIllum > fullMoonThreshold)
 
         // 極細三日月の判定（早期定義）
         let thinCrescentThreshold: Double = 0.15  // 15%以下は極細とみなす
         let isThinCrescent = astroIllum <= thinCrescentThreshold
 
-        // ※ 幾何も左右も s に従わせて"同じソース"にする
+        // 幾何オフセット s はあくまで形状用。左右判定は位相で一意に決める（sin符号方式で境界に強い）
         let shadowCenter = CGPoint(x: center.x + s, y: center.y)
-        let isRightLit = s < 0   // 影円を +s に置くなら、明部は s<0 が右、s>0 は左
+        // Phase-based: sin(2πφ) > 0 ⇒ waxing (right-lit), sin < 0 ⇒ waning (left-lit)
+        let isRightLit = sin(2.0 * .pi * φ) > 0
         // 極細でも二円法の単一輪郭（P/Q）で生成して尖りを自然に保つ
         let litPath = makeLitPath(
             c0: center, c1: shadowCenter, r: radius,
-            phase: phase, s: s, illumination: astroIllum,
+            phase: φ, s: s, illumination: astroIllum,
             isRightLit: isRightLit
         )
 
@@ -80,7 +90,7 @@ enum MoonPainter {
         // 極細三日月や半月以外では無効化（ターミネーターを目立たせない）
         if isNearHalf && !isThinCrescent {
             let (boundaryGradient, gradientWidth) = createBoundaryGradient(
-                center: center, radius: radius, phase: phase, isRightLit: isRightLit
+                center: center, radius: radius, phase: φ, isRightLit: isRightLit
             )
             ctx.drawLayer { gradient in
                 // 月の明るい部分（litPath）との交差部分のみにグラデーションを適用
@@ -125,7 +135,7 @@ enum MoonPainter {
             let k: CGFloat = 0.12 * quarterEmphasis + 0.02           // 曲率（直線→弧）
             var ctxMutable = ctx
             softenTerminator(&ctxMutable, center: center, radius: radius,
-                            phase: phase, tone: tone, litPath: litPath, curvature: k, feather: 3, jitter: 0.8)
+                            phase: φ, tone: tone, litPath: litPath, curvature: k, feather: 3, jitter: 0.8)
         }
 
         // --- OUTER GLOW：月の縁に沿った"薄いリング領域"に限定（外へ出さず、内側寄り） ---
@@ -363,10 +373,10 @@ enum MoonPainter {
         feather: CGFloat,           // 3〜10px くらい
         jitter: CGFloat = 0         // 0〜2px（テクスチャのザラつき）
     ) {
-        // Waxing(右が明) / Waning(左が明) - sの符号で統一
-        let s = CGFloat(cos(2.0 * .pi * φ)) * r
-        let isRightLit = s < 0   // 影円を +s に置くなら、明部は s<0 が右、s>0 は左
-        let waxing = isRightLit   // 右が明るい＝waxing と定義を合わせる
+        // Waxing(右が明) / Waning(左が明) - 位相ベース（sin符号）で統一
+        let φn = MoonPainter.normalizePhase(φ)
+        let waxing = sin(2.0 * .pi * φn) > 0
+        let isRightLit = waxing
         let sign: CGFloat = waxing ? 1 : -1
 
         // ターミネーター曲線 x(y) = sign * k * sqrt(r^2 - y^2)
