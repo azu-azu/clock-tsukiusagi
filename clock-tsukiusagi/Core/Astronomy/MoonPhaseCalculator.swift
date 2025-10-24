@@ -36,25 +36,25 @@ public enum MoonPhaseCalculator {
         let illumination = 0.5 * (1.0 - cos(2.0 * .pi * phase))
         return MoonPhaseValue(phase: phase, illumination: illumination)
     }
-    
+
     /// ローカル夜時刻（21:00）基準で月相を計算
     /// より直感的な見た目を提供するため、その日の夜の時刻で計算
     public static func moonPhaseForLocalEvening(on date: Date) -> MoonPhaseValue {
         let calendar = Calendar.current
         let timeZone = TimeZone.current
-        
+
         // その日の21:00（ローカル時刻）を取得
         var components = calendar.dateComponents([.year, .month, .day], from: date)
         components.hour = 21
         components.minute = 0
         components.second = 0
         components.timeZone = timeZone
-        
+
         guard let eveningDate = calendar.date(from: components) else {
             // フォールバック: 元の計算を使用
             return moonPhase(on: date)
         }
-        
+
         return moonPhase(on: eveningDate)
     }
 

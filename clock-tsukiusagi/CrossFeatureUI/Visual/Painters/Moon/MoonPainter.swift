@@ -33,8 +33,16 @@ enum MoonPainter {
         let offset = CGFloat(abs(cos(2.0 * .pi * φ))) * r
         let c1 = CGPoint(x: c0.x + (isRightLit ? -offset : +offset), y: c0.y)
 
-        // 白い“明部”の輪郭（2円法）
-        let lit = makeLitPath(c0: c0, c1: c1, r: r, phase: φ, isRightLit: isRightLit)
+        // デバッグログ
+        #if DEBUG
+        let d = hypot(c1.x - c0.x, c1.y - c0.y)
+        let threshold = r * 0.02
+        print(String(format: "φ=%.6f  rightLit=%@  offset=%.4f  d=%.4f  r=%.2f  threshold=%.4f  isHalfMoon=%@",
+                    φ, isRightLit ? "R" : "L", offset, d, r, threshold, d < threshold ? "YES" : "NO"))
+        #endif
+
+        // 白い"明部"の輪郭（2円法）
+        let lit = makeLitPath(c0: c0, c1: c1, r: r, phase: φ, isRightLit: isRightLit, offset: offset)
 
         // 塗る（単色。必要なら .radialGradient に差し替え可）
         let bodyColor = Color.white.opacity(0.95)
@@ -43,7 +51,7 @@ enum MoonPainter {
 
     // MARK: - Two-circle shape
     private static func makeLitPath(
-        c0: CGPoint, c1: CGPoint, r: CGFloat, phase φ: Double, isRightLit: Bool
+        c0: CGPoint, c1: CGPoint, r: CGFloat, phase φ: Double, isRightLit: Bool, offset: CGFloat
     ) -> Path {
 
         // 照度（天文学的）0..1
@@ -60,8 +68,16 @@ enum MoonPainter {
         let d = max(0.0, hypot(dx, dy))
 
         // ほぼ半月（d≈0）は直線ターミネーターの半円
-        // より広い範囲で半月判定（約±2日程度）
-        if d < r * 0.1 {
+        // 厳しい条件で半月判定（約±0.5日程度）
+        let threshold = r * 0.02
+        #if DEBUG
+        print(String(format: "makeLitPath: d=%.4f  threshold=%.4f  isHalfMoon=%@", d, threshold, d < threshold ? "YES" : "NO"))
+        #endif
+
+        if d < threshold {
+            #if DEBUG
+            print("makeLitPath: Using half-moon path")
+            #endif
             var p = Path()
             if isRightLit {
                 p.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
@@ -71,6 +87,10 @@ enum MoonPainter {
             p.addLine(to: c0); p.closeSubpath()
             return p
         }
+
+        #if DEBUG
+        print("makeLitPath: Using two-circle path")
+        #endif
 
         // 交点（P,Q）
         let a  = d * 0.5
@@ -82,6 +102,12 @@ enum MoonPainter {
         let px = mx + h*nx, py = my + h*ny
         let qx = mx - h*nx, qy = my - h*ny
 
+        #if DEBUG
+        print(String(format: "Circle centers: c0(%.2f,%.2f) c1(%.2f,%.2f)", c0.x, c0.y, c1.x, c1.y))
+        print(String(format: "Intersection calc: a=%.2f h2=%.2f h=%.2f", a, h2, h))
+        print(String(format: "Unit vector: ux=%.4f uy=%.4f nx=%.4f ny=%.4f", ux, uy, nx, ny))
+        #endif
+
         func ang(_ cx: CGFloat, _ cy: CGFloat, _ x: CGFloat, _ y: CGFloat) -> Angle {
             .radians(atan2(Double(y - cy), Double(x - cx)))
         }
@@ -90,25 +116,42 @@ enum MoonPainter {
         let th1P = ang(c1.x, c1.y, px, py)
         let th1Q = ang(c1.x, c1.y, qx, qy)
 
-        let isCrescent = illum < 0.5
+        #if DEBUG
+        print(String(format: "Two-circle: P(%.2f,%.2f) Q(%.2f,%.2f) h=%.2f", px, py, qx, qy, h))
+        print(String(format: "Angles: th0P=%.2f th0Q=%.2f th1P=%.2f th1Q=%.2f",
+                    th0P.degrees, th0Q.degrees, th1P.degrees, th1Q.degrees))
+        #endif
+
+        // offsetが大きいほど三日月、小さいほど凸月
+        let isCrescent = offset > r * 0.3
         var path = Path()
         path.move(to: CGPoint(x: px, y: py))
 
-        if isCrescent {
-            // 三日月系
-            if isRightLit {
+        #if DEBUG
+        print(String(format: "Path: isCrescent=%@ rightLit=%@ illum=%.2f",
+                    isCrescent ? "YES" : "NO", isRightLit ? "R" : "L", illum))
+        #endif
+
+        // 2円法の正しいロジック
+        if isRightLit {
+            // 右が明るい場合
+            if isCrescent {
+                // 右が明るい三日月：右側のアーク（c0）と左側のターミネーター（c1）
                 path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: false)
                 path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: true)
             } else {
-                path.addArc(center: c0, radius: r, startAngle: th0Q, endAngle: th0P, clockwise: true)
-                path.addArc(center: c1, radius: r, startAngle: th1P, endAngle: th1Q, clockwise: false)
-            }
-        } else {
-            // 凸月系
-            if isRightLit {
+                // 右が明るい凸月：右側の大部分（c0）と左側の一部（c1）
                 path.addArc(center: c0, radius: r, startAngle: th0Q, endAngle: th0P, clockwise: true)
                 path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: true)
+            }
+        } else {
+            // 左が明るい場合
+            if isCrescent {
+                // 左が明るい三日月：左側のアーク（c0）と右側のターミネーター（c1）
+                path.addArc(center: c0, radius: r, startAngle: th0Q, endAngle: th0P, clockwise: true)
+                path.addArc(center: c1, radius: r, startAngle: th1P, endAngle: th1Q, clockwise: false)
             } else {
+                // 左が明るい凸月：左側の大部分（c0）と右側の一部（c1）
                 path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: false)
                 path.addArc(center: c1, radius: r, startAngle: th1P, endAngle: th1Q, clockwise: false)
             }

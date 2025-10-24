@@ -14,10 +14,20 @@ struct MoonGlyph: View {
     var body: some View {
         let mp = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
 
+        // デバッグログを別の場所で実行
+        let _ = {
+            #if DEBUG
+            print("MoonGlyph: illumination=\(mp.illumination), thinThreshold=\(thinThreshold)")
+            #endif
+        }()
+
         if mp.illumination < thinThreshold {
             Color.clear
         } else {
             Canvas { ctx, canvasSize in
+                #if DEBUG
+                print("MoonGlyph: Calling MoonPainter.draw")
+                #endif
                 MoonPainter.draw(
                     in: ctx,
                     size: canvasSize,

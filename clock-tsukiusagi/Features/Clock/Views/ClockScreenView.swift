@@ -144,17 +144,39 @@ final class ClockScreenVM: ObservableObject {
 }
 
 #if DEBUG
-#Preview("Fixed 10/9 左明") {
+#Preview("Fixed 10/11 デバッグ") {
     var comps = DateComponents()
-    comps.year = 2025; comps.month = 10; comps.day = 8
-    comps.hour = 5; comps.minute = 35
+    comps.year = 2025; comps.month = 10; comps.day = 11
+    comps.hour = 21; comps.minute = 0
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
-    return ClockScreenView(fixedDate: date)
-    .overlay(alignment: .bottom) {
-        WavyBottomView()
-            .allowsHitTesting(false)
+
+    // デバッグ情報を表示
+    let mp = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
+    let φ = mp.phase
+    let isRightLit = sin(2.0 * .pi * φ) > 0
+    let offset = abs(cos(2.0 * .pi * φ))
+
+    return VStack {
+        Text("10/11 デバッグ情報")
+            .font(.caption)
+            .foregroundColor(.white)
+        Text(String(format: "φ=%.6f", φ))
+            .font(.caption)
+            .foregroundColor(.white)
+        Text(String(format: "rightLit=%@", isRightLit ? "R" : "L"))
+            .font(.caption)
+            .foregroundColor(.white)
+        Text(String(format: "offset=%.4f", offset))
+            .font(.caption)
+            .foregroundColor(.white)
+        Text(String(format: "illum=%.2f%%", mp.illumination * 100))
+            .font(.caption)
+            .foregroundColor(.white)
+
+        ClockScreenView(fixedDate: date)
     }
+    .background(.black)
 }
 
 #Preview("Fixed 10/13 左明,third") {
