@@ -123,7 +123,8 @@ enum MoonPainter {
         #endif
 
         // offsetが大きいほど三日月、小さいほど凸月
-        let isCrescent = offset > r * 0.3
+        // より厳しい閾値で凸月判定（下弦の1日前も凸月として表示）
+        let isCrescent = offset > r * 0.5
         var path = Path()
         path.move(to: CGPoint(x: px, y: py))
 
