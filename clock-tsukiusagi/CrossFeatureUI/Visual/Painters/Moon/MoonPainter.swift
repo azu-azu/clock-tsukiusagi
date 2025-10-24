@@ -55,7 +55,7 @@ enum MoonPainter {
         print("MoonPainter: circleDistance=\(circleDistance), terminatorThreshold=\(terminatorThreshold), hasTerminator=\(circleDistance < terminatorThreshold)")
         #endif
         if circleDistance < terminatorThreshold {
-            softenTerminator(ctx: ctx, center: c0, radius: r, isRightLit: isRightLit, litPath: lit, tone: tone)
+            softenTerminator(ctx: ctx, center: c0, radius: r, isRightLit: isRightLit, litPath: lit, tone: tone, circleDistance: circleDistance)
         }
 
         // 青いグロー効果を追加（月本体の描画の後）
@@ -315,10 +315,11 @@ enum MoonPainter {
         radius r: CGFloat,
         isRightLit: Bool,
         litPath: Path,
-        tone: SkyTone
+        tone: SkyTone,
+        circleDistance d: CGFloat
     ) {
         #if DEBUG
-        print("softenTerminator: center=\(c), radius=\(r), isRightLit=\(isRightLit)")
+        print("softenTerminator: center=\(c), radius=\(r), isRightLit=\(isRightLit), d=\(d), isNearTwoCircleTransition=\(d > r * 0.2 && d < r * 0.5)")
         #endif
 
         // ターミネーターの曲率パラメータ
@@ -338,7 +339,9 @@ enum MoonPainter {
             let yy = (t * 2 - 1) * r                     // -r→+r
             let xr = curvature * sqrt(max(0, r*r - yy*yy))
             // 境界に重なるよう、中心から少し外側にオフセット
-            let offset = r * 0.2  // 境界に重なるよう調整
+            // 2円法の直後と直前（10/12, 10/16付近）では境界により近づける
+            let isNearTwoCircleTransition = (d > r * 0.2 && d < r * 0.5)  // 2円法の直後と直前の範囲（上限を調整）
+            let offset = isNearTwoCircleTransition ? r * 0.3 : r * 0.2
             let j = (jitter > 0) ? (CGFloat.random(in: -jitter...jitter)) : 0
             let x = c.x + sign * (xr - offset) + j
             let y = c.y + yy

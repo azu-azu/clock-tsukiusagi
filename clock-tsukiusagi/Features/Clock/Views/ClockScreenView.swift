@@ -181,7 +181,7 @@ final class ClockScreenVM: ObservableObject {
 
 #Preview("Fixed 10/13 左明,third") {
     var comps = DateComponents()
-    comps.year = 2025; comps.month = 10; comps.day = 12
+    comps.year = 2025; comps.month = 10; comps.day = 14
     comps.hour = 7; comps.minute = 5
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
