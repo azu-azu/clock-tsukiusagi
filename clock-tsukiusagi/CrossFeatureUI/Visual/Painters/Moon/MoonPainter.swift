@@ -52,48 +52,7 @@ enum MoonPainter {
         let halfMoonDistance = hypot(c1.x - c0.x, c1.y - c0.y)
         let halfMoonThreshold = r * 0.02
         if halfMoonDistance < halfMoonThreshold {
-            ctx.drawLayer { layer in
-                // ターミネーターの曲率パラメータ
-                let curvature: CGFloat = 0.12
-                let feather: CGFloat = 3.0
-                let jitter: CGFloat = 0.8
-
-                // Waxing(右が明) / Waning(左が明) - 統一されたisRightLitを使用
-                let sign: CGFloat = isRightLit ? 1 : -1
-
-                // ターミネーター曲線 x(y) = sign * k * sqrt(r^2 - y^2)
-                // 境界に重なるよう、中心位置を調整
-                let steps = 96
-                var terminator = Path()
-                for i in 0...steps {
-                    let t = CGFloat(i) / CGFloat(steps)          // 0→1
-                    let yy = (t * 2 - 1) * r                      // -r→+r
-                    let xr = curvature * sqrt(max(0, r*r - yy*yy))
-                    // 境界に重なるよう、中心から少し外側にオフセット
-                    let offset = r * 0.1  // 境界に重なるよう調整
-                    let j = (jitter > 0) ? (CGFloat.random(in: -jitter...jitter)) : 0
-                    let x = c0.x + sign * (xr - offset) + j
-                    let y = c0.y + yy
-                    (i == 0) ? terminator.move(to: CGPoint(x: x, y: y))
-                             : terminator.addLine(to: CGPoint(x: x, y: y))
-                }
-
-                // Apply terminator softening with clipping to lit portion
-                layer.clip(to: lit)
-                layer.blendMode = .normal
-                layer.addFilter(.blur(radius: feather))
-
-                // Apply multiple stroke passes for feathering effect
-                let passes = 5
-                for p in 0..<passes {
-                    let w = feather * (1.6 - 0.25 * CGFloat(p))
-                    layer.stroke(
-                        terminator,
-                        with: .color(Color.black.opacity(0.3)),
-                        lineWidth: max(1, w)
-                    )
-                }
-            }
+            softenTerminator(ctx: ctx, center: c0, radius: r, isRightLit: isRightLit, litPath: lit, tone: tone)
         }
 
         // 青いグロー効果を追加（月本体の描画の後）
@@ -222,94 +181,178 @@ enum MoonPainter {
         phase: Double,
         isRightLit: Bool
     ) {
-        // 照度に基づいてグロー強度を調整
-        let illumination = 0.5 * (1.0 - cos(2.0 * .pi * phase))
-        let glowIntensity = CGFloat(illumination)
+        // 天文学的照度
+        let astroIllum = CGFloat(0.5 * (1.0 - cos(2.0 * .pi * phase)))
 
-        // 極細三日月ではグローを控えめに
-        let thinThreshold: Double = 0.15
-        let isThinCrescent = illumination <= thinThreshold
+        // 動的な閾値調整: 極細の時はより厳しく、通常時は緩く
+        let baseGlowThreshold: CGFloat = 0.03
+        let dynamicGlowThreshold = astroIllum < 0.1 ? baseGlowThreshold * 2.0 : baseGlowThreshold
 
-        if isThinCrescent {
-            return // 極細三日月ではグロー効果を無効化
-        }
+        // 極細三日月の判定
+        let thinCrescentThreshold: Double = 0.15
+        let isThinCrescent = astroIllum <= thinCrescentThreshold
 
-        // グロー色の定義
-        let glowCyan = Color.cyan.opacity(0.3)
-        let glowWhite = Color.white.opacity(0.1)
+        // 満月近くの判定
+        let fullMoonThreshold: Double = 0.95
+        let fullMoonTransition: Double = 0.08
+        let isFullish = (abs(phase - 0.5) < fullMoonTransition) || (astroIllum > fullMoonThreshold)
 
         // 月の境界に沿ったリング領域を作成
         let moonRect = CGRect(x: center.x - radius, y: center.y - radius, width: 2*radius, height: 2*radius)
-        let outwardMax = radius * 0.05
-        let inwardMax = radius * 0.25
+        let outwardMax = radius * 0.01
+        let inwardMax = radius * 0.36
         let outerRect = moonRect.insetBy(dx: -outwardMax, dy: -outwardMax)
         let innerRect = moonRect.insetBy(dx: inwardMax, dy: inwardMax)
 
         var ringClip = Path()
-        ringClip.addRect(CGRect(origin: .zero, size: CGSize(width: 1000, height: 1000))) // 大きな矩形
+        ringClip.addRect(CGRect(origin: .zero, size: CGSize(width: 1000, height: 1000)))
         ringClip.addEllipse(in: outerRect)
         ringClip.addEllipse(in: innerRect) // even-odd: 外側 - 内側 = リング
 
         ctx.drawLayer { glow in
-            glow.clip(to: ringClip, style: FillStyle(eoFill: true))
+            if isFullish {
+                // 満月: クリップなしで直接ぼかし効果を適用
+                let moonPath = Path(ellipseIn: moonRect)
 
-            // 明るい側の角度幅
-            let centerDeg: Double = isRightLit ? 0.0 : 180.0
-            let wedgeSweep: Double = 120.0
-            let startDeg: Double = centerDeg - wedgeSweep / 2
-            let endDeg: Double = centerDeg + wedgeSweep / 2
+                // 内側のブルーグロー（ぼかし効果付き）
+                glow.drawLayer { layer in
+                    layer.blendMode = .normal
+                    layer.addFilter(.blur(radius: radius * 0.25))
+                    layer.fill(moonPath, with: .color(Color.cyan.opacity(0.15)))
+                }
 
-            var outerArc = Path()
-            outerArc.addArc(
-                center: center,
-                radius: radius,
-                startAngle: .degrees(startDeg),
-                endAngle: .degrees(endDeg),
-                clockwise: false
-            )
+                // 外側の白いグロー（ぼかし効果付き）
+                glow.drawLayer { layer in
+                    layer.blendMode = .plusLighter
+                    layer.addFilter(.blur(radius: radius * 0.18))
+                    layer.fill(moonPath, with: .color(Color.white.opacity(0.05)))
+                }
 
-            // ベース青グロー
-            glow.drawLayer { layer in
-                layer.addFilter(.blur(radius: radius * 0.2))
-                layer.blendMode = .normal
-                layer.stroke(
-                    outerArc,
-                    with: .color(glowCyan),
-                    style: StrokeStyle(
-                        lineWidth: radius * 0.3,
-                        lineCap: .round,
-                        lineJoin: .round
-                    )
+                // 外側への拡散グロー
+                glow.drawLayer { layer in
+                    layer.blendMode = .plusLighter
+                    layer.addFilter(.blur(radius: radius * 0.45))
+                    layer.fill(moonPath, with: .color(Color.cyan.opacity(0.08)))
+                }
+            } else if !isThinCrescent {
+                // 極細三日月以外: 通常のグロー処理
+                glow.clip(to: ringClip, style: FillStyle(eoFill: true))
+
+                // Skip glow entirely when extremely thin (動的閾値使用)
+                guard astroIllum > dynamicGlowThreshold else { return }
+
+                // 明るい側の角度幅
+                let centerDeg: Double = isRightLit ? 0.0 : 180.0
+                let wedgeSweep: Double = 120.0
+                let startDeg: Double = centerDeg - wedgeSweep / 2
+                let endDeg: Double = centerDeg + wedgeSweep / 2
+
+                var outerArc = Path()
+                outerArc.addArc(
+                    center: center,
+                    radius: radius,
+                    startAngle: .degrees(startDeg),
+                    endAngle: .degrees(endDeg),
+                    clockwise: false
                 )
-            }
 
-            // 白い加算グロー
-            glow.drawLayer { layer in
-                layer.addFilter(.blur(radius: radius * 0.15))
-                layer.blendMode = .plusLighter
-                layer.stroke(
-                    outerArc,
-                    with: .color(glowWhite),
-                    style: StrokeStyle(
-                        lineWidth: radius * 0.2,
-                        lineCap: .round,
-                        lineJoin: .round
+                // ベース青（端は丸キャップで自然にフェード）
+                glow.drawLayer { layer in
+                    layer.addFilter(.blur(radius: radius * 0.18))
+                    layer.blendMode = .normal
+                    layer.stroke(
+                        outerArc,
+                        with: .color(Color.cyan.opacity(0.15)),
+                        style: StrokeStyle(
+                            lineWidth: radius * 0.28,
+                            lineCap: .round,
+                            lineJoin: .round
+                        )
                     )
-                )
-            }
+                }
 
-            // 仕上げ青グロー（極薄）
-            glow.drawLayer { layer in
-                layer.addFilter(.blur(radius: radius * 0.3))
-                layer.blendMode = .plusLighter
-                layer.stroke(
-                    outerArc,
-                    with: .color(Color.cyan.opacity(0.05)),
-                    style: StrokeStyle(
-                        lineWidth: radius * 0.2,
-                        lineCap: .round,
-                        lineJoin: .round
+                // 白加算（ごく薄く）
+                glow.drawLayer { layer in
+                    layer.addFilter(.blur(radius: radius * 0.14))
+                    layer.blendMode = .plusLighter
+                    layer.stroke(
+                        outerArc,
+                        with: .color(Color.white.opacity(0.025)),
+                        style: StrokeStyle(
+                            lineWidth: radius * 0.18,
+                            lineCap: .round,
+                            lineJoin: .round
+                        )
                     )
+                }
+
+                // 仕上げ青（極薄）
+                glow.drawLayer { layer in
+                    layer.addFilter(.blur(radius: radius * 0.20))
+                    layer.blendMode = .plusLighter
+                    layer.stroke(
+                        outerArc,
+                        with: .color(Color.cyan.opacity(0.05)),
+                        style: StrokeStyle(
+                            lineWidth: radius * 0.18,
+                            lineCap: .round,
+                            lineJoin: .round
+                        )
+                    )
+                }
+            }
+            // 極細三日月ではグロー効果を完全に無効化
+        }
+    }
+
+    // MARK: - Terminator Softening
+    private static func softenTerminator(
+        ctx: GraphicsContext,
+        center c: CGPoint,
+        radius r: CGFloat,
+        isRightLit: Bool,
+        litPath: Path,
+        tone: SkyTone
+    ) {
+        // ターミネーターの曲率パラメータ
+        let curvature: CGFloat = 0.12
+        let feather: CGFloat = 3.0
+        let jitter: CGFloat = 0.8
+
+        // Waxing(右が明) / Waning(左が明) - 統一されたisRightLitを使用
+        let sign: CGFloat = isRightLit ? 1 : -1
+
+        // ターミネーター曲線 x(y) = sign * k * sqrt(r^2 - y^2)
+        // 境界に重なるよう、中心位置を調整
+        let steps = 96
+        var terminator = Path()
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps)          // 0→1
+            let yy = (t * 2 - 1) * r                     // -r→+r
+            let xr = curvature * sqrt(max(0, r*r - yy*yy))
+            // 境界に重なるよう、中心から少し外側にオフセット
+            let offset = r * 0.1  // 境界に重なるよう調整
+            let j = (jitter > 0) ? (CGFloat.random(in: -jitter...jitter)) : 0
+            let x = c.x + sign * (xr - offset) + j
+            let y = c.y + yy
+            (i == 0) ? terminator.move(to: CGPoint(x: x, y: y))
+                     : terminator.addLine(to: CGPoint(x: x, y: y))
+        }
+
+        // Apply terminator softening with clipping to lit portion
+        ctx.drawLayer { layer in
+            layer.clip(to: litPath)
+            layer.blendMode = .normal
+            layer.addFilter(.blur(radius: feather))
+
+            // Apply multiple stroke passes for feathering effect
+            let passes = 5
+            for p in 0..<passes {
+                let w = feather * (1.6 - 0.25 * CGFloat(p))
+                layer.stroke(
+                    terminator,
+                    with: .color(tone.gradEnd.opacity(0.3)),
+                    lineWidth: max(1, w)
                 )
             }
         }
