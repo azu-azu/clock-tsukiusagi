@@ -12,7 +12,7 @@ struct MoonGlyph: View {
     }
 
     var body: some View {
-        let mp = MoonPhaseCalculator.moonPhase(on: date)
+        let mp = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
 
         if mp.illumination < thinThreshold {
             Color.clear
