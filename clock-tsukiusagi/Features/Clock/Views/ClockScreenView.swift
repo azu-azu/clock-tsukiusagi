@@ -146,7 +146,7 @@ final class ClockScreenVM: ObservableObject {
 #if DEBUG
 #Preview("Fixed 10/11 デバッグ") {
     var comps = DateComponents()
-    comps.year = 2025; comps.month = 10; comps.day = 11
+    comps.year = 2025; comps.month = 10; comps.day = 7
     comps.hour = 21; comps.minute = 0
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
@@ -181,10 +181,15 @@ final class ClockScreenVM: ObservableObject {
 
 #Preview("Fixed 10/13 左明,third") {
     var comps = DateComponents()
-    comps.year = 2025; comps.month = 10; comps.day = 13
+    comps.year = 2025; comps.month = 10; comps.day = 12
     comps.hour = 7; comps.minute = 5
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
+
+    // デバッグ用：10/13の月相計算を確認
+    let moonPhase = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
+    let _ = print("10/13 Debug: phase=\(moonPhase.phase), illumination=\(moonPhase.illumination)")
+
     return ClockScreenView(fixedDate: date)
 }
 

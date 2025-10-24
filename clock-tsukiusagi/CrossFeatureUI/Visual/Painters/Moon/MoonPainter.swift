@@ -48,10 +48,13 @@ enum MoonPainter {
         let bodyColor = Color.white.opacity(0.95)
         ctx.fill(lit, with: .color(bodyColor))
 
-        // 半月の時だけターミネーターの柔らか化を適用
-        let halfMoonDistance = hypot(c1.x - c0.x, c1.y - c0.y)
-        let halfMoonThreshold = r * 0.02
-        if halfMoonDistance < halfMoonThreshold {
+        // 2円法でターミネーターが存在する時に柔らか化を適用
+        let circleDistance = hypot(c1.x - c0.x, c1.y - c0.y)
+        let terminatorThreshold = r * 0.5  // 2円が近く交差している範囲（距離 < 0.5r）
+        #if DEBUG
+        print("MoonPainter: circleDistance=\(circleDistance), terminatorThreshold=\(terminatorThreshold), hasTerminator=\(circleDistance < terminatorThreshold)")
+        #endif
+        if circleDistance < terminatorThreshold {
             softenTerminator(ctx: ctx, center: c0, radius: r, isRightLit: isRightLit, litPath: lit, tone: tone)
         }
 
@@ -314,6 +317,10 @@ enum MoonPainter {
         litPath: Path,
         tone: SkyTone
     ) {
+        #if DEBUG
+        print("softenTerminator: center=\(c), radius=\(r), isRightLit=\(isRightLit)")
+        #endif
+
         // ターミネーターの曲率パラメータ
         let curvature: CGFloat = 0.12
         let feather: CGFloat = 3.0
@@ -331,7 +338,7 @@ enum MoonPainter {
             let yy = (t * 2 - 1) * r                     // -r→+r
             let xr = curvature * sqrt(max(0, r*r - yy*yy))
             // 境界に重なるよう、中心から少し外側にオフセット
-            let offset = r * 0.1  // 境界に重なるよう調整
+            let offset = r * 0.2  // 境界に重なるよう調整
             let j = (jitter > 0) ? (CGFloat.random(in: -jitter...jitter)) : 0
             let x = c.x + sign * (xr - offset) + j
             let y = c.y + yy
@@ -346,12 +353,12 @@ enum MoonPainter {
             layer.addFilter(.blur(radius: feather))
 
             // Apply multiple stroke passes for feathering effect
-            let passes = 5
+            let passes = 20
             for p in 0..<passes {
                 let w = feather * (1.6 - 0.25 * CGFloat(p))
                 layer.stroke(
                     terminator,
-                    with: .color(tone.gradEnd.opacity(0.3)),
+                    with: .color(Color.black.opacity(0.6)),  // より濃い色でターミネーターを目立たせる
                     lineWidth: max(1, w)
                 )
             }
