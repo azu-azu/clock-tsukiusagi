@@ -44,7 +44,6 @@ enum ThirdQuarterMoon {
     /// ターミネーターの柔らか化パス（直線ターミネーターに曲率を加える）
     static func terminatorPath(center: CGPoint, radius: CGFloat, circleDistance: CGFloat = 0) -> Path {
         let curvature: CGFloat = 0.12
-        let feather: CGFloat = 3.0
         let jitter: CGFloat = 0.8
         let isRightLit = false  // 下弦の月は常に左が明
 
@@ -103,7 +102,11 @@ enum ThirdQuarterMoon {
         let hasTerminator = circleDistance < terminatorThreshold
 
         if hasTerminator {
-            let terminatorPath = ThirdQuarterMoon.terminatorPath(center: center, radius: radius, circleDistance: circleDistance)
+            let terminatorPath = ThirdQuarterMoon.terminatorPath(
+                center: center,
+                radius: radius,
+                circleDistance: circleDistance
+            )
             ctx.drawLayer { layer in
                 layer.clip(to: quarterMoonPath)
                 layer.blendMode = .normal

@@ -148,7 +148,7 @@ final class ClockScreenVM: ObservableObject {
     // ←ここはお好きな日付でOK（例: 2025/10/13 21:00 JST）
     var comps = DateComponents()
     comps.year = 2025; comps.month = 10; comps.day = 12
-    comps.hour = 21; comps.minute = 0
+    comps.hour = 9; comps.minute = 0
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
 
@@ -250,7 +250,14 @@ final class ClockScreenVM: ObservableObject {
                   ? (isRightLit ? "右側" : "左側") : nil
 
     return VStack(spacing: 8) {
-        Text(DateFormatter.localizedString(from: date, dateStyle: .short, timeStyle: .none).replacingOccurrences(of: "/", with: "/"))
+        Text(
+            DateFormatter.localizedString(
+                from: date,
+                dateStyle: .short,
+                timeStyle: .none
+            )
+            .replacingOccurrences(of: "/", with: "/")
+        )
             .font(.headline).foregroundColor(.white)
 
         Text(phaseName + tag)

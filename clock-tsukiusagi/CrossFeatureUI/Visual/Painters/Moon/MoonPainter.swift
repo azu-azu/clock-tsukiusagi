@@ -7,16 +7,21 @@ enum MoonPainter {
         let center = CGPoint(x: size.width * 0.5, y: size.height * 0.45)
         let radius = min(size.width, size.height) * 0.18
 
-        // phase から月相判定
+        // phase から月相判定（境界を跨ぐ場合も考慮）
         // 0.0 = 新月, 0.25 = 上弦, 0.5 = 満月, 0.75 = 下弦
-        let firstQuarterPhase = 0.25
-        let fullMoonPhase = 0.5
-        let thirdQuarterPhase = 0.75
-        let phaseThreshold = 0.05
 
-        let isFirstQuarter = abs(phase - firstQuarterPhase) < phaseThreshold
-        let isFullMoon = abs(phase - fullMoonPhase) < phaseThreshold
-        let isThirdQuarter = abs(phase - thirdQuarterPhase) < phaseThreshold
+        // 円形のphase範囲を考慮して、境界を跨いだ判定も含める
+        func isInPhaseRange(_ p: Double, _ target: Double, _ threshold: Double) -> Bool {
+            let diff = abs(p - target)
+            // phaseは円形（0.0と1.0は隣接）なので、反対側もチェック
+            return diff < threshold || diff > (1.0 - threshold)
+        }
+
+        let phaseThreshold = 0.08  // ±0.08（約±2.5日）
+
+        let isFullMoon = isInPhaseRange(phase, 0.5, phaseThreshold)
+        let isFirstQuarter = isInPhaseRange(phase, 0.25, phaseThreshold)
+        let isThirdQuarter = isInPhaseRange(phase, 0.75, phaseThreshold)
 
         #if DEBUG
         print(String(format: "MoonPainter.draw: phase=%.6f, isFirstQuarter=%@, isFullMoon=%@, isThirdQuarter=%@",
@@ -96,7 +101,11 @@ enum MoonPainter {
 
             // ターミネーターの柔らか化（上弦の月）
             let circleDistance: CGFloat = 13.7750  // 上弦の月の実測値
-            let terminatorPath = FirstQuarterMoon.terminatorPath(center: center, radius: radius, circleDistance: circleDistance)
+            let terminatorPath = FirstQuarterMoon.terminatorPath(
+                center: center,
+                radius: radius,
+                circleDistance: circleDistance
+            )
             ctx.drawLayer { layer in
                 layer.clip(to: quarterPath)
                 layer.blendMode = .normal
@@ -115,7 +124,13 @@ enum MoonPainter {
 
             // グロー効果（右側のみ）
             let glowArc = Path { path in
-                path.addArc(center: center, radius: radius, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
+                path.addArc(
+                    center: center,
+                    radius: radius,
+                    startAngle: .degrees(-90),
+                    endAngle: .degrees(90),
+                    clockwise: false
+                )
             }
             ctx.drawLayer { layer in
                 layer.addFilter(.blur(radius: radius * 0.18))
@@ -150,7 +165,11 @@ enum MoonPainter {
 
             // ターミネーターの柔らか化（下弦の月）
             let circleDistance: CGFloat = 31.7503  // 下弦の月の実測値
-            let terminatorPath = ThirdQuarterMoon.terminatorPath(center: center, radius: radius, circleDistance: circleDistance)
+            let terminatorPath = ThirdQuarterMoon.terminatorPath(
+                center: center,
+                radius: radius,
+                circleDistance: circleDistance
+            )
             ctx.drawLayer { layer in
                 layer.clip(to: quarterPath)
                 layer.blendMode = .normal
@@ -169,7 +188,13 @@ enum MoonPainter {
 
             // グロー効果（左側のみ）
             let glowArc = Path { path in
-                path.addArc(center: center, radius: radius, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
+                path.addArc(
+                    center: center,
+                    radius: radius,
+                    startAngle: .degrees(90),
+                    endAngle: .degrees(270),
+                    clockwise: false
+                )
             }
             ctx.drawLayer { layer in
                 layer.addFilter(.blur(radius: radius * 0.18))
