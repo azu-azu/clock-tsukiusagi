@@ -19,14 +19,40 @@ enum MoonPainter {
 
         let phaseThreshold = 0.08  // ±0.08（約±2.5日）
 
+        let isNewMoon = isInPhaseRange(phase, 0.0, phaseThreshold)
         let isFullMoon = isInPhaseRange(phase, 0.5, phaseThreshold)
         let isFirstQuarter = isInPhaseRange(phase, 0.25, phaseThreshold)
         let isThirdQuarter = isInPhaseRange(phase, 0.75, phaseThreshold)
 
         #if DEBUG
-        print(String(format: "MoonPainter.draw: phase=%.6f, isFirstQuarter=%@, isFullMoon=%@, isThirdQuarter=%@",
-                    phase, isFirstQuarter ? "YES" : "NO", isFullMoon ? "YES" : "NO", isThirdQuarter ? "YES" : "NO"))
+        print(
+            String(
+                format: """
+                    MoonPainter.draw: phase=%.6f,
+                    isNewMoon=%@,
+                    isFirstQuarter=%@,
+                    isFullMoon=%@,
+                    isThirdQuarter=%@
+                    """,
+                    phase,
+                    isNewMoon ? "YES" : "NO",
+                    isFirstQuarter ? "YES" : "NO",
+                    isFullMoon ? "YES" : "NO",
+                    isThirdQuarter ? "YES" : "NO"
+                ))
         #endif
+
+        // 新月（薄い黒円）
+        if isNewMoon {
+            #if DEBUG
+            print("MoonPainter.draw: Drawing new moon template")
+            #endif
+            // 太陽方向（右=0°）: 位相から近似（waxingなら右、waningなら左）
+            let isRightLit = sin(2.0 * .pi * phase) > 0
+            let sunAngle: Angle = isRightLit ? .degrees(0) : .degrees(180)
+            NewMoonPainter.draw(in: ctx, center: center, radius: radius, sunAngle: sunAngle)
+            return
+        }
 
         if isFullMoon {
             #if DEBUG

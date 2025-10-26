@@ -22,7 +22,11 @@ struct MoonGlyph: View {
             #endif
         }()
 
-        if mp.illumination < thinThreshold {
+        // 新月（黒円）だけは薄くても表示したい
+        let newMoonThreshold = 0.08   // 約±2.5日
+        let isNewMoon = isInPhaseRange(mp.phase, 0.0, newMoonThreshold)
+
+        if mp.illumination < thinThreshold && !isNewMoon {
             Color.clear
         } else {
             Canvas { ctx, canvasSize in
@@ -36,9 +40,15 @@ struct MoonGlyph: View {
                     tone: tone
                 )
             }
-            .opacity(calculateOpacity(illumination: mp.illumination))
+            .opacity(isNewMoon ? 1.0 : calculateOpacity(illumination: mp.illumination))
             .accessibilityLabel(Text("Moon, phase: \(String(format: "%.0f", mp.illumination * 100))%"))
         }
+    }
+
+    // body外のヘルパー（ViewBuilderを壊さないため）
+    private func isInPhaseRange(_ p: Double, _ target: Double, _ threshold: Double) -> Bool {
+        let diff = abs(p - target)
+        return diff < threshold || diff > (1.0 - threshold)
     }
 
     private func calculateOpacity(illumination: Double) -> Double {

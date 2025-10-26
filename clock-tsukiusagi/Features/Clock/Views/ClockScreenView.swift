@@ -147,8 +147,8 @@ final class ClockScreenVM: ObservableObject {
 #Preview("Phase debug") {
     // ←ここはお好きな日付でOK（例: 2025/10/13 21:00 JST）
     var comps = DateComponents()
-    comps.year = 2025; comps.month = 10; comps.day = 12
-    comps.hour = 9; comps.minute = 0
+    comps.year = 2025; comps.month = 10; comps.day = 22
+    comps.hour = 21; comps.minute = 0
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
 
