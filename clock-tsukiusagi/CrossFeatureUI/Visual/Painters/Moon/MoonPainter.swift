@@ -7,7 +7,7 @@ enum MoonPainter {
         let center = CGPoint(x: size.width * 0.5, y: size.height * 0.45)
         let radius = min(size.width, size.height) * 0.18
 
-        // phase から月相判定（境界を跨ぐ場合も考慮）
+        // phase から月相判定
         // 0.0 = 新月, 0.25 = 上弦, 0.5 = 満月, 0.75 = 下弦
 
         // 円形のphase範囲を考慮して、境界を跨いだ判定も含める
