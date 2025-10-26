@@ -44,9 +44,16 @@ enum MoonPainter {
         // 白い"明部"の輪郭（2円法）
         let lit = makeLitPath(c0: c0, c1: c1, r: r, phase: φ, isRightLit: isRightLit, offset: offset)
 
-        // 塗る（単色。必要なら .radialGradient に差し替え可）
-        let bodyColor = Color.white.opacity(0.95)
-        ctx.fill(lit, with: .color(bodyColor))
+        // 塗る（backup と同じ放射グラデーション）
+        ctx.fill(
+            lit,
+            with: .radialGradient(
+                Gradient(colors: [DesignTokens.MoonColors.centerColor, DesignTokens.MoonColors.edgeColor]),
+                center: .init(x: c0.x, y: c0.y),
+                startRadius: r * 0.08,
+                endRadius: r
+            )
+        )
 
         // 2円法でターミネーターが存在する時に柔らか化を適用
         let circleDistance = hypot(c1.x - c0.x, c1.y - c0.y)
