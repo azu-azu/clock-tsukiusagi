@@ -1,11 +1,7 @@
-/* 
+/*
   Localizable.strings (ja)
   tsukiusagi-clock
 
   Created by AI Assistant on 2025-01-14.
 */
 
-"caption_dawn" = "静かに始めよう。";
-"caption_day" = "穏やかなリズムを保って。";
-"caption_dusk" = "ゆっくりとくつろいで。";
-"caption_night" = "静かな時間です。";

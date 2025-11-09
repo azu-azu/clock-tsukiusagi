@@ -1,311 +1,237 @@
 import SwiftUI
 
-// MARK: - MoonPainter
 enum MoonPainter {
-    // MARK: - Colors
-    private static let moonCenterColor = DesignTokens.MoonColors.centerColor
-    private static let moonEdgeColor   = DesignTokens.MoonColors.edgeColor
 
-    // === GLOW: 外周アークだけ発光（ストローク→ブラー→内側を消す） ===
+    // MARK: - Public API
     static func draw(in ctx: GraphicsContext, size: CGSize, phase: Double, tone: SkyTone) {
+        let center = CGPoint(x: size.width * 0.5, y: size.height * 0.45)
         let radius = min(size.width, size.height) * 0.18
-        let center = CGPoint(
-            x: size.width * 0.5,
-            y: size.height * 0.45
-        )
 
-        // 位相とオフセット（二円法の余弦マッピング）
-        // φ=0.25/0.75 → s=0 (perfect half-moon), φ=0.5 → s=-r (full), φ=0 → s=+r (new)
-        let s = CGFloat(cos(2.0 * .pi * phase)) * radius
-        // Glow intensity strategy
-        let illum = glowIntensity(phase: phase, s: s, radius: radius)
-        let glowSkipThreshold: CGFloat = 0.03
-        // Helpers for interpolation
-        func lerp(_ a: CGFloat, _ b: CGFloat, _ t: CGFloat) -> CGFloat { a + (b - a) * t }
-        func smooth(_ x: CGFloat) -> CGFloat { let t = max(0, min(1, x)); return t * t * (3 - 2 * t) }
-        let t = smooth(illum)
-        // Near-full detection: phase-based threshold (near φ=0.5)
-        let isFullish = abs(phase - 0.5) < 0.02
+        // phase から月相判定
+        // 0.0 = 新月, 0.25 = 上弦, 0.5 = 満月, 0.75 = 下弦
 
-        // 二円法による litPath 生成
-        let shadowCenter = CGPoint(x: center.x + s, y: center.y)
-        let litPath = makeLitPath(c0: center, c1: shadowCenter, r: radius, phase: phase, s: s)
+        // 円形のphase範囲を考慮して、境界を跨いだ判定も含める
+        func isInPhaseRange(_ p: Double, _ target: Double, _ threshold: Double) -> Bool {
+            let diff = abs(p - target)
+            // phaseは円形（0.0と1.0は隣接）なので、反対側もチェック
+            return diff < threshold || diff > (1.0 - threshold)
+        }
 
-        // --- 月本体（litPath を直接塗る） ---
-        ctx.drawLayer { body in
-            body.fill(
-                litPath,
+        let phaseThreshold = 0.08  // ±0.08（約±2.5日）
+
+        let isNewMoon = isInPhaseRange(phase, 0.0, phaseThreshold)
+        let isFullMoon = isInPhaseRange(phase, 0.5, phaseThreshold)
+        let isFirstQuarter = isInPhaseRange(phase, 0.25, phaseThreshold)
+        let isThirdQuarter = isInPhaseRange(phase, 0.75, phaseThreshold)
+
+        #if DEBUG
+        print(
+            String(
+                format: """
+                    MoonPainter.draw: phase=%.6f,
+                    isNewMoon=%@,
+                    isFirstQuarter=%@,
+                    isFullMoon=%@,
+                    isThirdQuarter=%@
+                    """,
+                    phase,
+                    isNewMoon ? "YES" : "NO",
+                    isFirstQuarter ? "YES" : "NO",
+                    isFullMoon ? "YES" : "NO",
+                    isThirdQuarter ? "YES" : "NO"
+                ))
+        #endif
+
+        // 新月（薄い黒円）
+        if isNewMoon {
+            #if DEBUG
+            print("MoonPainter.draw: Drawing new moon template")
+            #endif
+            // 太陽方向（右=0°）: 位相から近似（waxingなら右、waningなら左）
+            let isRightLit = sin(2.0 * .pi * phase) > 0
+            let sunAngle: Angle = isRightLit ? .degrees(0) : .degrees(180)
+            NewMoonPainter.draw(in: ctx, center: center, radius: radius, sunAngle: sunAngle)
+            return
+        }
+
+        if isFullMoon {
+            #if DEBUG
+            print("MoonPainter.draw: Drawing full moon template")
+            #endif
+
+            // 満月テンプレートを使用
+            let fullMoonPath = FullMoon.shape(center: center, radius: radius)
+
+            // 放射グラデーションで塗る
+            ctx.fill(
+                fullMoonPath,
                 with: .radialGradient(
-                    Gradient(colors: [moonCenterColor, moonEdgeColor]),
-                    center: .init(x: center.x, y: center.y),
+                    Gradient(colors: [
+                        DesignTokens.MoonColors.centerColor,
+                        DesignTokens.MoonColors.edgeColor
+                    ]),
+                    center: center,
                     startRadius: radius * 0.08,
                     endRadius: radius
                 )
             )
+
+            // 満月のグロー効果
+            let moonRect = CGRect(x: center.x - radius, y: center.y - radius, width: 2*radius, height: 2*radius)
+            let moonPath = Path(ellipseIn: moonRect)
+
+            // 内側のブルーグロー
+            ctx.drawLayer { layer in
+                layer.blendMode = .normal
+                layer.addFilter(.blur(radius: radius * 0.25))
+                layer.fill(moonPath, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.15)))
+            }
+
+            // 外側の白いグロー
+            ctx.drawLayer { layer in
+                layer.blendMode = .plusLighter
+                layer.addFilter(.blur(radius: radius * 0.18))
+                layer.fill(moonPath, with: .color(DesignTokens.MoonColors.glowWhite.opacity(0.05)))
+            }
+
+            // 外側への拡散グロー
+            ctx.drawLayer { layer in
+                layer.blendMode = .plusLighter
+                layer.addFilter(.blur(radius: radius * 0.45))
+                layer.fill(moonPath, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.08)))
+            }
+
+            return
         }
 
-        // --- OUTER GLOW：月の縁に沿った"薄いリング領域"に限定（外へ出さず、内側寄り） ---
-        // 外側は極小、内側へ広げる
-        let moonRect = CGRect(x: center.x - radius, y: center.y - radius, width: 2*radius, height: 2*radius)
-        let outwardMax = radius * 0.01
-        let inwardMax  = radius * 0.36
-        let outerRect  = moonRect.insetBy(dx: -outwardMax, dy: -outwardMax) // わずかに拡大
-        let innerRect  = moonRect.insetBy(dx:  inwardMax, dy:  inwardMax)   // だいぶ縮小
-        var ringClip = Path()
-        ringClip.addRect(CGRect(origin: .zero, size: size))
-        ringClip.addEllipse(in: outerRect)
-        ringClip.addEllipse(in: innerRect) // even-odd: Rect - (outer - inner) = 薄いリング
+        if isFirstQuarter {
+            #if DEBUG
+            print("MoonPainter.draw: Drawing first quarter moon template")
+            #endif
 
-        // 点灯側の角度幅（位相に応じて補間）
-        let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
-        let wedgeSweep: Double = Double(lerp(120, 150, t))
+            let quarterPath = FirstQuarterMoon.shape(center: center, radius: radius)
 
-        ctx.drawLayer { glow in
-            if isFullish {
-                // Full moon: use a 360° inward-biased ring halo (no wedge cap)
-                let moonPath = Path(ellipseIn: moonRect)
-                let outer = moonRect.insetBy(dx: -radius * 0.02, dy: -radius * 0.02)
-                let inner = moonRect.insetBy(dx:  radius * 0.32, dy:  radius * 0.32)
-                var ring = Path()
-                ring.addEllipse(in: outer)
-                ring.addEllipse(in: inner)
-                glow.clip(to: ring, style: FillStyle(eoFill: true))
+            // 放射グラデーションで塗る
+            ctx.fill(
+                quarterPath,
+                with: .radialGradient(
+                    Gradient(colors: [
+                        DesignTokens.MoonColors.centerColor,
+                        DesignTokens.MoonColors.edgeColor
+                    ]),
+                    center: center,
+                    startRadius: radius * 0.08,
+                    endRadius: radius
+                )
+            )
 
-                glow.blendMode = .plusLighter
-                glow.addFilter(.blur(radius: radius * 0.35))
-                glow.fill(moonPath, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.18)))
+            // ターミネーターの柔らか化（上弦の月）
+            let circleDistance: CGFloat = 13.7750  // 上弦の月の実測値
+            let terminatorPath = FirstQuarterMoon.terminatorPath(
+                center: center,
+                radius: radius,
+                circleDistance: circleDistance
+            )
+            ctx.drawLayer { layer in
+                layer.clip(to: quarterPath)
+                layer.blendMode = .normal
+                layer.addFilter(.blur(radius: 3.0))
 
-                glow.addFilter(.blur(radius: radius * 0.18))
-                glow.fill(moonPath, with: .color(DesignTokens.MoonColors.glowWhite.opacity(0.05)))
-            } else {
-                glow.clip(to: ringClip, style: FillStyle(eoFill: true))
-                // Skip glow entirely when extremely thin
-                guard illum > glowSkipThreshold else { return }
-
-                // 外周アークに沿ったストロークをぼかして重ねる（内側寄りに見えるよう控えめ）
-                // Center on lit side: 0° (right-lit), 180° (left-lit)
-                let centerDeg: Double = isRightLit ? 0.0 : 180.0
-                let startDeg: Double = centerDeg - wedgeSweep / 2
-                let endDeg: Double   = centerDeg + wedgeSweep / 2
-                var outerArc = Path()
-                outerArc.addArc(center: center, radius: radius,
-                                startAngle: .degrees(startDeg), endAngle: .degrees(endDeg), clockwise: false)
-
-                // ベース青（端は丸キャップで自然にフェード）
-                glow.drawLayer { layer in
-                    let blurBase = lerp(radius * 0.18, radius * 0.28, t)
-                    let cyanAlpha = lerp(0.15, 0.11, t)
-                    layer.addFilter(.blur(radius: blurBase))
-                    layer.blendMode = .normal
+                let passes = 20
+                for p in 0..<passes {
+                    let w = 3.0 * (1.6 - 0.25 * CGFloat(p))
                     layer.stroke(
-                        outerArc,
-                        with: .color(DesignTokens.MoonColors.glowCyan.opacity(cyanAlpha)),
-                        style: StrokeStyle(
-                            lineWidth: radius * 0.28,
-                            lineCap: .round,
-                            lineJoin: .round
-                        )
-                    )
-                }
-
-                // 白加算（ごく薄く）
-                glow.drawLayer { layer in
-                    let blurSoft = lerp(radius * 0.14, radius * 0.22, t)
-                    let whiteAlpha = lerp(0.025, 0.035, t)
-                    layer.addFilter(.blur(radius: blurSoft))
-                    layer.blendMode = .plusLighter
-                    layer.stroke(
-                        outerArc,
-                        with: .color(DesignTokens.MoonColors.glowWhite.opacity(whiteAlpha)),
-                        style: StrokeStyle(
-                            lineWidth: radius * 0.18,
-                            lineCap: .round,
-                            lineJoin: .round
-                        )
-                    )
-                }
-
-                // 仕上げ青（極薄）
-                glow.drawLayer { layer in
-                    layer.addFilter(.blur(radius: lerp(radius * 0.20, radius * 0.36, t)))
-                    layer.blendMode = .plusLighter
-                    layer.stroke(
-                        outerArc,
-                        with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.05)),
-                        style: StrokeStyle(
-                            lineWidth: radius * 0.18,
-                            lineCap: .round,
-                            lineJoin: .round
-                        )
+                        terminatorPath,
+                        with: .color(Color.black.opacity(0.6)),
+                        lineWidth: max(1, w)
                     )
                 }
             }
-        }
-    }
 
-    // MARK: - Moon Shape Generation
-    private static func getActualMoonShape(center: CGPoint, radius: CGFloat, phase: Double) -> Path {
-        var path = Path()
-        let s = CGFloat(sin(2.0 * .pi * phase)) * radius
-
-        if phase < 0.5 {
-            // 右側が光る（外側は右半分）
-            path.addArc(center: center, radius: radius,
-                        startAngle: .degrees(270), endAngle: .degrees(90), clockwise: false)
-            let innerCenter = CGPoint(x: center.x + s, y: center.y)
-            path.addArc(center: innerCenter, radius: radius,
-                        startAngle: .degrees(90), endAngle: .degrees(270), clockwise: true)
-        } else {
-            // 左側が光る（外側は左半分）
-            path.addArc(center: center, radius: radius,
-                        startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
-            let innerCenter = CGPoint(x: center.x - s, y: center.y)
-            path.addArc(center: innerCenter, radius: radius,
-                        startAngle: .degrees(270), endAngle: .degrees(90), clockwise: true)
-        }
-        path.closeSubpath()
-        return path
-    }
-
-    // MARK: - Two-Circle Lit Path Generation
-    private static func makeLitPath(c0: CGPoint, c1: CGPoint, r: CGFloat, phase: Double, s: CGFloat) -> Path {
-        let dx = c1.x - c0.x
-        let dy = c1.y - c0.y
-        let d = max(0.0, hypot(dx, dy))
-
-        // Calculate illumination
-        let illum = 0.5 * (1.0 - cos(2.0 * .pi * phase))
-
-        // Edge cases
-        if illum < 0.001 {
-            return Path() // New moon - empty
-        }
-        if illum > 0.999 {
-            return Path(ellipseIn: CGRect(x: c0.x - r, y: c0.y - r, width: 2*r, height: 2*r)) // Full moon
-        }
-
-        // Half-moon case (circles nearly coincident)
-        if d < 1e-4 {
-            let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
-
-            var path = Path()
-            if isRightLit {
-                // Right-lit: draw right semicircle (-90° to +90°)
-                path.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
-            } else {
-                // Left-lit: draw left semicircle (+90° to +270°)
-                path.addArc(center: c0, radius: r, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
+            // グロー効果（右側のみ）
+            let glowArc = Path { path in
+                path.addArc(
+                    center: center,
+                    radius: radius,
+                    startAngle: .degrees(-90),
+                    endAngle: .degrees(90),
+                    clockwise: false
+                )
             }
-            path.addLine(to: c0)
-            path.closeSubpath()
-            return path
-        }
-
-        // General case: calculate intersection points
-        let a = d * 0.5
-        let h2 = r * r - a * a
-
-        if h2 <= 0 {
-            // Circles don't intersect - fallback to half-moon
-            let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
-
-            var path = Path()
-            if isRightLit {
-                // Right-lit: draw right semicircle (-90° to +90°)
-                path.addArc(center: c0, radius: r, startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
-            } else {
-                // Left-lit: draw left semicircle (+90° to +270°)
-                path.addArc(center: c0, radius: r, startAngle: .degrees(90), endAngle: .degrees(270), clockwise: false)
+            ctx.drawLayer { layer in
+                layer.addFilter(.blur(radius: radius * 0.18))
+                layer.blendMode = .normal
+                layer.stroke(glowArc, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.15)),
+                           style: StrokeStyle(lineWidth: radius * 0.28, lineCap: .round, lineJoin: .round))
             }
-            path.addLine(to: c0)
-            path.closeSubpath()
-            return path
+
+            return
         }
 
-        let h = sqrt(h2)
+        if isThirdQuarter {
+            #if DEBUG
+            print("MoonPainter.draw: Drawing third quarter moon template")
+            #endif
 
-        // Unit vector along line connecting centers
-        let ux = dx / d
-        let uy = dy / d
+            let quarterPath = ThirdQuarterMoon.shape(center: center, radius: radius)
 
-        // Midpoint between centers
-        let mx = c0.x + a * ux
-        let my = c0.y + a * uy
+            // 放射グラデーションで塗る
+            ctx.fill(
+                quarterPath,
+                with: .radialGradient(
+                    Gradient(colors: [
+                        DesignTokens.MoonColors.centerColor,
+                        DesignTokens.MoonColors.edgeColor
+                    ]),
+                    center: center,
+                    startRadius: radius * 0.08,
+                    endRadius: radius
+                )
+            )
 
-        // Intersection points (perpendicular to line connecting centers)
-        let nx = -uy
-        let ny = ux
-        let px = mx + h * nx
-        let py = my + h * ny
-        let qx = mx - h * nx
-        let qy = my - h * ny
+            // ターミネーターの柔らか化（下弦の月）
+            let circleDistance: CGFloat = 31.7503  // 下弦の月の実測値
+            let terminatorPath = ThirdQuarterMoon.terminatorPath(
+                center: center,
+                radius: radius,
+                circleDistance: circleDistance
+            )
+            ctx.drawLayer { layer in
+                layer.clip(to: quarterPath)
+                layer.blendMode = .normal
+                layer.addFilter(.blur(radius: 3.0))
 
-        // Calculate angles for arc generation
-        let angleFromCenter = { (cx: CGFloat, cy: CGFloat, x: CGFloat, y: CGFloat) -> Angle in
-            Angle(radians: atan2(Double(y - cy), Double(x - cx)))
+                let passes = 20
+                for p in 0..<passes {
+                    let w = 3.0 * (1.6 - 0.25 * CGFloat(p))
+                    layer.stroke(
+                        terminatorPath,
+                        with: .color(Color.black.opacity(0.6)),
+                        lineWidth: max(1, w)
+                    )
+                }
+            }
+
+            // グロー効果（左側のみ）
+            let glowArc = Path { path in
+                path.addArc(
+                    center: center,
+                    radius: radius,
+                    startAngle: .degrees(90),
+                    endAngle: .degrees(270),
+                    clockwise: false
+                )
+            }
+            ctx.drawLayer { layer in
+                layer.addFilter(.blur(radius: radius * 0.18))
+                layer.blendMode = .normal
+                layer.stroke(glowArc, with: .color(DesignTokens.MoonColors.glowCyan.opacity(0.15)),
+                           style: StrokeStyle(lineWidth: radius * 0.28, lineCap: .round, lineJoin: .round))
+            }
+
+            return
         }
 
-        let th0P = angleFromCenter(c0.x, c0.y, px, py)
-        let th0Q = angleFromCenter(c0.x, c0.y, qx, qy)
-        let th1P = angleFromCenter(c1.x, c1.y, px, py)
-        let th1Q = angleFromCenter(c1.x, c1.y, qx, qy)
-
-        // Determine crescent vs gibbous and waxing vs waning
-        let crescent = illum < 0.5
-        let isRightLit = phase < 0.5  // First Quarter (φ<0.5) = right lit
-
-        var path = Path()
-
-        if crescent {
-            // Crescent: narrow arcs
-            path.move(to: CGPoint(x: px, y: py))
-            path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: isRightLit ? false : true)
-            path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: isRightLit ? false : true)
-            path.closeSubpath()
-        } else {
-            // Gibbous: wide arcs (complement)
-            path.move(to: CGPoint(x: px, y: py))
-            path.addArc(center: c0, radius: r, startAngle: th0P, endAngle: th0Q, clockwise: isRightLit ? true : false)
-            path.addArc(center: c1, radius: r, startAngle: th1Q, endAngle: th1P, clockwise: isRightLit ? true : false)
-            path.closeSubpath()
-        }
-
-        return path
-    }
-
-    // MARK: - Glow Intensity Strategy
-    private enum GlowCurve {
-        case astronomical
-        case legacy
-        case blend(weight: Double) // 0.0=legacy, 1.0=astronomical
-    }
-
-    private static let glowCurveStrategy: GlowCurve = .blend(weight: 0.6)
-
-    @inline(__always)
-    private static func illumAstronomical(_ phase: Double) -> CGFloat {
-        let v = 0.5 * (1.0 - cos(2.0 * .pi * phase))
-        return CGFloat(max(0.0, min(1.0, v)))
-    }
-
-    @inline(__always)
-    private static func illumLegacy(from s: CGFloat, radius r: CGFloat) -> CGFloat {
-        let v = 1.0 - abs(s) / r
-        return max(0.0, min(1.0, v))
-    }
-
-    @inline(__always)
-    private static func glowIntensity(phase: Double, s: CGFloat, radius r: CGFloat) -> CGFloat {
-        switch glowCurveStrategy {
-        case .astronomical:
-            return illumAstronomical(phase)
-        case .legacy:
-            return illumLegacy(from: s, radius: r)
-        case .blend(let w):
-            let a = Double(illumAstronomical(phase))
-            let l = Double(illumLegacy(from: s, radius: r))
-            let v = (1.0 - w) * l + w * a
-            return CGFloat(max(0.0, min(1.0, v)))
-        }
+        // その他の月相は後で実装
     }
 }

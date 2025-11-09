@@ -51,7 +51,6 @@ struct SevenSegDotClockView: View {
             }
             .padding(.horizontal, 8)
         }
-        .statusBarHidden(true)
     }
 }
 
@@ -85,7 +84,7 @@ struct SevenSegDigitDotCell: View {
             let rect = geo.frame(in: .local)
 
             // 8の形（=全セグメント）を「薄い」レイヤー
-            DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: textColor.opacity(inactiveOpacity))
+            DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: textColor.opacity(inactiveOpacity * 0.3))
                 .mask(segmentsPath(in: rect, lit: Array(repeating: true, count: 7)))
 
             // 現在点灯するセグメントだけ「濃い」レイヤー
@@ -163,7 +162,7 @@ struct ColonDotCell: View {
 
             ZStack {
                 // 薄い（同じ円をスケールで拡大 → 楕円化しない）
-                DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: textColor.opacity(inactiveOpacity))
+                DigitalDotGrid(dotSize: dotSize, spacing: spacing, color: textColor.opacity(inactiveOpacity * 0.3))
                     .mask(
                         Path { p in
                             p.addEllipse(in: up)
