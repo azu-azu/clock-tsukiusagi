@@ -134,8 +134,18 @@ final class ClockScreenVM: ObservableObject {
     func snapshot(at date: Date) -> Snapshot {
         let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
         let tone = SkyTone.forHour(comps.hour ?? 0)
-        let cap = tone.captionKey.localized // Localizable対応想定
-        return Snapshot(time: date, skyTone: tone, caption: cap)
+        let mp = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
+        #if DEBUG
+        print("=== ClockCaption Debug ===")
+        print("Date: \(date)")
+        print("Phase: \(String(format: "%.6f", mp.phase))")
+        print("Illumination: \(String(format: "%.2f%%", mp.illumination * 100))")
+        let captionResult = ClockCaption.forMoonPhase(phase: mp.phase, illumination: mp.illumination)
+        print("Caption Key: \(captionResult.captionKey)")
+        print("========================")
+        #endif
+        let caption = ClockCaption.forMoonPhase(phase: mp.phase, illumination: mp.illumination).captionKey
+        return Snapshot(time: date, skyTone: tone, caption: caption)
     }
 }
 

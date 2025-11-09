@@ -1,11 +1,7 @@
-/* 
+/*
   Localizable.strings
   tsukiusagi-clock
 
   Created by AI Assistant on 2025-01-14.
 */
 
-"caption_dawn" = "Begin softly.";
-"caption_day" = "Keep a steady rhythm.";
-"caption_dusk" = "Unwind gently.";
-"caption_night" = "It's a gentle hour.";
