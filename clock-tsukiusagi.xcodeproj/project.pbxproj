@@ -29,9 +29,22 @@
 		32C0CBFF2EA31420008ACC87 /* clock-tsukiusagiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "clock-tsukiusagiUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3284C5C92EC05BD6008F7D7B /* Exceptions for "clock-tsukiusagi" folder in "clock-tsukiusagi" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 32C0CBE72EA3141F008ACC87 /* clock-tsukiusagi */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		32C0CBEA2EA3141F008ACC87 /* clock-tsukiusagi */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3284C5C92EC05BD6008F7D7B /* Exceptions for "clock-tsukiusagi" folder in "clock-tsukiusagi" target */,
+			);
 			path = "clock-tsukiusagi";
 			sourceTree = "<group>";
 		};
@@ -401,6 +414,7 @@
 				DEVELOPMENT_TEAM = ZD854UM35V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "clock-tsukiusagi/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -429,6 +443,7 @@
 				DEVELOPMENT_TEAM = ZD854UM35V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "clock-tsukiusagi/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
