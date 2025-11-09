@@ -48,25 +48,25 @@ public final class LocalAudioEngine {
         print("LocalAudioEngine: Background audio enabled: \(settings.isBackgroundAudioEnabled)")
 
         // オーディオセッションをアクティベート
-        // まずシンプルな .ambient カテゴリで試す（Background Modes不要）
+        // .playback カテゴリを使う（サイレントスイッチを無視）
         do {
-            print("LocalAudioEngine: Trying .ambient category first...")
+            print("LocalAudioEngine: Trying .playback category (ignores silent switch)...")
             try sessionManager.activate(
-                category: .ambient,
-                options: [],
+                category: .playback,
+                options: [.mixWithOthers],
                 background: false
             )
-            print("LocalAudioEngine: Audio session activated successfully with .ambient")
+            print("LocalAudioEngine: Audio session activated successfully with .playback")
         } catch {
-            print("LocalAudioEngine: .ambient failed, trying .soloAmbient...")
-            // .ambient が失敗したら .soloAmbient を試す
+            print("LocalAudioEngine: .playback failed, trying .ambient...")
+            // .playback が失敗したら .ambient を試す
             do {
                 try sessionManager.activate(
-                    category: .soloAmbient,
+                    category: .ambient,
                     options: [],
                     background: false
                 )
-                print("LocalAudioEngine: Audio session activated successfully with .soloAmbient")
+                print("LocalAudioEngine: Audio session activated successfully with .ambient")
             } catch {
                 print("LocalAudioEngine: Failed to activate audio session with any category")
                 throw error
