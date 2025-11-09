@@ -12,7 +12,7 @@ import Foundation
 /// オーディオセッション管理クラス
 /// - 中断（電話/通知）対応
 /// - ルート変化（イヤホン抜け）対応
-/// - 背景再生対応
+/// - バックグラウンド再生対応
 public final class AudioSessionManager {
     // MARK: - Properties
 
@@ -40,7 +40,7 @@ public final class AudioSessionManager {
     /// - Parameters:
     ///   - category: セッションカテゴリ（デフォルト: .playback）
     ///   - options: セッションオプション
-    ///   - background: 背景再生を有効にするか（Info.plistの設定も必要）
+    ///   - background: バックグラウンド再生を有効にするか（Info.plistの設定も必要）
     public func activate(
         category: AVAudioSession.Category = .playback,
         options: AVAudioSession.CategoryOptions = [.mixWithOthers, .allowBluetooth],

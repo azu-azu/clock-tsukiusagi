@@ -11,19 +11,7 @@ import AVFoundation
 
 /// テスト用の音源タイプ
 enum TestSoundType: String, CaseIterable {
-    case oscillator = "サイン波 (220Hz)"
-    case noise = "ホワイトノイズ"
-    case oceanWaves = "波の音"
-    case cracklingFire = "焚き火"
-    case tibetanBowl = "チベタンボウル"
-    case windChime = "癒しチャイム"
-    case pleasantWarm = "心地よい音（温かい）"
-    case pleasantCalm = "心地よい音（穏やか）"
-    case pleasantDeep = "心地よい音（深い）"
-    case pleasantDrone = "心地よいドローン"
-    case ambientFocus = "🎯 Focus（集中）"
-    case ambientRelax = "🌿 Relax（リラックス）"
-    case ambientSleep = "😴 Sleep（睡眠）"
+    case comfortRelax = "🌙 Comfort Relax"
 }
 
 /// オーディオテストビュー
@@ -32,7 +20,7 @@ struct AudioTestView: View {
     @State private var settings = BackgroundAudioToggle()
 
     @State private var isPlaying = false
-    @State private var selectedSound: TestSoundType = .oscillator
+    @State private var selectedSound: TestSoundType = .comfortRelax
     @State private var masterVolume: Float = 0.5
 
     @State private var errorMessage: String?
@@ -139,7 +127,7 @@ struct AudioTestView: View {
             Text("設定")
                 .font(.headline)
 
-            Toggle("背景再生", isOn: $settings.isBackgroundAudioEnabled)
+            Toggle("バックグラウンド再生", isOn: $settings.isBackgroundAudioEnabled)
             Toggle("中断後の自動再開", isOn: $settings.isAutoResumeEnabled)
             Toggle("イヤホン抜けで自動停止", isOn: $settings.stopOnHeadphoneDisconnect)
         }
@@ -247,136 +235,24 @@ struct AudioTestView: View {
 
     private func registerSound(to engine: LocalAudioEngine) throws {
         switch selectedSound {
-        case .oscillator:
-            // シンプルなサイン波
-            let osc = Oscillator(frequency: 220.0, amplitude: 0.3)
-            try engine.register(osc)
-
-        case .noise:
-            // ホワイトノイズ
-            let noise = NoiseSource(amplitude: 0.15)
-            try engine.register(noise)
-
-        case .oceanWaves:
-            // 波の音（ノイズ + フィルタ + リバーブ）
-            // ※本格的な実装は別途必要
-            let noise = NoiseSource(amplitude: NaturalSoundPresets.OceanWaves.noiseAmplitude)
-            try engine.register(noise)
-
-        case .cracklingFire:
-            // 焚き火（バンドパスノイズ + パルス）
-            let baseNoise = BandpassNoise(
-                centerFrequency: NaturalSoundPresets.CracklingFire.baseCenterFrequency,
-                bandwidth: NaturalSoundPresets.CracklingFire.baseBandwidth,
-                amplitude: NaturalSoundPresets.CracklingFire.baseAmplitude
+        case .comfortRelax:
+            // Click Masking - ピンクノイズ（ベース+マスキング層）
+            let maskingSound = ClickMaskingDrone(
+                baseNoiseType: NaturalSoundPresets.ComfortRelax.baseNoiseType,
+                baseNoiseAmplitude: NaturalSoundPresets.ComfortRelax.baseNoiseAmplitude,
+                baseHighpassCutoff: NaturalSoundPresets.ComfortRelax.baseHighpassCutoff,
+                baseLowpassCutoff: NaturalSoundPresets.ComfortRelax.baseLowpassCutoff,
+                baseNoiseLFOFrequency: NaturalSoundPresets.ComfortRelax.baseNoiseLFOFrequency,
+                baseNoiseLFODepth: NaturalSoundPresets.ComfortRelax.baseNoiseLFODepth,
+                maskNoiseType: NaturalSoundPresets.ComfortRelax.maskNoiseType,
+                maskNoiseAmplitude: NaturalSoundPresets.ComfortRelax.maskNoiseAmplitude,
+                maskBandpassCenter: NaturalSoundPresets.ComfortRelax.maskBandpassCenter,
+                maskBandpassQ: NaturalSoundPresets.ComfortRelax.maskBandpassQ,
+                maskNoiseLFOFrequency: NaturalSoundPresets.ComfortRelax.maskNoiseLFOFrequency,
+                reverbWetDryMix: NaturalSoundPresets.ComfortRelax.reverbWetDryMix,
+                masterAttenuation: NaturalSoundPresets.ComfortRelax.masterAttenuation
             )
-            try engine.register(baseNoise)
-
-            let pulse = PulseGenerator(amplitude: NaturalSoundPresets.CracklingFire.pulseAmplitude)
-            pulse.minimumDuration = NaturalSoundPresets.CracklingFire.pulseMinDuration
-            pulse.maximumDuration = NaturalSoundPresets.CracklingFire.pulseMaxDuration
-            pulse.minimumInterval = NaturalSoundPresets.CracklingFire.pulseMinInterval
-            pulse.maximumInterval = NaturalSoundPresets.CracklingFire.pulseMaxInterval
-            try engine.register(pulse)
-
-        case .tibetanBowl:
-            // チベタンボウル（複数オシレータ + 倍音）
-            let bowl = MultiOscillator.tibetanBowl(
-                fundamentalFrequency: NaturalSoundPresets.TibetanBowl.fundamentalFrequency
-            )
-            try engine.register(bowl)
-
-        case .windChime:
-            // 癒しチャイム（シンプル版 - 単一周波数）
-            // ※本格的な実装（ランダムトリガー + エンベロープ）は別途必要
-            let freq = NaturalSoundPresets.WindChime.frequencies.randomElement() ?? 1320.0
-            let osc = Oscillator(frequency: freq, amplitude: NaturalSoundPresets.WindChime.amplitude)
-            try engine.register(osc)
-
-        case .pleasantWarm:
-            // 心地よい音（温かい）- デチューンオシレータ
-            let warmSound = DetunedOscillator(
-                baseFrequency: NaturalSoundPresets.PleasantWarm.baseFrequency,
-                detuneAmount: NaturalSoundPresets.PleasantWarm.detuneAmount,
-                oscillatorCount: NaturalSoundPresets.PleasantWarm.oscillatorCount,
-                amplitude: NaturalSoundPresets.PleasantWarm.amplitude,
-                noiseLevel: NaturalSoundPresets.PleasantWarm.noiseLevel
-            )
-            try engine.register(warmSound)
-
-        case .pleasantCalm:
-            // 心地よい音（穏やか）- デチューンオシレータ
-            let calmSound = DetunedOscillator(
-                baseFrequency: NaturalSoundPresets.PleasantCalm.baseFrequency,
-                detuneAmount: NaturalSoundPresets.PleasantCalm.detuneAmount,
-                oscillatorCount: NaturalSoundPresets.PleasantCalm.oscillatorCount,
-                amplitude: NaturalSoundPresets.PleasantCalm.amplitude,
-                noiseLevel: NaturalSoundPresets.PleasantCalm.noiseLevel
-            )
-            try engine.register(calmSound)
-
-        case .pleasantDeep:
-            // 心地よい音（深い）- デチューンオシレータ
-            let deepSound = DetunedOscillator(
-                baseFrequency: NaturalSoundPresets.PleasantDeep.baseFrequency,
-                detuneAmount: NaturalSoundPresets.PleasantDeep.detuneAmount,
-                oscillatorCount: NaturalSoundPresets.PleasantDeep.oscillatorCount,
-                amplitude: NaturalSoundPresets.PleasantDeep.amplitude,
-                noiseLevel: NaturalSoundPresets.PleasantDeep.noiseLevel
-            )
-            try engine.register(deepSound)
-
-        case .pleasantDrone:
-            // 心地よいドローン - 和音 + LFO変調
-            let droneSound = PleasantDrone(
-                rootFrequency: NaturalSoundPresets.PleasantDrone.rootFrequency,
-                chordType: NaturalSoundPresets.PleasantDrone.chordType,
-                amplitude: NaturalSoundPresets.PleasantDrone.amplitude,
-                amplitudeLFOFrequency: NaturalSoundPresets.PleasantDrone.amplitudeLFOFrequency,
-                pitchLFOFrequency: NaturalSoundPresets.PleasantDrone.pitchLFOFrequency,
-                pitchLFODepth: NaturalSoundPresets.PleasantDrone.pitchLFODepth,
-                noiseLevel: NaturalSoundPresets.PleasantDrone.noiseLevel
-            )
-            try engine.register(droneSound)
-
-        case .ambientFocus:
-            // Endel風 Focus - ピンクノイズ + 高め周波数 + 速めLFO
-            let focusSound = AmbientDrone(
-                noiseType: NaturalSoundPresets.AmbientFocus.noiseType,
-                noiseAmplitude: NaturalSoundPresets.AmbientFocus.noiseAmplitude,
-                sineFrequencies: NaturalSoundPresets.AmbientFocus.sineFrequencies,
-                sineAmplitude: NaturalSoundPresets.AmbientFocus.sineAmplitude,
-                detuneAmount: NaturalSoundPresets.AmbientFocus.detuneAmount,
-                lfoAmplitudeFrequency: NaturalSoundPresets.AmbientFocus.lfoAmplitudeFrequency,
-                lfoAmplitudeDepth: NaturalSoundPresets.AmbientFocus.lfoAmplitudeDepth
-            )
-            try engine.register(focusSound)
-
-        case .ambientRelax:
-            // Endel風 Relax - ホワイトノイズ + 中域 + ゆっくりLFO
-            let relaxSound = AmbientDrone(
-                noiseType: NaturalSoundPresets.AmbientRelax.noiseType,
-                noiseAmplitude: NaturalSoundPresets.AmbientRelax.noiseAmplitude,
-                sineFrequencies: NaturalSoundPresets.AmbientRelax.sineFrequencies,
-                sineAmplitude: NaturalSoundPresets.AmbientRelax.sineAmplitude,
-                detuneAmount: NaturalSoundPresets.AmbientRelax.detuneAmount,
-                lfoAmplitudeFrequency: NaturalSoundPresets.AmbientRelax.lfoAmplitudeFrequency,
-                lfoAmplitudeDepth: NaturalSoundPresets.AmbientRelax.lfoAmplitudeDepth
-            )
-            try engine.register(relaxSound)
-
-        case .ambientSleep:
-            // Endel風 Sleep - ブラウンノイズ + 低域 + 超ゆっくりLFO
-            let sleepSound = AmbientDrone(
-                noiseType: NaturalSoundPresets.AmbientSleep.noiseType,
-                noiseAmplitude: NaturalSoundPresets.AmbientSleep.noiseAmplitude,
-                sineFrequencies: NaturalSoundPresets.AmbientSleep.sineFrequencies,
-                sineAmplitude: NaturalSoundPresets.AmbientSleep.sineAmplitude,
-                detuneAmount: NaturalSoundPresets.AmbientSleep.detuneAmount,
-                lfoAmplitudeFrequency: NaturalSoundPresets.AmbientSleep.lfoAmplitudeFrequency,
-                lfoAmplitudeDepth: NaturalSoundPresets.AmbientSleep.lfoAmplitudeDepth
-            )
-            try engine.register(sleepSound)
+            try engine.register(maskingSound)
         }
     }
 }

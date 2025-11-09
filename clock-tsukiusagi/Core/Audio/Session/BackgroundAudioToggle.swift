@@ -3,18 +3,18 @@
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-09.
-//  背景再生設定ブリッジ
+//  バックグラウンド再生設定ブリッジ
 //
 
 import Foundation
 import SwiftUI
 
-/// 背景再生の設定を管理するクラス
+/// バックグラウンド再生の設定を管理するクラス
 @Observable
 public final class BackgroundAudioToggle {
     // MARK: - Properties
 
-    /// 背景再生が有効かどうか
+    /// バックグラウンド再生が有効かどうか
     public var isBackgroundAudioEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isBackgroundAudioEnabled, forKey: Keys.backgroundAudioEnabled)

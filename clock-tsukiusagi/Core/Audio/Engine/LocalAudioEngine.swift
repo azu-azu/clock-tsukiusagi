@@ -29,7 +29,7 @@ public final class LocalAudioEngine {
     /// エンジンを初期化
     /// - Parameters:
     ///   - sessionManager: オーディオセッションマネージャー
-    ///   - settings: 背景再生設定
+    ///   - settings: バックグラウンド再生設定
     public init(
         sessionManager: AudioSessionManager = AudioSessionManager(),
         settings: BackgroundAudioToggle = BackgroundAudioToggle()

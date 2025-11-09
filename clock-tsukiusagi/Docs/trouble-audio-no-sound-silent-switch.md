@@ -84,7 +84,7 @@
 
 #### AVAudioSession カテゴリの挙動
 
-| カテゴリ | サイレントスイッチ | 他アプリと混在 | 背景再生 | Background Modes必須 |
+| カテゴリ | サイレントスイッチ | 他アプリと混在 | バックグラウンド再生 | Background Modes必須 |
 |---------|-------------------|---------------|----------|---------------------|
 | `.ambient` | ✅ **尊重する** | ✅ 可能 | ✅ 可能 | ❌ 不要 |
 | `.soloAmbient` | ✅ 尊重する | ❌ 不可 | ❌ 不可 | ❌ 不要 |
@@ -251,7 +251,7 @@ Oscillator: Rendering 1024 frames, amplitude: 0.3
 
 2. **Background Modes 設定**
    - 現在は `background: false`
-   - 将来的に背景再生を有効にする場合、Info.plistの設定が必要
+   - 将来的にバックグラウンド再生を有効にする場合、Info.plistの設定が必要
 
 ---
 
