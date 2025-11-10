@@ -111,7 +111,7 @@ public struct AudioSettingsView: View {
                             )
 
                             // 次の休憩時刻を表示
-                            if let nextBreak = audioService.breakScheduler?.nextBreakAt {
+                            if let nextBreak = audioService.breakScheduler.nextBreakAt {
                                 HStack {
                                     Text("Next Break")
                                         .foregroundColor(.white.opacity(0.7))
