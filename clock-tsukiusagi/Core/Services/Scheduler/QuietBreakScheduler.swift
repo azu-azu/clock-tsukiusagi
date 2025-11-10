@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 /// 無音休憩スケジュール管理プロトコル
 public protocol QuietBreakScheduling {
