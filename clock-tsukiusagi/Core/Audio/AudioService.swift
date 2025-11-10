@@ -105,13 +105,8 @@ public final class AudioService: ObservableObject {
             }
         }
 
-        // エンジンを設定
-        do {
-            try engine.configure()
-        } catch {
-            print("⚠️ [AudioService] Engine configuration failed: \(error)")
-            throw AudioError.engineStartFailed(error)
-        }
+        // Note: LocalAudioEngine.configure()は呼ばない
+        // セッション管理はAudioServiceで行うため、二重アクティベートを避ける
 
         // 音源を登録
         do {
