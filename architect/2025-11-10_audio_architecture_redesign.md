@@ -1204,6 +1204,545 @@ Route changes while stopped: UI updates correctly
 
 ---
 
-**Document Status**: ✅ Phase 1 Complete - Tested on Device
-**Last Updated**: 2025-11-10 (Phase 1 implementation verified + route detection fixes)
-**Next Review**: Before Phase 2 implementation
+## Issue 4: iOS Compatibility - AVAudioUnitDynamicsProcessor Not Available
+
+**Discovered During**: Phase 2 implementation (SafeVolumeLimiter)
+**Date**: 2025-11-10
+**Status**: ✅ Resolved
+
+### Problem
+
+`AVAudioUnitDynamicsProcessor` was specified in the original design (Appendix C) for volume limiting, but this class is **macOS-only** and not available on iOS.
+
+**Compilation Error**:
+```
+Cannot find 'AVAudioUnitDynamicsProcessor' in scope
+```
+
+### Analysis
+
+**Original Design (Appendix C)**:
+```swift
+private let dynamicsProcessor = AVAudioUnitDynamicsProcessor()
+
+func configureDynamicsProcessor() {
+    dynamicsProcessor.threshold = maxOutputDb          // -6dB ceiling
+    dynamicsProcessor.headRoom = 0.1                   // 0.1dB headroom
+    dynamicsProcessor.attackTime = 0.001               // 1ms attack
+    dynamicsProcessor.releaseTime = 0.05               // 50ms release
+    dynamicsProcessor.compressionAmount = 20.0         // Heavy limiting
+}
+```
+
+**Platform Availability**:
+- `AVAudioUnitDynamicsProcessor`: macOS 10.10+, **NOT available on iOS**
+- Need iOS-compatible alternative for soft limiting
+
+### Solution
+
+Replace with `AVAudioUnitDistortion` using soft clipping preset:
+
+```swift
+private let limiterNode = AVAudioUnitDistortion()
+
+private func updateLimiterSettings() {
+    // Load soft clipping preset
+    limiterNode.loadFactoryPreset(.multiDecimated4)
+
+    // Pre-gain controls the ceiling
+    limiterNode.preGain = maxOutputDb  // -6dB default
+
+    // Full wet mix (100% processing)
+    limiterNode.wetDryMix = 100
+}
+```
+
+**Audio Graph** (unchanged structure):
+```
+MainMixerNode → Limiter → OutputNode
+```
+
+### Trade-offs
+
+**Pros**:
+- ✅ Available on all Apple platforms (iOS, macOS, tvOS, watchOS)
+- ✅ Same audio graph structure (drop-in replacement)
+- ✅ Soft clipping provides similar protection against harsh clipping
+- ✅ Pre-gain adjustment allows dB-based volume ceiling control
+
+**Cons**:
+- ❌ Less precise than true dynamics processor (no attack/release/ratio control)
+- ❌ Adds harmonic distortion (soft clipping characteristic)
+- ❌ Not true transparent limiting (audible on extreme peaks)
+
+**Acceptable for Use Case**:
+- App generates smooth synthesized drones (no sharp transients)
+- Volume ceiling is a safety feature, not mastering tool
+- Soft clipping is preferable to hard clipping for user safety
+- Distortion minimal at target levels (-6dB ceiling with typical content)
+
+### Testing Requirements
+
+**Device Testing Needed**:
+1. Generate signal at various volumes (0.3, 0.5, 0.7, 1.0)
+2. Verify limiter engages above threshold
+3. Listen for audible distortion artifacts
+4. Test with headphones (most critical use case)
+5. Verify no unexpected volume jumps
+
+**Alternative if Distortion Unacceptable**:
+- Use manual volume scaling in MainMixerNode
+- Trade-off: No brick-wall protection, relies on user volume only
+- Code:
+```swift
+let safeVolume = min(requestedVolume, volumeCeiling)
+engine.mainMixerNode.outputVolume = safeVolume
+```
+
+### Implementation Notes
+
+**Files Modified**:
+- `SafeVolumeLimiter.swift`: Changed from `AVAudioUnitDynamicsProcessor` to `AVAudioUnitDistortion`
+
+**Comments Added**:
+```swift
+/// iOS用実装: AVAudioUnitDistortion + ソフトクリッピングを使用
+/// Note: AVAudioUnitDynamicsProcessorはmacOSのみで利用可能なため、
+/// iOS用の代替として歪みエフェクトを使用してソフトリミットを実装
+```
+
+---
+
+## Phase 2 Implementation Report
+
+**Status**: ✅ Complete - Ready for Device Testing
+**Date**: 2025-11-10
+**Tag**: `audio-architecture-phase2-complete`
+
+### Implemented Features
+
+#### 1. QuietBreakScheduler - Automatic Break Scheduling
+
+**Implementation**: `clock-tsukiusagi/Core/Services/Scheduler/QuietBreakScheduler.swift`
+
+**Key Design Decisions**:
+
+1. **Ground Truth Timing Pattern**:
+```swift
+private var _nextBreakAt: Date?  // Ground truth (real wall-clock time)
+private var timer: DispatchSourceTimer?
+
+// Schedule based on Date, not just interval
+_nextBreakAt = Date().addingTimeInterval(playDuration)
+timer?.schedule(wallDeadline: .now() + interval)  // Use wallDeadline, NOT uptimeNanoseconds
+```
+
+**Why**: Prevents timer drift after device sleep/wake. `wallDeadline` uses real-world clock, not process uptime.
+
+2. **Sleep/Wake Drift Correction**:
+```swift
+private func handleWakeFromSleep() {
+    guard let nextBreak = _nextBreakAt else { return }
+
+    let now = Date()
+    let remaining = nextBreak.timeIntervalSince(now)
+
+    if remaining > 0 {
+        scheduleTimer(for: remaining)  // Recalculate from ground truth
+    } else {
+        handleTimerFired()  // Overdue - trigger immediately
+    }
+}
+```
+
+**Why**: App lifecycle events (background/foreground) can cause timer delays. Always recalculate from Date ground truth.
+
+3. **UIKit Import Required**:
+```swift
+import Foundation
+import UIKit  // Required for UIApplication.willEnterForegroundNotification
+```
+
+**Critical**: Forgot to import UIKit initially → compilation error. Always import UIKit when using UIApplication notifications.
+
+**Callbacks**:
+- `onBreakStart` → AudioService pauses with `.quietBreak` reason
+- `onBreakEnd` → AudioService resumes automatically
+
+**Phase Tracking**:
+```swift
+enum Phase {
+    case idle
+    case playing(startedAt: Date)
+    case breaking(startedAt: Date)
+}
+```
+
+#### 2. SafeVolumeLimiter - iOS-Compatible Volume Ceiling
+
+**Implementation**: `clock-tsukiusagi/Core/Services/Volume/SafeVolumeLimiter.swift`
+
+**Platform Adaptation** (See Issue 4):
+- Original design: `AVAudioUnitDynamicsProcessor` (macOS-only)
+- iOS implementation: `AVAudioUnitDistortion` with soft clipping
+
+**Configuration**:
+```swift
+limiterNode.loadFactoryPreset(.multiDecimated4)  // Soft clipping
+limiterNode.preGain = maxOutputDb                // -6dB default
+limiterNode.wetDryMix = 100                      // Full processing
+```
+
+**Audio Graph**:
+```
+Source → MainMixerNode → SafeVolumeLimiter → OutputNode
+                         (AVAudioUnitDistortion)
+```
+
+**isConfigured Flag**:
+```swift
+private var isConfigured = false
+
+func configure(...) {
+    guard !isConfigured else { return }  // Prevent double-configuration
+    // ... attach and connect
+    isConfigured = true
+}
+```
+
+**Why**: `configure()` called in `play()` method. Without flag, multiple plays would attempt to re-attach already-attached node → crash.
+
+#### 3. Fade Effects - Smooth Volume Transitions
+
+**Implementation**: `AudioService.swift` (private methods)
+
+**60-Step Timer Approach**:
+```swift
+let steps = 60  // 60fps animation
+let stepDuration = duration / Double(steps)
+let volumeStep = startVolume / Float(steps)
+
+fadeTimer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { ... }
+```
+
+**Why 60 steps**: Matches typical display refresh rate (60fps) for smooth perceived transition.
+
+**Target Volume Memory**:
+```swift
+private var targetVolume: Float = 0.5
+
+func fadeOut(duration: TimeInterval) {
+    targetVolume = engine.engine.mainMixerNode.outputVolume  // Remember
+    // ... fade to 0.0
+}
+
+func fadeIn(duration: TimeInterval) {
+    let endVolume = targetVolume  // Restore remembered volume
+    // ... fade from 0.0 to endVolume
+}
+```
+
+**Why**: User may have set custom volume before pause. Fade-in should return to *that* volume, not default 0.5.
+
+**Integration**:
+- `stop(fadeOut:)` → fadeOut, then stop engine after delay
+- `pause(reason:)` → fadeOut, then stop engine
+- `resume()` → start engine, then fadeIn
+
+**Critical Timing**:
+```swift
+// WRONG: Stop immediately
+fadeOut(duration: 0.5)
+engine.stop()  // ❌ Cuts off fade
+
+// CORRECT: Wait for fade to complete
+fadeOut(duration: 0.5)
+DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+    engine.stop()  // ✅ After fade completes
+}
+```
+
+#### 4. AudioSettingsView - Comprehensive Configuration UI
+
+**Implementation**: `clock-tsukiusagi/Features/Settings/Views/AudioSettingsView.swift`
+
+**State Management**:
+```swift
+@EnvironmentObject private var audioService: AudioService
+@State private var settings: AudioSettings
+
+init() {
+    _settings = State(initialValue: AudioSettings.load())
+}
+```
+
+**Why separate State**: UI needs local mutable state for immediate feedback. Save to UserDefaults + update AudioService on change.
+
+**Save Pattern**:
+```swift
+private func saveSettings() {
+    settings.save()                      // Persist to UserDefaults
+    audioService.updateSettings(settings)  // Apply to live service
+}
+```
+
+**Binding Pattern**:
+```swift
+SettingsToggle(
+    title: "Enable Quiet Breaks",
+    isOn: Binding(
+        get: { settings.quietBreakEnabled },
+        set: {
+            settings.quietBreakEnabled = $0
+            saveSettings()  // Save on every change
+        }
+    )
+)
+```
+
+**Next Break Time Display**:
+```swift
+// WRONG: Optional chaining on non-optional
+if let nextBreak = audioService.breakScheduler?.nextBreakAt { ... }
+                                                ^^^ breakScheduler is NOT optional
+
+// CORRECT: Only nextBreakAt is optional
+if let nextBreak = audioService.breakScheduler.nextBreakAt { ... }
+```
+
+**Critical**: `breakScheduler` is `let` (non-optional), but `nextBreakAt` is `var nextBreakAt: Date?` (optional).
+
+**ContentView Integration**:
+```swift
+enum Tab {
+    case clock
+    case audioTest
+    case settings  // Added
+}
+
+// Added Settings tab button
+TabButton(
+    icon: "gearshape.fill",
+    label: "Settings",
+    isSelected: selectedTab == .settings
+)
+```
+
+### Integration into AudioService
+
+**Lifecycle**:
+```swift
+init() {
+    // ... existing setup
+
+    self.breakScheduler = QuietBreakScheduler(
+        isEnabled: settings.quietBreakEnabled,
+        playDuration: TimeInterval(settings.playMinutes * 60),
+        breakDuration: TimeInterval(settings.breakMinutes * 60),
+        fadeDuration: 1.0
+    )
+
+    self.volumeLimiter = SafeVolumeLimiter(
+        maxOutputDb: settings.maxOutputDb
+    )
+
+    setupBreakSchedulerCallbacks()
+}
+
+deinit {
+    breakScheduler.stop()  // Clean up
+}
+```
+
+**Play Flow**:
+```swift
+func play(preset: NaturalSoundPreset) throws {
+    // 1. Activate session (if needed)
+    // 2. Register source
+    // 3. Set initial volume
+    // 4. Configure volume limiter ← Phase 2
+    let format = engine.engine.outputNode.inputFormat(forBus: 0)
+    volumeLimiter.configure(engine: engine.engine, format: format)
+
+    // 5. Start engine
+    // 6. Start break scheduler ← Phase 2
+    breakScheduler.start()
+
+    // 7. Update state
+}
+```
+
+**Stop Flow**:
+```swift
+func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
+    fadeOut(duration: fadeOutDuration)  // ← Phase 2
+
+    DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) {
+        engine.stop()
+    }
+
+    breakScheduler.stop()  // ← Phase 2
+
+    isPlaying = false
+    currentPreset = nil
+    pauseReason = nil
+}
+```
+
+**Resume Flow**:
+```swift
+func resume() throws {
+    // Safety checks...
+
+    try engine.start()
+    fadeIn(duration: 0.5)  // ← Phase 2
+
+    // Restart scheduler UNLESS pause reason was .quietBreak
+    // (scheduler handles its own auto-resume in that case)
+    if reason != .quietBreak {  // ← Phase 2
+        breakScheduler.start()
+    }
+
+    isPlaying = true
+    pauseReason = nil
+}
+```
+
+**Break Scheduler Callbacks**:
+```swift
+private func setupBreakSchedulerCallbacks() {
+    breakScheduler.onBreakStart = { [weak self] in
+        Task { @MainActor in
+            self?.pause(reason: .quietBreak)  // Automatic pause
+        }
+    }
+
+    breakScheduler.onBreakEnd = { [weak self] in
+        Task { @MainActor in
+            try? self?.resume()  // Automatic resume
+        }
+    }
+}
+```
+
+**Why `Task { @MainActor in }`**: Scheduler callbacks fire on `.main` queue, but AudioService is `@MainActor`. Explicit Task ensures proper actor isolation.
+
+### Files Modified/Created
+
+**Core Implementation**:
+- `clock-tsukiusagi/Core/Services/Scheduler/QuietBreakScheduler.swift` (new, 204 lines)
+- `clock-tsukiusagi/Core/Services/Volume/SafeVolumeLimiter.swift` (new, 100 lines)
+- `clock-tsukiusagi/Core/Audio/AudioService.swift` (modified, +127 lines)
+
+**Settings UI**:
+- `clock-tsukiusagi/Features/Settings/Views/AudioSettingsView.swift` (new, 242 lines)
+- `clock-tsukiusagi/App/ContentView.swift` (modified, +9 lines)
+
+### Commits
+
+1. `e7bc662` - feat: implement Phase 2 audio features - quiet breaks, volume limiting, and fade effects
+2. `8d3f9f7` - feat: add Phase 2 settings UI and fix iOS compatibility for volume limiter
+3. `3ab933e` - fix: add UIKit import to QuietBreakScheduler for UIApplication access
+4. `666f982` - fix: remove incorrect optional chaining for breakScheduler in AudioSettingsView
+
+### Lessons Learned (Phase 2)
+
+1. **Platform Differences Matter**: Always check API availability before designing. `AVAudioUnitDynamicsProcessor` looked perfect in docs, but was macOS-only.
+
+2. **Import Dependencies Explicitly**: UIKit not imported by default in non-UI files. Using `UIApplication` requires explicit `import UIKit`.
+
+3. **Optional vs Non-Optional Chaining**: Easy to over-use `?.` when only the property is optional, not the parent object.
+
+4. **Timer Drift Correction**: For long-running timers (55 minutes), always store ground truth (Date) and recalculate on lifecycle events.
+
+5. **Fade Timing Coordination**: Use `DispatchQueue.asyncAfter` to coordinate fade completion with engine stop. Don't stop engine during fade.
+
+6. **Audio Node Configuration**: Once attached to engine, nodes cannot be re-attached. Use `isConfigured` flag to prevent errors.
+
+7. **Break Scheduler Self-Management**: When scheduler triggers auto-resume, don't restart it manually in `resume()` → check `pauseReason`.
+
+8. **Settings Persistence**: Always save to UserDefaults AND update live service. UI needs both for consistency.
+
+### Known Limitations
+
+1. **Volume Limiter Precision**: AVAudioUnitDistortion less precise than dynamics processor. May allow brief peaks above threshold.
+
+2. **Fade Granularity**: 60-step fade may be perceptible on very quiet passages. Could increase to 120 steps if needed.
+
+3. **Break Scheduler Accuracy**: DispatchSourceTimer can drift ~1-2 seconds over 55 minutes. Recalculation on wake helps but not perfect.
+
+4. **Settings UI - Next Break Display**: Only shows when quiet breaks enabled AND scheduler has started (after first play). Shows nil before first playback.
+
+### Testing Requirements
+
+**Unit Testing** (Future):
+- [ ] QuietBreakScheduler: Verify phase transitions
+- [ ] QuietBreakScheduler: Test sleep/wake recalculation
+- [ ] SafeVolumeLimiter: Verify threshold enforcement
+- [ ] Fade effects: Verify smooth volume curves
+
+**Integration Testing**:
+- [ ] Start playback → verify limiter and scheduler both active
+- [ ] Stop playback → verify scheduler stops
+- [ ] Resume after user pause → verify scheduler restarts
+- [ ] Resume after quiet break → verify scheduler does NOT restart
+
+**Device Testing** (Critical):
+1. **Quiet Break Cycle**:
+   - [ ] Set to 5min play / 1min break (for faster validation)
+   - [ ] Start playback
+   - [ ] Wait 5 minutes → verify automatic pause with fade
+   - [ ] Wait 1 minute → verify automatic resume with fade
+   - [ ] Lock device during break → verify resume still happens
+   - [ ] Check Settings UI → verify "Next Break" time updates
+
+2. **Volume Limiter**:
+   - [ ] Set max output to -12dB (very low)
+   - [ ] Set mixer volume to 1.0 (max)
+   - [ ] Play audio → verify output is limited (quieter than expected)
+   - [ ] Set max output to 0dB
+   - [ ] Verify output increases (ceiling removed)
+   - [ ] Listen for distortion artifacts at various levels
+
+3. **Fade Effects**:
+   - [ ] Start playback → verify smooth fade-in
+   - [ ] Stop playback → verify smooth fade-out
+   - [ ] Pause (user) → verify fade-out
+   - [ ] Resume → verify fade-in to previous volume
+   - [ ] Adjust volume → stop → play → verify restores new volume
+
+4. **Settings UI**:
+   - [ ] Toggle quiet breaks → verify scheduler starts/stops
+   - [ ] Change play duration → verify next cycle uses new duration
+   - [ ] Change volume limit → verify immediate effect on playback
+   - [ ] Toggle headphone-only → verify safety pause behavior
+   - [ ] Navigate between tabs → verify settings persist
+
+5. **Edge Cases**:
+   - [ ] Force-quit app during quiet break → verify state recovery
+   - [ ] Change timezone during break → verify scheduler not confused
+   - [ ] Very long break (30 min) → verify no timeout issues
+   - [ ] Rapid play/stop cycles → verify no crashes or resource leaks
+
+### Next Steps
+
+**Immediate**:
+1. Device testing with reduced timings (5min/1min)
+2. Verify volume limiter effectiveness
+3. Test scheduler sleep/wake behavior
+
+**Phase 3 Preparation**:
+- Track Player implementation (file-based audio)
+- Live Activity integration
+- Picture-in-Picture support
+
+**Future Improvements**:
+- True iOS dynamics processor (custom DSP if needed)
+- Configurable fade duration in settings
+- Break scheduler pause/resume (user override)
+
+---
+
+**Document Status**: ✅ Phase 2 Complete - Ready for Device Testing
+**Last Updated**: 2025-11-10 (Phase 2 implementation complete)
+**Next Review**: After device testing, before Phase 3
