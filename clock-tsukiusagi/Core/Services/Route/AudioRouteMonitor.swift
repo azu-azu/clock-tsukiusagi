@@ -93,7 +93,7 @@ public final class AudioRouteMonitor: AudioRouteMonitoring {
     // MARK: - Private Methods
 
     @objc private func handleRouteChange(_ notification: Notification) {
-        // 1. 理由をチェック - デバイス削除時のみ処理
+        // 1. 理由をチェック
         guard let userInfo = notification.userInfo,
               let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
               let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
@@ -102,11 +102,15 @@ public final class AudioRouteMonitor: AudioRouteMonitoring {
 
         print("🎧 [AudioRouteMonitor] Route change reason: \(reason.description)")
 
-        // デバイス削除（イヤホン抜けなど）以外は経路通知のみ
+        // 現在の経路を取得
+        let newRoute = detectCurrentRoute()
+        print("🎧 [AudioRouteMonitor] Current route: \(newRoute.displayName) \(newRoute.icon)")
+
+        // 常に経路変更を通知（UIをリアルタイム更新）
+        onRouteChanged?(newRoute)
+
+        // デバイス削除（イヤホン抜けなど）の場合のみ安全停止チェック
         guard reason == .oldDeviceUnavailable else {
-            let newRoute = detectCurrentRoute()
-            print("🎧 [AudioRouteMonitor] Route changed to: \(newRoute.displayName)")
-            onRouteChanged?(newRoute)
             return
         }
 
@@ -125,21 +129,14 @@ public final class AudioRouteMonitor: AudioRouteMonitoring {
 
         print("🎧 [AudioRouteMonitor] Previous route: \(previousOutput.portType.rawValue), was headphone type: \(wasHeadphoneType)")
 
-        // 3. 現在の経路をチェック - スピーカーになったか？
-        let newRoute = detectCurrentRoute()
-        print("🎧 [AudioRouteMonitor] Current route: \(newRoute.displayName)")
-
-        // 4. イヤホン→スピーカー かつ 設定で安全停止が有効なら発動
+        // 3. イヤホン→スピーカー かつ 設定で安全停止が有効なら発動
         if wasHeadphoneType && newRoute == .speaker {
             if settings.onlyHeadphoneOutput {
                 print("⚠️ [AudioRouteMonitor] Safety pause triggered: headphone→speaker")
                 onSpeakerSafety?()
             } else {
                 print("🎧 [AudioRouteMonitor] Headphone removed but safety pause disabled")
-                onRouteChanged?(newRoute)
             }
-        } else {
-            onRouteChanged?(newRoute)
         }
     }
 

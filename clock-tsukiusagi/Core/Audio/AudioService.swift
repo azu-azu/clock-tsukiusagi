@@ -78,12 +78,16 @@ public final class AudioService: ObservableObject {
         )
         self.routeMonitor = AudioRouteMonitor(settings: settings)
 
-        // LocalAudioEngineのセッションコールバックを無効化
-        // AudioServiceで直接管理するため
+        // コールバック設定
         setupCallbacks()
         setupInterruptionHandling()
 
+        // 初期経路を取得して監視開始（起動時から経路変更を検知）
+        outputRoute = routeMonitor.currentRoute
+        routeMonitor.start()  // 起動時から監視開始
+
         print("🎵 [AudioService] Initialized as singleton")
+        print("   Initial output route: \(outputRoute.displayName) \(outputRoute.icon)")
     }
 
     deinit {
@@ -131,8 +135,7 @@ public final class AudioService: ObservableObject {
             throw AudioError.engineStartFailed(error)
         }
 
-        // 経路監視を開始
-        routeMonitor.start()
+        // 経路監視は既に起動時に開始済み（init()で実行）
 
         // 状態を更新
         isPlaying = true
@@ -152,7 +155,8 @@ public final class AudioService: ObservableObject {
         // fadeOut(duration: fadeOut)
 
         engine.stop()
-        routeMonitor.stop()
+
+        // 経路監視は停止しない（常に監視してUIを更新）
 
         isPlaying = false
         currentPreset = nil
