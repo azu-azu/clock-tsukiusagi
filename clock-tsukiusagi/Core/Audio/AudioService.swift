@@ -56,6 +56,8 @@ public final class AudioService: ObservableObject {
     private let engine: LocalAudioEngine
     private let sessionManager: AudioSessionManager
     private let routeMonitor: AudioRouteMonitor
+    private let breakScheduler: QuietBreakScheduler
+    private let volumeLimiter: SafeVolumeLimiter
     private var settings: AudioSettings
 
     private var sessionActivated = false  // セッション二重アクティベート防止フラグ
@@ -68,9 +70,6 @@ public final class AudioService: ObservableObject {
         self.settings = AudioSettings.load()
 
         // コンポーネントを初期化
-        // Note: AudioSessionManagerはAudioServiceで直接管理するため、
-        // LocalAudioEngineには渡すが、configure()は呼ばないことで
-        // セッション管理の競合を避ける
         self.sessionManager = AudioSessionManager()
         self.engine = LocalAudioEngine(
             sessionManager: sessionManager,
@@ -78,9 +77,23 @@ public final class AudioService: ObservableObject {
         )
         self.routeMonitor = AudioRouteMonitor(settings: settings)
 
+        // Phase 2: Quiet Break Scheduler
+        self.breakScheduler = QuietBreakScheduler(
+            isEnabled: settings.quietBreakEnabled,
+            playDuration: TimeInterval(settings.playMinutes * 60),
+            breakDuration: TimeInterval(settings.breakMinutes * 60),
+            fadeDuration: 1.0
+        )
+
+        // Phase 2: Safe Volume Limiter
+        self.volumeLimiter = SafeVolumeLimiter(
+            maxOutputDb: settings.maxOutputDb
+        )
+
         // コールバック設定
         setupCallbacks()
         setupInterruptionHandling()
+        setupBreakSchedulerCallbacks()
 
         // 初期経路を取得して監視開始（起動時から経路変更を検知）
         outputRoute = routeMonitor.currentRoute
@@ -88,6 +101,8 @@ public final class AudioService: ObservableObject {
 
         print("🎵 [AudioService] Initialized as singleton")
         print("   Initial output route: \(outputRoute.displayName) \(outputRoute.icon)")
+        print("   Quiet breaks: \(settings.quietBreakEnabled ? "Enabled" : "Disabled")")
+        print("   Max output: \(settings.maxOutputDb) dB")
     }
 
     deinit {
@@ -95,6 +110,7 @@ public final class AudioService: ObservableObject {
             NotificationCenter.default.removeObserver(observer)
         }
         routeMonitor.stop()
+        breakScheduler.stop()
     }
 
     // MARK: - Public Methods
@@ -128,6 +144,10 @@ public final class AudioService: ObservableObject {
         // 音量を初期設定
         engine.setMasterVolume(0.5)
 
+        // Phase 2: 音量リミッターを設定
+        let format = engine.engine.outputNode.inputFormat(forBus: 0)
+        volumeLimiter.configure(engine: engine.engine, format: format)
+
         // エンジンを開始
         do {
             try engine.start()
@@ -136,6 +156,9 @@ public final class AudioService: ObservableObject {
         }
 
         // 経路監視は既に起動時に開始済み（init()で実行）
+
+        // Phase 2: Quiet Breakスケジューラーを開始
+        breakScheduler.start()
 
         // 状態を更新
         isPlaying = true
@@ -148,22 +171,29 @@ public final class AudioService: ObservableObject {
 
     /// 音声再生を停止
     /// - Parameter fadeOut: フェードアウト時間（秒）
-    public func stop(fadeOut: TimeInterval = 0.5) {
+    public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
         print("🎵 [AudioService] stop() called")
 
-        // TODO: フェードアウト実装（Phase 2）
-        // fadeOut(duration: fadeOut)
+        // フェードアウト
+        self.fadeOut(duration: fadeOutDuration)
 
-        engine.stop()
+        // フェード完了後にエンジンを停止
+        DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
+            self?.engine.stop()
+            print("🎵 [AudioService] Engine stopped after fade")
+        }
 
         // 経路監視は停止しない（常に監視してUIを更新）
+
+        // Phase 2: Quiet Breakスケジューラーを停止
+        breakScheduler.stop()
 
         isPlaying = false
         currentPreset = nil
         pauseReason = nil
 
         // セッションはアクティブのまま（高速再開のため）
-        print("🎵 [AudioService] Playback stopped")
+        print("🎵 [AudioService] Playback stopping with fade")
     }
 
     /// 音声再生を一時停止
@@ -171,10 +201,14 @@ public final class AudioService: ObservableObject {
     public func pause(reason: PauseReason) {
         print("⚠️ [AudioService] pause() called, reason: \(reason)")
 
-        // TODO: フェードアウト実装（Phase 2）
-        // fadeOut(duration: 0.5)
+        // フェードアウト
+        fadeOut(duration: 0.5)
 
-        engine.stop()
+        // フェード完了後にエンジンを停止
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.engine.stop()
+            print("⚠️ [AudioService] Engine stopped after fade")
+        }
 
         pauseReason = reason
         isPlaying = false
@@ -207,8 +241,14 @@ public final class AudioService: ObservableObject {
             throw AudioError.engineStartFailed(error)
         }
 
-        // TODO: フェードイン実装（Phase 2）
-        // fadeIn(duration: 0.5)
+        // フェードイン
+        fadeIn(duration: 0.5)
+
+        // Phase 2: Quiet Breakスケジューラーを再開（ただし.quietBreak理由の場合は除く）
+        // .quietBreak の場合はスケジューラー自身が自動再開を管理している
+        if reason != .quietBreak {
+            breakScheduler.start()
+        }
 
         isPlaying = true
         pauseReason = nil
@@ -248,6 +288,26 @@ public final class AudioService: ObservableObject {
             Task { @MainActor in
                 print("⚠️ [AudioService] Speaker safety triggered - pausing playback")
                 self.pause(reason: .routeSafetySpeaker)
+            }
+        }
+    }
+
+    private func setupBreakSchedulerCallbacks() {
+        // 休憩開始時のコールバック
+        breakScheduler.onBreakStart = { [weak self] in
+            guard let self = self else { return }
+            Task { @MainActor in
+                print("⏰ [AudioService] Quiet break started")
+                self.pause(reason: .quietBreak)
+            }
+        }
+
+        // 休憩終了時のコールバック
+        breakScheduler.onBreakEnd = { [weak self] in
+            guard let self = self else { return }
+            Task { @MainActor in
+                print("⏰ [AudioService] Quiet break ended - resuming")
+                try? self.resume()
             }
         }
     }
@@ -347,7 +407,75 @@ public final class AudioService: ObservableObject {
         }
     }
 
-    // TODO: Phase 2 でフェード処理を実装
-    // private func fadeOut(duration: TimeInterval) { }
-    // private func fadeIn(duration: TimeInterval) { }
+    // MARK: - Fade Effects (Phase 2)
+
+    private var fadeTimer: Timer?
+    private var targetVolume: Float = 0.5
+
+    /// 音量をフェードアウト
+    /// - Parameter duration: フェード時間（秒）
+    private func fadeOut(duration: TimeInterval) {
+        fadeTimer?.invalidate()
+
+        let startVolume = engine.engine.mainMixerNode.outputVolume
+        targetVolume = startVolume  // 元の音量を記憶
+
+        print("🎵 [AudioService] Fade out: \(startVolume) → 0.0 over \(duration)s")
+
+        let steps = 60  // 60ステップ（60fps想定）
+        let stepDuration = duration / Double(steps)
+        let volumeStep = startVolume / Float(steps)
+
+        var currentStep = 0
+
+        fadeTimer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+
+            currentStep += 1
+            let newVolume = max(0.0, startVolume - (volumeStep * Float(currentStep)))
+            self.engine.setMasterVolume(newVolume)
+
+            if currentStep >= steps {
+                timer.invalidate()
+                self.fadeTimer = nil
+                print("🎵 [AudioService] Fade out complete")
+            }
+        }
+    }
+
+    /// 音量をフェードイン
+    /// - Parameter duration: フェード時間（秒）
+    private func fadeIn(duration: TimeInterval) {
+        fadeTimer?.invalidate()
+
+        let endVolume = targetVolume  // 記憶した音量に戻す
+
+        print("🎵 [AudioService] Fade in: 0.0 → \(endVolume) over \(duration)s")
+
+        let steps = 60  // 60ステップ
+        let stepDuration = duration / Double(steps)
+        let volumeStep = endVolume / Float(steps)
+
+        var currentStep = 0
+
+        fadeTimer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+
+            currentStep += 1
+            let newVolume = min(endVolume, volumeStep * Float(currentStep))
+            self.engine.setMasterVolume(newVolume)
+
+            if currentStep >= steps {
+                timer.invalidate()
+                self.fadeTimer = nil
+                print("🎵 [AudioService] Fade in complete")
+            }
+        }
+    }
 }
