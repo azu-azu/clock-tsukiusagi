@@ -1108,14 +1108,82 @@ try registerSource(for: preset)
 try engine.start()
 ```
 
+### Issue 3: Route Detection Timing Issues
+
+**Problem**: Audio route displayed as "Unknown" on app launch, and route changes not reflected in UI in real-time.
+
+**Symptoms**:
+1. Launch with Bluetooth headphones → UI shows "Unknown ❓"
+2. Start playback → UI updates to "Bluetooth 🅱️"
+3. Plug/unplug headphones during playback → UI doesn't update
+4. Route changes while stopped → No UI feedback
+
+**Root Cause 1: Late Initialization**
+Route detection only happened when playback started:
+```swift
+// In AudioService.play():
+routeMonitor.start()  // Called on playback, not on launch
+onRouteChanged?(currentRoute)  // First notification delayed
+```
+
+**Root Cause 2: Selective Notification**
+Route monitor only notified UI on `.oldDeviceUnavailable` (device removal):
+```swift
+guard reason == .oldDeviceUnavailable else {
+    // Other route changes (like .newDeviceAvailable) were ignored
+    return
+}
+```
+
+**Solution**:
+1. **Detect route on app launch**:
+```swift
+// In AudioService.init():
+outputRoute = routeMonitor.currentRoute  // Immediate detection
+routeMonitor.start()  // Start monitoring from launch
+```
+
+2. **Always notify route changes**:
+```swift
+// In AudioRouteMonitor.handleRouteChange():
+let newRoute = detectCurrentRoute()
+onRouteChanged?(newRoute)  // Always notify, regardless of reason
+
+// Safety pause only on device removal
+guard reason == .oldDeviceUnavailable else { return }
+// ... check for headphone→speaker transition
+```
+
+3. **Continuous monitoring**:
+```swift
+// Route monitor never stops (removed from stop() method)
+// Monitors even when playback is stopped
+```
+
+**Testing Results** (After Fix):
+```
+Launch with Bluetooth: Bluetooth 🅱️ (immediate)
+Plug headphones: Headphones 🎧 (real-time)
+Unplug headphones: Speaker 🔊 + safety pause (if enabled)
+Route changes while stopped: UI updates correctly
+```
+
+**Impact**:
+- ✅ Immediate route display on launch
+- ✅ Real-time UI updates for all route changes
+- ✅ Better user feedback (always know current output)
+- ✅ Safety pause still works correctly (unchanged behavior)
+
+---
+
 ### Lessons Learned
 
 1. **Audio Session Options**: Not all documented options work reliably across iOS versions/devices. Start minimal, add options incrementally.
 
 2. **Separation of Concerns**: Clear ownership is critical:
-   - `AudioService` → Session management
-   - `LocalAudioEngine` → Engine lifecycle
-   - `AudioRouteMonitor` → Route observation only
+   - `AudioService` → Session management + Route state publishing
+   - `LocalAudioEngine` → Engine lifecycle only
+   - `AudioRouteMonitor` → Route observation + Change notifications
 
 3. **Error Diagnosis**: OSStatus errors require systematic elimination:
    - Test with minimal configuration first
@@ -1124,8 +1192,18 @@ try engine.start()
 
 4. **Testing Strategy**: Always test on physical device for audio features. Simulator has limitations.
 
+5. **Initialization Timing**: UI-critical state should be initialized as early as possible:
+   - Don't wait for user action (playback) to detect system state (route)
+   - Start monitoring immediately on app launch
+   - Publish initial values to avoid "Unknown" states
+
+6. **Notification Filtering**: Be careful about filtering notifications:
+   - Different notification reasons serve different purposes
+   - UI updates need all changes, safety features need specific changes
+   - Separate "notify UI" from "trigger action" logic
+
 ---
 
 **Document Status**: ✅ Phase 1 Complete - Tested on Device
-**Last Updated**: 2025-11-10 (Phase 1 implementation verified)
+**Last Updated**: 2025-11-10 (Phase 1 implementation verified + route detection fixes)
 **Next Review**: Before Phase 2 implementation
