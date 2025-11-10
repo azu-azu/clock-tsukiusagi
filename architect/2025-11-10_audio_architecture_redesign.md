@@ -2,6 +2,31 @@
 
 🗓️ 2025/11/10 [Monday]
 
+---
+
+## 📚 Documentation Structure (2025-11-10 Update)
+
+**This document is the original design document** containing historical context and detailed implementation reports. For ongoing work, use the **role-based documentation structure**:
+
+### For Different Roles:
+
+**🏛️ Designers / Architects**:
+- [`clock-tsukiusagi/Docs/architecture/audio-system-spec.md`](/Users/mypc/AI_develop/clock-tsukiusagi/clock-tsukiusagi/Docs/architecture/audio-system-spec.md) - Architecture specification (immutable principles, state machines, public interfaces)
+- [`clock-tsukiusagi/Docs/architecture/adrs/`](/Users/mypc/AI_develop/clock-tsukiusagi/clock-tsukiusagi/Docs/architecture/adrs/) - Architecture Decision Records (why decisions were made)
+
+**👨‍💻 Developers / Implementers**:
+- [`clock-tsukiusagi/Docs/implementation/_guide-audio-system-impl.md`](/Users/mypc/AI_develop/clock-tsukiusagi/clock-tsukiusagi/Docs/implementation/_guide-audio-system-impl.md) - Implementation guide (how to build, pitfalls & fixes, code snippets)
+
+**🧪 QA / Operations**:
+- [`clock-tsukiusagi/Docs/runbook/_runbook-audio-ops-and-tests.md`](/Users/mypc/AI_develop/clock-tsukiusagi/clock-tsukiusagi/Docs/runbook/_runbook-audio-ops-and-tests.md) - Operations & testing procedures (test matrix, troubleshooting, rollback plan)
+
+**📝 Maintainers**:
+- [`clock-tsukiusagi/Docs/changelog/changelog-audio.md`](/Users/mypc/AI_develop/clock-tsukiusagi/clock-tsukiusagi/Docs/changelog/changelog-audio.md) - Change history (what changed, breaking changes, testing status)
+
+**Rationale**: Original long document mixed architecture (immutable) with implementation details (variable) and operational procedures. New structure separates by role for faster navigation and clearer ownership.
+
+---
+
 ## Executive Summary
 
 **Goal**: Transform the current instance-based audio system into a long-lived, app-wide service that survives screen transitions, provides safe output control, and enables advanced features like Live Activity, scheduled breaks, and headphone safety.
