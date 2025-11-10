@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct clock_tsukiusagiApp: App {
+    // オーディオサービス（Singleton）をアプリ全体で共有
+    @StateObject private var audioService = AudioService.shared
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(audioService)
         }
     }
 }
