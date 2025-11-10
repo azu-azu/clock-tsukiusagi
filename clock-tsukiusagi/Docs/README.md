@@ -61,6 +61,7 @@
 ### 🔧 トラブルシューティング
 - [`trouble-audio-no-sound-silent-switch.md`](./trouble-audio-no-sound-silent-switch.md) - オーディオ無音問題（サイレントスイッチ）RCA
 - [`trouble-cursor-swift.md`](./trouble-cursor-swift.md) - Cursor Swift拡張のトラブルシューティング
+- [`trouble-error-resolution-guide.md`](./trouble-error-resolution-guide.md) - エラー解決ガイド（汎用チェックリスト）
 
 ## 📝 ドキュメント作成・更新ルール
 
