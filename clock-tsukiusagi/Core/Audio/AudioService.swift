@@ -434,14 +434,18 @@ public final class AudioService: ObservableObject {
                 return
             }
 
-            currentStep += 1
-            let newVolume = max(0.0, startVolume - (volumeStep * Float(currentStep)))
-            self.engine.setMasterVolume(newVolume)
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
 
-            if currentStep >= steps {
-                timer.invalidate()
-                self.fadeTimer = nil
-                print("🎵 [AudioService] Fade out complete")
+                currentStep += 1
+                let newVolume = max(0.0, startVolume - (volumeStep * Float(currentStep)))
+                self.engine.setMasterVolume(newVolume)
+
+                if currentStep >= steps {
+                    timer.invalidate()
+                    self.fadeTimer = nil
+                    print("🎵 [AudioService] Fade out complete")
+                }
             }
         }
     }
@@ -467,14 +471,18 @@ public final class AudioService: ObservableObject {
                 return
             }
 
-            currentStep += 1
-            let newVolume = min(endVolume, volumeStep * Float(currentStep))
-            self.engine.setMasterVolume(newVolume)
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
 
-            if currentStep >= steps {
-                timer.invalidate()
-                self.fadeTimer = nil
-                print("🎵 [AudioService] Fade in complete")
+                currentStep += 1
+                let newVolume = min(endVolume, volumeStep * Float(currentStep))
+                self.engine.setMasterVolume(newVolume)
+
+                if currentStep >= steps {
+                    timer.invalidate()
+                    self.fadeTimer = nil
+                    print("🎵 [AudioService] Fade in complete")
+                }
             }
         }
     }
