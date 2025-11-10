@@ -236,23 +236,20 @@ struct AudioTestView: View {
     private func registerSound(to engine: LocalAudioEngine) throws {
         switch selectedSound {
         case .comfortRelax:
-            // Click Masking - ピンクノイズ（ベース+マスキング層）
-            let maskingSound = ClickMaskingDrone(
-                baseNoiseType: NaturalSoundPresets.ComfortRelax.baseNoiseType,
-                baseNoiseAmplitude: NaturalSoundPresets.ComfortRelax.baseNoiseAmplitude,
-                baseHighpassCutoff: NaturalSoundPresets.ComfortRelax.baseHighpassCutoff,
-                baseLowpassCutoff: NaturalSoundPresets.ComfortRelax.baseLowpassCutoff,
-                baseNoiseLFOFrequency: NaturalSoundPresets.ComfortRelax.baseNoiseLFOFrequency,
-                baseNoiseLFODepth: NaturalSoundPresets.ComfortRelax.baseNoiseLFODepth,
-                maskNoiseType: NaturalSoundPresets.ComfortRelax.maskNoiseType,
-                maskNoiseAmplitude: NaturalSoundPresets.ComfortRelax.maskNoiseAmplitude,
-                maskBandpassCenter: NaturalSoundPresets.ComfortRelax.maskBandpassCenter,
-                maskBandpassQ: NaturalSoundPresets.ComfortRelax.maskBandpassQ,
-                maskNoiseLFOFrequency: NaturalSoundPresets.ComfortRelax.maskNoiseLFOFrequency,
-                reverbWetDryMix: NaturalSoundPresets.ComfortRelax.reverbWetDryMix,
-                masterAttenuation: NaturalSoundPresets.ComfortRelax.masterAttenuation
+            // Comfort Pack Relax - ピンクノイズ + 低周波ドローン + 呼吸LFO
+            let relaxSound = ComfortPackDrone(
+                noiseType: NaturalSoundPresets.ComfortRelax.noiseType,
+                noiseAmplitude: NaturalSoundPresets.ComfortRelax.noiseAmplitude,
+                noiseLowpassCutoff: NaturalSoundPresets.ComfortRelax.noiseLowpassCutoff,
+                noiseLFOFrequency: NaturalSoundPresets.ComfortRelax.noiseLFOFrequency,
+                noiseLFODepth: NaturalSoundPresets.ComfortRelax.noiseLFODepth,
+                droneFrequencies: NaturalSoundPresets.ComfortRelax.droneFrequencies,
+                droneAmplitude: NaturalSoundPresets.ComfortRelax.droneAmplitude,
+                droneDetuneCents: NaturalSoundPresets.ComfortRelax.droneDetuneCents,
+                droneLFOFrequency: NaturalSoundPresets.ComfortRelax.droneLFOFrequency,
+                reverbWetDryMix: NaturalSoundPresets.ComfortRelax.reverbWetDryMix
             )
-            try engine.register(maskingSound)
+            try engine.register(relaxSound)
         }
     }
 }
