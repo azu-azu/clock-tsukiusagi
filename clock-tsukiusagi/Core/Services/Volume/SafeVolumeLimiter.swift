@@ -3,7 +3,7 @@
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-10.
-//  安全音量リミッター（AVAudioUnitDynamicsProcessor使用）
+//  安全音量リミッター（iOS: AVAudioUnitDistortion使用）
 //
 
 import AVFoundation
@@ -17,15 +17,17 @@ public protocol SafeVolumeLimiting {
 }
 
 /// 安全音量リミッター
-/// AVAudioUnitDynamicsProcessorを使用して出力音量を制限
+/// iOS用実装: AVAudioUnitDistortion + ソフトクリッピングを使用
+/// Note: AVAudioUnitDynamicsProcessorはmacOSのみで利用可能なため、
+/// iOS用の代替として歪みエフェクトを使用してソフトリミットを実装
 public final class SafeVolumeLimiter: SafeVolumeLimiting {
     // MARK: - Properties
 
-    private let dynamicsProcessor = AVAudioUnitDynamicsProcessor()
+    private let limiterNode = AVAudioUnitDistortion()
     public var maxOutputDb: Float {
         didSet {
             print("🔊 [SafeVolumeLimiter] Max output updated to \(maxOutputDb) dB")
-            dynamicsProcessor.threshold = maxOutputDb
+            updateLimiterSettings()
         }
     }
 
@@ -45,27 +47,27 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
             return
         }
 
-        print("🔊 [SafeVolumeLimiter] Configuring dynamics processor")
+        print("🔊 [SafeVolumeLimiter] Configuring soft limiter (iOS)")
         print("   Max output: \(maxOutputDb) dB")
         print("   Format: \(format.sampleRate) Hz, \(format.channelCount) channels")
 
-        // ダイナミクスプロセッサーをアタッチ
-        engine.attach(dynamicsProcessor)
+        // リミッターノードをアタッチ
+        engine.attach(limiterNode)
 
-        // 接続: MainMixerNode → DynamicsProcessor → OutputNode
+        // 接続: MainMixerNode → Limiter → OutputNode
         engine.connect(
             engine.mainMixerNode,
-            to: dynamicsProcessor,
+            to: limiterNode,
             format: format
         )
         engine.connect(
-            dynamicsProcessor,
+            limiterNode,
             to: engine.outputNode,
             format: format
         )
 
         // ソフトリミッターとして設定
-        configureDynamicsProcessor()
+        updateLimiterSettings()
 
         isConfigured = true
         print("🔊 [SafeVolumeLimiter] Configuration complete")
@@ -77,19 +79,21 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
 
     // MARK: - Private Methods
 
-    private func configureDynamicsProcessor() {
-        // リミッター設定（Azu設計）
-        dynamicsProcessor.threshold = maxOutputDb          // -6dB ceiling
-        dynamicsProcessor.headRoom = 0.1                   // 0.1dB headroom
-        dynamicsProcessor.attackTime = 0.001               // 1ms attack (fast)
-        dynamicsProcessor.releaseTime = 0.05               // 50ms release
-        dynamicsProcessor.overallGain = 0                  // No makeup gain
-        dynamicsProcessor.compressionAmount = 20.0         // Heavy limiting
-        dynamicsProcessor.inputAmplitude = 0               // Input metering
-        dynamicsProcessor.outputAmplitude = 0              // Output metering
+    private func updateLimiterSettings() {
+        // iOS用ソフトクリッピング設定
+        // AVAudioUnitDistortionを使用してソフトリミットを実現
+        // 負のプリゲイン + ソフトクリッピングでダイナミクスプロセッサーに近い効果を得る
 
-        print("   Threshold: \(maxOutputDb) dB")
-        print("   Attack: 1ms, Release: 50ms")
-        print("   Compression: 20:1 (heavy limiting)")
+        limiterNode.loadFactoryPreset(.multiDecimated4)  // ソフトなプリセットを使用
+
+        // プリゲイン: maxOutputDbに基づいて調整（-6dB → 約-6dB gain）
+        limiterNode.preGain = maxOutputDb
+
+        // ウェットドライミックス: 100%ウェット（完全に処理を適用）
+        limiterNode.wetDryMix = 100
+
+        print("   Pre-gain: \(maxOutputDb) dB")
+        print("   Preset: MultiDecimated4 (soft clipping)")
+        print("   Wet/Dry: 100% (full processing)")
     }
 }

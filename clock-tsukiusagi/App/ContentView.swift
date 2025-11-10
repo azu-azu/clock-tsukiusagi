@@ -21,6 +21,9 @@ public struct ContentView: View {
 
                 case .audioTest:
                     AudioTestView()
+
+                case .settings:
+                    AudioSettingsView()
                 }
             }
 
@@ -42,6 +45,14 @@ public struct ContentView: View {
                     ) {
                         selectedTab = .audioTest
                     }
+
+                    TabButton(
+                        icon: "gearshape.fill",
+                        label: "Settings",
+                        isSelected: selectedTab == .settings
+                    ) {
+                        selectedTab = .settings
+                    }
                 }
                 .frame(height: 60)
                 .padding(.top, 10)
@@ -58,6 +69,7 @@ public struct ContentView: View {
 private enum Tab {
     case clock
     case audioTest
+    case settings
 }
 
 // MARK: - TabButton

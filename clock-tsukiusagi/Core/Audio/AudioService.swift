@@ -56,7 +56,7 @@ public final class AudioService: ObservableObject {
     private let engine: LocalAudioEngine
     private let sessionManager: AudioSessionManager
     private let routeMonitor: AudioRouteMonitor
-    private let breakScheduler: QuietBreakScheduler
+    public let breakScheduler: QuietBreakScheduler  // Public for settings UI access
     private let volumeLimiter: SafeVolumeLimiter
     private var settings: AudioSettings
 
