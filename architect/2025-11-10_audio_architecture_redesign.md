@@ -1023,6 +1023,109 @@ enum PauseReason: String, Codable {
 
 ---
 
-**Document Status**: ✅ Design Complete - Ready for Phase 1 Implementation
-**Last Updated**: 2025-11-10
-**Next Review**: After Phase 1 completion
+## Appendix C: Phase 1 Implementation Issues and Solutions
+
+### Issue 1: OSStatus -50 Error on Audio Session Activation
+
+**Problem**: `AVAudioSession.setCategory()` failed with OSStatus error -50 (invalid parameter) on device.
+
+**Error Message**:
+```
+AVAudioSessionClient_Common.mm:600   Failed to set properties, error: -50
+Domain: NSOSStatusErrorDomain Code: -50
+Description: The operation couldn't be completed. (OSStatus error -50.)
+```
+
+**Root Cause**:
+The `.allowBluetooth` option in `AVAudioSession.CategoryOptions` was causing the error. While this option is documented and should be valid, it triggered an invalid parameter error on the test device (iOS実機).
+
+**Initial Configuration (Failed)**:
+```swift
+try session.setCategory(
+    .playback,
+    mode: .default,
+    options: [.mixWithOthers, .allowBluetooth]  // ❌ This failed
+)
+```
+
+**Solution**:
+Remove the `.allowBluetooth` option and use only `.mixWithOthers`:
+
+```swift
+try session.setCategory(
+    .playback,
+    mode: .default,
+    options: [.mixWithOthers]  // ✅ This works
+)
+```
+
+**Impact**:
+- ✅ Audio session activates successfully on device
+- ✅ Playback works normally
+- ⚠️ Bluetooth audio routing may require testing (not verified in Phase 1)
+- 📝 For Phase 2: Consider conditionally adding `.allowBluetooth` based on iOS version or device capabilities
+
+**Testing Results** (Device):
+```
+Current Category: AVAudioSessionCategorySoloAmbient
+After setCategory: AVAudioSessionCategoryPlayback
+✅ Session activated successfully
+✅ Audio playback working
+✅ Screen transitions maintain playback
+```
+
+**Diagnostic Logs**:
+```
+Noise: -25.6 dB
+Drone: -25.3 dB
+Mixed: -32.7 dB
+RMS: -42.3 dB
+✅ No clipping detected
+```
+
+### Issue 2: Duplicate Session Activation Attempts
+
+**Problem**: Initial implementation attempted to activate audio session in multiple places:
+1. `AudioService.activateAudioSession()`
+2. `LocalAudioEngine.configure()` → `AudioSessionManager.activate()`
+
+**Root Cause**:
+Legacy architecture where `LocalAudioEngine` managed its own session. In the new singleton pattern, `AudioService` owns session management, but the engine still tried to configure it.
+
+**Solution**:
+- Remove `engine.configure()` call from `AudioService.play()`
+- AudioService handles session activation directly
+- LocalAudioEngine only manages AVAudioEngine lifecycle (start/stop)
+
+**Code Change**:
+```swift
+// Before (caused conflicts):
+try engine.configure()  // Would try to activate session again
+
+// After (correct):
+// Skip engine.configure() - session already activated by AudioService
+try registerSource(for: preset)
+try engine.start()
+```
+
+### Lessons Learned
+
+1. **Audio Session Options**: Not all documented options work reliably across iOS versions/devices. Start minimal, add options incrementally.
+
+2. **Separation of Concerns**: Clear ownership is critical:
+   - `AudioService` → Session management
+   - `LocalAudioEngine` → Engine lifecycle
+   - `AudioRouteMonitor` → Route observation only
+
+3. **Error Diagnosis**: OSStatus errors require systematic elimination:
+   - Test with minimal configuration first
+   - Add options one by one
+   - Log current session state before changes
+
+4. **Testing Strategy**: Always test on physical device for audio features. Simulator has limitations.
+
+---
+
+**Document Status**: ✅ Phase 1 Complete - Tested on Device
+**Last Updated**: 2025-11-10 (Phase 1 implementation verified)
+**Next Review**: Before Phase 2 implementation
