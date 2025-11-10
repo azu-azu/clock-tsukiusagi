@@ -68,6 +68,9 @@ public final class AudioService: ObservableObject {
         self.settings = AudioSettings.load()
 
         // コンポーネントを初期化
+        // Note: AudioSessionManagerはAudioServiceで直接管理するため、
+        // LocalAudioEngineには渡すが、configure()は呼ばないことで
+        // セッション管理の競合を避ける
         self.sessionManager = AudioSessionManager()
         self.engine = LocalAudioEngine(
             sessionManager: sessionManager,
@@ -75,6 +78,8 @@ public final class AudioService: ObservableObject {
         )
         self.routeMonitor = AudioRouteMonitor(settings: settings)
 
+        // LocalAudioEngineのセッションコールバックを無効化
+        // AudioServiceで直接管理するため
         setupCallbacks()
         setupInterruptionHandling()
 
@@ -282,23 +287,37 @@ public final class AudioService: ObservableObject {
     }
 
     private func activateAudioSession() throws {
+        print("🎵 [AudioService] Activating audio session...")
+
         let session = AVAudioSession.sharedInstance()
 
-        print("🎵 [AudioService] Activating audio session...")
-        print("   Category: .playback")
-        print("   Mode: .default")
-        print("   Options: [.mixWithOthers, .allowBluetooth]")
+        print("   Current state:")
+        print("     Category: \(session.category.rawValue)")
+        print("     Mode: \(session.mode.rawValue)")
 
-        try session.setCategory(
-            .playback,
-            mode: .default,
-            options: [.mixWithOthers, .allowBluetooth]
-        )
+        // 既にアクティブかチェック
+        let isActive = session.isOtherAudioPlaying
+        print("     Is other audio playing: \(isActive)")
 
-        // バッファサイズを設定（低レイテンシ）
-        try session.setPreferredIOBufferDuration(0.005)  // 5ms
+        // まずカテゴリだけ設定（アクティブ化前）
+        do {
+            print("   Setting category to .playback...")
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            print("   ✅ Category set")
+        } catch {
+            print("   ❌ setCategory failed: \(error)")
+            throw error
+        }
 
-        try session.setActive(true)
+        // 次にアクティブ化
+        do {
+            print("   Activating session...")
+            try session.setActive(true, options: [])
+            print("   ✅ Session activated")
+        } catch {
+            print("   ❌ setActive failed: \(error)")
+            throw error
+        }
 
         print("🎵 [AudioService] Audio session activated successfully")
     }
