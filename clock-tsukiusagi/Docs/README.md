@@ -42,6 +42,7 @@
 - [`_arch-guidelines.md`](./_arch-guidelines.md) - アーキテクチャガイドライン・設計原則
 
 ### 🔧 実装ガイド・手順書
+- [`_guide-error-resolution.md`](./_guide-error-resolution.md) - エラー解決ガイド（汎用チェックリスト）
 - [`_guide-font.md`](./_guide-font.md) - フォント使用ガイドライン
 - [`_guide-font-installation.md`](./_guide-font-installation.md) - Nunitoフォントのインストール手順
 - [`_guide-keyboard.md`](./_guide-keyboard.md) - キーボード操作ガイドライン
@@ -61,7 +62,6 @@
 ### 🔧 トラブルシューティング
 - [`trouble-audio-no-sound-silent-switch.md`](./trouble-audio-no-sound-silent-switch.md) - オーディオ無音問題（サイレントスイッチ）RCA
 - [`trouble-cursor-swift.md`](./trouble-cursor-swift.md) - Cursor Swift拡張のトラブルシューティング
-- [`trouble-error-resolution-guide.md`](./trouble-error-resolution-guide.md) - エラー解決ガイド（汎用チェックリスト）
 
 ## 📝 ドキュメント作成・更新ルール
 
