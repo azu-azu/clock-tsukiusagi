@@ -64,16 +64,18 @@ public final class TrackPlayer: TrackPlaying {
     /// - Parameters:
     ///   - engine: AVAudioEngine
     ///   - format: オーディオフォーマット
-    public func configure(engine: AVAudioEngine, format: AVAudioFormat) {
+    ///   - destination: 接続先ノード（デフォルト: mainMixerNode）
+    public func configure(engine: AVAudioEngine, format: AVAudioFormat, destination: AVAudioNode? = nil) {
         self.engine = engine
 
         // プレイヤーノードをエンジンにアタッチ
         engine.attach(playerNode)
 
-        // メインミキサーに接続
-        engine.connect(playerNode, to: engine.mainMixerNode, format: format)
+        // 指定された接続先またはメインミキサーに接続
+        let targetNode = destination ?? engine.mainMixerNode
+        engine.connect(playerNode, to: targetNode, format: format)
 
-        print("🎵 [TrackPlayer] Configured and connected to engine")
+        print("🎵 [TrackPlayer] Configured and connected to \(destination != nil ? "masterBusMixer" : "mainMixerNode")")
     }
 
     // MARK: - Public Methods

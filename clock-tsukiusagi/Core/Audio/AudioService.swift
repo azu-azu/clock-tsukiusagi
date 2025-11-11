@@ -113,6 +113,12 @@ public final class AudioService: ObservableObject {
         // Phase 3: Now Playing Controller
         self.nowPlayingController = NowPlayingController()
 
+        // Attach limiter nodes to engine BEFORE any connections
+        volumeLimiter.attachNodes(to: engine.engine)
+
+        // Set masterBusMixer as destination for all audio sources
+        engine.setDestination(volumeLimiter.masterBusMixer)
+
         // コールバック設定
         setupCallbacks()
         setupInterruptionHandling()
@@ -133,6 +139,7 @@ public final class AudioService: ObservableObject {
         print("   Live Activity: \(activityController != nil ? "Available" : "Not Available")")
         print("   System volume monitoring: Enabled")
         print("   Volume cap: \(volumeCapLinear) (-6dB)")
+        print("   Audio routing: All sources → masterBusMixer → limiter → mainMixer → output")
     }
 
     deinit {
@@ -164,14 +171,10 @@ public final class AudioService: ObservableObject {
         // Note: LocalAudioEngine.configure()は呼ばない
         // セッション管理はAudioServiceで行うため、二重アクティベートを避ける
 
-        // Phase 2: 音量リミッターを設定（SafeVolumeLimiterの内部フラグで二重設定防止）
-        let format = engine.engine.outputNode.inputFormat(forBus: 0)
-        volumeLimiter.configure(engine: engine.engine, format: format)
-
         // Re-enable synthesis sources for playback
         engine.enableSources()
 
-        // 音源を登録
+        // 音源を登録（masterBusMixerに接続される）
         do {
             try registerSource(for: preset)
         } catch {
@@ -179,15 +182,19 @@ public final class AudioService: ObservableObject {
             throw AudioError.engineStartFailed(error)
         }
 
-        // 音量は動的ゲイン補正で自動設定される（システム音量に基づく）
-        applyDynamicGainCompensation()
-
         // エンジンを開始
         do {
             try engine.start()
         } catch {
             throw AudioError.engineStartFailed(error)
         }
+
+        // Phase 2: Configure limiter AFTER engine is running and sources are connected
+        let format = engine.engine.outputNode.inputFormat(forBus: 0)
+        volumeLimiter.configure(engine: engine.engine, format: format)
+
+        // 音量は動的ゲイン補正で自動設定される（システム音量に基づく）
+        applyDynamicGainCompensation()
 
         // 経路監視は既に起動時に開始済み（init()で実行）
 
@@ -227,6 +234,7 @@ public final class AudioService: ObservableObject {
             // フェード完了後にエンジンを停止
             DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
                 self?.engine.stop()
+                self?.volumeLimiter.reset()  // Reset limiter state when engine stops
                 print("🎵 [AudioService] Synthesis engine stopped after fade")
             }
         }
@@ -730,12 +738,20 @@ public final class AudioService: ObservableObject {
         if isPlaying {
             print("🎵 [AudioService] Stopping current playback before file playback")
             engine.stop()
+            volumeLimiter.reset()  // Reset limiter when stopping
             isPlaying = false
             currentPreset = nil
             currentAudioFile = nil
         }
 
-        // Disable synthesis sources for file playback
+        // Always stop engine to reset audio graph for file playback
+        if engine.isEngineRunning {
+            print("🎵 [AudioService] Stopping engine to reset audio graph")
+            engine.stop()
+            volumeLimiter.reset()  // Reset limiter when stopping
+        }
+
+        // Disable synthesis sources for file playback (but don't detach nodes)
         engine.disableSources()
 
         // Get audio file URL
@@ -753,23 +769,28 @@ public final class AudioService: ObservableObject {
         print("   Channels: \(fileFormat.channelCount)")
         print("   Sample rate: \(fileFormat.sampleRate) Hz")
 
-        // Start engine BEFORE configuring limiter or TrackPlayer
-        // Don't start synthesis sources (startSources: false)
-        try engine.start(startSources: false)
-
-        // Phase 2: 音量リミッターを設定（SafeVolumeLimiterの内部フラグで二重設定防止）
-        let format = engine.engine.outputNode.inputFormat(forBus: 0)
-        volumeLimiter.configure(engine: engine.engine, format: format)
-
-        // Initialize TrackPlayer if needed
+        // Initialize TrackPlayer if needed and connect to masterBusMixer
         if trackPlayer == nil {
             trackPlayer = TrackPlayer()
 
-            // Configure TrackPlayer with file's format (ensures channel count matches)
-            trackPlayer?.configure(engine: engine.engine, format: fileFormat)
+            // Configure TrackPlayer to connect to masterBusMixer (not mainMixer directly)
+            trackPlayer?.configure(
+                engine: engine.engine,
+                format: fileFormat,
+                destination: volumeLimiter.masterBusMixer
+            )
 
-            print("🎵 [AudioService] TrackPlayer configured and connected to engine")
+            print("🎵 [AudioService] TrackPlayer configured and connected to masterBusMixer")
         }
+
+        // Start engine BEFORE configuring limiter
+        // Don't start synthesis sources (startSources: false)
+        try engine.start(startSources: false)
+
+        // Phase 2: Configure SafeVolumeLimiter AFTER engine is running
+        // This creates the path: masterBusMixer → Limiter → mainMixer → output
+        let format = engine.engine.outputNode.inputFormat(forBus: 0)
+        volumeLimiter.configure(engine: engine.engine, format: format)
 
         // Load audio file
         try trackPlayer?.load(url: url)
