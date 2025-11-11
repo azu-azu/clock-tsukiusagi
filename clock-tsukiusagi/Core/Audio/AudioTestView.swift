@@ -19,7 +19,6 @@ struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
 
     @State private var selectedSound: TestSoundType = .clickSuppression
-    @State private var masterVolume: Float = 0.5
 
     @State private var errorMessage: String?
     @State private var showError = false
@@ -95,25 +94,41 @@ struct AudioTestView: View {
     private var volumeSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("音量")
+                Text("音量（端末ボタンで制御）")
                     .font(.headline)
                 Spacer()
-                Text("\(Int(masterVolume * 100))%")
+                Text("\(Int(audioService.systemVolume * 100))%")
                     .foregroundColor(.secondary)
+                    .monospacedDigit()
             }
 
             HStack(spacing: 12) {
                 Image(systemName: "speaker.fill")
                     .foregroundColor(.secondary)
 
-                Slider(value: $masterVolume, in: 0...1)
-                    .onChange(of: masterVolume) { _, newValue in
-                        audioService.setVolume(newValue)
+                // Read-only progress bar
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        // Background
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 8)
+
+                        // Filled portion
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.blue)
+                            .frame(width: geometry.size.width * CGFloat(audioService.systemVolume), height: 8)
                     }
+                }
+                .frame(height: 8)
 
                 Image(systemName: "speaker.wave.3.fill")
                     .foregroundColor(.secondary)
             }
+
+            Text("💡 音量は端末のボリュームボタンで調整してください")
+                .font(.caption)
+                .foregroundColor(.orange)
         }
         .padding()
         .background(Color(.secondarySystemBackground))
@@ -192,8 +207,7 @@ struct AudioTestView: View {
             // AudioServiceに再生を依頼（プリセットを指定）
             try audioService.play(preset: .clickSuppression)
 
-            // 音量を設定
-            audioService.setVolume(masterVolume)
+            // 音量はシステム音量で自動制御される
 
             print("AudioTestView: Audio playback started successfully")
 

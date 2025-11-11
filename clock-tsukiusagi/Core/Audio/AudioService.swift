@@ -66,6 +66,11 @@ public final class AudioService: ObservableObject {
     // Phase 3: Now Playing Controller
     private var nowPlayingController: NowPlayingController?
 
+    // System Volume Monitoring
+    @Published public private(set) var systemVolume: Float = 1.0
+    private var volumeObservation: NSKeyValueObservation?
+    private let volumeCapLinear: Float = 0.501187  // -6dB = 10^(-6/20)
+
     private var sessionActivated = false  // セッション二重アクティベート防止フラグ
     private var interruptionObserver: NSObjectProtocol?
 
@@ -114,17 +119,23 @@ public final class AudioService: ObservableObject {
         outputRoute = routeMonitor.currentRoute
         routeMonitor.start()  // 起動時から監視開始
 
+        // システム音量監視を開始
+        setupSystemVolumeMonitoring()
+
         print("🎵 [AudioService] Initialized as singleton")
         print("   Initial output route: \(outputRoute.displayName) \(outputRoute.icon)")
         print("   Quiet breaks: \(settings.quietBreakEnabled ? "Enabled" : "Disabled")")
         print("   Max output: \(settings.maxOutputDb) dB")
         print("   Live Activity: \(activityController != nil ? "Available" : "Not Available")")
+        print("   System volume monitoring: Enabled")
+        print("   Volume cap: \(volumeCapLinear) (-6dB)")
     }
 
     deinit {
         if let observer = interruptionObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+        volumeObservation?.invalidate()
         routeMonitor.stop()
         breakScheduler.stop()
     }
@@ -157,8 +168,8 @@ public final class AudioService: ObservableObject {
             throw AudioError.engineStartFailed(error)
         }
 
-        // 音量を初期設定
-        engine.setMasterVolume(0.5)
+        // 音量は動的ゲイン補正で自動設定される（システム音量に基づく）
+        applyDynamicGainCompensation()
 
         // Phase 2: 音量リミッターを設定
         let format = engine.engine.outputNode.inputFormat(forBus: 0)
@@ -297,10 +308,12 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] Resumed successfully")
     }
 
-    /// 音量を設定
+    /// 音量を設定（非推奨：システム音量で自動制御されます）
     /// - Parameter volume: 音量（0.0〜1.0）
+    @available(*, deprecated, message: "音量はシステム音量（端末ボタン）で制御されます。このメソッドは無視されます。")
     public func setVolume(_ volume: Float) {
-        engine.setMasterVolume(volume)
+        print("⚠️ [AudioService] setVolume() is deprecated. Volume is now controlled by system volume.")
+        // Do nothing - volume is automatically controlled by dynamic gain compensation
     }
 
     /// 設定を更新
@@ -622,5 +635,64 @@ public final class AudioService: ObservableObject {
     /// Update Now Playing playback state
     private func updateNowPlayingState() {
         nowPlayingController?.updatePlaybackState(isPlaying: isPlaying)
+    }
+
+    // MARK: - System Volume Monitoring
+
+    /// Setup system volume monitoring with KVO
+    private func setupSystemVolumeMonitoring() {
+        let audioSession = AVAudioSession.sharedInstance()
+
+        // Get initial system volume
+        systemVolume = audioSession.outputVolume
+
+        // Apply initial gain compensation
+        applyDynamicGainCompensation()
+
+        // Observe system volume changes via KVO
+        volumeObservation = audioSession.observe(\.outputVolume, options: [.new]) { [weak self] session, change in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+
+                if let newVolume = change.newValue {
+                    self.systemVolume = newVolume
+                    self.applyDynamicGainCompensation()
+
+                    print("🔊 [AudioService] System volume changed: \(String(format: "%.2f", newVolume)) (\(Int(newVolume * 100))%)")
+                }
+            }
+        }
+
+        print("🔊 [AudioService] System volume monitoring started")
+        print("   Current system volume: \(String(format: "%.2f", systemVolume)) (\(Int(systemVolume * 100))%)")
+    }
+
+    /// Apply dynamic gain compensation to maintain volume cap
+    /// Formula: appGain = min(1.0, cap / max(systemVolume, ε))
+    /// Result: systemVolume × appGain ≤ cap (0.501187 = -6dB)
+    private func applyDynamicGainCompensation() {
+        let epsilon: Float = 0.0001  // Avoid division by zero
+        let systemVol = max(systemVolume, epsilon)
+
+        // Calculate compensated app gain
+        let compensatedGain = min(1.0, volumeCapLinear / systemVol)
+
+        // Apply to main mixer
+        engine.setMasterVolume(compensatedGain)
+
+        let finalVolume = systemVol * compensatedGain
+        let finalDb = 20.0 * log10(max(finalVolume, epsilon))
+
+        print("🔊 [AudioService] Dynamic gain compensation applied")
+        print("   System volume: \(String(format: "%.4f", systemVol)) (\(Int(systemVol * 100))%)")
+        print("   App gain: \(String(format: "%.4f", compensatedGain)) (\(Int(compensatedGain * 100))%)")
+        print("   Final output: \(String(format: "%.4f", finalVolume)) (\(String(format: "%.1f", finalDb)) dB)")
+        print("   Cap: \(String(format: "%.4f", volumeCapLinear)) (-6.0 dB)")
+
+        if finalVolume > volumeCapLinear + 0.001 {
+            print("   ⚠️  WARNING: Final volume exceeds cap!")
+        } else {
+            print("   ✅ Within safe limit")
+        }
     }
 }
