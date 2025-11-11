@@ -157,6 +157,23 @@ public struct AudioSettingsView: View {
                         .padding(.vertical, 8)
                     }
 
+                    // MARK: - Live Activity (Phase 3)
+                    if #available(iOS 16.1, *) {
+                        SettingsSection(title: "Live Activity") {
+                            SettingsToggle(
+                                title: "Enable Live Activity",
+                                subtitle: "Show playback status on Lock Screen and Dynamic Island",
+                                isOn: Binding(
+                                    get: { settings.liveActivityEnabled },
+                                    set: {
+                                        settings.liveActivityEnabled = $0
+                                        saveSettings()
+                                    }
+                                )
+                            )
+                        }
+                    }
+
                     Spacer(minLength: 40)
                 }
                 .padding(.horizontal, 24)

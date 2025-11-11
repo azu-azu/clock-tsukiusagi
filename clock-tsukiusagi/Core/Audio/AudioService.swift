@@ -60,6 +60,12 @@ public final class AudioService: ObservableObject {
     private let volumeLimiter: SafeVolumeLimiter
     private var settings: AudioSettings
 
+    // Phase 3: Live Activity
+    private var activityController: AudioActivityController?
+
+    // Phase 3: Now Playing Controller
+    private var nowPlayingController: NowPlayingController?
+
     private var sessionActivated = false  // セッション二重アクティベート防止フラグ
     private var interruptionObserver: NSObjectProtocol?
 
@@ -90,10 +96,19 @@ public final class AudioService: ObservableObject {
             maxOutputDb: settings.maxOutputDb
         )
 
+        // Phase 3: Live Activity Controller (iOS 16.1+)
+        if #available(iOS 16.1, *) {
+            self.activityController = AudioActivityController()
+        }
+
+        // Phase 3: Now Playing Controller
+        self.nowPlayingController = NowPlayingController()
+
         // コールバック設定
         setupCallbacks()
         setupInterruptionHandling()
         setupBreakSchedulerCallbacks()
+        setupNowPlayingCommands()
 
         // 初期経路を取得して監視開始（起動時から経路変更を検知）
         outputRoute = routeMonitor.currentRoute
@@ -103,6 +118,7 @@ public final class AudioService: ObservableObject {
         print("   Initial output route: \(outputRoute.displayName) \(outputRoute.icon)")
         print("   Quiet breaks: \(settings.quietBreakEnabled ? "Enabled" : "Disabled")")
         print("   Max output: \(settings.maxOutputDb) dB")
+        print("   Live Activity: \(activityController != nil ? "Available" : "Not Available")")
     }
 
     deinit {
@@ -166,6 +182,13 @@ public final class AudioService: ObservableObject {
         pauseReason = nil
         outputRoute = routeMonitor.currentRoute
 
+        // Phase 3: Live Activityを更新
+        updateLiveActivity()
+
+        // Phase 3: Now Playingを更新
+        updateNowPlaying()
+        updateNowPlayingState()
+
         print("🎵 [AudioService] Playback started successfully")
     }
 
@@ -192,6 +215,12 @@ public final class AudioService: ObservableObject {
         currentPreset = nil
         pauseReason = nil
 
+        // Phase 3: Live Activityを終了
+        endLiveActivity()
+
+        // Phase 3: Now Playingをクリア
+        nowPlayingController?.clearNowPlaying()
+
         // セッションはアクティブのまま（高速再開のため）
         print("🎵 [AudioService] Playback stopping with fade")
     }
@@ -212,6 +241,12 @@ public final class AudioService: ObservableObject {
 
         pauseReason = reason
         isPlaying = false
+
+        // Phase 3: Live Activityを更新
+        updateLiveActivity()
+
+        // Phase 3: Now Playing状態を更新
+        updateNowPlayingState()
 
         print("⚠️ [AudioService] Paused with reason: \(reason)")
     }
@@ -252,6 +287,12 @@ public final class AudioService: ObservableObject {
 
         isPlaying = true
         pauseReason = nil
+
+        // Phase 3: Live Activityを更新
+        updateLiveActivity()
+
+        // Phase 3: Now Playing状態を更新
+        updateNowPlayingState()
 
         print("🎵 [AudioService] Resumed successfully")
     }
@@ -310,6 +351,27 @@ public final class AudioService: ObservableObject {
                 try? self.resume()
             }
         }
+    }
+
+    private func setupNowPlayingCommands() {
+        nowPlayingController?.setupRemoteCommands(
+            onPlay: { [weak self] in
+                Task { @MainActor [weak self] in
+                    guard let self = self, let preset = self.currentPreset else { return }
+                    try? self.play(preset: preset)
+                }
+            },
+            onPause: { [weak self] in
+                Task { @MainActor [weak self] in
+                    self?.pause(reason: .user)
+                }
+            },
+            onStop: { [weak self] in
+                Task { @MainActor [weak self] in
+                    self?.stop()
+                }
+            }
+        )
     }
 
     private func setupInterruptionHandling() {
@@ -485,5 +547,80 @@ public final class AudioService: ObservableObject {
                 }
             }
         }
+    }
+
+    // MARK: - Live Activity Integration
+
+    /// Update Live Activity with current state
+    private func updateLiveActivity() {
+        guard #available(iOS 16.1, *), settings.liveActivityEnabled else { return }
+        guard let controller = activityController else { return }
+
+        let route = outputRoute.displayName
+        let nextBreak = breakScheduler.nextBreakAt
+        let presetName = currentPreset.map { "\($0)" }  // Convert enum to string
+
+        if isPlaying {
+            // Start or update activity
+            if !controller.isActivityActive {
+                controller.startActivity(
+                    isPlaying: true,
+                    nextBreakAt: nextBreak,
+                    outputRoute: route,
+                    pauseReason: nil,
+                    presetName: presetName
+                )
+            } else {
+                controller.updateActivity(
+                    isPlaying: true,
+                    nextBreakAt: nextBreak,
+                    outputRoute: route,
+                    pauseReason: nil,
+                    presetName: presetName
+                )
+            }
+        } else {
+            // Update with paused state
+            if controller.isActivityActive {
+                controller.updateActivity(
+                    isPlaying: false,
+                    nextBreakAt: nextBreak,
+                    outputRoute: route,
+                    pauseReason: pauseReason?.rawValue,
+                    presetName: presetName
+                )
+            }
+        }
+    }
+
+    /// End Live Activity
+    private func endLiveActivity() {
+        guard #available(iOS 16.1, *) else { return }
+        activityController?.endActivity(after: 3.0)  // Keep visible for 3 seconds
+    }
+
+    // MARK: - Now Playing Integration
+
+    /// Update Now Playing info in Control Center
+    private func updateNowPlaying() {
+        guard let preset = currentPreset else {
+            nowPlayingController?.clearNowPlaying()
+            return
+        }
+
+        let title = "\(preset)"  // Convert enum to string
+        nowPlayingController?.updateNowPlaying(
+            title: title,
+            artist: "Clock Tsukiusagi",
+            album: "Natural Sound Drones",
+            artwork: nil,  // TODO: Add app icon or preset-specific artwork
+            duration: nil, // Infinite duration for continuous playback
+            elapsedTime: 0
+        )
+    }
+
+    /// Update Now Playing playback state
+    private func updateNowPlayingState() {
+        nowPlayingController?.updatePlaybackState(isPlaying: isPlaying)
     }
 }
