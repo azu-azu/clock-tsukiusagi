@@ -735,32 +735,30 @@ public final class AudioService: ObservableObject {
             ]))
         }
 
+        // Get audio file format first
+        let file = try AVAudioFile(forReading: url)
+        let fileFormat = file.processingFormat
+
+        print("🎵 [AudioService] Audio file format:")
+        print("   Channels: \(fileFormat.channelCount)")
+        print("   Sample rate: \(fileFormat.sampleRate) Hz")
+
+        // Start engine BEFORE configuring TrackPlayer
+        // (TrackPlayer needs engine to be running to attach nodes)
+        try engine.start()
+
         // Initialize TrackPlayer if needed
         if trackPlayer == nil {
             trackPlayer = TrackPlayer()
 
-            // Get audio file format to configure TrackPlayer
-            let file = try AVAudioFile(forReading: url)
-            let fileFormat = file.processingFormat
-
             // Configure TrackPlayer with file's format (ensures channel count matches)
             trackPlayer?.configure(engine: engine.engine, format: fileFormat)
 
-            print("🎵 [AudioService] TrackPlayer configured with file format:")
-            print("   Channels: \(fileFormat.channelCount)")
-            print("   Sample rate: \(fileFormat.sampleRate) Hz")
+            print("🎵 [AudioService] TrackPlayer configured and connected to engine")
         }
 
         // Load audio file
         try trackPlayer?.load(url: url)
-
-        // Activate audio session (if not already active)
-        if !sessionActivated {
-            // Session activation is handled in init, no need to reactivate
-        }
-
-        // Start engine
-        try engine.start()
 
         // Start playback with loop settings
         let settings = audioFile.loopSettings
