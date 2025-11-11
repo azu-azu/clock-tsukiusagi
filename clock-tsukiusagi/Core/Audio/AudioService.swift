@@ -172,6 +172,9 @@ public final class AudioService: ObservableObject {
             limiterConfigured = true
         }
 
+        // Re-enable synthesis sources for playback
+        engine.enableSources()
+
         // 音源を登録
         do {
             try registerSource(for: preset)
@@ -230,16 +233,11 @@ public final class AudioService: ObservableObject {
                 self?.engine.stop()
                 print("🎵 [AudioService] Synthesis engine stopped after fade")
             }
-
-            // Re-enable sources for next synthesis playback
-            engine.enableSources()
         }
 
         // Stop TrackPlayer (if playing audio file)
         if currentAudioFile != nil {
             stopTrackPlayer()
-            // Re-enable sources for next synthesis playback
-            engine.enableSources()
         }
 
         // 経路監視は停止しない（常に監視してUIを更新）
@@ -732,15 +730,13 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] playAudioFile() called with: \(audioFile.displayName)")
         print("🎵 [AudioService] ========================================")
 
-        // Stop synthesis engine if playing
-        if isPlaying && currentPreset != nil {
+        // Stop any currently playing audio (synthesis or file)
+        if isPlaying {
+            print("🎵 [AudioService] Stopping current playback before file playback")
             engine.stop()
-            engine.disableSources()  // Disable synthesis sources
             isPlaying = false
             currentPreset = nil
-        } else if isPlaying {
-            // Stop engine even if no preset
-            engine.stop()
+            currentAudioFile = nil
         }
 
         // Disable synthesis sources for file playback
