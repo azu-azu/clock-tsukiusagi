@@ -222,14 +222,18 @@ public final class AudioService: ObservableObject {
             // フェード完了後にエンジンを停止
             DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
                 self?.engine.stop()
-                self?.engine.clearSources()  // Clear sources to prevent restart
-                print("🎵 [AudioService] Synthesis engine stopped and cleared after fade")
+                print("🎵 [AudioService] Synthesis engine stopped after fade")
             }
+
+            // Re-enable sources for next synthesis playback
+            engine.enableSources()
         }
 
         // Stop TrackPlayer (if playing audio file)
         if currentAudioFile != nil {
             stopTrackPlayer()
+            // Re-enable sources for next synthesis playback
+            engine.enableSources()
         }
 
         // 経路監視は停止しない（常に監視してUIを更新）
@@ -722,19 +726,19 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] playAudioFile() called with: \(audioFile.displayName)")
         print("🎵 [AudioService] ========================================")
 
-        // Stop and clear synthesis engine if playing
+        // Stop synthesis engine if playing
         if isPlaying && currentPreset != nil {
             engine.stop()
-            engine.clearSources()  // Clear synthesis sources from array
+            engine.disableSources()  // Disable synthesis sources
             isPlaying = false
             currentPreset = nil
         } else if isPlaying {
-            // Stop engine even if no preset (to clear any lingering sources)
+            // Stop engine even if no preset
             engine.stop()
-            engine.clearSources()  // Clear any lingering sources from array
         }
 
-        // Don't call stop() - it would stop TrackPlayer too
+        // Disable synthesis sources for file playback
+        engine.disableSources()
 
         // Get audio file URL
         guard let url = audioFile.url() else {
@@ -753,7 +757,8 @@ public final class AudioService: ObservableObject {
 
         // Start engine BEFORE configuring TrackPlayer
         // (TrackPlayer needs engine to be running to attach nodes)
-        try engine.start()
+        // Don't start synthesis sources (startSources: false)
+        try engine.start(startSources: false)
 
         // Initialize TrackPlayer if needed
         if trackPlayer == nil {

@@ -20,6 +20,7 @@ public final class LocalAudioEngine {
 
     private var sources: [AudioSource] = []
     private var isRunning = false
+    private var shouldStartSources = true  // 音源の自動起動フラグ
 
     /// エンジンの状態
     public var isEngineRunning: Bool { isRunning }
@@ -94,13 +95,14 @@ public final class LocalAudioEngine {
     }
 
     /// エンジンを開始
-    public func start() throws {
+    /// - Parameter startSources: 登録済み音源を起動するかどうか（デフォルト: true）
+    public func start(startSources: Bool = true) throws {
         guard !isRunning else {
             print("LocalAudioEngine: Already running, skipping start")
             return
         }
 
-        print("LocalAudioEngine: Starting audio engine...")
+        print("LocalAudioEngine: Starting audio engine (startSources: \(startSources))...")
 
         // エンジンを開始
         if !engine.isRunning {
@@ -113,13 +115,17 @@ public final class LocalAudioEngine {
             }
         }
 
-        // 全ての音源を開始
-        do {
-            try sources.forEach { try $0.start() }
-            print("LocalAudioEngine: All audio sources started")
-        } catch {
-            print("LocalAudioEngine: Failed to start audio sources - \(error)")
-            throw error
+        // 音源の自動起動が有効な場合のみ起動
+        if startSources && shouldStartSources {
+            do {
+                try sources.forEach { try $0.start() }
+                print("LocalAudioEngine: All audio sources started (\(sources.count) sources)")
+            } catch {
+                print("LocalAudioEngine: Failed to start audio sources - \(error)")
+                throw error
+            }
+        } else {
+            print("LocalAudioEngine: Skipping source start (startSources: \(startSources), shouldStartSources: \(shouldStartSources))")
         }
 
         isRunning = true
@@ -139,17 +145,23 @@ public final class LocalAudioEngine {
         isRunning = false
     }
 
-    /// 全ての音源を登録解除してクリア
-    public func clearSources() {
-        print("LocalAudioEngine: Clearing all sources (count: \(sources.count))")
+    /// 音源の自動起動を無効化（TrackPlayer使用時など）
+    public func disableSources() {
+        print("LocalAudioEngine: Disabling sources (count: \(sources.count))")
 
-        // 全ての音源を停止
+        // 現在の音源を停止
         sources.forEach { $0.stop() }
 
-        // 配列をクリア
-        sources.removeAll()
+        // 次回start()時に音源を起動しない
+        shouldStartSources = false
 
-        print("LocalAudioEngine: All sources cleared")
+        print("LocalAudioEngine: Sources disabled (will not restart on next start)")
+    }
+
+    /// 音源の自動起動を再有効化
+    public func enableSources() {
+        print("LocalAudioEngine: Re-enabling sources")
+        shouldStartSources = true
     }
 
     /// 全体の音量を設定
