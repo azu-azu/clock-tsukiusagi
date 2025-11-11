@@ -11,7 +11,8 @@ import AVFoundation
 
 /// テスト用の音源タイプ
 enum TestSoundType: String, CaseIterable {
-    case clickSuppression = "🔇 クリック音防止"
+    case clickSuppression = "🔇 クリック音防止（合成）"
+    case audioFile = "🎵 音源ファイル"
 }
 
 /// オーディオテストビュー
@@ -19,6 +20,7 @@ struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
 
     @State private var selectedSound: TestSoundType = .clickSuppression
+    @State private var selectedAudioFile: AudioFilePreset = .testTone
 
     @State private var errorMessage: String?
     @State private var showError = false
@@ -61,13 +63,31 @@ struct AudioTestView: View {
             Text("音源選択")
                 .font(.headline)
 
-            Picker("音源", selection: $selectedSound) {
+            // Sound type picker
+            Picker("音源タイプ", selection: $selectedSound) {
                 ForEach(TestSoundType.allCases, id: \.self) { type in
                     Text(type.rawValue).tag(type)
                 }
             }
-            .pickerStyle(.menu)
+            .pickerStyle(.segmented)
             .disabled(audioService.isPlaying)
+
+            // Audio file picker (if audio file type selected)
+            if selectedSound == .audioFile {
+                Divider()
+
+                Picker("ファイル", selection: $selectedAudioFile) {
+                    ForEach(AudioFilePreset.allCases) { preset in
+                        Text(preset.displayName).tag(preset)
+                    }
+                }
+                .pickerStyle(.menu)
+                .disabled(audioService.isPlaying)
+
+                Text("📁 \(selectedAudioFile.rawValue).\(selectedAudioFile.fileExtension)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
         }
         .padding()
         .background(Color(.secondarySystemBackground))
@@ -181,9 +201,23 @@ struct AudioTestView: View {
                 }
             }
 
-            Text("選択中: \(selectedSound.rawValue)")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            // Selected source
+            VStack(alignment: .leading, spacing: 4) {
+                Text("選択中:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                switch selectedSound {
+                case .clickSuppression:
+                    Text("🔇 クリック音防止（合成）")
+                        .font(.caption)
+                        .foregroundColor(.primary)
+                case .audioFile:
+                    Text("🎵 \(selectedAudioFile.displayName)")
+                        .font(.caption)
+                        .foregroundColor(.primary)
+                }
+            }
         }
         .padding()
         .background(Color(.secondarySystemBackground))
@@ -204,8 +238,18 @@ struct AudioTestView: View {
         do {
             print("AudioTestView: Starting audio playback via AudioService...")
 
-            // AudioServiceに再生を依頼（プリセットを指定）
-            try audioService.play(preset: .clickSuppression)
+            // 選択された音源タイプに応じて再生
+            switch selectedSound {
+            case .clickSuppression:
+                // 合成音源（ClickSuppressionDrone）
+                try audioService.play(preset: .clickSuppression)
+                print("AudioTestView: Playing synthesized audio (ClickSuppressionDrone)")
+
+            case .audioFile:
+                // 音源ファイル（TrackPlayer）
+                try audioService.playAudioFile(selectedAudioFile)
+                print("AudioTestView: Playing audio file (\(selectedAudioFile.displayName))")
+            }
 
             // 音量はシステム音量で自動制御される
 
