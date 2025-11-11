@@ -727,7 +727,17 @@ public final class AudioService: ObservableObject {
         // Initialize TrackPlayer if needed
         if trackPlayer == nil {
             trackPlayer = TrackPlayer()
-            trackPlayer?.configure(engine: engine.engine, format: engine.engine.mainMixerNode.outputFormat(forBus: 0))
+
+            // Get audio file format to configure TrackPlayer
+            let file = try AVAudioFile(forReading: url)
+            let fileFormat = file.processingFormat
+
+            // Configure TrackPlayer with file's format (ensures channel count matches)
+            trackPlayer?.configure(engine: engine.engine, format: fileFormat)
+
+            print("🎵 [AudioService] TrackPlayer configured with file format:")
+            print("   Channels: \(fileFormat.channelCount)")
+            print("   Sample rate: \(fileFormat.sampleRate) Hz")
         }
 
         // Load audio file
