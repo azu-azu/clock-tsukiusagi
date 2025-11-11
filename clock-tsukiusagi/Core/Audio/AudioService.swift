@@ -66,6 +66,10 @@ public final class AudioService: ObservableObject {
     // Phase 3: Now Playing Controller
     private var nowPlayingController: NowPlayingController?
 
+    // Phase 3: Track Player (file-based playback)
+    private var trackPlayer: TrackPlayer?
+    @Published public private(set) var currentAudioFile: AudioFilePreset?
+
     // System Volume Monitoring
     @Published public private(set) var systemVolume: Float = 1.0
     private var volumeObservation: NSKeyValueObservation?
@@ -231,6 +235,9 @@ public final class AudioService: ObservableObject {
 
         // Phase 3: Now Playingをクリア
         nowPlayingController?.clearNowPlaying()
+
+        // Phase 3: TrackPlayerを停止
+        stopTrackPlayer()
 
         // セッションはアクティブのまま（高速再開のため）
         print("🎵 [AudioService] Playback stopping with fade")
@@ -694,5 +701,83 @@ public final class AudioService: ObservableObject {
         } else {
             print("   ✅ Within safe limit")
         }
+    }
+
+    // MARK: - Track Player (File-based Playback)
+
+    /// Play audio file using TrackPlayer
+    /// - Parameter audioFile: Audio file preset to play
+    /// - Throws: Audio errors
+    public func playAudioFile(_ audioFile: AudioFilePreset) throws {
+        print("🎵 [AudioService] playAudioFile() called with: \(audioFile.displayName)")
+
+        // Stop any current playback
+        stop(fadeOut: 0.2)
+
+        // Wait for fade out
+        Thread.sleep(forTimeInterval: 0.2)
+
+        // Get audio file URL
+        guard let url = audioFile.url() else {
+            throw AudioError.engineStartFailed(NSError(domain: "AudioService", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "Audio file not found: \(audioFile.rawValue)"
+            ]))
+        }
+
+        // Initialize TrackPlayer if needed
+        if trackPlayer == nil {
+            trackPlayer = TrackPlayer()
+            trackPlayer?.configure(engine: engine.engine, format: engine.engine.mainMixerNode.outputFormat(forBus: 0))
+        }
+
+        // Load audio file
+        try trackPlayer?.load(url: url)
+
+        // Activate audio session (if not already active)
+        if !sessionActivated {
+            // Session activation is handled in init, no need to reactivate
+        }
+
+        // Start engine
+        try engine.start()
+
+        // Start playback with loop settings
+        let settings = audioFile.loopSettings
+        trackPlayer?.play(loop: settings.shouldLoop, crossfadeDuration: settings.crossfadeDuration)
+
+        // Update state
+        isPlaying = true
+        currentAudioFile = audioFile
+        currentPreset = nil  // File-based playback doesn't use presets
+        pauseReason = nil
+
+        // Route monitoring is already running from init
+
+        // Start quiet break scheduler
+        breakScheduler.start()
+
+        // Fade in
+        fadeIn(duration: settings.fadeInDuration)
+
+        // Update Live Activity
+        updateLiveActivity()
+
+        // Update Now Playing
+        updateNowPlaying()
+        updateNowPlayingState()
+
+        print("🎵 [AudioService] Audio file playback started successfully")
+    }
+
+    /// Stop TrackPlayer
+    private func stopTrackPlayer() {
+        guard let player = trackPlayer, player.isPlaying else { return }
+
+        let fadeOut = settings.crossfadeDuration
+        player.stop(fadeOut: fadeOut)
+
+        currentAudioFile = nil
+
+        print("🎵 [AudioService] TrackPlayer stopped")
     }
 }
