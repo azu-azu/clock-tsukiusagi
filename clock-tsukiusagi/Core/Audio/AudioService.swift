@@ -222,7 +222,8 @@ public final class AudioService: ObservableObject {
             // フェード完了後にエンジンを停止
             DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
                 self?.engine.stop()
-                print("🎵 [AudioService] Synthesis engine stopped after fade")
+                self?.engine.clearSources()  // Clear sources to prevent restart
+                print("🎵 [AudioService] Synthesis engine stopped and cleared after fade")
             }
         }
 
@@ -724,11 +725,13 @@ public final class AudioService: ObservableObject {
         // Stop and clear synthesis engine if playing
         if isPlaying && currentPreset != nil {
             engine.stop()
+            engine.clearSources()  // Clear synthesis sources from array
             isPlaying = false
             currentPreset = nil
         } else if isPlaying {
             // Stop engine even if no preset (to clear any lingering sources)
             engine.stop()
+            engine.clearSources()  // Clear any lingering sources from array
         }
 
         // Don't call stop() - it would stop TrackPlayer too
