@@ -212,13 +212,21 @@ public final class AudioService: ObservableObject {
     public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
         print("🎵 [AudioService] stop() called")
 
-        // フェードアウト
-        self.fadeOut(duration: fadeOutDuration)
+        // Stop synthesis engine (if playing)
+        if currentPreset != nil {
+            // フェードアウト
+            self.fadeOut(duration: fadeOutDuration)
 
-        // フェード完了後にエンジンを停止
-        DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
-            self?.engine.stop()
-            print("🎵 [AudioService] Engine stopped after fade")
+            // フェード完了後にエンジンを停止
+            DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
+                self?.engine.stop()
+                print("🎵 [AudioService] Synthesis engine stopped after fade")
+            }
+        }
+
+        // Stop TrackPlayer (if playing audio file)
+        if currentAudioFile != nil {
+            stopTrackPlayer()
         }
 
         // 経路監視は停止しない（常に監視してUIを更新）
@@ -228,6 +236,7 @@ public final class AudioService: ObservableObject {
 
         isPlaying = false
         currentPreset = nil
+        currentAudioFile = nil
         pauseReason = nil
 
         // Phase 3: Live Activityを終了
@@ -235,9 +244,6 @@ public final class AudioService: ObservableObject {
 
         // Phase 3: Now Playingをクリア
         nowPlayingController?.clearNowPlaying()
-
-        // Phase 3: TrackPlayerを停止
-        stopTrackPlayer()
 
         // セッションはアクティブのまま（高速再開のため）
         print("🎵 [AudioService] Playback stopping with fade")
@@ -709,13 +715,18 @@ public final class AudioService: ObservableObject {
     /// - Parameter audioFile: Audio file preset to play
     /// - Throws: Audio errors
     public func playAudioFile(_ audioFile: AudioFilePreset) throws {
+        print("🎵 [AudioService] ========================================")
         print("🎵 [AudioService] playAudioFile() called with: \(audioFile.displayName)")
+        print("🎵 [AudioService] ========================================")
 
-        // Stop any current playback
-        stop(fadeOut: 0.2)
+        // Stop synthesis engine if playing
+        if isPlaying && currentPreset != nil {
+            engine.stop()
+            isPlaying = false
+            currentPreset = nil
+        }
 
-        // Wait for fade out
-        Thread.sleep(forTimeInterval: 0.2)
+        // Don't call stop() - it would stop TrackPlayer too
 
         // Get audio file URL
         guard let url = audioFile.url() else {

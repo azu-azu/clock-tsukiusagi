@@ -236,19 +236,22 @@ struct AudioTestView: View {
 
     private func playAudio() {
         do {
-            print("AudioTestView: Starting audio playback via AudioService...")
+            print("🎵 ==========================================")
+            print("🎵 AudioTestView: Starting audio playback")
+            print("🎵 Selected sound type: \(selectedSound)")
+            print("🎵 ==========================================")
 
             // 選択された音源タイプに応じて再生
             switch selectedSound {
             case .clickSuppression:
                 // 合成音源（ClickSuppressionDrone）
+                print("🎵 AudioTestView: → Playing SYNTHESIZED audio (ClickSuppressionDrone)")
                 try audioService.play(preset: .clickSuppression)
-                print("AudioTestView: Playing synthesized audio (ClickSuppressionDrone)")
 
             case .audioFile:
                 // 音源ファイル（TrackPlayer）
+                print("🎵 AudioTestView: → Playing AUDIO FILE (\(selectedAudioFile.displayName))")
                 try audioService.playAudioFile(selectedAudioFile)
-                print("AudioTestView: Playing audio file (\(selectedAudioFile.displayName))")
             }
 
             // 音量はシステム音量で自動制御される
