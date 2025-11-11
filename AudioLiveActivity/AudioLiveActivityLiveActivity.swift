@@ -51,13 +51,29 @@ struct AudioLiveActivityLiveActivity: Widget {
                 Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
                     .foregroundColor(context.state.isPlaying ? .green : .orange)
             } compactTrailing: {
-                Text(context.state.outputRoute.prefix(1))
+                Image(systemName: audioOutputIcon(for: context.state.outputRoute))
                     .font(.caption2)
             } minimal: {
                 Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
             }
             .keylineTint(Color.green)
         }
+    }
+}
+
+// MARK: - Helper Functions
+
+/// Get SF Symbol icon for audio output route
+private func audioOutputIcon(for route: String) -> String {
+    let lowercased = route.lowercased()
+    if lowercased.contains("headphone") || lowercased.contains("ヘッドホン") {
+        return "headphones"
+    } else if lowercased.contains("bluetooth") || lowercased.contains("ブルートゥース") {
+        return "antenna.radiowaves.left.and.right"
+    } else if lowercased.contains("speaker") || lowercased.contains("スピーカー") {
+        return "speaker.wave.2"
+    } else {
+        return "speaker.wave.1"
     }
 }
 
