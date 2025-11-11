@@ -6,7 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		3284D3EA2EC3035B005F899F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3284D3E92EC3035B005F899F /* WidgetKit.framework */; };
+		3284D3EC2EC3035B005F899F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3284D3EB2EC3035B005F899F /* SwiftUI.framework */; };
+		3284D3FD2EC3035F005F899F /* AudioLiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3284D3E72EC3035B005F899F /* AudioLiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
+		3284D3FB2EC3035F005F899F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 32C0CBE02EA3141F008ACC87 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3284D3E62EC3035B005F899F;
+			remoteInfo = AudioLiveActivityExtension;
+		};
 		32C0CBF62EA31420008ACC87 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 32C0CBE02EA3141F008ACC87 /* Project object */;
@@ -23,7 +36,24 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		3284D4022EC3035F005F899F /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				3284D3FD2EC3035F005F899F /* AudioLiveActivityExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		3284D3E72EC3035B005F899F /* AudioLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AudioLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		3284D3E92EC3035B005F899F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		3284D3EB2EC3035B005F899F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		32C0CBE82EA3141F008ACC87 /* clock-tsukiusagi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "clock-tsukiusagi.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C0CBF52EA31420008ACC87 /* clock-tsukiusagiTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "clock-tsukiusagiTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		32C0CBFF2EA31420008ACC87 /* clock-tsukiusagiUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "clock-tsukiusagiUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -37,9 +67,24 @@
 			);
 			target = 32C0CBE72EA3141F008ACC87 /* clock-tsukiusagi */;
 		};
+		3284D4012EC3035F005F899F /* Exceptions for "AudioLiveActivity" folder in "AudioLiveActivityExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3284D3E62EC3035B005F899F /* AudioLiveActivityExtension */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		3284D3ED2EC3035B005F899F /* AudioLiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3284D4012EC3035F005F899F /* Exceptions for "AudioLiveActivity" folder in "AudioLiveActivityExtension" target */,
+			);
+			path = AudioLiveActivity;
+			sourceTree = "<group>";
+		};
 		32C0CBEA2EA3141F008ACC87 /* clock-tsukiusagi */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -61,6 +106,15 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3284D3E42EC3035B005F899F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3284D3EC2EC3035B005F899F /* SwiftUI.framework in Frameworks */,
+				3284D3EA2EC3035B005F899F /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C0CBE52EA3141F008ACC87 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -85,12 +139,23 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3284D3E82EC3035B005F899F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3284D3E92EC3035B005F899F /* WidgetKit.framework */,
+				3284D3EB2EC3035B005F899F /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		32C0CBDF2EA3141F008ACC87 = {
 			isa = PBXGroup;
 			children = (
 				32C0CBEA2EA3141F008ACC87 /* clock-tsukiusagi */,
 				32C0CBF82EA31420008ACC87 /* clock-tsukiusagiTests */,
 				32C0CC022EA31420008ACC87 /* clock-tsukiusagiUITests */,
+				3284D3ED2EC3035B005F899F /* AudioLiveActivity */,
+				3284D3E82EC3035B005F899F /* Frameworks */,
 				32C0CBE92EA3141F008ACC87 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -101,6 +166,7 @@
 				32C0CBE82EA3141F008ACC87 /* clock-tsukiusagi.app */,
 				32C0CBF52EA31420008ACC87 /* clock-tsukiusagiTests.xctest */,
 				32C0CBFF2EA31420008ACC87 /* clock-tsukiusagiUITests.xctest */,
+				3284D3E72EC3035B005F899F /* AudioLiveActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,6 +174,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		3284D3E62EC3035B005F899F /* AudioLiveActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3284D3FE2EC3035F005F899F /* Build configuration list for PBXNativeTarget "AudioLiveActivityExtension" */;
+			buildPhases = (
+				3284D3E32EC3035B005F899F /* Sources */,
+				3284D3E42EC3035B005F899F /* Frameworks */,
+				3284D3E52EC3035B005F899F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3284D3ED2EC3035B005F899F /* AudioLiveActivity */,
+			);
+			name = AudioLiveActivityExtension;
+			packageProductDependencies = (
+			);
+			productName = AudioLiveActivityExtension;
+			productReference = 3284D3E72EC3035B005F899F /* AudioLiveActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		32C0CBE72EA3141F008ACC87 /* clock-tsukiusagi */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 32C0CC092EA31420008ACC87 /* Build configuration list for PBXNativeTarget "clock-tsukiusagi" */;
@@ -115,10 +203,12 @@
 				32C0CBE42EA3141F008ACC87 /* Sources */,
 				32C0CBE52EA3141F008ACC87 /* Frameworks */,
 				32C0CBE62EA3141F008ACC87 /* Resources */,
+				3284D4022EC3035F005F899F /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				3284D3FC2EC3035F005F899F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				32C0CBEA2EA3141F008ACC87 /* clock-tsukiusagi */,
@@ -186,6 +276,9 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					3284D3E62EC3035B005F899F = {
+						CreatedOnToolsVersion = 16.4;
+					};
 					32C0CBE72EA3141F008ACC87 = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -217,11 +310,19 @@
 				32C0CBE72EA3141F008ACC87 /* clock-tsukiusagi */,
 				32C0CBF42EA31420008ACC87 /* clock-tsukiusagiTests */,
 				32C0CBFE2EA31420008ACC87 /* clock-tsukiusagiUITests */,
+				3284D3E62EC3035B005F899F /* AudioLiveActivityExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3284D3E52EC3035B005F899F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C0CBE62EA3141F008ACC87 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -246,6 +347,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3284D3E32EC3035B005F899F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32C0CBE42EA3141F008ACC87 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -270,6 +378,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		3284D3FC2EC3035F005F899F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3284D3E62EC3035B005F899F /* AudioLiveActivityExtension */;
+			targetProxy = 3284D3FB2EC3035F005F899F /* PBXContainerItemProxy */;
+		};
 		32C0CBF72EA31420008ACC87 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 32C0CBE72EA3141F008ACC87 /* clock-tsukiusagi */;
@@ -283,6 +396,60 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		3284D3FF2EC3035F005F899F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZD854UM35V;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AudioLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AudioLiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.tsukiusagi.clock-tsukiusagi.AudioLiveActivity";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3284D4002EC3035F005F899F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ZD854UM35V;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AudioLiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AudioLiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.tsukiusagi.clock-tsukiusagi.AudioLiveActivity";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		32C0CC072EA31420008ACC87 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -537,6 +704,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3284D3FE2EC3035F005F899F /* Build configuration list for PBXNativeTarget "AudioLiveActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3284D3FF2EC3035F005F899F /* Debug */,
+				3284D4002EC3035F005F899F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		32C0CBE32EA3141F008ACC87 /* Build configuration list for PBXProject "clock-tsukiusagi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

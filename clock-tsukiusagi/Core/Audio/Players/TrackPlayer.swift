@@ -10,6 +10,7 @@ import AVFoundation
 import Foundation
 
 /// トラック再生プロトコル
+@MainActor
 public protocol TrackPlaying {
     /// オーディオファイルを読み込み
     /// - Parameter url: ローカルファイルURL
