@@ -115,11 +115,15 @@ public final class TrackPlayer: TrackPlaying {
             playerNode.stop()
         }
 
+        // プレイヤーノードの音量を最大に設定（マスター音量で制御する）
+        playerNode.volume = 1.0
+
         // 再生開始
         scheduleBuffer(buffer, loop: loop, crossfadeDuration: crossfadeDuration)
         playerNode.play()
 
         print("🎵 [TrackPlayer] Playback started (loop: \(loop), crossfade: \(crossfadeDuration)s)")
+        print("🎵 [TrackPlayer] Player node volume: \(playerNode.volume)")
     }
 
     public func stop(fadeOut: TimeInterval) {
