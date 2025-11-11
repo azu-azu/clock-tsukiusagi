@@ -46,7 +46,7 @@ public struct AudioSettings: Codable {
     // MARK: - UI Features (Phase 3)
 
     /// Live Activityを有効化
-    public var liveActivityEnabled: Bool = false
+    public var liveActivityEnabled: Bool = true
 
     /// Picture in Pictureを有効化
     public var pipEnabled: Bool = false
@@ -61,7 +61,7 @@ public struct AudioSettings: Codable {
         breakMinutes: Int = 5,
         maxOutputDb: Float = -6.0,
         crossfadeDuration: TimeInterval = 2.0,
-        liveActivityEnabled: Bool = false,
+        liveActivityEnabled: Bool = true,
         pipEnabled: Bool = false
     ) {
         self.onlyHeadphoneOutput = onlyHeadphoneOutput

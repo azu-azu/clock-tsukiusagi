@@ -2,131 +2,79 @@
 //  AudioLiveActivityLiveActivity.swift
 //  AudioLiveActivity
 //
-//  Created by Claude Code on 2025/11/11.
-//  Live Activity UI for Lock Screen and Dynamic Island
+//  Created by 松本和実 on 2025/11/11.
 //
 
 import ActivityKit
 import WidgetKit
 import SwiftUI
 
+struct AudioLiveActivityAttributes: ActivityAttributes {
+    public struct ContentState: Codable, Hashable {
+        // Dynamic stateful properties about your activity go here!
+        var emoji: String
+    }
+
+    // Fixed non-changing properties about your activity go here!
+    var name: String
+}
+
 struct AudioLiveActivityLiveActivity: Widget {
     var body: some WidgetConfiguration {
-        ActivityConfiguration(for: AudioActivityAttributes.self) { context in
-            // Lock screen/banner UI
-            LockScreenView(state: context.state)
-                .activityBackgroundTint(Color.black.opacity(0.8))
-                .activitySystemActionForegroundColor(Color.white)
+        ActivityConfiguration(for: AudioLiveActivityAttributes.self) { context in
+            // Lock screen/banner UI goes here
+            VStack {
+                Text("Hello \(context.state.emoji)")
+            }
+            .activityBackgroundTint(Color.cyan)
+            .activitySystemActionForegroundColor(Color.black)
 
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded UI
+                // Expanded UI goes here.  Compose the expanded UI through
+                // various regions, like leading/trailing/center/bottom
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 4) {
-                        Image(systemName: context.state.isPlaying ? "play.circle.fill" : "pause.circle.fill")
-                            .foregroundColor(context.state.isPlaying ? .green : .orange)
-                        Text(context.state.presetName ?? "音声")
-                            .font(.caption)
-                            .lineLimit(1)
-                    }
+                    Text("Leading")
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.state.outputRoute)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text("Trailing")
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack {
-                        if let nextBreak = context.state.nextBreakAt {
-                            Text("次の休憩: \(nextBreak, style: .time)")
-                                .font(.caption2)
-                        } else if let reason = context.state.pauseReason {
-                            Text("停止: \(reason)")
-                                .font(.caption2)
-                                .foregroundColor(.orange)
-                        }
-                    }
+                    Text("Bottom \(context.state.emoji)")
+                    // more content
                 }
             } compactLeading: {
-                Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
-                    .foregroundColor(context.state.isPlaying ? .green : .orange)
+                Text("L")
             } compactTrailing: {
-                Text(context.state.outputRoute.prefix(1))
-                    .font(.caption2)
+                Text("T \(context.state.emoji)")
             } minimal: {
-                Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
+                Text(context.state.emoji)
             }
-            .keylineTint(Color.green)
+            .widgetURL(URL(string: "http://www.apple.com"))
+            .keylineTint(Color.red)
         }
     }
 }
 
-// MARK: - Lock Screen View
-
-struct LockScreenView: View {
-    let state: AudioActivityAttributes.ContentState
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // Status icon
-            Image(systemName: state.isPlaying ? "play.circle.fill" : "pause.circle.fill")
-                .font(.system(size: 40))
-                .foregroundColor(state.isPlaying ? .green : .orange)
-
-            VStack(alignment: .leading, spacing: 4) {
-                // Preset name
-                Text(state.presetName ?? "クリック音防止")
-                    .font(.headline)
-                    .foregroundColor(.white)
-
-                // Output route
-                HStack(spacing: 4) {
-                    Image(systemName: "speaker.wave.2")
-                        .font(.caption)
-                    Text(state.outputRoute)
-                        .font(.caption)
-                }
-                .foregroundColor(.secondary)
-
-                // Next break or pause reason
-                if let nextBreak = state.nextBreakAt {
-                    HStack(spacing: 4) {
-                        Image(systemName: "clock")
-                            .font(.caption2)
-                        Text("休憩: \(nextBreak, style: .time)")
-                            .font(.caption2)
-                    }
-                    .foregroundColor(.blue)
-                } else if let reason = state.pauseReason {
-                    Text("停止理由: \(reason)")
-                        .font(.caption2)
-                        .foregroundColor(.orange)
-                }
-            }
-
-            Spacer()
-        }
-        .padding(16)
+extension AudioLiveActivityAttributes {
+    fileprivate static var preview: AudioLiveActivityAttributes {
+        AudioLiveActivityAttributes(name: "World")
     }
 }
 
-// MARK: - Preview
+extension AudioLiveActivityAttributes.ContentState {
+    fileprivate static var smiley: AudioLiveActivityAttributes.ContentState {
+        AudioLiveActivityAttributes.ContentState(emoji: "😀")
+     }
+     
+     fileprivate static var starEyes: AudioLiveActivityAttributes.ContentState {
+         AudioLiveActivityAttributes.ContentState(emoji: "🤩")
+     }
+}
 
-#Preview("Playing", as: .content, using: AudioActivityAttributes()) {
-    AudioLiveActivityLiveActivity()
+#Preview("Notification", as: .content, using: AudioLiveActivityAttributes.preview) {
+   AudioLiveActivityLiveActivity()
 } contentStates: {
-    AudioActivityAttributes.ContentState(
-        isPlaying: true,
-        nextBreakAt: Date().addingTimeInterval(1800),
-        outputRoute: "ヘッドホン",
-        pauseReason: nil,
-        presetName: "クリック音防止"
-    )
-    AudioActivityAttributes.ContentState(
-        isPlaying: false,
-        nextBreakAt: nil,
-        outputRoute: "スピーカー",
-        pauseReason: "routeSafetySpeaker",
-        presetName: "クリック音防止"
-    )
+    AudioLiveActivityAttributes.ContentState.smiley
+    AudioLiveActivityAttributes.ContentState.starEyes
 }

@@ -85,6 +85,11 @@
 			path = AudioLiveActivity;
 			sourceTree = "<group>";
 		};
+		3284D40C2EC30848005F899F /* AudioLiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AudioLiveActivity;
+			sourceTree = "<group>";
+		};
 		32C0CBEA2EA3141F008ACC87 /* clock-tsukiusagi */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -155,6 +160,7 @@
 				32C0CBF82EA31420008ACC87 /* clock-tsukiusagiTests */,
 				32C0CC022EA31420008ACC87 /* clock-tsukiusagiUITests */,
 				3284D3ED2EC3035B005F899F /* AudioLiveActivity */,
+				3284D40C2EC30848005F899F /* AudioLiveActivity */,
 				3284D3E82EC3035B005F899F /* Frameworks */,
 				32C0CBE92EA3141F008ACC87 /* Products */,
 			);
@@ -417,9 +423,13 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tsukiusagi.clock-tsukiusagi.AudioLiveActivity";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -444,9 +454,13 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tsukiusagi.clock-tsukiusagi.AudioLiveActivity";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -594,9 +608,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tsukiusagi.clock-tsukiusagi";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -623,9 +641,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.tsukiusagi.clock-tsukiusagi";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
