@@ -3,25 +3,38 @@ import Foundation
 
 /// Activity Attributes for Live Activity on Lock Screen and Dynamic Island
 @available(iOS 16.1, *)
-struct AudioActivityAttributes: ActivityAttributes {
-    /// Static attributes (set once when activity starts)
+public struct AudioActivityAttributes: ActivityAttributes {
+    /// Dynamic state that changes during activity lifetime
     public struct ContentState: Codable, Hashable {
         /// Current playback state
-        var isPlaying: Bool
+        public var isPlaying: Bool
 
         /// Scheduled break time (if quiet breaks enabled)
-        var nextBreakAt: Date?
+        public var nextBreakAt: Date?
 
         /// Current audio output route
-        var outputRoute: String  // "Headphones", "Bluetooth", "Speaker"
+        public var outputRoute: String  // "Headphones", "Bluetooth", "Speaker"
 
         /// Reason for pause (if not playing)
-        var pauseReason: String?  // PauseReason.rawValue from AudioService
+        public var pauseReason: String?  // PauseReason.rawValue from AudioService
 
         /// Current preset name
-        var presetName: String?
+        public var presetName: String?
+
+        public init(
+            isPlaying: Bool,
+            nextBreakAt: Date? = nil,
+            outputRoute: String,
+            pauseReason: String? = nil,
+            presetName: String? = nil
+        ) {
+            self.isPlaying = isPlaying
+            self.nextBreakAt = nextBreakAt
+            self.outputRoute = outputRoute
+            self.pauseReason = pauseReason
+            self.presetName = presetName
+        }
     }
 
-    /// Fixed attributes (never change during activity lifetime)
-    var appName: String = "Clock Tsukiusagi"
+    public init() {}
 }
