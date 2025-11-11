@@ -76,7 +76,6 @@ public final class AudioService: ObservableObject {
     private let volumeCapLinear: Float = 0.501187  // -6dB = 10^(-6/20)
 
     private var sessionActivated = false  // セッション二重アクティベート防止フラグ
-    private var limiterConfigured = false  // SafeVolumeLimiter設定済みフラグ
     private var interruptionObserver: NSObjectProtocol?
 
     // MARK: - Initialization
@@ -165,12 +164,9 @@ public final class AudioService: ObservableObject {
         // Note: LocalAudioEngine.configure()は呼ばない
         // セッション管理はAudioServiceで行うため、二重アクティベートを避ける
 
-        // Phase 2: 音量リミッターを設定（初回のみ、音源登録前に実行）
-        if !limiterConfigured {
-            let format = engine.engine.outputNode.inputFormat(forBus: 0)
-            volumeLimiter.configure(engine: engine.engine, format: format)
-            limiterConfigured = true
-        }
+        // Phase 2: 音量リミッターを設定（SafeVolumeLimiterの内部フラグで二重設定防止）
+        let format = engine.engine.outputNode.inputFormat(forBus: 0)
+        volumeLimiter.configure(engine: engine.engine, format: format)
 
         // Re-enable synthesis sources for playback
         engine.enableSources()
@@ -757,28 +753,13 @@ public final class AudioService: ObservableObject {
         print("   Channels: \(fileFormat.channelCount)")
         print("   Sample rate: \(fileFormat.sampleRate) Hz")
 
-        // Phase 2: 音量リミッターを設定（初回のみ、エンジン起動後に実行）
-        // エンジンを一時的に起動してフォーマットを取得
-        let needsLimiterSetup = !limiterConfigured
-        if needsLimiterSetup && !engine.engine.isRunning {
-            try engine.engine.start()
-        }
-
-        if needsLimiterSetup {
-            let format = engine.engine.outputNode.inputFormat(forBus: 0)
-            volumeLimiter.configure(engine: engine.engine, format: format)
-            limiterConfigured = true
-        }
-
-        // Stop engine before reconfiguring
-        if engine.engine.isRunning {
-            engine.engine.stop()
-        }
-
-        // Start engine BEFORE configuring TrackPlayer
-        // (TrackPlayer needs engine to be running to attach nodes)
+        // Start engine BEFORE configuring limiter or TrackPlayer
         // Don't start synthesis sources (startSources: false)
         try engine.start(startSources: false)
+
+        // Phase 2: 音量リミッターを設定（SafeVolumeLimiterの内部フラグで二重設定防止）
+        let format = engine.engine.outputNode.inputFormat(forBus: 0)
+        volumeLimiter.configure(engine: engine.engine, format: format)
 
         // Initialize TrackPlayer if needed
         if trackPlayer == nil {
