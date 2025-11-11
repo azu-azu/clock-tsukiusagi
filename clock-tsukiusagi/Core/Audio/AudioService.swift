@@ -211,6 +211,8 @@ public final class AudioService: ObservableObject {
     /// - Parameter fadeOut: フェードアウト時間（秒）
     public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
         print("🎵 [AudioService] stop() called")
+        print("🎵 [AudioService] Current preset: \(String(describing: currentPreset))")
+        print("🎵 [AudioService] Current audio file: \(currentAudioFile?.displayName ?? "none")")
 
         // Stop synthesis engine (if playing)
         if currentPreset != nil {
@@ -719,11 +721,14 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] playAudioFile() called with: \(audioFile.displayName)")
         print("🎵 [AudioService] ========================================")
 
-        // Stop synthesis engine if playing
+        // Stop and clear synthesis engine if playing
         if isPlaying && currentPreset != nil {
             engine.stop()
             isPlaying = false
             currentPreset = nil
+        } else if isPlaying {
+            // Stop engine even if no preset (to clear any lingering sources)
+            engine.stop()
         }
 
         // Don't call stop() - it would stop TrackPlayer too
