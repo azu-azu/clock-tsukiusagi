@@ -152,10 +152,20 @@ public final class LocalAudioEngine {
         // 現在の音源を停止
         sources.forEach { $0.stop() }
 
+        // 音源ノードをエンジンから切断
+        sources.forEach { source in
+            let node = source.sourceNode
+            if engine.attachedNodes.contains(node) {
+                engine.disconnectNodeOutput(node)
+                engine.detach(node)
+                print("LocalAudioEngine: Detached node: \(type(of: source))")
+            }
+        }
+
         // 次回start()時に音源を起動しない
         shouldStartSources = false
 
-        print("LocalAudioEngine: Sources disabled (will not restart on next start)")
+        print("LocalAudioEngine: Sources disabled and detached")
     }
 
     /// 音源の自動起動を再有効化
