@@ -1,18 +1,18 @@
 //
-//  ComfortPackDrone.swift
+//  ClickSuppressionDrone.swift
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-09.
-//  Comfort Pack ドローン（ノイズ床 + やわらかドローン + フィルター + リバーブ）
+//  クリック音防止ドローン（ノイズ床 + やわらかドローン + フィルター + リバーブ）
 //  Azu & Fujiko設計: たった3レイヤ＋ゆるい揺らぎで"心地よい"を実現
 //
 
 import AVFoundation
 import Foundation
 
-/// Comfort Pack ドローン音源
+/// クリック音防止ドローン音源
 /// 構成: ノイズ床 + やわらかドローン + 薄い空間
-public final class ComfortPackDrone: AudioSource {
+public final class ClickSuppressionDrone: AudioSource {
     // MARK: - Properties
 
     private let _sourceNode: AVAudioSourceNode
@@ -24,7 +24,7 @@ public final class ComfortPackDrone: AudioSource {
 
     // MARK: - Initialization
 
-    /// Comfort Pack ドローンを初期化
+    /// クリック音防止ドローンを初期化
     /// - Parameters:
     ///   - noiseType: ノイズタイプ
     ///   - noiseAmplitude: ノイズ音量
@@ -136,8 +136,7 @@ public final class ComfortPackDrone: AudioSource {
                 var droneSum: Double = 0.0
                 for i in 0..<dronePhases.count {
                     let sineSample = sin(dronePhases[i])
-                    // tanh で柔らかく
-                    droneSum += tanh(sineSample * 1.1)
+                    droneSum += sineSample  // ✅ Pure sine wave, no distortion
 
                     // 位相を進める
                     let phaseIncrement = twoPi * droneFreqs[i] / sampleRate
@@ -149,13 +148,7 @@ public final class ComfortPackDrone: AudioSource {
                 droneSum *= localDroneAmplitude * droneVolumeMod
 
                 // 合成（ノイズ床 + ドローン）
-                var mixed = noise + droneSum
-
-                // 事前アッテネート（合算クリップ防止）
-                mixed *= 0.3
-
-                // ソフトクリップ（耳あたり改善）
-                mixed = tanh(mixed * 0.8)
+                let mixed = noise + droneSum  // ✅ No attenuation, no clipping
 
                 let sample = Float(mixed)
 
@@ -181,7 +174,7 @@ public final class ComfortPackDrone: AudioSource {
                     let mixedDb = 20.0 * log10(max(peakMixed, 0.00001))
                     let rmsDb = 20.0 * log10(max(rms, 0.00001))
 
-                    print("🎵 [ComfortPackDrone Diagnostics]")
+                    print("🎵 [ClickSuppressionDrone Diagnostics]")
                     print("   Noise: \(String(format: "%.4f", peakNoise)) (\(String(format: "%.1f", noiseDb)) dB)")
                     print("   Drone: \(String(format: "%.4f", peakDrone)) (\(String(format: "%.1f", droneDb)) dB)")
                     print("   Mixed Peak: \(String(format: "%.4f", peakMixed)) (\(String(format: "%.1f", mixedDb)) dB)")

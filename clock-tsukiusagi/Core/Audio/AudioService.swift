@@ -452,18 +452,18 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] Registering source for preset: \(preset)")
 
         switch preset {
-        case .comfortRelax:
-            let source = ComfortPackDrone(
-                noiseType: NaturalSoundPresets.ComfortRelax.noiseType,
-                noiseAmplitude: NaturalSoundPresets.ComfortRelax.noiseAmplitude,
-                noiseLowpassCutoff: NaturalSoundPresets.ComfortRelax.noiseLowpassCutoff,
-                noiseLFOFrequency: NaturalSoundPresets.ComfortRelax.noiseLFOFrequency,
-                noiseLFODepth: NaturalSoundPresets.ComfortRelax.noiseLFODepth,
-                droneFrequencies: NaturalSoundPresets.ComfortRelax.droneFrequencies,
-                droneAmplitude: NaturalSoundPresets.ComfortRelax.droneAmplitude,
-                droneDetuneCents: NaturalSoundPresets.ComfortRelax.droneDetuneCents,
-                droneLFOFrequency: NaturalSoundPresets.ComfortRelax.droneLFOFrequency,
-                reverbWetDryMix: NaturalSoundPresets.ComfortRelax.reverbWetDryMix
+        case .clickSuppression:
+            let source = ClickSuppressionDrone(
+                noiseType: NaturalSoundPresets.ClickSuppression.noiseType,
+                noiseAmplitude: NaturalSoundPresets.ClickSuppression.noiseAmplitude,
+                noiseLowpassCutoff: NaturalSoundPresets.ClickSuppression.noiseLowpassCutoff,
+                noiseLFOFrequency: NaturalSoundPresets.ClickSuppression.noiseLFOFrequency,
+                noiseLFODepth: NaturalSoundPresets.ClickSuppression.noiseLFODepth,
+                droneFrequencies: NaturalSoundPresets.ClickSuppression.droneFrequencies,
+                droneAmplitude: NaturalSoundPresets.ClickSuppression.droneAmplitude,
+                droneDetuneCents: NaturalSoundPresets.ClickSuppression.droneDetuneCents,
+                droneLFOFrequency: NaturalSoundPresets.ClickSuppression.droneLFOFrequency,
+                reverbWetDryMix: NaturalSoundPresets.ClickSuppression.reverbWetDryMix
             )
             try engine.register(source)
         }

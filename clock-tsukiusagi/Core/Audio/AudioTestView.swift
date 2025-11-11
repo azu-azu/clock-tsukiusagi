@@ -11,14 +11,14 @@ import AVFoundation
 
 /// テスト用の音源タイプ
 enum TestSoundType: String, CaseIterable {
-    case comfortRelax = "🌙 Comfort Relax"
+    case clickSuppression = "🔇 クリック音防止"
 }
 
 /// オーディオテストビュー
 struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
 
-    @State private var selectedSound: TestSoundType = .comfortRelax
+    @State private var selectedSound: TestSoundType = .clickSuppression
     @State private var masterVolume: Float = 0.5
 
     @State private var errorMessage: String?
@@ -190,7 +190,7 @@ struct AudioTestView: View {
             print("AudioTestView: Starting audio playback via AudioService...")
 
             // AudioServiceに再生を依頼（プリセットを指定）
-            try audioService.play(preset: .comfortRelax)
+            try audioService.play(preset: .clickSuppression)
 
             // 音量を設定
             audioService.setVolume(masterVolume)

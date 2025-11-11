@@ -10,17 +10,17 @@ import Foundation
 
 /// 自然音プリセット
 public enum NaturalSoundPreset {
-    case comfortRelax       // Comfort Pack Relax（最小構成・リラックス）
+    case clickSuppression   // クリック音防止（最小構成・リラックス）
 }
 
 /// 自然音プリセットの設定
 public struct NaturalSoundPresets {
-    // MARK: - Comfort Pack Relax（最小構成）
+    // MARK: - クリック音防止（最小構成）
 
-    /// Comfort Pack Relax プリセット設定
+    /// クリック音防止プリセット設定
     /// Azu設計: ピンクノイズ + 低周波ドローン + 呼吸LFO
     /// 構成: ピンクノイズ（ベース）+ 低周波ドローン（150-200 Hz）
-    public struct ComfortRelax {
+    public struct ClickSuppression {
         // ノイズ床（ピンク、LPF 2kHz）
         public static let noiseType: NoiseType = .pink
         public static let noiseAmplitude: Double = 0.06  // -24 dB
