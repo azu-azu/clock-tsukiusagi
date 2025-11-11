@@ -76,6 +76,7 @@ public final class AudioService: ObservableObject {
     private let volumeCapLinear: Float = 0.501187  // -6dB = 10^(-6/20)
 
     private var sessionActivated = false  // セッション二重アクティベート防止フラグ
+    private var limiterConfigured = false  // SafeVolumeLimiter設定済みフラグ
     private var interruptionObserver: NSObjectProtocol?
 
     // MARK: - Initialization
@@ -164,6 +165,13 @@ public final class AudioService: ObservableObject {
         // Note: LocalAudioEngine.configure()は呼ばない
         // セッション管理はAudioServiceで行うため、二重アクティベートを避ける
 
+        // Phase 2: 音量リミッターを設定（初回のみ、音源登録前に実行）
+        if !limiterConfigured {
+            let format = engine.engine.outputNode.inputFormat(forBus: 0)
+            volumeLimiter.configure(engine: engine.engine, format: format)
+            limiterConfigured = true
+        }
+
         // 音源を登録
         do {
             try registerSource(for: preset)
@@ -174,10 +182,6 @@ public final class AudioService: ObservableObject {
 
         // 音量は動的ゲイン補正で自動設定される（システム音量に基づく）
         applyDynamicGainCompensation()
-
-        // Phase 2: 音量リミッターを設定
-        let format = engine.engine.outputNode.inputFormat(forBus: 0)
-        volumeLimiter.configure(engine: engine.engine, format: format)
 
         // エンジンを開始
         do {
@@ -211,6 +215,8 @@ public final class AudioService: ObservableObject {
     /// - Parameter fadeOut: フェードアウト時間（秒）
     public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
         print("🎵 [AudioService] stop() called")
+        print("🎵 [AudioService] Call stack:")
+        Thread.callStackSymbols.prefix(10).forEach { print("   \($0)") }
         print("🎵 [AudioService] Current preset: \(String(describing: currentPreset))")
         print("🎵 [AudioService] Current audio file: \(currentAudioFile?.displayName ?? "none")")
 
@@ -754,6 +760,13 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] Audio file format:")
         print("   Channels: \(fileFormat.channelCount)")
         print("   Sample rate: \(fileFormat.sampleRate) Hz")
+
+        // Phase 2: 音量リミッターを設定（初回のみ）
+        if !limiterConfigured {
+            let format = engine.engine.outputNode.inputFormat(forBus: 0)
+            volumeLimiter.configure(engine: engine.engine, format: format)
+            limiterConfigured = true
+        }
 
         // Start engine BEFORE configuring TrackPlayer
         // (TrackPlayer needs engine to be running to attach nodes)
