@@ -757,11 +757,22 @@ public final class AudioService: ObservableObject {
         print("   Channels: \(fileFormat.channelCount)")
         print("   Sample rate: \(fileFormat.sampleRate) Hz")
 
-        // Phase 2: 音量リミッターを設定（初回のみ）
-        if !limiterConfigured {
+        // Phase 2: 音量リミッターを設定（初回のみ、エンジン起動後に実行）
+        // エンジンを一時的に起動してフォーマットを取得
+        let needsLimiterSetup = !limiterConfigured
+        if needsLimiterSetup && !engine.engine.isRunning {
+            try engine.engine.start()
+        }
+
+        if needsLimiterSetup {
             let format = engine.engine.outputNode.inputFormat(forBus: 0)
             volumeLimiter.configure(engine: engine.engine, format: format)
             limiterConfigured = true
+        }
+
+        // Stop engine before reconfiguring
+        if engine.engine.isRunning {
+            engine.engine.stop()
         }
 
         // Start engine BEFORE configuring TrackPlayer
