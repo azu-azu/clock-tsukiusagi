@@ -8,7 +8,7 @@ in CAF format (Apple’s preferred format for iOS)
 import numpy as np
 import scipy.signal as signal
 from scipy.io import wavfile
-import subprocess
+import soundfile as sf
 import os
 
 # ------------------------------------------------------------
@@ -38,33 +38,23 @@ def normalize(audio):
 
 
 def save_as_wav_and_convert_to_caf(audio_data, filename, sample_rate):
-    """Save as WAV and convert to CAF format safely"""
+    """Save both WAV and CAF (no afconvert dependency)"""
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    audio_16bit = np.int16(audio_data * 32767)
     wav_path = os.path.join(OUTPUT_DIR, f"{filename}.wav")
     caf_path = os.path.join(OUTPUT_DIR, f"{filename}.caf")
 
-    # Save WAV file first
+    # WAV保存（16-bit PCM）
+    audio_16bit = np.int16(audio_data * 32767)
     wavfile.write(wav_path, sample_rate, audio_16bit)
     print(f"✓ Generated WAV: {wav_path}")
 
-    # Safe CAF conversion with explicit format
+    # CAF保存（soundfileを使用 - pure Python, no afconvert dependency）
     try:
-        subprocess.run([
-            "afconvert",
-            "-f", "caff",           # Output container
-            "-d", "LEI16@48000",    # 16-bit little-endian, 48kHz
-            "-c", "1",              # Mono
-            "-v",                   # Verbose (logs output)
-            wav_path,
-            caf_path
-        ], check=True)
-        print(f"✓ Converted to CAF: {caf_path}")
-    except subprocess.CalledProcessError as e:
-        print(f"⚠️  CAF conversion failed: {e}")
-    except FileNotFoundError:
-        print("⚠️  afconvert not found (macOS only)")
+        sf.write(caf_path, audio_data, sample_rate, subtype='PCM_16', format='CAF')
+        print(f"✓ Generated CAF (pure Python): {caf_path}")
+    except Exception as e:
+        print(f"⚠️  CAF save failed: {e}")
 
 
 # ------------------------------------------------------------
