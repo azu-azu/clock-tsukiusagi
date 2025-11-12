@@ -35,9 +35,13 @@ public protocol TrackPlaying {
 /// WAV/CAFファイルをシームレスにループ再生（オプションでクロスフェード）
 @MainActor
 public final class TrackPlayer: TrackPlaying {
+    // MARK: - Internal Properties
+
+    // Internal access needed for AudioService to detach/reattach node
+    let playerNode = AVAudioPlayerNode()
+
     // MARK: - Private Properties
 
-    private let playerNode = AVAudioPlayerNode()
     private var audioFile: AVAudioFile?
     private var buffer: AVAudioPCMBuffer?
 

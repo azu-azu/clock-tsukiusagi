@@ -990,26 +990,37 @@ public final class AudioService: ObservableObject {
         // This maintains consistent format throughout the limiter chain
         // Format conversion happens at masterBusMixer (accepts any file format)
         let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
+
+        // CRITICAL: Reset limiter configuration state to prevent buffer reuse
+        // This ensures fresh audio graph for each file switch
+        volumeLimiter.resetConfigurationState()
         volumeLimiter.configure(engine: engine.engine, format: outputFormat)
 
         print("🎵 [AudioService] Limiter configured with output format:")
         print("   Sample rate: \(outputFormat.sampleRate) Hz")
         print("   Channels: \(outputFormat.channelCount)")
 
-        // Initialize TrackPlayer if needed and connect to masterBusMixer
+        // CRITICAL: Reconfigure TrackPlayer for EVERY file switch
+        // This prevents audio buffer cache reuse between different files
         if trackPlayer == nil {
             trackPlayer = TrackPlayer()
-
-            // Configure TrackPlayer to connect to masterBusMixer (not mainMixer directly)
-            // TrackPlayer uses file's native format, masterBusMixer will convert
-            trackPlayer?.configure(
-                engine: engine.engine,
-                format: fileFormat,
-                destination: volumeLimiter.masterBusMixer
-            )
-
-            print("🎵 [AudioService] TrackPlayer configured and connected to masterBusMixer")
         }
+
+        // Detach TrackPlayer node if already attached (force fresh connection)
+        if let playerNode = trackPlayer?.playerNode, engine.engine.attachedNodes.contains(playerNode) {
+            print("🎵 [AudioService] Detaching existing TrackPlayer node to reset audio graph")
+            engine.engine.detach(playerNode)
+        }
+
+        // Configure TrackPlayer to connect to masterBusMixer (not mainMixer directly)
+        // TrackPlayer uses file's native format, masterBusMixer will convert
+        trackPlayer?.configure(
+            engine: engine.engine,
+            format: fileFormat,
+            destination: volumeLimiter.masterBusMixer
+        )
+
+        print("🎵 [AudioService] TrackPlayer configured and connected to masterBusMixer")
 
         // Start engine (after limiter configuration)
         // Don't start synthesis sources (startSources: false)

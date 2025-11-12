@@ -142,6 +142,16 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         needsRebind = true
     }
 
+    /// Reset configuration state completely (for file switching)
+    /// CRITICAL: Forces complete reconfiguration on next configure() call
+    /// This prevents audio buffer cache reuse between different files
+    public func resetConfigurationState() {
+        print("🔊 [SafeVolumeLimiter] Resetting configuration state completely for file switch")
+        isConfigured = false
+        needsRebind = true
+        configuredFormat = nil
+    }
+
     // MARK: - Private Methods
 
     private func updateLimiterSettings() {
