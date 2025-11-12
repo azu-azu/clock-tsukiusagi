@@ -38,29 +38,33 @@ def normalize(audio):
 
 
 def save_as_wav_and_convert_to_caf(audio_data, filename, sample_rate):
-    """Save as WAV and convert to CAF using afconvert"""
+    """Save as WAV and convert to CAF format safely"""
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     audio_16bit = np.int16(audio_data * 32767)
     wav_path = os.path.join(OUTPUT_DIR, f"{filename}.wav")
     caf_path = os.path.join(OUTPUT_DIR, f"{filename}.caf")
 
-    # Save WAV
+    # Save WAV file first
     wavfile.write(wav_path, sample_rate, audio_16bit)
-    print(f"✓ Generated: {wav_path}")
+    print(f"✓ Generated WAV: {wav_path}")
 
-    # Convert to CAF (macOS only)
+    # Safe CAF conversion with explicit format
     try:
         subprocess.run([
             "afconvert",
-            "-f", "caff",
-            "-d", "LEI16",
+            "-f", "caff",           # Output container
+            "-d", "LEI16@48000",    # 16-bit little-endian, 48kHz
+            "-c", "1",              # Mono
+            "-v",                   # Verbose (logs output)
             wav_path,
             caf_path
-        ], check=True, capture_output=True)
+        ], check=True)
         print(f"✓ Converted to CAF: {caf_path}")
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        print("⚠️  CAF conversion skipped or failed — WAV file kept.")
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️  CAF conversion failed: {e}")
+    except FileNotFoundError:
+        print("⚠️  afconvert not found (macOS only)")
 
 
 # ------------------------------------------------------------
