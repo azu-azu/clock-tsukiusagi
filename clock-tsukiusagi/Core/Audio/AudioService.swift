@@ -158,6 +158,19 @@ public final class AudioService: ObservableObject {
     public func play(preset: NaturalSoundPreset) throws {
         print("🎵 [AudioService] play() called with preset: \(preset)")
 
+        // Wrap entire method in do-catch to ensure state cleanup on error
+        do {
+            try _playInternal(preset: preset)
+        } catch {
+            // CRITICAL: Cleanup state on error to unlock UI
+            print("❌ [AudioService] play() failed: \(error)")
+            cleanupStateOnError()
+            throw error
+        }
+    }
+
+    /// Internal play implementation (allows proper error handling)
+    private func _playInternal(preset: NaturalSoundPreset) throws {
         // セッションを一度だけアクティベート
         if !sessionActivated {
             do {
@@ -174,6 +187,11 @@ public final class AudioService: ObservableObject {
         // Re-enable synthesis sources for playback
         engine.enableSources()
 
+        // Phase 2: Configure limiter BEFORE engine starts (avoid runtime reconfiguration)
+        // CRITICAL: Use output format (48kHz/2ch) for consistency across all playback types
+        let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
+        volumeLimiter.configure(engine: engine.engine, format: outputFormat)
+
         // 音源を登録（masterBusMixerに接続される）
         do {
             try registerSource(for: preset)
@@ -182,16 +200,12 @@ public final class AudioService: ObservableObject {
             throw AudioError.engineStartFailed(error)
         }
 
-        // エンジンを開始
+        // エンジンを開始（Limiter設定後）
         do {
             try engine.start()
         } catch {
             throw AudioError.engineStartFailed(error)
         }
-
-        // Phase 2: Configure limiter AFTER engine is running and sources are connected
-        let format = engine.engine.outputNode.inputFormat(forBus: 0)
-        volumeLimiter.configure(engine: engine.engine, format: format)
 
         // 音量は動的ゲイン補正で自動設定される（システム音量に基づく）
         applyDynamicGainCompensation()
@@ -357,6 +371,37 @@ public final class AudioService: ObservableObject {
     }
 
     // MARK: - Private Methods
+
+    /// Cleanup state on error to unlock UI
+    private func cleanupStateOnError() {
+        print("🧹 [AudioService] Cleaning up state after error")
+
+        // Stop fade timer if running
+        fadeTimer?.invalidate()
+        fadeTimer = nil
+
+        // Reset playback state
+        isPlaying = false
+        currentPreset = nil
+        currentAudioFile = nil
+        pauseReason = nil
+
+        // Stop engine if running
+        if engine.isEngineRunning {
+            engine.stop()
+        }
+
+        // Reset limiter
+        volumeLimiter.reset()
+
+        // Clear Live Activity
+        endLiveActivity()
+
+        // Clear Now Playing
+        nowPlayingController?.clearNowPlaying()
+
+        print("🧹 [AudioService] State cleanup complete")
+    }
 
     private func setupCallbacks() {
         // 経路変更時のコールバック
@@ -738,6 +783,19 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] playAudioFile() called with: \(audioFile.displayName)")
         print("🎵 [AudioService] ========================================")
 
+        // Wrap entire method in do-catch to ensure state cleanup on error
+        do {
+            try _playAudioFileInternal(audioFile)
+        } catch {
+            // CRITICAL: Cleanup state on error to unlock UI
+            print("❌ [AudioService] playAudioFile() failed: \(error)")
+            cleanupStateOnError()
+            throw error
+        }
+    }
+
+    /// Internal playAudioFile implementation (allows proper error handling)
+    private func _playAudioFileInternal(_ audioFile: AudioFilePreset) throws {
         // Stop any currently playing audio (synthesis or file)
         if isPlaying {
             print("🎵 [AudioService] Stopping current playback before file playback")
@@ -773,11 +831,23 @@ public final class AudioService: ObservableObject {
         print("   Channels: \(fileFormat.channelCount)")
         print("   Sample rate: \(fileFormat.sampleRate) Hz")
 
+        // Phase 2: Configure SafeVolumeLimiter BEFORE engine starts
+        // CRITICAL: Use OUTPUT format (48kHz/2ch), NOT file format
+        // This maintains consistent format throughout the limiter chain
+        // Format conversion happens at masterBusMixer (accepts any file format)
+        let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
+        volumeLimiter.configure(engine: engine.engine, format: outputFormat)
+
+        print("🎵 [AudioService] Limiter configured with output format:")
+        print("   Sample rate: \(outputFormat.sampleRate) Hz")
+        print("   Channels: \(outputFormat.channelCount)")
+
         // Initialize TrackPlayer if needed and connect to masterBusMixer
         if trackPlayer == nil {
             trackPlayer = TrackPlayer()
 
             // Configure TrackPlayer to connect to masterBusMixer (not mainMixer directly)
+            // TrackPlayer uses file's native format, masterBusMixer will convert
             trackPlayer?.configure(
                 engine: engine.engine,
                 format: fileFormat,
@@ -787,19 +857,9 @@ public final class AudioService: ObservableObject {
             print("🎵 [AudioService] TrackPlayer configured and connected to masterBusMixer")
         }
 
-        // Start engine BEFORE configuring limiter
+        // Start engine (after limiter configuration)
         // Don't start synthesis sources (startSources: false)
         try engine.start(startSources: false)
-
-        // Phase 2: Configure SafeVolumeLimiter AFTER engine is running
-        // CRITICAL: Use file's format (not output format) to avoid format mismatch
-        // The audio path needs consistent sample rate and channel count:
-        // TrackPlayer (file format) → masterBusMixer → Limiter → mainMixer → output
-        volumeLimiter.configure(engine: engine.engine, format: fileFormat)
-
-        print("🎵 [AudioService] Limiter configured with file format:")
-        print("   Sample rate: \(fileFormat.sampleRate) Hz")
-        print("   Channels: \(fileFormat.channelCount)")
 
         // Load audio file
         try trackPlayer?.load(url: url)

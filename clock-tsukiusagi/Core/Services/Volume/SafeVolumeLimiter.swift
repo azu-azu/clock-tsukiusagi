@@ -45,6 +45,7 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
     private var needsRebind = false
     private weak var engine: AVAudioEngine?
     private var nodesAttached = false
+    private var configuredFormat: AVAudioFormat?
 
     // MARK: - Initialization
 
@@ -82,20 +83,27 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
     }
 
     /// Configure limiter with masterBusMixer approach
-    /// Should be called AFTER engine.start() and AFTER at least one source is connected
+    /// CRITICAL: Must be called BEFORE engine.start() to avoid runtime reconfiguration
+    /// Should use output format (48kHz/2ch) for consistency, not file format
     public func configure(engine: AVAudioEngine, format: AVAudioFormat) {
         // Ensure nodes are attached first
         attachNodes(to: engine)
 
-        // Skip if already configured and no rebind needed
-        guard !isConfigured || needsRebind else {
-            print("🔊 [SafeVolumeLimiter] Already configured, skipping")
+        // Idempotent check: Skip if already configured with same format
+        if isConfigured, !needsRebind,
+           let existing = configuredFormat,
+           existing.sampleRate == format.sampleRate,
+           existing.channelCount == format.channelCount {
+            print("🔊 [SafeVolumeLimiter] Already configured with same format, skipping")
             return
         }
 
-        // Ensure engine is running
-        guard engine.isRunning else {
-            print("🔊 [SafeVolumeLimiter] Engine not running, skipping configuration")
+        // CRITICAL: Refuse to reconfigure if engine is running
+        // Runtime graph reconfiguration causes -10868 crashes
+        if engine.isRunning {
+            print("⚠️ [SafeVolumeLimiter] Engine is running, cannot reconfigure (would crash)")
+            print("   Current format: \(configuredFormat?.sampleRate ?? 0)Hz/\(configuredFormat?.channelCount ?? 0)ch")
+            print("   Requested format: \(format.sampleRate)Hz/\(format.channelCount)ch")
             return
         }
 
@@ -108,7 +116,7 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         engine.disconnectNodeOutput(limiterNode)
 
         // Connect: masterBusMixer → Limiter → mainMixerNode
-        // CRITICAL: Use provided format for masterBusMixer→Limiter connection
+        // Use provided format for masterBusMixer→Limiter connection
         // Use nil format for Limiter→mainMixer to allow automatic format conversion
         engine.connect(masterBusMixer, to: limiterNode, format: format)
         engine.connect(limiterNode, to: engine.mainMixerNode, format: nil)  // Auto-conversion
@@ -120,6 +128,7 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
 
         isConfigured = true
         needsRebind = false
+        configuredFormat = format
         print("🔊 [SafeVolumeLimiter] Configuration complete")
     }
 
