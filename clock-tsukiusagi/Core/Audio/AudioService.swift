@@ -231,6 +231,62 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] Playback started successfully")
     }
 
+    /// 音声再生を停止して完了を待つ（モード切替用）
+    /// - Parameters:
+    ///   - fadeOut: フェードアウト時間（秒）
+    ///   - completion: 停止完了後のコールバック
+    public func stopAndWait(fadeOut fadeOutDuration: TimeInterval = 0.5, completion: @escaping () -> Void) {
+        print("🎵 [AudioService] stopAndWait() called")
+        print("🎵 [AudioService] Current preset: \(String(describing: currentPreset))")
+        print("🎵 [AudioService] Current audio file: \(currentAudioFile?.displayName ?? "none")")
+
+        // 1) Stop individual players first (if any)
+        var playerFadeDuration: TimeInterval = 0
+        if let player = trackPlayer, player.isPlaying {
+            playerFadeDuration = settings.crossfadeDuration
+            player.stop(fadeOut: playerFadeDuration)
+            print("🎵 [AudioService] TrackPlayer stopped (fade: \(playerFadeDuration)s)")
+        }
+
+        // 2) Always fade out master volume (regardless of source type)
+        let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
+        self.fadeOut(duration: masterFadeDuration)
+        print("🎵 [AudioService] Master fade out: \(masterFadeDuration)s")
+
+        // 3) ALWAYS stop engine after fade (unified behavior)
+        DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration) { [weak self] in
+            guard let self = self else { return }
+
+            // Stop engine completely
+            self.engine.stop()
+            self.volumeLimiter.reset()
+
+            // Disable sources (suspends timers, keeps nodes attached)
+            self.engine.disableSources()
+
+            print("🎵 [AudioService] Engine hard-stopped after master fade")
+
+            // 4) Cleanup state and auxiliary features
+            self.breakScheduler.stop()
+
+            self.isPlaying = false
+            self.currentPreset = nil
+            self.currentAudioFile = nil
+            self.pauseReason = nil
+
+            // Phase 3: Live Activityを終了
+            self.endLiveActivity()
+
+            // Phase 3: Now Playingをクリア
+            self.nowPlayingController?.clearNowPlaying()
+
+            print("🎵 [AudioService] Stop completed, calling completion handler")
+
+            // Call completion handler
+            completion()
+        }
+    }
+
     /// 音声再生を停止
     /// - Parameter fadeOut: フェードアウト時間（秒）
     public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
@@ -782,6 +838,17 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] ========================================")
         print("🎵 [AudioService] playAudioFile() called with: \(audioFile.displayName)")
         print("🎵 [AudioService] ========================================")
+
+        // CRITICAL: Activate session BEFORE getting output format
+        // This ensures outputNode.inputFormat returns correct device format (48kHz/2ch)
+        if !sessionActivated {
+            do {
+                try activateAudioSession()
+                sessionActivated = true
+            } catch {
+                throw AudioError.sessionActivationFailed(error)
+            }
+        }
 
         // Wrap entire method in do-catch to ensure state cleanup on error
         do {
