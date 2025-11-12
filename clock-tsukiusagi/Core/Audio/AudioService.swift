@@ -979,9 +979,21 @@ public final class AudioService: ObservableObject {
 
         // Get audio file format first
         let file = try AVAudioFile(forReading: url)
-        let fileFormat = file.processingFormat
+
+        // CRITICAL: Force Float32 format to avoid CAF PCM_16 decoding issues
+        // soundfile writes CAF as PCM_16, but AVAudioFile.processingFormat may misinterpret
+        // Explicitly specify Float32 to ensure consistent decoding across all files
+        let fileFormat = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: file.fileFormat.sampleRate,
+            channels: file.fileFormat.channelCount,
+            interleaved: false
+        )!
 
         print("🎵 [AudioService] Audio file format:")
+        print("   File format: \(file.fileFormat.commonFormat.rawValue) (from file)")
+        print("   Processing format: \(file.processingFormat.commonFormat.rawValue) (AVAudioFile)")
+        print("   Using format: \(fileFormat.commonFormat.rawValue) (forced Float32)")
         print("   Channels: \(fileFormat.channelCount)")
         print("   Sample rate: \(fileFormat.sampleRate) Hz")
 

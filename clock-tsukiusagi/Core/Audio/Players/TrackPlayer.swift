@@ -91,13 +91,23 @@ public final class TrackPlayer: TrackPlaying {
             playerNode.stop()
         }
 
+        // CRITICAL: Reset playerNode to clear any internal cache
+        playerNode.reset()
+
         // 既存のバッファを解放
         buffer = nil
         audioFile = nil
 
-        // ファイルを読み込み
+        print("🎵 [TrackPlayer] Loading new file: \(url.lastPathComponent)")
+        print("   Full path: \(url.path)")
+
+        // CRITICAL: Force fresh AVAudioFile instance to avoid decode cache
+        // Create new file handle each time to prevent iOS from reusing cached decoder
         let file = try AVAudioFile(forReading: url)
-        audioFile = file
+
+        // Verify we're reading the correct file
+        print("   File length: \(file.length) frames")
+        print("   Processing format: \(file.processingFormat.sampleRate) Hz, \(file.processingFormat.channelCount) ch")
 
         // バッファを作成
         guard let buffer = AVAudioPCMBuffer(
@@ -109,12 +119,25 @@ public final class TrackPlayer: TrackPlaying {
 
         // ファイル全体をバッファに読み込み
         try file.read(into: buffer)
-        self.buffer = buffer
 
-        print("🎵 [TrackPlayer] Loaded file: \(url.lastPathComponent)")
+        // CRITICAL: Verify buffer contains data
+        guard let floatChannelData = buffer.floatChannelData else {
+            throw TrackPlayerError.bufferCreationFailed
+        }
+
+        // Sample first 10 samples to verify unique audio data
+        let firstSamples = (0..<min(10, Int(buffer.frameLength))).map {
+            floatChannelData[0][$0]
+        }
+        print("   First 10 samples: \(firstSamples.map { String(format: "%.4f", $0) }.joined(separator: ", "))")
+
+        // Store references AFTER verification
+        self.buffer = buffer
+        self.audioFile = file
+
+        print("🎵 [TrackPlayer] ✅ File loaded successfully")
         print("   Duration: \(Double(buffer.frameLength) / file.fileFormat.sampleRate)s")
-        print("   Sample rate: \(file.fileFormat.sampleRate) Hz")
-        print("   Channels: \(file.fileFormat.channelCount)")
+        print("   Buffer frame length: \(buffer.frameLength)")
     }
 
     public func play(loop: Bool, crossfadeDuration: TimeInterval) {
