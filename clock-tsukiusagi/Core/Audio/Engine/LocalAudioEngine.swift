@@ -89,26 +89,21 @@ public final class LocalAudioEngine {
 
     /// 音源を登録
     /// - Parameter source: 登録する音源
-    public func register(_ source: AudioSource) throws {
+    public func register(_ source: AudioSource) {
         print("LocalAudioEngine: Registering audio source...")
         let format = engine.outputNode.inputFormat(forBus: 0)
         print("LocalAudioEngine: Output format - sampleRate: \(format.sampleRate), channels: \(format.channelCount)")
 
-        do {
-            // Attach node to engine
-            engine.attach(source.sourceNode)
+        // Attach node to engine
+        engine.attach(source.sourceNode)
 
-            // Connect to destination (masterBusMixer) or mainMixer
-            let target = destinationNode ?? engine.mainMixerNode
-            engine.connect(source.sourceNode, to: target, format: format)
+        // Connect to destination (masterBusMixer) or mainMixer
+        let target = destinationNode ?? engine.mainMixerNode
+        engine.connect(source.sourceNode, to: target, format: format)
 
-            sources.append(source)
-            print("LocalAudioEngine: Audio source registered and connected to \(destinationNode != nil ? "masterBusMixer" : "mainMixerNode")")
-            print("LocalAudioEngine: Total sources: \(sources.count)")
-        } catch {
-            print("LocalAudioEngine: Failed to register audio source - \(error)")
-            throw error
-        }
+        sources.append(source)
+        print("LocalAudioEngine: Audio source registered and connected to \(destinationNode != nil ? "masterBusMixer" : "mainMixerNode")")
+        print("LocalAudioEngine: Total sources: \(sources.count)")
     }
 
     /// エンジンを開始

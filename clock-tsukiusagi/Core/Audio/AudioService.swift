@@ -687,7 +687,7 @@ public final class AudioService: ObservableObject {
                 droneLFOFrequency: NaturalSoundPresets.ClickSuppression.droneLFOFrequency,
                 reverbWetDryMix: NaturalSoundPresets.ClickSuppression.reverbWetDryMix
             )
-            try engine.register(source)
+            engine.register(source)
         }
     }
 
