@@ -38,6 +38,8 @@ Core/Audio/
 │   └── TrackPlayer.swift           # ファイル再生プレイヤー
 ├── Presets/
 │   └── AudioFilePresets.swift      # 音源プリセット定義
+├── Services/Volume/
+│   └── SafeVolumeLimiter.swift     # 音量制限（masterBusMixer統合）
 └── AudioService.swift              # TrackPlayer統合
 ```
 
@@ -45,7 +47,7 @@ Core/Audio/
 
 ## アーキテクチャ
 
-### 音声処理フロー
+### 音声処理フロー（最終版）
 
 ```
 AudioFile (WAV/CAF)
@@ -54,40 +56,234 @@ AVAudioFile (read)
     ↓
 AVAudioPCMBuffer (full file in memory)
     ↓
-AVAudioPlayerNode (volume = 1.0)
+AVAudioPlayerNode (volume = 1.0, file native format)
     ↓
-AVAudioEngine.mainMixerNode (Dynamic Gain Compensation)
+masterBusMixer (format conversion: file → 48kHz/2ch)
     ↓
-SafeVolumeLimiter (-6dB cap)
+SafeVolumeLimiter (48kHz/2ch, -6dB cap)
     ↓
-AVAudioEngine.outputNode
+AVAudioEngine.mainMixerNode (48kHz/2ch, Dynamic Gain Compensation)
+    ↓
+AVAudioEngine.outputNode (Apple auto-wiring)
     ↓
 System Output (Speaker/Headphones/Bluetooth)
 ```
 
+### masterBusMixerアーキテクチャの重要性
+
+**従来の問題:**
+- `mainMixer → Limiter → output`という接続がAppleの自動配線と競合
+- ランタイム再構成で`-10868`エラー（クラッシュ）
+- フォーマット不一致で無音
+
+**解決策:**
+```
+Sources → masterBusMixer → Limiter → mainMixer → output
+                                               ↑
+                                    Apple自動配線を尊重
+```
+
+**利点:**
+- Appleの自動配線（mainMixer→output）を妨害しない
+- 全ての音源が統一された経路を通る
+- フォーマット変換が明確な場所で行われる
+
 ### 重要な設計原則
 
-1. **TrackPlayerは音量調整しない**
+1. **AVAudioSessionを先にアクティベート（最重要）**
+   - セッション未アクティベートだと`outputNode.inputFormat`が44.1kHz/2chを返す
+   - セッションアクティベート後は正しいデバイスフォーマット（48kHz/2ch）を返す
+   - **必ずファイル再生前にもセッションをアクティベート**
+
+2. **Limiterはエンジン起動前に構成**
+   - `configure → register → start`の順序を厳守
+   - エンジン起動中の再構成は絶対禁止（-10868クラッシュ）
+   - 出力フォーマット（48kHz/2ch）で統一
+
+3. **フォーマット統一の原則**
+   - Limiterは常に出力フォーマット（48kHz/2ch）で構成
+   - TrackPlayerはファイルのネイティブフォーマットを使用
+   - masterBusMixerが自動的にフォーマット変換
+   - **ファイルフォーマットでLimiterを構成してはいけない**
+
+4. **TrackPlayerは音量調整しない**
    - `playerNode.volume = 1.0` 固定
    - マスター音量で制御（Dynamic Gain Compensation）
 
-2. **エンジンは起動してから接続**
-   - `engine.start()` → `trackPlayer.configure()`
-   - 逆順だとノードが切断される
-
-3. **音源配列は明示的にクリア**
-   - `engine.stop()` だけでは不十分
-   - `engine.clearSources()` で配列をクリア
-
-4. **ファイルフォーマットをそのまま使う**
-   - ミキサーフォーマットではなく `file.processingFormat` を使用
-   - チャンネル数不一致を防ぐ
+5. **音源の分離管理**
+   - 合成音源（ClickSuppressionDrone）とファイル再生は別管理
+   - `disableSources()`/`enableSources()`で制御
+   - ノードはアタッチしたまま、`suspend()`/`resume()`で無音化
 
 ---
 
 ## 重大バグと解決策
 
-### 1. チャンネル数不一致クラッシュ
+### 1. AVAudioEngineランタイム再構成クラッシュ（-10868エラー）
+
+**症状:**
+```
+Thread 1: "error -10868"
+required condition is false: !srcNodeMixerConns.empty() && !isSrcNodeConnectedToIONode
+```
+
+**原因:**
+エンジン起動**後**にLimiterを`configure()`していた。AVAudioEngineは起動中のグラフ再構成を許さない。
+
+**間違ったコード:**
+```swift
+// ❌ エンジン起動後に構成（クラッシュ）
+try engine.start()
+volumeLimiter.configure(engine: engine.engine, format: format)  // ← -10868エラー
+```
+
+**正しいコード:**
+```swift
+// ✅ エンジン起動前に構成
+volumeLimiter.configure(engine: engine.engine, format: outputFormat)
+try engine.start()
+```
+
+**解決策の詳細:**
+```swift
+// SafeVolumeLimiter.swift
+public func configure(engine: AVAudioEngine, format: AVAudioFormat) {
+    // Idempotent check: 同じフォーマットなら何もしない
+    if isConfigured, !needsRebind,
+       let existing = configuredFormat,
+       existing.sampleRate == format.sampleRate,
+       existing.channelCount == format.channelCount {
+        return
+    }
+
+    // CRITICAL: エンジン起動中は再構成を拒否
+    if engine.isRunning {
+        print("⚠️ [SafeVolumeLimiter] Engine is running, cannot reconfigure (would crash)")
+        return
+    }
+
+    // 構成処理...
+}
+```
+
+**重要ポイント:**
+- **"Attach → Configure → Connect → Start"** の順序を厳守
+- エンジン起動中は絶対に再構成しない
+- `isConfigured`フラグで冪等性を確保
+
+---
+
+### 2. フォーマット不一致による無音（44.1kHz ↔ 48kHz）
+
+**症状:**
+- 再生ログは正常に出力される
+- エンジンは動作している
+- しかし音が全く聞こえない
+- ログに`44100.0 Hz`と`48000.0 Hz`が混在
+
+**原因:**
+ファイル再生時に**AVAudioSessionをアクティベートせず**に`outputNode.inputFormat`を取得。
+デフォルトで44.1kHz/2chが返され、Limiterを44.1kHzで構成。
+後で合成再生時にセッションアクティベート → 48kHz/2chに変わり、フォーマット不一致が発生。
+
+**問題の流れ:**
+```
+1. ファイル再生開始
+   → セッション未アクティベート
+   → outputNode.inputFormat → 44.1kHz/2ch（デフォルト）
+   → Limiterを44.1kHzで構成
+
+2. 合成再生に切替
+   → セッションアクティベート → 48kHz/2ch
+   → Limiter再構成を試みる
+   → エンジン起動中 → 再構成拒否
+   → 結果: 44.1kHz Limiter + 48kHzソース = 無音
+```
+
+**間違ったコード:**
+```swift
+// ❌ セッション未アクティベートでフォーマット取得
+public func playAudioFile(_ audioFile: AudioFilePreset) throws {
+    let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)  // ← 44.1kHz
+    volumeLimiter.configure(engine: engine.engine, format: outputFormat)
+    // ...
+}
+```
+
+**正しいコード:**
+```swift
+// ✅ セッション先行アクティベート
+public func playAudioFile(_ audioFile: AudioFilePreset) throws {
+    // CRITICAL: セッションを先にアクティベート
+    if !sessionActivated {
+        try activateAudioSession()  // ← これで48kHz/2chになる
+        sessionActivated = true
+    }
+
+    let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)  // ← 48kHz
+    volumeLimiter.configure(engine: engine.engine, format: outputFormat)
+    // ...
+}
+```
+
+**重要ポイント:**
+- **"Session First, Format Next, Configure Before Start"**
+- 合成再生・ファイル再生の両方で同じ48kHz/2chフォーマットを使用
+- ファイルのネイティブフォーマット（44.1kHz/1ch）はmasterBusMixerで変換
+
+**ログの確認:**
+```
+// ✅ 正常（統一されている）
+🔊 [SafeVolumeLimiter] Format: 48000.0 Hz, 2 channels
+🎵 [AudioService] Audio file format: 44100.0 Hz, 1ch
+🎵 [AudioService] Limiter configured with output format: 48000.0 Hz, 2ch
+
+// ❌ 異常（不一致）
+🔊 [SafeVolumeLimiter] Format: 44100.0 Hz, 2 channels  ← 問題！
+⚠️ Engine is running, cannot reconfigure (would crash)
+   Requested format: 48000.0Hz/2ch
+```
+
+---
+
+### 3. masterBusMixer接続エラー
+
+**症状:**
+```
+required condition is false: [_nodes containsObject: node1] && [_nodes containsObject: node2]
+```
+
+**原因:**
+`masterBusMixer`と`limiterNode`をエンジンにアタッチする前に接続しようとした。
+
+**解決策:**
+ノードのアタッチと接続を分離。
+
+```swift
+// SafeVolumeLimiter.swift
+public func attachNodes(to engine: AVAudioEngine) {
+    guard !nodesAttached else { return }
+
+    // 先にアタッチ
+    engine.attach(masterBusMixer)
+    engine.attach(limiterNode)
+
+    nodesAttached = true
+}
+
+public func configure(engine: AVAudioEngine, format: AVAudioFormat) {
+    // アタッチを確認
+    attachNodes(to: engine)
+
+    // その後に接続
+    engine.connect(masterBusMixer, to: limiterNode, format: format)
+    engine.connect(limiterNode, to: engine.mainMixerNode, format: nil)  // Auto-conversion
+}
+```
+
+---
+
+### 4. チャンネル数不一致クラッシュ（旧問題・参考）
 
 **症状:**
 ```
@@ -98,203 +294,179 @@ required condition is false: _outputFormat.channelCount == buffer.format.channel
 **原因:**
 ミキサーのステレオフォーマット（2ch）でモノラルファイル（1ch）を再生しようとした。
 
-**間違ったコード:**
-```swift
-// ❌ ミキサーのフォーマットを使う（チャンネル数が合わない）
-let mixerFormat = engine.mainMixerNode.outputFormat(forBus: 0)
-trackPlayer?.configure(engine: engine.engine, format: mixerFormat)
-```
-
-**正しいコード:**
-```swift
-// ✅ ファイルのフォーマットを使う
-let file = try AVAudioFile(forReading: url)
-let fileFormat = file.processingFormat  // モノラルならそのまま
-trackPlayer?.configure(engine: engine.engine, format: fileFormat)
-```
-
-**理由:**
-- AVAudioEngineはノード間で自動的にフォーマット変換を行う
-- PlayerNode → Mixer の接続でモノラル→ステレオ変換される
-- バッファとノードのフォーマットが一致していればOK
+**解決済み:**
+TrackPlayerはファイルのネイティブフォーマットを使用し、masterBusMixerで変換。
 
 ---
 
-### 2. 音が聞こえない問題
+### 5. 音が聞こえない（playerNode.volume未設定）
 
 **症状:**
-- 再生ログは正常に出力される
-- `playerNode.isPlaying` が `true` になる
+- 再生ログは正常
+- `playerNode.isPlaying` が `true`
+- マスター音量も正常
 - しかし音が聞こえない
-- マスター音量は正常（0.125程度）
 
 **原因:**
-`AVAudioPlayerNode.volume` が初期化されていなかった（デフォルト値が低い）。
+`AVAudioPlayerNode.volume` が初期化されていなかった。
 
-**間違ったコード:**
+**解決済み:**
 ```swift
-// ❌ playerNode.volume を設定していない
-playerNode.play()
-```
-
-**正しいコード:**
-```swift
-// ✅ 明示的に最大音量に設定
-playerNode.volume = 1.0
-playerNode.play()
-```
-
-**理由:**
-- TrackPlayerの音量は固定（1.0）
-- マスター音量で全体を制御（Dynamic Gain Compensation）
-- playerNode.volume が低いと、マスター音量を上げても聞こえない
-
-**デバッグ方法:**
-```swift
-print("🎵 [TrackPlayer] Player node volume: \(playerNode.volume)")  // ← これで確認
+// TrackPlayer.swift
+public func play(loop: Bool, crossfadeDuration: TimeInterval) {
+    playerNode.volume = 1.0  // ✅ 必須
+    playerNode.play()
+}
 ```
 
 ---
 
-### 3. エンジン起動順序エラー
+### 6. 合成音源との混在問題
 
 **症状:**
-- 音が全く出ない
-- ログは正常
-- 何度試しても無音
+- ファイル再生時に合成音源（ClickSuppressionDrone）も鳴る
+- 停止後も合成音源が鳴り続ける
 
 **原因:**
-TrackPlayer設定後にエンジンを再起動すると、ノード接続が切断される。
+`LocalAudioEngine.sources`配列が残り、`engine.start()`時に全て起動。
 
-**間違ったコード:**
-```swift
-// ❌ TrackPlayer設定 → エンジン起動（ノードが切断される）
-trackPlayer?.configure(engine: engine.engine, format: fileFormat)
-try engine.start()  // ← ここで接続が切れる！
-```
+**解決済み:**
+`disableSources()`/`enableSources()`メソッドで制御。
 
-**正しいコード:**
-```swift
-// ✅ エンジン起動 → TrackPlayer設定
-try engine.start()  // 先にエンジン起動
-trackPlayer?.configure(engine: engine.engine, format: fileFormat)  // 後でノード接続
-```
-
-**理由:**
-- AVAudioEngineはノードを `attach` 後に `connect` で接続
-- `engine.start()` でエンジンを再起動すると、一部の接続がリセットされる
-- エンジンが起動済みの状態でノードを接続するのが正しい
-
-**参考ログ:**
-```
-🎵 [AudioService] Audio file format:
-   Channels: 1
-   Sample rate: 44100.0 Hz
-🎵 [AudioService] Starting engine...
-LocalAudioEngine: Starting audio engine...
-LocalAudioEngine: AVAudioEngine started
-🎵 [TrackPlayer] Configured and connected to engine  ← 順序が正しい
-```
-
----
-
-### 4. 合成音源との混在問題（最重要）
-
-**症状:**
-1. 音源ファイルを再生すると、合成音源（ClickSuppressionDrone）も一緒に鳴る
-2. 音源ファイルを停止しても、合成音源が鳴り続ける
-3. 何度も再生・停止を繰り返すと、音が出なくなる
-
-**原因:**
-`LocalAudioEngine.sources` 配列が蓄積し、`engine.start()` 時に全ての音源が起動される。
-
-**問題のコード:**
 ```swift
 // LocalAudioEngine.swift
-public func register(_ source: AudioSource) throws {
-    sources.append(source)  // ← 追加するだけ、削除しない
+public func disableSources() {
+    sources.forEach {
+        $0.stop()
+        $0.suspend()  // 無音出力 + 診断ログ停止
+    }
+    shouldStartSources = false
 }
 
-public func start() throws {
-    try sources.forEach { try $0.start() }  // ← 配列の全て起動！
-}
-
-public func stop() {
-    sources.forEach { $0.stop() }  // ← 停止するだけ、配列に残る
-}
-```
-
-**問題の流れ:**
-```
-1. ClickSuppressionDrone再生
-   → sources = [ClickSuppressionDrone]
-
-2. 停止
-   → engine.stop() 呼び出し
-   → sources = [ClickSuppressionDrone]  ← まだ配列に残る
-
-3. TrackPlayer再生
-   → engine.start() 呼び出し
-   → sources.forEach { $0.start() }
-   → ClickSuppressionDroneも再起動！  ← 問題発生
-
-4. TrackPlayer停止
-   → trackPlayer.stop() のみ
-   → ClickSuppressionDroneは鳴り続ける  ← さらに問題
-```
-
-**解決策:**
-`clearSources()` メソッドを実装し、配列を明示的にクリア。
-
-**追加コード:**
-```swift
-// LocalAudioEngine.swift
-/// 全ての音源を登録解除してクリア
-public func clearSources() {
-    print("LocalAudioEngine: Clearing all sources (count: \(sources.count))")
-
-    // 全ての音源を停止
-    sources.forEach { $0.stop() }
-
-    // 配列をクリア
-    sources.removeAll()
-
-    print("LocalAudioEngine: All sources cleared")
-}
-```
-
-**使用箇所:**
-```swift
-// AudioService.swift - playAudioFile()
-if isPlaying && currentPreset != nil {
-    engine.stop()
-    engine.clearSources()  // ← 合成音源を配列から削除
-    isPlaying = false
-    currentPreset = nil
-} else if isPlaying {
-    engine.stop()
-    engine.clearSources()  // ← 念のため全クリア
-}
-
-// AudioService.swift - stop()
-DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
-    self?.engine.stop()
-    self?.engine.clearSources()  // ← 停止後もクリア
-    print("🎵 [AudioService] Synthesis engine stopped and cleared after fade")
+public func enableSources() {
+    sources.forEach { $0.resume() }
+    shouldStartSources = true
 }
 ```
 
 **重要ポイント:**
-- `stop()` だけでは音源が配列に残る
-- `clearSources()` で明示的に削除する
-- ファイル再生前に必ずクリア
-- 停止時もクリア（次回再生のため）
+- ノードはアタッチしたまま（グラフ構造維持）
+- `suspend()`で無音出力に切り替え
+- 診断ログも停止
+
+---
+
+### 7. 停止後も音が鳴り続ける
+
+**症状:**
+- 停止ボタンを押しても音が鳴り続ける
+- `ClickSuppressionDrone Diagnostics`ログが出続ける
+
+**原因:**
+`stop()`メソッドがファイル再生時にエンジンを止めていなかった。
+
+**解決済み:**
+```swift
+// AudioService.swift
+public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
+    // 1) TrackPlayer停止
+    if let player = trackPlayer, player.isPlaying {
+        player.stop(fadeOut: playerFadeDuration)
+    }
+
+    // 2) マスターフェードアウト
+    let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
+    self.fadeOut(duration: masterFadeDuration)
+
+    // 3) ALWAYS stop engine（ファイル・合成関係なく）
+    DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration) { [weak self] in
+        self?.engine.stop()
+        self?.volumeLimiter.reset()
+        self?.engine.disableSources()
+    }
+}
+```
+
+---
+
+### 8. エラー時のUIロック
+
+**症状:**
+- クラッシュ後に再生ボタンが押せなくなる
+- `isPlaying`が`true`のまま残る
+
+**原因:**
+例外発生時に状態がクリーンアップされない。
+
+**解決済み:**
+```swift
+// AudioService.swift
+public func play(preset: NaturalSoundPreset) throws {
+    do {
+        try _playInternal(preset: preset)
+    } catch {
+        cleanupStateOnError()  // ✅ 状態クリーンアップ
+        throw error
+    }
+}
+
+private func cleanupStateOnError() {
+    fadeTimer?.invalidate()
+    isPlaying = false
+    currentPreset = nil
+    currentAudioFile = nil
+    if engine.isEngineRunning {
+        engine.stop()
+    }
+    volumeLimiter.reset()
+    // ...
+}
+```
 
 ---
 
 ## ベストプラクティス
 
-### 1. 音量制御
+### 1. セッション管理
+
+```swift
+// ✅ 必ず先にアクティベート
+if !sessionActivated {
+    try activateAudioSession()
+    sessionActivated = true
+}
+
+// ✅ その後にフォーマット取得
+let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)  // 48kHz/2ch
+```
+
+### 2. Limiter構成
+
+```swift
+// ✅ エンジン起動前に一度だけ
+let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
+volumeLimiter.configure(engine: engine.engine, format: outputFormat)
+
+// ✅ その後にエンジン起動
+try engine.start()
+```
+
+### 3. TrackPlayer構成
+
+```swift
+// ✅ ファイルのネイティブフォーマットを使用
+let file = try AVAudioFile(forReading: url)
+let fileFormat = file.processingFormat  // 44.1kHz/1ch等
+
+// ✅ masterBusMixerに接続（自動変換される）
+trackPlayer?.configure(
+    engine: engine.engine,
+    format: fileFormat,
+    destination: volumeLimiter.masterBusMixer
+)
+```
+
+### 4. 音量制御
 
 ```swift
 // ✅ TrackPlayerは常に最大音量
@@ -307,59 +479,48 @@ engine.mainMixerNode.outputVolume = dynamicGain
 SafeVolumeLimiter(maxLevel: -6dB)
 ```
 
-### 2. エンジン管理
+### 5. エンジン停止
 
 ```swift
-// ✅ 正しい順序
-try engine.start()
-trackPlayer?.configure(engine: engine.engine, format: fileFormat)
-try trackPlayer?.load(url: url)
-trackPlayer?.play(loop: true, crossfadeDuration: 0.5)
+// ✅ 統一された停止処理（ファイル・合成両対応）
+public func stop(fadeOut: TimeInterval = 0.5) {
+    // TrackPlayer停止
+    trackPlayer?.stop(fadeOut: fadeOut)
 
-// ✅ 停止時はクリア
-engine.stop()
-engine.clearSources()
-```
+    // マスターフェードアウト
+    fadeOut(duration: fadeOut)
 
-### 3. フォーマット処理
-
-```swift
-// ✅ ファイルのフォーマットをそのまま使う
-let file = try AVAudioFile(forReading: url)
-let fileFormat = file.processingFormat
-
-// ✅ エンジンが自動変換してくれる
-trackPlayer?.configure(engine: engine.engine, format: fileFormat)
-```
-
-### 4. エラーハンドリング
-
-```swift
-// ✅ ファイルが見つからない場合
-guard let url = audioFile.url() else {
-    throw AudioError.engineStartFailed(NSError(domain: "AudioService", code: -1, userInfo: [
-        NSLocalizedDescriptionKey: "Audio file not found: \(audioFile.rawValue)"
-    ]))
-}
-
-// ✅ バッファ作成失敗
-guard let buffer = AVAudioPCMBuffer(
-    pcmFormat: file.processingFormat,
-    frameCapacity: AVAudioFrameCount(file.length)
-) else {
-    throw TrackPlayerError.bufferCreationFailed
+    // エンジン停止（必ず実行）
+    DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut) {
+        engine.stop()
+        volumeLimiter.reset()
+        engine.disableSources()
+    }
 }
 ```
 
-### 5. ログ出力
+### 6. エラーハンドリング
 
 ```swift
-// ✅ 重要な情報を出力
-print("🎵 [TrackPlayer] Loaded file: \(url.lastPathComponent)")
-print("   Duration: \(Double(buffer.frameLength) / file.fileFormat.sampleRate)s")
-print("   Sample rate: \(file.fileFormat.sampleRate) Hz")
-print("   Channels: \(file.fileFormat.channelCount)")
-print("   Player node volume: \(playerNode.volume)")
+// ✅ 必ず状態をクリーンアップ
+public func play(preset: NaturalSoundPreset) throws {
+    do {
+        try _playInternal(preset: preset)
+    } catch {
+        cleanupStateOnError()
+        throw error
+    }
+}
+```
+
+### 7. モード切替
+
+```swift
+// ✅ 完了ハンドラ付き停止
+audioService.stopAndWait(fadeOut: 0.5) {
+    // エンジン完全停止後に次の再生開始
+    try? audioService.playAudioFile(newFile)
+}
 ```
 
 ---
@@ -388,28 +549,12 @@ clock-tsukiusagi/
         └── (future audio files...)
 ```
 
-### Xcodeプロジェクト設定
-
-1. ファイルをドラッグ＆ドロップ
-2. "Copy items if needed" にチェック
-3. Target Membership: `clock-tsukiusagi` を選択
-
 ### プリセット定義
 
 ```swift
 // AudioFilePresets.swift
 public enum AudioFilePreset: String, CaseIterable, Identifiable {
     case testTone = "test_tone_440hz"
-    // Future presets:
-    // case pinkNoise = "pink_noise_60s"
-    // case brownNoise = "brown_noise_60s"
-
-    public var displayName: String {
-        switch self {
-        case .testTone:
-            return "Test Tone (440Hz)"
-        }
-    }
 
     public func url() -> URL? {
         // Try CAF first
@@ -434,35 +579,17 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
 }
 ```
 
-### 音源生成スクリプト
-
-```bash
-cd scripts
-python3 generate_test_tone.py
-```
-
-**生成される音源:**
-- 440Hz サイン波（A4音程）
-- 5秒間
-- 44.1kHz サンプルレート
-- モノラル
-- フェードイン/アウト付き（100ms）
-- WAV + CAF両方
-
 ---
 
 ## テスト方法
 
 ### 基本再生テスト
 
-```swift
-// AudioTestView.swift
 1. アプリ起動
 2. "音源ファイル" を選択
 3. "Test Tone (440Hz)" を選択
 4. "再生" ボタンをタップ
 5. 音が聞こえることを確認
-```
 
 ### チェックリスト
 
@@ -472,45 +599,36 @@ python3 generate_test_tone.py
 - [ ] 停止ボタンで完全に停止する
 - [ ] 合成音源（クリック音防止）と切り替えできる
 - [ ] 複数回再生・停止しても安定している
+- [ ] クラッシュしない
+- [ ] UIがロックしない
 
 ### デバッグログの確認
 
 **正常なログ:**
 ```
-🎵 [AudioService] playAudioFile() called with: Test Tone (440Hz)
-🎵 [AudioService] Audio file format:
-   Channels: 1
-   Sample rate: 44100.0 Hz
-LocalAudioEngine: Starting audio engine...
-LocalAudioEngine: AVAudioEngine started
-🎵 [TrackPlayer] Configured and connected to engine
+🎵 [AudioService] Activating audio session...
+   ✅ Session activated
+🔊 [SafeVolumeLimiter] Configuring soft limiter
+   Format: 48000.0 Hz, 2 channels
+🎵 [AudioService] Audio file format: 44100.0 Hz, 1ch
+🎵 [AudioService] Limiter configured with output format: 48000.0 Hz, 2ch
+🎵 [TrackPlayer] Configured and connected to masterBusMixer
 🎵 [TrackPlayer] Loaded file: test_tone_440hz.caf
    Duration: 5.0s
    Sample rate: 44100.0 Hz
    Channels: 1
 🎵 [TrackPlayer] Playback started (loop: true, crossfade: 0.5s)
 🎵 [TrackPlayer] Player node volume: 1.0
-🎵 [AudioService] Starting fade in...
-🎵 [AudioService] Fade in complete - target: 0.5012
+🎵 [AudioService] Fade in complete
 ```
 
 **異常なログ:**
 ```
-⚠️ [AudioFilePreset] File not found: test_tone_440hz.caf  ← ファイルがない
-required condition is false: _outputFormat.channelCount == buffer.format.channelCount  ← チャンネル数不一致
-🎵 [TrackPlayer] Player node volume: 0.0  ← 音量が0
+❌ Thread 1: "error -10868"  ← ランタイム再構成
+⚠️ Engine is running, cannot reconfigure  ← フォーマット不一致
+required condition is false: [_nodes containsObject: node1]  ← ノード未アタッチ
+🎵 [TrackPlayer] Player node volume: 0.0  ← 音量未設定
 ```
-
-### 実機テスト
-
-**必須確認項目:**
-- [ ] iPhone実機で動作（シミュレータでは不完全）
-- [ ] ヘッドホンで再生
-- [ ] Bluetooth接続で再生
-- [ ] スピーカーで再生（音量注意）
-- [ ] ロック画面でも継続再生
-- [ ] バックグラウンドでも継続再生
-- [ ] 電話着信時の中断・再開
 
 ---
 
@@ -519,93 +637,81 @@ required condition is false: _outputFormat.channelCount == buffer.format.channel
 ### 音が出ない
 
 **チェック項目:**
-1. `playerNode.volume` が 1.0 に設定されているか？
-2. マスター音量が 0 でないか？
-3. システム音量が 0 でないか？
-4. エンジンが起動しているか？（`engine.isRunning`）
-5. ファイルが正しく読み込まれているか？（`buffer != nil`）
+1. セッションがアクティベートされているか？
+2. Limiterが48kHz/2chで構成されているか？
+3. TrackPlayerがmasterBusMixerに接続されているか？
+4. `playerNode.volume`が1.0か？
+5. システム音量が0でないか？
+6. エンジンが起動しているか？
 
 **デバッグコマンド:**
 ```swift
+print("sessionActivated: \(sessionActivated)")
+print("limiter format: \(volumeLimiter.configuredFormat)")
 print("playerNode.volume: \(playerNode.volume)")
-print("engine.mainMixerNode.outputVolume: \(engine.mainMixerNode.outputVolume)")
 print("systemVolume: \(AVAudioSession.sharedInstance().outputVolume)")
 print("engine.isRunning: \(engine.isRunning)")
-print("buffer: \(String(describing: buffer))")
 ```
 
-### 合成音源と混在する
+### クラッシュする（-10868）
+
+**原因:** エンジン起動中に再構成
 
 **解決策:**
-`playAudioFile()` の最初に `clearSources()` を呼ぶ。
-
 ```swift
-if isPlaying && currentPreset != nil {
-    engine.stop()
-    engine.clearSources()  // ← 必須
-    isPlaying = false
-    currentPreset = nil
+// ✅ 必ずエンジン起動前に構成
+volumeLimiter.configure(engine: engine.engine, format: outputFormat)
+try engine.start()
+```
+
+### フォーマット不一致
+
+**原因:** セッション未アクティベート
+
+**解決策:**
+```swift
+// ✅ セッションを先にアクティベート
+if !sessionActivated {
+    try activateAudioSession()
+    sessionActivated = true
 }
-```
-
-### 複数回再生で失敗
-
-**原因:** 音源が蓄積している
-
-**解決策:**
-停止時にも `clearSources()` を呼ぶ。
-
-```swift
-DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
-    self?.engine.stop()
-    self?.engine.clearSources()  // ← 追加
-}
-```
-
-### クラッシュする
-
-**原因:** チャンネル数不一致
-
-**解決策:**
-ファイルの `processingFormat` を使う。
-
-```swift
-let file = try AVAudioFile(forReading: url)
-let fileFormat = file.processingFormat  // ← これを使う
-trackPlayer?.configure(engine: engine.engine, format: fileFormat)
 ```
 
 ---
 
 ## まとめ
 
-### 重要ポイント（5つ）
+### 最重要原則（5つ）
 
-1. **playerNode.volume = 1.0 は必須**
-   - マスター音量で制御するため
+1. **"Session First, Format Next, Configure Before Start"**
+   - セッションアクティベート → フォーマット取得 → Limiter構成 → エンジン起動
 
-2. **エンジン起動 → ノード接続の順序**
-   - 逆だとノードが切断される
+2. **フォーマット統一（48kHz/2ch）**
+   - 全ての再生タイプで出力フォーマットを統一
+   - ファイルフォーマットでLimiterを構成しない
 
-3. **ファイルフォーマットをそのまま使う**
-   - チャンネル数不一致を防ぐ
+3. **エンジン起動中は再構成禁止**
+   - `configure → start`の順序を厳守
+   - `-10868`クラッシュを防ぐ
 
-4. **clearSources() で配列をクリア**
-   - stop() だけでは不十分
+4. **masterBusMixerアーキテクチャ**
+   - Appleの自動配線を尊重
+   - 全ての音源が統一された経路を通る
 
-5. **実機でテスト**
-   - シミュレータでは完全に動作しない
+5. **エラー時の状態クリーンアップ**
+   - 必ず`isPlaying`等をリセット
+   - UIロックを防ぐ
 
 ### 次のステップ
 
 - [ ] 複数音源の追加（pink/brown noise等）
 - [ ] クロスフェードの洗練
-- [ ] 複数ファイルの同時再生（ミキシング）
 - [ ] ストリーミング再生（大容量ファイル対応）
 
 ---
 
 **作成日**: 2025-11-11
+**最終更新**: 2025-11-12
 **対象**: TrackPlayer実装者
 **関連**: Phase 3 Audio Integration
 
