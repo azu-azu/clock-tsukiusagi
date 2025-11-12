@@ -43,6 +43,7 @@ public final class TrackPlayer: TrackPlaying {
 
     private var isLooping = false
     private var crossfadeDuration: TimeInterval = 0.0
+    private var fadeOutWorkItem: DispatchWorkItem?  // Track pending fade out
 
     private weak var engine: AVAudioEngine?
 
@@ -109,6 +110,10 @@ public final class TrackPlayer: TrackPlaying {
             return
         }
 
+        // Cancel any pending fade out from previous playback
+        fadeOutWorkItem?.cancel()
+        fadeOutWorkItem = nil
+
         self.isLooping = loop
         self.crossfadeDuration = crossfadeDuration
 
@@ -131,6 +136,10 @@ public final class TrackPlayer: TrackPlaying {
     public func stop(fadeOut: TimeInterval) {
         guard playerNode.isPlaying else { return }
 
+        // Cancel any pending fade out work item
+        fadeOutWorkItem?.cancel()
+        fadeOutWorkItem = nil
+
         // Stop looping immediately
         isLooping = false
 
@@ -139,14 +148,18 @@ public final class TrackPlayer: TrackPlaying {
             let currentVolume = playerNode.volume
             playerNode.volume = 0.0
 
-            // フェード完了後に停止
-            DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut) { [weak self] in
+            // Create cancellable work item for fade out completion
+            let workItem = DispatchWorkItem { [weak self] in
                 guard let self = self else { return }
                 self.playerNode.stop()
                 self.playerNode.reset()  // Clear pending schedules
                 self.playerNode.volume = currentVolume  // 音量を元に戻す
+                self.fadeOutWorkItem = nil
                 print("🎵 [TrackPlayer] Stopped and reset after fade out")
             }
+
+            fadeOutWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut, execute: workItem)
         } else {
             // 即座に停止
             playerNode.stop()
