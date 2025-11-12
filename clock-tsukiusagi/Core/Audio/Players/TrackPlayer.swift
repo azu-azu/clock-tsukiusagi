@@ -43,6 +43,7 @@ public final class TrackPlayer: TrackPlaying {
 
     private var isLooping = false
     private var crossfadeDuration: TimeInterval = 0.0
+    private var fadeOutWorkItem: DispatchWorkItem?  // Track pending fade out
 
     private weak var engine: AVAudioEngine?
 
@@ -64,16 +65,18 @@ public final class TrackPlayer: TrackPlaying {
     /// - Parameters:
     ///   - engine: AVAudioEngine
     ///   - format: オーディオフォーマット
-    public func configure(engine: AVAudioEngine, format: AVAudioFormat) {
+    ///   - destination: 接続先ノード（デフォルト: mainMixerNode）
+    public func configure(engine: AVAudioEngine, format: AVAudioFormat, destination: AVAudioNode? = nil) {
         self.engine = engine
 
         // プレイヤーノードをエンジンにアタッチ
         engine.attach(playerNode)
 
-        // メインミキサーに接続
-        engine.connect(playerNode, to: engine.mainMixerNode, format: format)
+        // 指定された接続先またはメインミキサーに接続
+        let targetNode = destination ?? engine.mainMixerNode
+        engine.connect(playerNode, to: targetNode, format: format)
 
-        print("🎵 [TrackPlayer] Configured and connected to engine")
+        print("🎵 [TrackPlayer] Configured and connected to \(destination != nil ? "masterBusMixer" : "mainMixerNode")")
     }
 
     // MARK: - Public Methods
@@ -107,6 +110,10 @@ public final class TrackPlayer: TrackPlaying {
             return
         }
 
+        // Cancel any pending fade out from previous playback
+        fadeOutWorkItem?.cancel()
+        fadeOutWorkItem = nil
+
         self.isLooping = loop
         self.crossfadeDuration = crossfadeDuration
 
@@ -129,21 +136,45 @@ public final class TrackPlayer: TrackPlaying {
     public func stop(fadeOut: TimeInterval) {
         guard playerNode.isPlaying else { return }
 
+        // Cancel any pending fade out work item
+        fadeOutWorkItem?.cancel()
+        fadeOutWorkItem = nil
+
+        // Stop looping immediately
+        isLooping = false
+
         if fadeOut > 0 {
             // フェードアウト処理（ボリュームランプを使用）
             let currentVolume = playerNode.volume
             playerNode.volume = 0.0
 
-            // フェード完了後に停止
-            DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut) { [weak self] in
-                self?.playerNode.stop()
-                self?.playerNode.volume = currentVolume  // 音量を元に戻す
-                print("🎵 [TrackPlayer] Stopped after fade out")
+            // Create cancellable work item for fade out completion
+            // Note: We need to declare workItem first, then reference it in the closure
+            var workItem: DispatchWorkItem!
+            workItem = DispatchWorkItem { [weak self] in
+                guard let self = self else { return }
+
+                // Check if this work item was cancelled before execution
+                // This prevents "ghost" fade-out tasks from stopping new playback
+                if workItem.isCancelled {
+                    print("🎵 [TrackPlayer] Fade-out canceled before execution (ghost task prevented)")
+                    return
+                }
+
+                self.playerNode.stop()
+                self.playerNode.reset()  // Clear pending schedules
+                self.playerNode.volume = currentVolume  // 音量を元に戻す
+                self.fadeOutWorkItem = nil
+                print("🎵 [TrackPlayer] Stopped and reset after fade out")
             }
+
+            fadeOutWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut, execute: workItem)
         } else {
             // 即座に停止
             playerNode.stop()
-            print("🎵 [TrackPlayer] Stopped immediately")
+            playerNode.reset()  // Clear pending schedules
+            print("🎵 [TrackPlayer] Stopped and reset immediately")
         }
     }
 

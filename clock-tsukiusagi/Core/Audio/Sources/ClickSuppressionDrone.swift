@@ -10,6 +10,12 @@
 import AVFoundation
 import Foundation
 
+// Helper class for shared mutable state in closures
+private final class AudioState {
+    var isSuspended = false
+    var diagnosticsEnabled = true
+}
+
 /// クリック音防止ドローン音源
 /// 構成: ノイズ床 + やわらかドローン + 薄い空間
 public final class ClickSuppressionDrone: AudioSource {
@@ -21,6 +27,9 @@ public final class ClickSuppressionDrone: AudioSource {
     private let lowpassFilter: FilterBus
     private let highpassFilter: FilterBus?
     private let reverb: ReverbBus
+
+    // Suspend/resume control (shared with render callback)
+    private let audioState = AudioState()
 
     // MARK: - Initialization
 
@@ -114,11 +123,26 @@ public final class ClickSuppressionDrone: AudioSource {
         var rmsSum: Double = 0.0
         var clippingCount: Int = 0
 
+        // Capture audio state for suspend/resume control
+        let state = audioState
+
         // AVAudioSourceNode を作成
         _sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
             let sampleRate = 44100.0
             let deltaTime = 1.0 / sampleRate
+
+            // If suspended, output silence
+            if state.isSuspended {
+                for buffer in abl {
+                    guard let data = buffer.mData else { continue }
+                    let samples = data.assumingMemoryBound(to: Float.self)
+                    for frame in 0..<Int(frameCount) {
+                        samples[frame] = 0.0
+                    }
+                }
+                return noErr
+            }
 
             for frame in 0..<Int(frameCount) {
                 // ノイズ用LFO（音量変調）- Azu式：オフセット付き
@@ -166,25 +190,27 @@ public final class ClickSuppressionDrone: AudioSource {
 
                 frameCounter += 1
 
-                // 1秒ごとに診断情報を出力
+                // 1秒ごとに診断情報を出力（diagnostics有効時のみ）
                 if frameCounter >= diagnosticInterval {
-                    let rms = sqrt(rmsSum / Double(diagnosticInterval))
-                    let noiseDb = 20.0 * log10(max(peakNoise, 0.00001))
-                    let droneDb = 20.0 * log10(max(peakDrone, 0.00001))
-                    let mixedDb = 20.0 * log10(max(peakMixed, 0.00001))
-                    let rmsDb = 20.0 * log10(max(rms, 0.00001))
+                    if state.diagnosticsEnabled {
+                        let rms = sqrt(rmsSum / Double(diagnosticInterval))
+                        let noiseDb = 20.0 * log10(max(peakNoise, 0.00001))
+                        let droneDb = 20.0 * log10(max(peakDrone, 0.00001))
+                        let mixedDb = 20.0 * log10(max(peakMixed, 0.00001))
+                        let rmsDb = 20.0 * log10(max(rms, 0.00001))
 
-                    print("🎵 [ClickSuppressionDrone Diagnostics]")
-                    print("   Noise: \(String(format: "%.4f", peakNoise)) (\(String(format: "%.1f", noiseDb)) dB)")
-                    print("   Drone: \(String(format: "%.4f", peakDrone)) (\(String(format: "%.1f", droneDb)) dB)")
-                    print("   Mixed Peak: \(String(format: "%.4f", peakMixed)) (\(String(format: "%.1f", mixedDb)) dB)")
-                    print("   RMS: \(String(format: "%.4f", rms)) (\(String(format: "%.1f", rmsDb)) dB)")
-                    if clippingCount > 0 {
-                        print("   ⚠️  Clipping: \(clippingCount) samples (\(String(format: "%.1f", Double(clippingCount) / Double(diagnosticInterval) * 100))%)")
-                    } else {
-                        print("   ✅ No clipping")
+                        print("🎵 [ClickSuppressionDrone Diagnostics]")
+                        print("   Noise: \(String(format: "%.4f", peakNoise)) (\(String(format: "%.1f", noiseDb)) dB)")
+                        print("   Drone: \(String(format: "%.4f", peakDrone)) (\(String(format: "%.1f", droneDb)) dB)")
+                        print("   Mixed Peak: \(String(format: "%.4f", peakMixed)) (\(String(format: "%.1f", mixedDb)) dB)")
+                        print("   RMS: \(String(format: "%.4f", rms)) (\(String(format: "%.1f", rmsDb)) dB)")
+                        if clippingCount > 0 {
+                            print("   ⚠️  Clipping: \(clippingCount) samples (\(String(format: "%.1f", Double(clippingCount) / Double(diagnosticInterval) * 100))%)")
+                        } else {
+                            print("   ✅ No clipping")
+                        }
+                        print("   ---")
                     }
-                    print("   ---")
 
                     // リセット
                     frameCounter = 0
@@ -226,6 +252,18 @@ public final class ClickSuppressionDrone: AudioSource {
 
     public func stop() {
         // ソースノードは自動的に停止
+    }
+
+    public func suspend() {
+        audioState.isSuspended = true
+        audioState.diagnosticsEnabled = false
+        print("🎵 [ClickSuppressionDrone] Suspended (output silence, diagnostics off)")
+    }
+
+    public func resume() {
+        audioState.isSuspended = false
+        audioState.diagnosticsEnabled = true
+        print("🎵 [ClickSuppressionDrone] Resumed (output active, diagnostics on)")
     }
 
     public func setVolume(_ volume: Float) {

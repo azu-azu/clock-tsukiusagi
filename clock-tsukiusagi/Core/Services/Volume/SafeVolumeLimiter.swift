@@ -4,6 +4,7 @@
 //
 //  Created by Claude Code on 2025-11-10.
 //  安全音量リミッター（iOS: AVAudioUnitDistortion使用）
+//  Architecture: masterBusMixer approach to avoid conflicts with Apple's auto-wiring
 //
 
 import AVFoundation
@@ -12,18 +13,27 @@ import Foundation
 /// 安全音量制限プロトコル
 public protocol SafeVolumeLimiting {
     var maxOutputDb: Float { get set }
+    var masterBusMixer: AVAudioMixerNode { get }
+    func attachNodes(to engine: AVAudioEngine)
     func configure(engine: AVAudioEngine, format: AVAudioFormat)
     func updateLimit(_ db: Float)
+    func reset()
 }
 
 /// 安全音量リミッター
 /// iOS用実装: AVAudioUnitDistortion + ソフトクリッピングを使用
 /// Note: AVAudioUnitDynamicsProcessorはmacOSのみで利用可能なため、
 /// iOS用の代替として歪みエフェクトを使用してソフトリミットを実装
+///
+/// Architecture:
+/// Sources → masterBusMixer → Limiter → mainMixerNode → outputNode (Apple's auto-wiring)
+/// This avoids conflicts with Apple's automatic mainMixer→output connection
 public final class SafeVolumeLimiter: SafeVolumeLimiting {
     // MARK: - Properties
 
     private let limiterNode = AVAudioUnitDistortion()
+    public let masterBusMixer = AVAudioMixerNode()  // All sources connect here
+
     public var maxOutputDb: Float {
         didSet {
             print("🔊 [SafeVolumeLimiter] Max output updated to \(maxOutputDb) dB")
@@ -32,6 +42,10 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
     }
 
     private var isConfigured = false
+    private var needsRebind = false
+    private weak var engine: AVAudioEngine?
+    private var nodesAttached = false
+    private var configuredFormat: AVAudioFormat?
 
     // MARK: - Initialization
 
@@ -41,40 +55,91 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
 
     // MARK: - Public Methods
 
-    public func configure(engine: AVAudioEngine, format: AVAudioFormat) {
-        guard !isConfigured else {
-            print("🔊 [SafeVolumeLimiter] Already configured, skipping")
+    /// Attach nodes to engine (call once during initialization)
+    /// - Parameter engine: AVAudioEngine
+    public func attachNodes(to engine: AVAudioEngine) {
+        guard !nodesAttached else {
+            print("🔊 [SafeVolumeLimiter] Nodes already attached, skipping")
             return
         }
 
-        print("🔊 [SafeVolumeLimiter] Configuring soft limiter (iOS)")
+        self.engine = engine
+
+        print("🔊 [SafeVolumeLimiter] Attaching nodes to engine...")
+
+        // Attach nodes to engine
+        if !engine.attachedNodes.contains(masterBusMixer) {
+            engine.attach(masterBusMixer)
+            print("   ✅ masterBusMixer attached")
+        }
+
+        if !engine.attachedNodes.contains(limiterNode) {
+            engine.attach(limiterNode)
+            print("   ✅ limiterNode attached")
+        }
+
+        nodesAttached = true
+        print("🔊 [SafeVolumeLimiter] Nodes attached successfully")
+    }
+
+    /// Configure limiter with masterBusMixer approach
+    /// CRITICAL: Must be called BEFORE engine.start() to avoid runtime reconfiguration
+    /// Should use output format (48kHz/2ch) for consistency, not file format
+    public func configure(engine: AVAudioEngine, format: AVAudioFormat) {
+        // Ensure nodes are attached first
+        attachNodes(to: engine)
+
+        // Idempotent check: Skip if already configured with same format
+        if isConfigured, !needsRebind,
+           let existing = configuredFormat,
+           existing.sampleRate == format.sampleRate,
+           existing.channelCount == format.channelCount {
+            print("🔊 [SafeVolumeLimiter] Already configured with same format, skipping")
+            return
+        }
+
+        // CRITICAL: Refuse to reconfigure if engine is running
+        // Runtime graph reconfiguration causes -10868 crashes
+        if engine.isRunning {
+            print("⚠️ [SafeVolumeLimiter] Engine is running, cannot reconfigure (would crash)")
+            print("   Current format: \(configuredFormat?.sampleRate ?? 0)Hz/\(configuredFormat?.channelCount ?? 0)ch")
+            print("   Requested format: \(format.sampleRate)Hz/\(format.channelCount)ch")
+            return
+        }
+
+        print("🔊 [SafeVolumeLimiter] Configuring soft limiter (masterBusMixer approach)")
         print("   Max output: \(maxOutputDb) dB")
         print("   Format: \(format.sampleRate) Hz, \(format.channelCount) channels")
 
-        // リミッターノードをアタッチ
-        engine.attach(limiterNode)
+        // Disconnect existing connections to ensure clean state
+        engine.disconnectNodeOutput(masterBusMixer)
+        engine.disconnectNodeOutput(limiterNode)
 
-        // 接続: MainMixerNode → Limiter → OutputNode
-        engine.connect(
-            engine.mainMixerNode,
-            to: limiterNode,
-            format: format
-        )
-        engine.connect(
-            limiterNode,
-            to: engine.outputNode,
-            format: format
-        )
+        // Connect: masterBusMixer → Limiter → mainMixerNode
+        // Use provided format for masterBusMixer→Limiter connection
+        // Use nil format for Limiter→mainMixer to allow automatic format conversion
+        engine.connect(masterBusMixer, to: limiterNode, format: format)
+        engine.connect(limiterNode, to: engine.mainMixerNode, format: nil)  // Auto-conversion
 
-        // ソフトリミッターとして設定
+        print("   ✅ Audio path: masterBusMixer → limiter (\(format.sampleRate)Hz/\(format.channelCount)ch) → mainMixer (auto) → output")
+
+        // Configure limiter settings
         updateLimiterSettings()
 
         isConfigured = true
+        needsRebind = false
+        configuredFormat = format
         print("🔊 [SafeVolumeLimiter] Configuration complete")
     }
 
     public func updateLimit(_ db: Float) {
         maxOutputDb = db
+    }
+
+    /// Reset configuration state (call when engine is stopped)
+    public func reset() {
+        print("🔊 [SafeVolumeLimiter] Resetting configuration state")
+        needsRebind = true
     }
 
     // MARK: - Private Methods
