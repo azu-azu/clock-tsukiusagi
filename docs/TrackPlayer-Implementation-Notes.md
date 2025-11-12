@@ -425,6 +425,205 @@ private func cleanupStateOnError() {
 
 ---
 
+### 9. 幽霊タスク問題：停止ボタンを押していないのに再生が止まる（最重要）
+
+**症状:**
+- 停止ボタンを押していないのに、再生中の音声が突然止まる
+- 何回か再生を繰り返すと**たまに**発生する
+- ログの順序が異常：
+  ```
+  🎵 [AudioService] Fade in complete
+  🎵 [TrackPlayer] Stopped and reset after fade out  ← 停止してない！
+  🔊 [SafeVolumeLimiter] Resetting configuration state
+  LocalAudioEngine: Sources disabled and suspended
+  🎵 [AudioService] Engine hard-stopped after master fade
+  ```
+
+**根本原因（ふじこさんのRCA）:**
+
+前回の `stop()` / `pause()` でスケジュールされた**遅延停止タスク**が、新しい再生開始後に発火している。
+
+#### 発生メカニズム
+
+1. 1回目の再生開始
+2. ユーザーが停止 → `stop(fadeOut: 0.5)` 呼び出し
+3. **0.5秒後にエンジンを停止するタスク**がスケジュールされる（`DispatchQueue.main.asyncAfter`）
+4. **すぐに2回目の再生開始**（タスクはまだ待機中）
+5. フェードイン完了
+6. **1回目のタスクが発火** ← ここで問題！
+7. 2回目の再生が停止してしまう
+
+#### 問題のあったコード
+
+```swift
+// ❌ キャンセル不可能な幽霊タスク
+DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut) { [weak self] in
+    self?.playerNode.stop()
+    self?.playerNode.reset()
+    print("🎵 [TrackPlayer] Stopped and reset after fade out")
+}
+```
+
+**問題点:**
+- `DispatchWorkItem.cancel()` はフラグを立てるだけ
+- DispatchQueue に積まれたタスクは**実行される**
+- `isCancelled` チェックがないと、キャンセル済みタスクも実行される
+
+#### 解決策：3層防御
+
+##### 第1層：TrackPlayer - `isCancelled` チェック
+
+```swift
+// TrackPlayer.swift
+private var fadeOutWorkItem: DispatchWorkItem?
+
+public func stop(fadeOut: TimeInterval) {
+    fadeOutWorkItem?.cancel()
+    fadeOutWorkItem = nil
+
+    if fadeOut > 0 {
+        var workItem: DispatchWorkItem!
+        workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+
+            // ✅ キャンセルチェック（幽霊タスク無害化）
+            if workItem.isCancelled {
+                print("🎵 [TrackPlayer] Fade-out canceled before execution (ghost task prevented)")
+                return
+            }
+
+            self.playerNode.stop()
+            self.playerNode.reset()
+            self.fadeOutWorkItem = nil
+        }
+
+        fadeOutWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut, execute: workItem)
+    }
+}
+
+public func play(loop: Bool, crossfadeDuration: TimeInterval) {
+    // ✅ 新規再生開始時にキャンセル
+    fadeOutWorkItem?.cancel()
+    fadeOutWorkItem = nil
+
+    // ... 再生処理
+}
+```
+
+##### 第2層：AudioService - 二重停止防止
+
+```swift
+// AudioService.swift
+public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
+    // ✅ 既に停止中なら無視
+    guard isPlaying else {
+        print("⚠️ [AudioService] stop() ignored (not playing)")
+        return
+    }
+    isPlaying = false  // 即座に設定して再入防止
+
+    // ... 停止処理
+}
+```
+
+##### 第3層：AudioService - エンジン停止の世代ガード（最重要）
+
+```swift
+// AudioService.swift
+private var engineStopWorkItem: DispatchWorkItem?
+private var playbackSessionId = UUID()  // 世代ガード
+
+// 再生開始時
+private func _playInternal(preset: NaturalSoundPreset) throws {
+    // ✅ 古いタスクを全てキャンセル
+    print("🎵 [AudioService] Canceling pending stop/fade tasks before new playback")
+    engineStopWorkItem?.cancel()
+    fadeTimer?.invalidate()
+    engineStopWorkItem = nil
+    fadeTimer = nil
+
+    // ✅ 新しいセッションID発行
+    playbackSessionId = UUID()
+    print("🎵 [AudioService] New playback session: \(playbackSessionId)")
+
+    // ... 再生処理
+}
+
+// 停止時
+public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
+    // ... 前処理 ...
+
+    // ✅ WorkItem化 + セッションIDキャプチャ
+    let stopSessionId = playbackSessionId  // 現在の世代を記録
+    engineStopWorkItem?.cancel()
+
+    var workItem: DispatchWorkItem!
+    workItem = DispatchWorkItem { [weak self] in
+        guard let self = self else { return }
+
+        // ✅ 世代ガード：セッション変わってたら無視
+        guard stopSessionId == self.playbackSessionId else {
+            print("🛑 [AudioService] Stale stop ignored (session changed)")
+            return
+        }
+
+        self.engine.stop()
+        self.volumeLimiter.reset()
+        self.engine.disableSources()
+        print("🎵 [AudioService] Engine hard-stopped after master fade")
+    }
+
+    engineStopWorkItem = workItem
+    DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration, execute: workItem)
+}
+```
+
+#### 修正後の正常なログ
+
+```
+🎵 [AudioService] Canceling pending stop/fade tasks before new playback
+🎵 [AudioService] New playback session: <UUID-1>
+🎵 [AudioService] Fade in: 0.0 → 1.0 over 1.0s
+LocalAudioEngine: Master volume set to 1.0
+🎵 [AudioService] Fade in complete
+
+// もし古いタスクが発火した場合（発火しても無害）
+🛑 [AudioService] Stale stop ignored (session changed)
+```
+
+#### なぜこれで止まらなくなるか？
+
+| 防御層 | 仕組み | 効果 |
+|------|--------|------|
+| **TrackPlayer** | `isCancelled` チェック | キャンセル済みタスクは `playerNode.stop()` を実行しない |
+| **AudioService 二重停止防止** | `isPlaying` ガード | 既に停止中なら新しい停止処理を開始しない |
+| **AudioService 世代ガード** | `playbackSessionId` 比較 | セッション変わっていたらエンジン停止しない |
+
+**3層すべてが機能することで、どのタイミングで幽霊タスクが発火しても安全。**
+
+#### 重要な教訓
+
+1. **`DispatchWorkItem.cancel()` だけでは不十分**
+   - キャンセルフラグを立てるだけで、タスクは実行される
+   - **必ず `isCancelled` チェックを入れる**
+
+2. **世代管理が最強の防御**
+   - 各再生セッションにUUIDを割り当て
+   - 古いセッションのタスクは無視
+   - キャンセル漏れがあっても安全
+
+3. **複数箇所で停止処理がある場合は全て対策**
+   - `stop()` / `stopAndWait()` / `pause()`
+   - すべて同じパターンで WorkItem 化
+
+4. **再生開始時に必ずクリーンアップ**
+   - 古いタスクをキャンセル
+   - タイマーを無効化
+   - 新しいセッションIDを発行
+
+---
+
 ## ベストプラクティス
 
 ### 1. セッション管理
@@ -479,30 +678,70 @@ engine.mainMixerNode.outputVolume = dynamicGain
 SafeVolumeLimiter(maxLevel: -6dB)
 ```
 
-### 5. エンジン停止
+### 5. エンジン停止（幽霊タスク防止）
 
 ```swift
-// ✅ 統一された停止処理（ファイル・合成両対応）
+// ✅ WorkItem化 + 世代ガード（幽霊タスク防止）
+private var engineStopWorkItem: DispatchWorkItem?
+private var playbackSessionId = UUID()
+
 public func stop(fadeOut: TimeInterval = 0.5) {
+    guard isPlaying else { return }  // ✅ 二重停止防止
+    isPlaying = false
+
     // TrackPlayer停止
     trackPlayer?.stop(fadeOut: fadeOut)
 
     // マスターフェードアウト
     fadeOut(duration: fadeOut)
 
-    // エンジン停止（必ず実行）
-    DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut) {
-        engine.stop()
-        volumeLimiter.reset()
-        engine.disableSources()
+    // ✅ エンジン停止（WorkItem化 + 世代ガード）
+    let stopSessionId = playbackSessionId  // 現在の世代を記録
+    engineStopWorkItem?.cancel()  // 古いタスクをキャンセル
+
+    var workItem: DispatchWorkItem!
+    workItem = DispatchWorkItem { [weak self] in
+        guard let self = self else { return }
+
+        // ✅ 世代チェック：セッション変わっていたら無視
+        guard stopSessionId == self.playbackSessionId else {
+            print("🛑 [AudioService] Stale stop ignored (session changed)")
+            return
+        }
+
+        self.engine.stop()
+        self.volumeLimiter.reset()
+        self.engine.disableSources()
     }
+
+    engineStopWorkItem = workItem
+    DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut, execute: workItem)
 }
 ```
 
-### 6. エラーハンドリング
+### 6. 再生開始時のクリーンアップ（幽霊タスク防止）
 
 ```swift
-// ✅ 必ず状態をクリーンアップ
+// ✅ 新規再生開始前に古いタスクを全てキャンセル
+private func _playInternal(preset: NaturalSoundPreset) throws {
+    // 古いタスクをキャンセル
+    engineStopWorkItem?.cancel()
+    fadeTimer?.invalidate()
+    engineStopWorkItem = nil
+    fadeTimer = nil
+
+    // 新しいセッションID発行
+    playbackSessionId = UUID()
+    print("🎵 [AudioService] New playback session: \(playbackSessionId)")
+
+    // ... 再生処理
+}
+```
+
+### 7. エラーハンドリング
+
+```swift
+// ✅ 必ず状態をクリーンアップ（幽霊タスクも含む）
 public func play(preset: NaturalSoundPreset) throws {
     do {
         try _playInternal(preset: preset)
@@ -511,9 +750,26 @@ public func play(preset: NaturalSoundPreset) throws {
         throw error
     }
 }
+
+private func cleanupStateOnError() {
+    // ✅ 幽霊タスクをキャンセル
+    engineStopWorkItem?.cancel()
+    fadeTimer?.invalidate()
+    engineStopWorkItem = nil
+    fadeTimer = nil
+
+    isPlaying = false
+    currentPreset = nil
+    currentAudioFile = nil
+
+    if engine.isEngineRunning {
+        engine.stop()
+    }
+    volumeLimiter.reset()
+}
 ```
 
-### 7. モード切替
+### 8. モード切替
 
 ```swift
 // ✅ 完了ハンドラ付き停止
@@ -677,11 +933,66 @@ if !sessionActivated {
 }
 ```
 
+### 停止ボタンを押していないのに止まる（幽霊タスク）
+
+**症状:**
+- 何回か再生・停止を繰り返すと**たまに**発生
+- フェードイン完了直後に突然停止
+
+**診断方法:**
+```
+🎵 [AudioService] Fade in complete
+🎵 [TrackPlayer] Stopped and reset after fade out  ← 幽霊タスク発火！
+🔊 [SafeVolumeLimiter] Resetting configuration state
+🎵 [AudioService] Engine hard-stopped after master fade
+```
+
+**原因:** 前回の `stop()` の遅延停止タスクが残っている
+
+**解決策（既に実装済み）:**
+
+1. **WorkItem化 + `isCancelled` チェック**
+   ```swift
+   var workItem: DispatchWorkItem!
+   workItem = DispatchWorkItem {
+       if workItem.isCancelled { return }  // ✅ 幽霊タスク無害化
+       self.playerNode.stop()
+   }
+   ```
+
+2. **世代ガード（Session ID）**
+   ```swift
+   let stopSessionId = playbackSessionId
+   workItem = DispatchWorkItem {
+       guard stopSessionId == self.playbackSessionId else {
+           print("🛑 Stale stop ignored (session changed)")
+           return
+       }
+       self.engine.stop()
+   }
+   ```
+
+3. **再生開始時にクリーンアップ**
+   ```swift
+   engineStopWorkItem?.cancel()
+   fadeTimer?.invalidate()
+   playbackSessionId = UUID()  // 新世代発行
+   ```
+
+**正常なログ（修正後）:**
+```
+🎵 [AudioService] Canceling pending stop/fade tasks before new playback
+🎵 [AudioService] New playback session: <UUID>
+🎵 [AudioService] Fade in complete
+// 幽霊タスクが発火しても：
+🛑 [AudioService] Stale stop ignored (session changed)  ← 無害化成功
+```
+
 ---
 
 ## まとめ
 
-### 最重要原則（5つ）
+### 最重要原則（6つ）
 
 1. **"Session First, Format Next, Configure Before Start"**
    - セッションアクティベート → フォーマット取得 → Limiter構成 → エンジン起動
@@ -698,8 +1009,15 @@ if !sessionActivated {
    - Appleの自動配線を尊重
    - 全ての音源が統一された経路を通る
 
-5. **エラー時の状態クリーンアップ**
+5. **幽霊タスク防止（最重要）**
+   - `DispatchWorkItem` で遅延タスクを管理
+   - `isCancelled` チェックで幽霊タスクを無害化
+   - 世代ガード（Session ID）で古いタスクを無視
+   - 再生開始時に必ず古いタスクをキャンセル
+
+6. **エラー時の状態クリーンアップ**
    - 必ず`isPlaying`等をリセット
+   - 幽霊タスクもキャンセル
    - UIロックを防ぐ
 
 ### 次のステップ
@@ -711,8 +1029,9 @@ if !sessionActivated {
 ---
 
 **作成日**: 2025-11-11
-**最終更新**: 2025-11-12
+**最終更新**: 2025-11-12 17:30 JST（幽霊タスク対策追加）
 **対象**: TrackPlayer実装者
 **関連**: Phase 3 Audio Integration
+**謝辞**: ふじこさんの詳細なRCAに感謝 🐰
 
 ---
