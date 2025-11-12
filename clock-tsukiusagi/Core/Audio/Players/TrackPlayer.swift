@@ -82,6 +82,15 @@ public final class TrackPlayer: TrackPlaying {
     // MARK: - Public Methods
 
     public func load(url: URL) throws {
+        // 既存のバッファとファイルを明示的にクリア（キャッシュ問題を回避）
+        if playerNode.isPlaying {
+            playerNode.stop()
+        }
+
+        // 既存のバッファを解放
+        buffer = nil
+        audioFile = nil
+
         // ファイルを読み込み
         let file = try AVAudioFile(forReading: url)
         audioFile = file
