@@ -166,18 +166,25 @@ public final class LocalAudioEngine {
     public func disableSources() {
         print("LocalAudioEngine: Disabling sources (count: \(sources.count))")
 
-        // 現在の音源を停止（ノードは接続されたまま）
-        sources.forEach { $0.stop() }
+        // 現在の音源を停止＆サスペンド（ノードは接続されたまま、無音出力）
+        sources.forEach {
+            $0.stop()
+            $0.suspend()  // Silence output + stop diagnostics
+        }
 
         // 次回start()時に音源を起動しない
         shouldStartSources = false
 
-        print("LocalAudioEngine: Sources disabled (nodes remain attached)")
+        print("LocalAudioEngine: Sources disabled and suspended (nodes remain attached, output silenced)")
     }
 
     /// 音源の自動起動を再有効化
     public func enableSources() {
         print("LocalAudioEngine: Re-enabling sources")
+
+        // Resume all sources (restart audio generation and diagnostics)
+        sources.forEach { $0.resume() }
+
         shouldStartSources = true
     }
 

@@ -131,6 +131,9 @@ public final class TrackPlayer: TrackPlaying {
     public func stop(fadeOut: TimeInterval) {
         guard playerNode.isPlaying else { return }
 
+        // Stop looping immediately
+        isLooping = false
+
         if fadeOut > 0 {
             // フェードアウト処理（ボリュームランプを使用）
             let currentVolume = playerNode.volume
@@ -138,14 +141,17 @@ public final class TrackPlayer: TrackPlaying {
 
             // フェード完了後に停止
             DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut) { [weak self] in
-                self?.playerNode.stop()
-                self?.playerNode.volume = currentVolume  // 音量を元に戻す
-                print("🎵 [TrackPlayer] Stopped after fade out")
+                guard let self = self else { return }
+                self.playerNode.stop()
+                self.playerNode.reset()  // Clear pending schedules
+                self.playerNode.volume = currentVolume  // 音量を元に戻す
+                print("🎵 [TrackPlayer] Stopped and reset after fade out")
             }
         } else {
             // 即座に停止
             playerNode.stop()
-            print("🎵 [TrackPlayer] Stopped immediately")
+            playerNode.reset()  // Clear pending schedules
+            print("🎵 [TrackPlayer] Stopped and reset immediately")
         }
     }
 

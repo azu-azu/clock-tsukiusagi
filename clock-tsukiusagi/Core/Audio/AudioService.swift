@@ -221,32 +221,37 @@ public final class AudioService: ObservableObject {
     /// - Parameter fadeOut: フェードアウト時間（秒）
     public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
         print("🎵 [AudioService] stop() called")
-        print("🎵 [AudioService] Call stack:")
-        Thread.callStackSymbols.prefix(10).forEach { print("   \($0)") }
         print("🎵 [AudioService] Current preset: \(String(describing: currentPreset))")
         print("🎵 [AudioService] Current audio file: \(currentAudioFile?.displayName ?? "none")")
 
-        // Stop synthesis engine (if playing)
-        if currentPreset != nil {
-            // フェードアウト
-            self.fadeOut(duration: fadeOutDuration)
-
-            // フェード完了後にエンジンを停止
-            DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) { [weak self] in
-                self?.engine.stop()
-                self?.volumeLimiter.reset()  // Reset limiter state when engine stops
-                print("🎵 [AudioService] Synthesis engine stopped after fade")
-            }
+        // 1) Stop individual players first (if any)
+        var playerFadeDuration: TimeInterval = 0
+        if let player = trackPlayer, player.isPlaying {
+            playerFadeDuration = settings.crossfadeDuration
+            player.stop(fadeOut: playerFadeDuration)
+            print("🎵 [AudioService] TrackPlayer stopped (fade: \(playerFadeDuration)s)")
         }
 
-        // Stop TrackPlayer (if playing audio file)
-        if currentAudioFile != nil {
-            stopTrackPlayer()
+        // 2) Always fade out master volume (regardless of source type)
+        let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
+        self.fadeOut(duration: masterFadeDuration)
+        print("🎵 [AudioService] Master fade out: \(masterFadeDuration)s")
+
+        // 3) ALWAYS stop engine after fade (unified behavior)
+        DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration) { [weak self] in
+            guard let self = self else { return }
+
+            // Stop engine completely
+            self.engine.stop()
+            self.volumeLimiter.reset()
+
+            // Disable sources (suspends timers, keeps nodes attached)
+            self.engine.disableSources()
+
+            print("🎵 [AudioService] Engine hard-stopped after master fade")
         }
 
-        // 経路監視は停止しない（常に監視してUIを更新）
-
-        // Phase 2: Quiet Breakスケジューラーを停止
+        // 4) Cleanup state and auxiliary features
         breakScheduler.stop()
 
         isPlaying = false
@@ -260,8 +265,7 @@ public final class AudioService: ObservableObject {
         // Phase 3: Now Playingをクリア
         nowPlayingController?.clearNowPlaying()
 
-        // セッションはアクティブのまま（高速再開のため）
-        print("🎵 [AudioService] Playback stopping with fade")
+        print("🎵 [AudioService] Playback stopping with unified master fade")
     }
 
     /// 音声再生を一時停止
@@ -823,15 +827,4 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] Audio file playback started successfully")
     }
 
-    /// Stop TrackPlayer
-    private func stopTrackPlayer() {
-        guard let player = trackPlayer, player.isPlaying else { return }
-
-        let fadeOut = settings.crossfadeDuration
-        player.stop(fadeOut: fadeOut)
-
-        currentAudioFile = nil
-
-        print("🎵 [AudioService] TrackPlayer stopped")
-    }
 }
