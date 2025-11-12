@@ -11,11 +11,10 @@ import Foundation
 /// Audio file presets for TrackPlayer
 public enum AudioFilePreset: String, CaseIterable, Identifiable {
     case testTone = "test_tone_440hz"
-    // Future presets:
-    // case pinkNoise = "pink_noise_60s"
-    // case brownNoise = "brown_noise_60s"
-    // case oceanWaves = "ocean_waves_60s"
-    // case rain = "rain_60s"
+    case pinkNoise = "pink_noise_60s"
+    case oceanWaves = "ocean_waves_60s"
+    case rain = "rain_60s"
+    case forestAmbience = "forest_ambience_60s"
 
     public var id: String { rawValue }
 
@@ -24,6 +23,14 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
         switch self {
         case .testTone:
             return "Test Tone (440Hz)"
+        case .pinkNoise:
+            return "Pink Noise"
+        case .oceanWaves:
+            return "Ocean Waves"
+        case .rain:
+            return "Rain"
+        case .forestAmbience:
+            return "Forest Ambience"
         }
     }
 
@@ -63,6 +70,34 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
                 crossfadeDuration: 0.5,
                 fadeInDuration: 0.2,
                 fadeOutDuration: 0.5
+            )
+        case .pinkNoise:
+            return LoopSettings(
+                shouldLoop: true,
+                crossfadeDuration: 2.0,  // Smooth crossfade for seamless loop
+                fadeInDuration: 1.0,
+                fadeOutDuration: 2.0
+            )
+        case .oceanWaves:
+            return LoopSettings(
+                shouldLoop: true,
+                crossfadeDuration: 3.0,  // Longer crossfade for natural wave rhythm
+                fadeInDuration: 2.0,
+                fadeOutDuration: 3.0
+            )
+        case .rain:
+            return LoopSettings(
+                shouldLoop: true,
+                crossfadeDuration: 2.0,
+                fadeInDuration: 1.5,
+                fadeOutDuration: 2.0
+            )
+        case .forestAmbience:
+            return LoopSettings(
+                shouldLoop: true,
+                crossfadeDuration: 3.0,  // Longer for natural ambient transition
+                fadeInDuration: 2.0,
+                fadeOutDuration: 3.0
             )
         }
     }

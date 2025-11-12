@@ -11,7 +11,7 @@ import subprocess
 import os
 
 # Audio parameters
-SAMPLE_RATE = 44100  # Hz
+SAMPLE_RATE = 48000  # Hz
 DURATION = 60  # seconds (1 minute loops)
 OUTPUT_DIR = "../clock-tsukiusagi/Resources/Audio"
 
