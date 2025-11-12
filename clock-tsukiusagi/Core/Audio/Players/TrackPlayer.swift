@@ -149,8 +149,18 @@ public final class TrackPlayer: TrackPlaying {
             playerNode.volume = 0.0
 
             // Create cancellable work item for fade out completion
-            let workItem = DispatchWorkItem { [weak self] in
+            // Note: We need to declare workItem first, then reference it in the closure
+            var workItem: DispatchWorkItem!
+            workItem = DispatchWorkItem { [weak self] in
                 guard let self = self else { return }
+
+                // Check if this work item was cancelled before execution
+                // This prevents "ghost" fade-out tasks from stopping new playback
+                if workItem.isCancelled {
+                    print("🎵 [TrackPlayer] Fade-out canceled before execution (ghost task prevented)")
+                    return
+                }
+
                 self.playerNode.stop()
                 self.playerNode.reset()  // Clear pending schedules
                 self.playerNode.volume = currentVolume  // 音量を元に戻す

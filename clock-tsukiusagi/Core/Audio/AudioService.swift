@@ -240,6 +240,14 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] Current preset: \(String(describing: currentPreset))")
         print("🎵 [AudioService] Current audio file: \(currentAudioFile?.displayName ?? "none")")
 
+        // Prevent duplicate stop() calls (ghost fade-out protection)
+        guard isPlaying else {
+            print("⚠️ [AudioService] stopAndWait() ignored (not playing)")
+            completion()  // Still call completion to unblock caller
+            return
+        }
+        isPlaying = false  // Immediately set to prevent re-entrance
+
         // 1) Stop individual players first (if any)
         var playerFadeDuration: TimeInterval = 0
         if let player = trackPlayer, player.isPlaying {
@@ -269,7 +277,7 @@ public final class AudioService: ObservableObject {
             // 4) Cleanup state and auxiliary features
             self.breakScheduler.stop()
 
-            self.isPlaying = false
+            // isPlaying already set to false at the beginning of stopAndWait()
             self.currentPreset = nil
             self.currentAudioFile = nil
             self.pauseReason = nil
@@ -293,6 +301,13 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] stop() called")
         print("🎵 [AudioService] Current preset: \(String(describing: currentPreset))")
         print("🎵 [AudioService] Current audio file: \(currentAudioFile?.displayName ?? "none")")
+
+        // Prevent duplicate stop() calls (ghost fade-out protection)
+        guard isPlaying else {
+            print("⚠️ [AudioService] stop() ignored (not playing)")
+            return
+        }
+        isPlaying = false  // Immediately set to prevent re-entrance
 
         // 1) Stop individual players first (if any)
         var playerFadeDuration: TimeInterval = 0
@@ -324,7 +339,7 @@ public final class AudioService: ObservableObject {
         // 4) Cleanup state and auxiliary features
         breakScheduler.stop()
 
-        isPlaying = false
+        // isPlaying already set to false at the beginning of stop()
         currentPreset = nil
         currentAudioFile = nil
         pauseReason = nil
