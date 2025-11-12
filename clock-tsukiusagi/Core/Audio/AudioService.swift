@@ -78,6 +78,10 @@ public final class AudioService: ObservableObject {
     private var sessionActivated = false  // セッション二重アクティベート防止フラグ
     private var interruptionObserver: NSObjectProtocol?
 
+    // Ghost task protection: track pending engine stop work items
+    private var engineStopWorkItem: DispatchWorkItem?
+    private var playbackSessionId = UUID()  // Generational guard against stale stops
+
     // MARK: - Initialization
 
     private init() {
@@ -171,6 +175,17 @@ public final class AudioService: ObservableObject {
 
     /// Internal play implementation (allows proper error handling)
     private func _playInternal(preset: NaturalSoundPreset) throws {
+        // Cancel any pending stop/fade tasks from previous session
+        print("🎵 [AudioService] Canceling pending stop/fade tasks before new playback")
+        engineStopWorkItem?.cancel()
+        fadeTimer?.invalidate()
+        engineStopWorkItem = nil
+        fadeTimer = nil
+
+        // Generate new playback session ID
+        playbackSessionId = UUID()
+        print("🎵 [AudioService] New playback session: \(playbackSessionId)")
+
         // セッションを一度だけアクティベート
         if !sessionActivated {
             do {
@@ -262,8 +277,20 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] Master fade out: \(masterFadeDuration)s")
 
         // 3) ALWAYS stop engine after fade (unified behavior)
-        DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration) { [weak self] in
+        // Use cancellable WorkItem to prevent ghost stop tasks
+        let stopSessionId = playbackSessionId  // Capture current session ID
+        engineStopWorkItem?.cancel()  // Cancel any pending stop from previous session
+
+        var workItem: DispatchWorkItem!
+        workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
+
+            // Ghost task protection: ignore if session has changed
+            guard stopSessionId == self.playbackSessionId else {
+                print("🛑 [AudioService] Stale stop ignored (session changed)")
+                completion()  // Still call completion to unblock caller
+                return
+            }
 
             // Stop engine completely
             self.engine.stop()
@@ -293,6 +320,9 @@ public final class AudioService: ObservableObject {
             // Call completion handler
             completion()
         }
+
+        engineStopWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration, execute: workItem)
     }
 
     /// 音声再生を停止
@@ -323,8 +353,19 @@ public final class AudioService: ObservableObject {
         print("🎵 [AudioService] Master fade out: \(masterFadeDuration)s")
 
         // 3) ALWAYS stop engine after fade (unified behavior)
-        DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration) { [weak self] in
+        // Use cancellable WorkItem to prevent ghost stop tasks
+        let stopSessionId = playbackSessionId  // Capture current session ID
+        engineStopWorkItem?.cancel()  // Cancel any pending stop from previous session
+
+        var workItem: DispatchWorkItem!
+        workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
+
+            // Ghost task protection: ignore if session has changed
+            guard stopSessionId == self.playbackSessionId else {
+                print("🛑 [AudioService] Stale stop ignored (session changed)")
+                return
+            }
 
             // Stop engine completely
             self.engine.stop()
@@ -335,6 +376,9 @@ public final class AudioService: ObservableObject {
 
             print("🎵 [AudioService] Engine hard-stopped after master fade")
         }
+
+        engineStopWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration, execute: workItem)
 
         // 4) Cleanup state and auxiliary features
         breakScheduler.stop()
@@ -361,11 +405,26 @@ public final class AudioService: ObservableObject {
         // フェードアウト
         fadeOut(duration: 0.5)
 
-        // フェード完了後にエンジンを停止
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.engine.stop()
+        // フェード完了後にエンジンを停止（幽霊タスク防止）
+        let pauseSessionId = playbackSessionId
+        engineStopWorkItem?.cancel()
+
+        var workItem: DispatchWorkItem!
+        workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+
+            // Ghost task protection
+            guard pauseSessionId == self.playbackSessionId else {
+                print("🛑 [AudioService] Stale pause-stop ignored (session changed)")
+                return
+            }
+
+            self.engine.stop()
             print("⚠️ [AudioService] Engine stopped after fade")
         }
+
+        engineStopWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
 
         pauseReason = reason
         isPlaying = false
@@ -447,8 +506,10 @@ public final class AudioService: ObservableObject {
     private func cleanupStateOnError() {
         print("🧹 [AudioService] Cleaning up state after error")
 
-        // Stop fade timer if running
+        // Cancel any pending stop/fade tasks
+        engineStopWorkItem?.cancel()
         fadeTimer?.invalidate()
+        engineStopWorkItem = nil
         fadeTimer = nil
 
         // Reset playback state
@@ -878,6 +939,17 @@ public final class AudioService: ObservableObject {
 
     /// Internal playAudioFile implementation (allows proper error handling)
     private func _playAudioFileInternal(_ audioFile: AudioFilePreset) throws {
+        // Cancel any pending stop/fade tasks from previous session
+        print("🎵 [AudioService] Canceling pending stop/fade tasks before new file playback")
+        engineStopWorkItem?.cancel()
+        fadeTimer?.invalidate()
+        engineStopWorkItem = nil
+        fadeTimer = nil
+
+        // Generate new playback session ID
+        playbackSessionId = UUID()
+        print("🎵 [AudioService] New playback session: \(playbackSessionId)")
+
         // Stop any currently playing audio (synthesis or file)
         if isPlaying {
             print("🎵 [AudioService] Stopping current playback before file playback")
