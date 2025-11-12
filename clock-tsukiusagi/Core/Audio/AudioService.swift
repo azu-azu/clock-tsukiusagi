@@ -792,9 +792,14 @@ public final class AudioService: ObservableObject {
         try engine.start(startSources: false)
 
         // Phase 2: Configure SafeVolumeLimiter AFTER engine is running
-        // This creates the path: masterBusMixer → Limiter → mainMixer → output
-        let format = engine.engine.outputNode.inputFormat(forBus: 0)
-        volumeLimiter.configure(engine: engine.engine, format: format)
+        // CRITICAL: Use file's format (not output format) to avoid format mismatch
+        // The audio path needs consistent sample rate and channel count:
+        // TrackPlayer (file format) → masterBusMixer → Limiter → mainMixer → output
+        volumeLimiter.configure(engine: engine.engine, format: fileFormat)
+
+        print("🎵 [AudioService] Limiter configured with file format:")
+        print("   Sample rate: \(fileFormat.sampleRate) Hz")
+        print("   Channels: \(fileFormat.channelCount)")
 
         // Load audio file
         try trackPlayer?.load(url: url)

@@ -108,11 +108,12 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         engine.disconnectNodeOutput(limiterNode)
 
         // Connect: masterBusMixer → Limiter → mainMixerNode
-        // (mainMixerNode → outputNode is Apple's automatic connection)
+        // CRITICAL: Use provided format for masterBusMixer→Limiter connection
+        // Use nil format for Limiter→mainMixer to allow automatic format conversion
         engine.connect(masterBusMixer, to: limiterNode, format: format)
-        engine.connect(limiterNode, to: engine.mainMixerNode, format: format)
+        engine.connect(limiterNode, to: engine.mainMixerNode, format: nil)  // Auto-conversion
 
-        print("   ✅ Audio path: masterBusMixer → limiter → mainMixer → output")
+        print("   ✅ Audio path: masterBusMixer → limiter (\(format.sampleRate)Hz/\(format.channelCount)ch) → mainMixer (auto) → output")
 
         // Configure limiter settings
         updateLimiterSettings()
