@@ -11,37 +11,37 @@ import os
 import subprocess
 
 OUTPUT_DIR = "../clock-tsukiusagi/Resources/Audio"
-SAMPLE_RATE = 44100
+SAMPLE_RATE = 48000
 DURATION = 5  # 5 seconds test tone
 
-def generate_sine_wave(frequency, duration, sample_rate, amplitude=0.3):
-    """Generate sine wave samples"""
-    num_samples = int(duration * sample_rate)
+def generate_sine_wave(freq, duration, sr, amplitude=0.2):
+    # ループ周期=1200サンプル（48k/440=1200/11 → 基本周期は1200）
+    base_period = 1200
+    total_samples = int(round(duration * sr))
+    # 念のため1200の倍数に丸める
+    total_samples = (total_samples // base_period) * base_period
     samples = []
 
-    for i in range(num_samples):
-        # Calculate sine wave value
-        t = i / sample_rate
-        value = amplitude * math.sin(2 * math.pi * frequency * t)
+    fade_ms = 80  # 80ms 等電力フェード
+    fade_samples = int(sr * (fade_ms / 1000.0))
+    fade_samples = max(1, min(fade_samples, total_samples // 4))
 
-        # Apply fade in/out for seamless loop
-        fade_samples = int(0.1 * sample_rate)  # 100ms fade
+    def cosine_fade(g):
+        return 0.5 * (1 - math.cos(math.pi * g))  # 等電力フェード
+
+    for i in range(total_samples):
+        t = i / sr
+        v = amplitude * math.sin(2.0 * math.pi * freq * t)
 
         if i < fade_samples:
-            # Fade in
-            fade_factor = i / fade_samples
-            value *= fade_factor
-        elif i > num_samples - fade_samples:
-            # Fade out
-            fade_factor = (num_samples - i) / fade_samples
-            value *= fade_factor
+            v *= cosine_fade(i / fade_samples)
+        elif i > total_samples - fade_samples - 1:
+            pos = total_samples - 1 - i
+            v *= cosine_fade(pos / fade_samples)
 
-        # Convert to 16-bit PCM
-        sample = int(value * 32767)
-        sample = max(-32768, min(32767, sample))  # Clamp
-        samples.append(sample)
-
+        samples.append(v)
     return samples
+
 
 def save_wav(samples, filename, sample_rate):
     """Save samples as WAV file"""
@@ -53,8 +53,11 @@ def save_wav(samples, filename, sample_rate):
         wav_file.setsampwidth(2)  # 16-bit
         wav_file.setframerate(sample_rate)
 
+        # Convert float samples to 16-bit integers
+        int_samples = [int(s * 32767) for s in samples]
+
         # Pack samples as little-endian 16-bit integers
-        packed_samples = struct.pack('<' + 'h' * len(samples), *samples)
+        packed_samples = struct.pack('<' + 'h' * len(int_samples), *int_samples)
         wav_file.writeframes(packed_samples)
 
     print(f"✓ Generated: {filepath}")
