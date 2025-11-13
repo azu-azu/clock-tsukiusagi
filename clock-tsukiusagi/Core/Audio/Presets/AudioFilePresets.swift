@@ -145,6 +145,14 @@ extension NaturalSoundPreset {
             return nil  // Uses synthesis (AmbientDrone)
         case .ambientSleep:
             return nil  // Uses synthesis (AmbientDrone)
+        case .windChime:
+            return nil  // Uses synthesis (WindChime)
+        case .tibetanBowl:
+            return nil  // Uses synthesis (TibetanBowl)
+        case .oceanWaves:
+            return nil  // Uses synthesis (OceanWaves)
+        case .cracklingFire:
+            return nil  // Uses synthesis (CracklingFire)
         }
     }
 }

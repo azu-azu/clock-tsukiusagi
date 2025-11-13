@@ -780,6 +780,50 @@ public final class AudioService: ObservableObject {
                 lfoAmplitudeDepth: NaturalSoundPresets.AmbientSleep.lfoAmplitudeDepth
             )
             engine.register(source)
+
+        case .windChime:
+            let source = WindChime(
+                frequencies: NaturalSoundPresets.WindChime.frequencies,
+                amplitude: NaturalSoundPresets.WindChime.amplitude,
+                minInterval: NaturalSoundPresets.WindChime.minInterval,
+                maxInterval: NaturalSoundPresets.WindChime.maxInterval,
+                attackTime: NaturalSoundPresets.WindChime.attackTime,
+                decayTime: NaturalSoundPresets.WindChime.decayTime,
+                sustainLevel: NaturalSoundPresets.WindChime.sustainLevel,
+                releaseTime: NaturalSoundPresets.WindChime.releaseTime
+            )
+            engine.register(source)
+
+        case .tibetanBowl:
+            let source = TibetanBowl(
+                fundamentalFrequency: NaturalSoundPresets.TibetanBowl.fundamentalFrequency,
+                amplitude: NaturalSoundPresets.TibetanBowl.amplitude,
+                harmonics: NaturalSoundPresets.TibetanBowl.harmonics,
+                vibratoFrequency: NaturalSoundPresets.TibetanBowl.vibratoFrequency,
+                vibratoDepth: NaturalSoundPresets.TibetanBowl.vibratoDepth
+            )
+            engine.register(source)
+
+        case .oceanWaves:
+            let source = OceanWaves(
+                noiseAmplitude: NaturalSoundPresets.OceanWaves.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.OceanWaves.lfoFrequency,
+                lfoDepth: NaturalSoundPresets.OceanWaves.lfoDepth,
+                lfoMinimum: NaturalSoundPresets.OceanWaves.lfoMinimum,
+                lfoMaximum: NaturalSoundPresets.OceanWaves.lfoMaximum
+            )
+            engine.register(source)
+
+        case .cracklingFire:
+            let source = CracklingFire(
+                baseAmplitude: NaturalSoundPresets.CracklingFire.baseAmplitude,
+                pulseAmplitude: NaturalSoundPresets.CracklingFire.pulseAmplitude,
+                minInterval: NaturalSoundPresets.CracklingFire.pulseMinInterval,
+                maxInterval: NaturalSoundPresets.CracklingFire.pulseMaxInterval,
+                minPulseDuration: NaturalSoundPresets.CracklingFire.pulseMinDuration,
+                maxPulseDuration: NaturalSoundPresets.CracklingFire.pulseMaxDuration
+            )
+            engine.register(source)
         }
     }
 

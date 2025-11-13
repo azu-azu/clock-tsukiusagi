@@ -20,6 +20,10 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     case ambientFocus       // Endel風 Focus（集中・前向き）
     case ambientRelax       // Endel風 Relax（落ち着く・緩む）
     case ambientSleep       // Endel風 Sleep（眠る・静寂）
+    case windChime          // 癒しチャイム
+    case tibetanBowl        // チベタンボウル風
+    case oceanWaves         // 波の音
+    case cracklingFire      // 焚き火の音
 
     public var id: String { rawValue }
 
@@ -46,6 +50,14 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
             return "リラックスモード (Relax)"
         case .ambientSleep:
             return "睡眠モード (Sleep)"
+        case .windChime:
+            return "癒しチャイム"
+        case .tibetanBowl:
+            return "チベタンボウル"
+        case .oceanWaves:
+            return "波の音"
+        case .cracklingFire:
+            return "焚き火の音"
         }
     }
 }
@@ -259,5 +271,110 @@ public struct NaturalSoundPresets {
 
         /// 音量LFO深さ
         public static let lfoAmplitudeDepth: Double = 0.15
+    }
+
+    // MARK: - Wind Chime（癒しチャイム）
+
+    /// 癒しチャイムプリセット設定
+    public struct WindChime {
+        /// ペンタトニックスケールの周波数（Hz）
+        public static let frequencies: [Double] = [
+            1047.0,  // C6
+            1175.0,  // D6
+            1319.0,  // E6
+            1568.0,  // G6
+            1760.0,  // A6
+            2093.0   // C7
+        ]
+
+        /// 音量
+        public static let amplitude: Double = 0.3
+
+        /// ランダムトリガー最小間隔
+        public static let minInterval: Double = 2.0
+
+        /// ランダムトリガー最大間隔
+        public static let maxInterval: Double = 8.0
+
+        /// エンベロープ - アタック時間
+        public static let attackTime: Double = 0.01
+
+        /// エンベロープ - ディケイ時間
+        public static let decayTime: Double = 3.0
+
+        /// エンベロープ - サステインレベル
+        public static let sustainLevel: Double = 0.0
+
+        /// エンベロープ - リリース時間
+        public static let releaseTime: Double = 1.0
+    }
+
+    // MARK: - Tibetan Bowl（チベタンボウル風）
+
+    /// チベタンボウル風プリセット設定
+    public struct TibetanBowl {
+        /// 基音の周波数
+        public static let fundamentalFrequency: Double = 220.0  // A3
+
+        /// 全体の音量
+        public static let amplitude: Double = 0.2
+
+        /// 倍音構造
+        public static let harmonics: [Harmonic] = [
+            Harmonic(multiplier: 1.0, amplitude: 1.0),   // 基音
+            Harmonic(multiplier: 2.0, amplitude: 0.7),   // 2倍音
+            Harmonic(multiplier: 3.0, amplitude: 0.5),   // 3倍音
+            Harmonic(multiplier: 4.0, amplitude: 0.3),   // 4倍音
+            Harmonic(multiplier: 5.0, amplitude: 0.2)    // 5倍音
+        ]
+
+        /// ビブラートLFO周波数
+        public static let vibratoFrequency: Double = 5.0
+
+        /// ビブラート深さ（周波数変調）
+        public static let vibratoDepth: Double = 0.02
+    }
+
+    // MARK: - Ocean Waves（波の音）
+
+    /// 波の音プリセット設定
+    public struct OceanWaves {
+        /// ベースノイズ音量
+        public static let noiseAmplitude: Float = 0.3
+
+        /// LFO周波数（波の強弱周期）
+        public static let lfoFrequency: Double = 0.2  // 5秒周期
+
+        /// LFO深さ
+        public static let lfoDepth: Double = 0.8
+
+        /// LFO最小値（音量）
+        public static let lfoMinimum: Double = 0.1
+
+        /// LFO最大値（音量）
+        public static let lfoMaximum: Double = 0.6
+    }
+
+    // MARK: - Crackling Fire（焚き火の音）
+
+    /// 焚き火の音プリセット設定
+    public struct CracklingFire {
+        /// ベースノイズ音量
+        public static let baseAmplitude: Float = 0.25
+
+        /// パルス音量
+        public static let pulseAmplitude: Float = 0.6
+
+        /// パルス最小間隔
+        public static let pulseMinInterval: Double = 0.5
+
+        /// パルス最大間隔
+        public static let pulseMaxInterval: Double = 3.0
+
+        /// パルス最小持続時間
+        public static let pulseMinDuration: Double = 0.01
+
+        /// パルス最大持続時間
+        public static let pulseMaxDuration: Double = 0.05
     }
 }
