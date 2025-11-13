@@ -11,15 +11,16 @@ import AVFoundation
 
 /// テスト用の音源タイプ
 enum TestSoundType: String, CaseIterable {
-    case clickSuppression = "🔇 クリック音防止（合成）"
-    case audioFile = "🎵 音源ファイル"
+    case synthesis = "🎵 合成音源"
+    case audioFile = "📁 音源ファイル"
 }
 
 /// オーディオテストビュー
 struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
 
-    @State private var selectedSound: TestSoundType = .clickSuppression
+    @State private var selectedSound: TestSoundType = .synthesis
+    @State private var selectedSynthesisPreset: NaturalSoundPreset = .clickSuppression
     @State private var selectedAudioFile: AudioFilePreset = .testTone
 
     @State private var errorMessage: String?
@@ -63,7 +64,7 @@ struct AudioTestView: View {
             Text("音源選択")
                 .font(.headline)
 
-            // Sound type picker
+            // Sound type picker (Segmented: Synthesis vs Audio File)
             Picker("音源タイプ", selection: $selectedSound) {
                 ForEach(TestSoundType.allCases, id: \.self) { type in
                     Text(type.rawValue).tag(type)
@@ -72,10 +73,25 @@ struct AudioTestView: View {
             .pickerStyle(.segmented)
             .disabled(audioService.isPlaying)
 
+            Divider()
+
+            // Synthesis preset picker (if synthesis type selected)
+            if selectedSound == .synthesis {
+                Picker("合成プリセット", selection: $selectedSynthesisPreset) {
+                    ForEach(NaturalSoundPreset.allCases) { preset in
+                        Text(preset.displayName).tag(preset)
+                    }
+                }
+                .pickerStyle(.menu)
+                .disabled(audioService.isPlaying)
+
+                Text("🎵 \(selectedSynthesisPreset.displayName)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
             // Audio file picker (if audio file type selected)
             if selectedSound == .audioFile {
-                Divider()
-
                 Picker("ファイル", selection: $selectedAudioFile) {
                     ForEach(AudioFilePreset.allCases) { preset in
                         Text(preset.displayName).tag(preset)
@@ -208,12 +224,12 @@ struct AudioTestView: View {
                     .foregroundColor(.secondary)
 
                 switch selectedSound {
-                case .clickSuppression:
-                    Text("🔇 クリック音防止（合成）")
+                case .synthesis:
+                    Text("🎵 \(selectedSynthesisPreset.displayName)")
                         .font(.caption)
                         .foregroundColor(.primary)
                 case .audioFile:
-                    Text("🎵 \(selectedAudioFile.displayName)")
+                    Text("📁 \(selectedAudioFile.displayName)")
                         .font(.caption)
                         .foregroundColor(.primary)
                 }
@@ -243,10 +259,10 @@ struct AudioTestView: View {
 
             // 選択された音源タイプに応じて再生
             switch selectedSound {
-            case .clickSuppression:
-                // 合成音源（ClickSuppressionDrone）
-                print("🎵 AudioTestView: → Playing SYNTHESIZED audio (ClickSuppressionDrone)")
-                try audioService.play(preset: .clickSuppression)
+            case .synthesis:
+                // 合成音源
+                print("🎵 AudioTestView: → Playing SYNTHESIZED audio (\(selectedSynthesisPreset.displayName))")
+                try audioService.play(preset: selectedSynthesisPreset)
 
             case .audioFile:
                 // 音源ファイル（TrackPlayer）

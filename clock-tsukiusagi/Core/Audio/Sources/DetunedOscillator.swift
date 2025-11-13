@@ -9,6 +9,11 @@
 import AVFoundation
 import Foundation
 
+// Helper class for shared mutable state in closures
+private final class AudioState {
+    var isSuspended = false
+}
+
 /// デチューンされた複数のオシレータを組み合わせた音源
 /// Fujiko設計原則: 純粋なサイン波は刺激的すぎるため、わずかにずらした複数の波を重ねる
 public final class DetunedOscillator: AudioSource {
@@ -16,6 +21,9 @@ public final class DetunedOscillator: AudioSource {
 
     private let _sourceNode: AVAudioSourceNode
     public var sourceNode: AVAudioNode { _sourceNode }
+
+    // Suspend/resume control (shared with render callback)
+    private let audioState = AudioState()
 
     private var phases: [Double] = []
     private var frequencies: [Double] = []
@@ -59,8 +67,24 @@ public final class DetunedOscillator: AudioSource {
         let localNoiseLevel = noiseLevel
         let twoPi = self.twoPi
 
+        // Capture audio state for suspend/resume control
+        let state = audioState
+
         _sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
+
+            // If suspended, output silence
+            if state.isSuspended {
+                for buffer in abl {
+                    guard let data = buffer.mData else { continue }
+                    let samples = data.assumingMemoryBound(to: Float.self)
+                    for frame in 0..<Int(frameCount) {
+                        samples[frame] = 0.0
+                    }
+                }
+                return noErr
+            }
+
             let sampleRate = 44100.0
 
             for frame in 0..<Int(frameCount) {
@@ -116,6 +140,16 @@ public final class DetunedOscillator: AudioSource {
 
     public func stop() {
         // ソースノードは自動的に停止するため、特に処理は不要
+    }
+
+    public func suspend() {
+        audioState.isSuspended = true
+        print("🎵 [DetunedOscillator] Suspended (output silence)")
+    }
+
+    public func resume() {
+        audioState.isSuspended = false
+        print("🎵 [DetunedOscillator] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {

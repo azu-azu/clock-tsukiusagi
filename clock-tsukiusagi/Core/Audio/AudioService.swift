@@ -688,6 +688,96 @@ public final class AudioService: ObservableObject {
                 reverbWetDryMix: NaturalSoundPresets.ClickSuppression.reverbWetDryMix
             )
             engine.register(source)
+
+        case .pinkNoise:
+            let source = PinkNoise(
+                amplitude: NaturalSoundPresets.PinkNoise.amplitude
+            )
+            engine.register(source)
+
+        case .brownNoise:
+            let source = BrownNoise(
+                amplitude: NaturalSoundPresets.BrownNoise.amplitude
+            )
+            engine.register(source)
+
+        case .pleasantDrone:
+            let source = PleasantDrone(
+                rootFrequency: NaturalSoundPresets.PleasantDrone.rootFrequency,
+                chordType: NaturalSoundPresets.PleasantDrone.chordType,
+                amplitude: NaturalSoundPresets.PleasantDrone.amplitude,
+                amplitudeLFOFrequency: NaturalSoundPresets.PleasantDrone.amplitudeLFOFrequency,
+                pitchLFOFrequency: NaturalSoundPresets.PleasantDrone.pitchLFOFrequency,
+                pitchLFODepth: NaturalSoundPresets.PleasantDrone.pitchLFODepth,
+                noiseLevel: NaturalSoundPresets.PleasantDrone.noiseLevel
+            )
+            engine.register(source)
+
+        case .pleasantWarm:
+            let source = DetunedOscillator(
+                baseFrequency: NaturalSoundPresets.PleasantWarm.baseFrequency,
+                detuneAmount: NaturalSoundPresets.PleasantWarm.detuneAmount,
+                oscillatorCount: NaturalSoundPresets.PleasantWarm.oscillatorCount,
+                amplitude: NaturalSoundPresets.PleasantWarm.amplitude,
+                noiseLevel: NaturalSoundPresets.PleasantWarm.noiseLevel
+            )
+            engine.register(source)
+
+        case .pleasantCalm:
+            let source = DetunedOscillator(
+                baseFrequency: NaturalSoundPresets.PleasantCalm.baseFrequency,
+                detuneAmount: NaturalSoundPresets.PleasantCalm.detuneAmount,
+                oscillatorCount: NaturalSoundPresets.PleasantCalm.oscillatorCount,
+                amplitude: NaturalSoundPresets.PleasantCalm.amplitude,
+                noiseLevel: NaturalSoundPresets.PleasantCalm.noiseLevel
+            )
+            engine.register(source)
+
+        case .pleasantDeep:
+            let source = DetunedOscillator(
+                baseFrequency: NaturalSoundPresets.PleasantDeep.baseFrequency,
+                detuneAmount: NaturalSoundPresets.PleasantDeep.detuneAmount,
+                oscillatorCount: NaturalSoundPresets.PleasantDeep.oscillatorCount,
+                amplitude: NaturalSoundPresets.PleasantDeep.amplitude,
+                noiseLevel: NaturalSoundPresets.PleasantDeep.noiseLevel
+            )
+            engine.register(source)
+
+        case .ambientFocus:
+            let source = AmbientDrone(
+                noiseType: NaturalSoundPresets.AmbientFocus.noiseType,
+                noiseAmplitude: NaturalSoundPresets.AmbientFocus.noiseAmplitude,
+                sineFrequencies: NaturalSoundPresets.AmbientFocus.sineFrequencies,
+                sineAmplitude: NaturalSoundPresets.AmbientFocus.sineAmplitude,
+                detuneAmount: NaturalSoundPresets.AmbientFocus.detuneAmount,
+                lfoAmplitudeFrequency: NaturalSoundPresets.AmbientFocus.lfoAmplitudeFrequency,
+                lfoAmplitudeDepth: NaturalSoundPresets.AmbientFocus.lfoAmplitudeDepth
+            )
+            engine.register(source)
+
+        case .ambientRelax:
+            let source = AmbientDrone(
+                noiseType: NaturalSoundPresets.AmbientRelax.noiseType,
+                noiseAmplitude: NaturalSoundPresets.AmbientRelax.noiseAmplitude,
+                sineFrequencies: NaturalSoundPresets.AmbientRelax.sineFrequencies,
+                sineAmplitude: NaturalSoundPresets.AmbientRelax.sineAmplitude,
+                detuneAmount: NaturalSoundPresets.AmbientRelax.detuneAmount,
+                lfoAmplitudeFrequency: NaturalSoundPresets.AmbientRelax.lfoAmplitudeFrequency,
+                lfoAmplitudeDepth: NaturalSoundPresets.AmbientRelax.lfoAmplitudeDepth
+            )
+            engine.register(source)
+
+        case .ambientSleep:
+            let source = AmbientDrone(
+                noiseType: NaturalSoundPresets.AmbientSleep.noiseType,
+                noiseAmplitude: NaturalSoundPresets.AmbientSleep.noiseAmplitude,
+                sineFrequencies: NaturalSoundPresets.AmbientSleep.sineFrequencies,
+                sineAmplitude: NaturalSoundPresets.AmbientSleep.sineAmplitude,
+                detuneAmount: NaturalSoundPresets.AmbientSleep.detuneAmount,
+                lfoAmplitudeFrequency: NaturalSoundPresets.AmbientSleep.lfoAmplitudeFrequency,
+                lfoAmplitudeDepth: NaturalSoundPresets.AmbientSleep.lfoAmplitudeDepth
+            )
+            engine.register(source)
         }
     }
 

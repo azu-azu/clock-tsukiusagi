@@ -9,6 +9,11 @@
 import AVFoundation
 import Foundation
 
+// Helper class for shared mutable state in closures
+private final class AudioState {
+    var isSuspended = false
+}
+
 /// ブラウンノイズ生成器
 /// Fujiko設計: Sleep向け - 低域中心、胎内音に近い
 public final class BrownNoise: AudioSource {
@@ -18,6 +23,9 @@ public final class BrownNoise: AudioSource {
     public var sourceNode: AVAudioNode { _sourceNode }
 
     private let amplitude: Double
+
+    // Suspend/resume control (shared with render callback)
+    private let audioState = AudioState()
 
     // MARK: - Initialization
 
@@ -30,8 +38,23 @@ public final class BrownNoise: AudioSource {
         var runningSum: Double = 0.0
         let localAmplitude = amplitude
 
+        // Capture audio state for suspend/resume control
+        let state = audioState
+
         _sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
+
+            // If suspended, output silence
+            if state.isSuspended {
+                for buffer in abl {
+                    guard let data = buffer.mData else { continue }
+                    let samples = data.assumingMemoryBound(to: Float.self)
+                    for frame in 0..<Int(frameCount) {
+                        samples[frame] = 0.0
+                    }
+                }
+                return noErr
+            }
 
             for frame in 0..<Int(frameCount) {
                 // ランダムなステップを追加（積分）
@@ -68,6 +91,16 @@ public final class BrownNoise: AudioSource {
 
     public func stop() {
         // ソースノードは自動的に停止
+    }
+
+    public func suspend() {
+        audioState.isSuspended = true
+        print("🎵 [BrownNoise] Suspended (output silence)")
+    }
+
+    public func resume() {
+        audioState.isSuspended = false
+        print("🎵 [BrownNoise] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {

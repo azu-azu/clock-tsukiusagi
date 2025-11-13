@@ -10,6 +10,11 @@
 import AVFoundation
 import Foundation
 
+// Helper class for shared mutable state in closures
+private final class AudioState {
+    var isSuspended = false
+}
+
 /// アンビエントドローン音源
 /// Fujiko設計原則: "音楽を鳴らす"のではなく、"静寂をどう揺らすか"をデザインする
 public final class AmbientDrone: AudioSource {
@@ -17,6 +22,9 @@ public final class AmbientDrone: AudioSource {
 
     private let _sourceNode: AVAudioSourceNode
     public var sourceNode: AVAudioNode { _sourceNode }
+
+    // Suspend/resume control (shared with render callback)
+    private let audioState = AudioState()
 
     // MARK: - Initialization
 
@@ -60,9 +68,25 @@ public final class AmbientDrone: AudioSource {
         let localLFOFrequency = lfoAmplitudeFrequency
         let localLFODepth = lfoAmplitudeDepth
 
+        // Capture audio state for suspend/resume control
+        let state = audioState
+
         // AVAudioSourceNode を作成
         _sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
+
+            // If suspended, output silence
+            if state.isSuspended {
+                for buffer in abl {
+                    guard let data = buffer.mData else { continue }
+                    let samples = data.assumingMemoryBound(to: Float.self)
+                    for frame in 0..<Int(frameCount) {
+                        samples[frame] = 0.0
+                    }
+                }
+                return noErr
+            }
+
             let sampleRate = 44100.0
             let deltaTime = 1.0 / sampleRate
 
@@ -124,6 +148,16 @@ public final class AmbientDrone: AudioSource {
 
     public func stop() {
         // ソースノードは自動的に停止
+    }
+
+    public func suspend() {
+        audioState.isSuspended = true
+        print("🎵 [AmbientDrone] Suspended (output silence)")
+    }
+
+    public func resume() {
+        audioState.isSuspended = false
+        print("🎵 [AmbientDrone] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {

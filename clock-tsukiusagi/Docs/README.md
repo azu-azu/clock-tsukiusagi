@@ -79,6 +79,7 @@
 - [`report-task-terminology-migration.md`](./report-task-terminology-migration.md) - Task用語移行レポート
 
 ### 🔧 トラブルシューティング
+- [`trouble-audio-distortion-noise.md`](./trouble-audio-distortion-noise.md) - AVAudioUnitDistortion雑音問題RCA（最重要）
 - [`trouble-audio-no-sound-silent-switch.md`](./trouble-audio-no-sound-silent-switch.md) - オーディオ無音問題（サイレントスイッチ）RCA
 - [`trouble-cursor-swift.md`](./trouble-cursor-swift.md) - Cursor Swift拡張のトラブルシューティング
 

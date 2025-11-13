@@ -126,9 +126,25 @@ extension NaturalSoundPreset {
     public var audioFilePreset: AudioFilePreset? {
         switch self {
         case .clickSuppression:
-            // Currently uses synthesis (ClickSuppressionDrone)
-            // Future: Could optionally use pre-recorded pink noise
-            return nil
+            return nil  // Uses synthesis (ClickSuppressionDrone)
+        case .pinkNoise:
+            return nil  // Uses synthesis (PinkNoise)
+        case .brownNoise:
+            return nil  // Uses synthesis (BrownNoise)
+        case .pleasantDrone:
+            return nil  // Uses synthesis (PleasantDrone)
+        case .pleasantWarm:
+            return nil  // Uses synthesis (DetunedOscillator)
+        case .pleasantCalm:
+            return nil  // Uses synthesis (DetunedOscillator)
+        case .pleasantDeep:
+            return nil  // Uses synthesis (DetunedOscillator)
+        case .ambientFocus:
+            return nil  // Uses synthesis (AmbientDrone)
+        case .ambientRelax:
+            return nil  // Uses synthesis (AmbientDrone)
+        case .ambientSleep:
+            return nil  // Uses synthesis (AmbientDrone)
         }
     }
 }

@@ -9,6 +9,11 @@
 import AVFoundation
 import Foundation
 
+// Helper class for shared mutable state in closures
+private final class AudioState {
+    var isSuspended = false
+}
+
 /// 和音ベースのドローン音源（LFO変調付き）
 /// Fujiko設計原則: 持続音にゆっくりとした変化（呼吸感）を与える
 public final class PleasantDrone: AudioSource {
@@ -19,6 +24,9 @@ public final class PleasantDrone: AudioSource {
 
     private let chordFrequencies: [Double]  // 和音を構成する周波数
     private let baseAmplitude: Double
+
+    // Suspend/resume control (shared with render callback)
+    private let audioState = AudioState()
 
     // MARK: - Initialization
 
@@ -63,11 +71,26 @@ public final class PleasantDrone: AudioSource {
         let localPitchLFODepth = pitchLFODepth
         let localNoiseLevel = noiseLevel
 
+        // Capture audio state for suspend/resume control
+        let state = audioState
+
         // AVAudioSourceNode を作成
         _sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
             let sampleRate = 44100.0
             let deltaTime = 1.0 / sampleRate
+
+            // If suspended, output silence
+            if state.isSuspended {
+                for buffer in abl {
+                    guard let data = buffer.mData else { continue }
+                    let samples = data.assumingMemoryBound(to: Float.self)
+                    for frame in 0..<Int(frameCount) {
+                        samples[frame] = 0.0
+                    }
+                }
+                return noErr
+            }
 
             for frame in 0..<Int(frameCount) {
                 // LFO値を計算
@@ -149,6 +172,16 @@ public final class PleasantDrone: AudioSource {
 
     public func stop() {
         // ソースノードは自動的に停止
+    }
+
+    public func suspend() {
+        audioState.isSuspended = true
+        print("🎵 [PleasantDrone] Suspended (output silence)")
+    }
+
+    public func resume() {
+        audioState.isSuspended = false
+        print("🎵 [PleasantDrone] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {
