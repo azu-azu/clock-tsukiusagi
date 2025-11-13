@@ -183,6 +183,24 @@ public final class LocalAudioEngine {
         shouldStartSources = true
     }
 
+    /// すべての音源をクリア（デタッチして削除）
+    public func clearSources() {
+        print("LocalAudioEngine: Clearing all sources (count: \(sources.count))")
+
+        // Stop and detach all sources
+        sources.forEach {
+            $0.stop()
+            $0.suspend()
+            // Detach the source node from engine
+            engine.detach($0.sourceNode)
+        }
+
+        // Clear the sources array
+        sources.removeAll()
+
+        print("LocalAudioEngine: All sources cleared")
+    }
+
     /// 全体の音量を設定
     /// - Parameter volume: 音量（0.0〜1.0）
     public func setMasterVolume(_ volume: Float) {

@@ -95,27 +95,27 @@ public struct NaturalSoundPresets {
     // MARK: - Pleasant Drone（心地よいドローン）
 
     /// 心地よいドローンプリセット設定
-    /// Fujiko設計: 和音ベースの浮遊感のあるドローン
+    /// Fujiko設計原則: 和音 + LFO変調で「呼吸する」音を生成
     public struct PleasantDrone {
         /// 根音の周波数
-        public static let rootFrequency: Double = 174.0  // F3（低めで温かい）
+        public static let rootFrequency: Double = 196.0  // G3
 
-        /// コードタイプ
-        public static let chordType: ChordType = .major
+        /// コードタイプ（デフォルト: sus4で浮遊感）
+        public static let chordType: ChordType = .sus4
 
         /// 音量
-        public static let amplitude: Double = 0.25
+        public static let amplitude: Double = 0.22
 
-        /// 音量変調の周波数（Hz）
-        public static let amplitudeLFOFrequency: Double = 0.15
+        /// 音量LFO周波数（呼吸のリズム）
+        public static let amplitudeLFOFrequency: Double = 0.15  // 約6.7秒周期
 
-        /// ピッチ変調の周波数（Hz）
+        /// ピッチLFO周波数（微細な揺らぎ）
         public static let pitchLFOFrequency: Double = 0.5
 
-        /// ピッチ変調の深さ（Hz）
+        /// ピッチLFO深さ（Hz）
         public static let pitchLFODepth: Double = 2.0
 
-        /// ノイズ混入量（空気感）
+        /// ノイズ混入量
         public static let noiseLevel: Double = 0.015
     }
 

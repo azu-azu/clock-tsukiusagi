@@ -199,8 +199,10 @@ public final class AudioService: ObservableObject {
         // Note: LocalAudioEngine.configure()は呼ばない
         // セッション管理はAudioServiceで行うため、二重アクティベートを避ける
 
-        // Re-enable synthesis sources for playback
-        engine.enableSources()
+        // CRITICAL: Clear all previous sources before registering new one
+        // This prevents multiple sources from playing simultaneously
+        engine.clearSources()
+        print("🎵 [AudioService] Cleared previous sources")
 
         // Phase 2: Configure limiter BEFORE engine starts (avoid runtime reconfiguration)
         // CRITICAL: Use output format (48kHz/2ch) for consistency across all playback types
