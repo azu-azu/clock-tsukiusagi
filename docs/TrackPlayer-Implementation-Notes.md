@@ -624,6 +624,153 @@ LocalAudioEngine: Master volume set to 1.0
 
 ---
 
+### 10. AVAudioUnitDistortion による雑音問題（最重大）
+
+**症状:**
+- すべての音声（ファイル再生・合成音源）が雑音のように聞こえる
+- ノイズやザラザラした音になる
+- WAVファイルをiPhoneで直接再生すると正常だが、アプリでは雑音
+- フォーマット変換やバッファの問題だと思われたが、実際は違った
+
+**根本原因:**
+
+`SafeVolumeLimiter` が音量制限のために **AVAudioUnitDistortion** の **multiDecimated4** プリセットを使用していた。
+
+```swift
+// ❌ 問題のあったコード (SafeVolumeLimiter.swift:162)
+private func updateLimiterSettings() {
+    limiterNode.loadFactoryPreset(.multiDecimated4)  // ← これが雑音の原因！
+    limiterNode.preGain = maxOutputDb
+    limiterNode.wetDryMix = 100  // 100%エフェクト適用
+}
+```
+
+**なぜ雑音になるのか:**
+
+`multiDecimated4` プリセットは：
+- **デシメーション（decimation）** = サンプルの間引き処理
+- オーディオサンプルを意図的にスキップして「lo-fi」「ビットクラッシャー」的な音を作るエフェクト
+- ギターやシンセサイザーの特殊エフェクトとしては有用
+- **しかし音量制限には完全に不適切**
+
+すべての音声がこのエフェクトを通過するため、クリアな音声が破壊されて雑音のように聞こえていた。
+
+**誤った診断の経緯:**
+
+1. 最初は「フォーマットの不一致（Int16 vs Float32）」だと思われた
+2. TrackPlayerで手動フォーマット変換を実装
+3. しかし改善せず
+4. 次に「AVAudioConverterの使い方が間違っている」と考えた
+5. Converterの実装を修正
+6. それでも改善せず
+7. 最終的にフォーマット変換を削除し、AVAudioEngineの自動変換に任せた
+8. **それでも雑音のまま**
+9. 最後に `SafeVolumeLimiter` のエフェクト設定を確認 → **真の原因を発見**
+
+**解決策（暫定）:**
+
+エフェクトを完全にバイパス：
+
+```swift
+// ✅ 修正後 (SafeVolumeLimiter.swift:163)
+private func updateLimiterSettings() {
+    // TEMPORARY FIX: Bypass distortion effect entirely
+    // The multiDecimated4 preset was causing noise/artifacts
+    // TODO: Find proper limiter solution for iOS (AVAudioUnitEQ or custom gain control)
+
+    // Bypass the effect by setting wet/dry mix to 0% (100% dry = no processing)
+    limiterNode.wetDryMix = 0
+
+    print("   ⚠️  LIMITER BYPASSED (distortion was causing noise)")
+    print("   Pre-gain: \(maxOutputDb) dB (not applied)")
+    print("   Wet/Dry: 0% (bypass mode)")
+}
+```
+
+**wetDryMix パラメータ:**
+- `0` = 100% Dry（元の音声そのまま、エフェクトなし）
+- `100` = 100% Wet（100%エフェクト適用）
+
+**結果:**
+- すべての音声がクリアに聞こえるようになった
+- ただし音量制限機能は無効化されている
+
+**なぜこのような実装になっていたか:**
+
+コメントを見ると、iOSでは本来使いたい `AVAudioUnitDynamicsProcessor`（macOS専用）が使えないため、代替として `AVAudioUnitDistortion` を使おうとしていた。
+
+しかし：
+- Distortion は音を**歪ませる**ためのエフェクト
+- Dynamics Processor（コンプレッサー/リミッター）とは全く別物
+- 音量制限には全く向いていない
+
+**今後の対応（TODO）:**
+
+音量制限機能を正しく実装するには、以下のアプローチを検討：
+
+1. **AVAudioMixerNode の volume プロパティで制御**
+   ```swift
+   // シンプルで効果的
+   masterBusMixer.outputVolume = min(1.0, desiredVolume)
+   ```
+
+2. **AVAudioUnitEQ でゲイン調整**
+   ```swift
+   let eq = AVAudioUnitEQ(numberOfBands: 1)
+   eq.bands[0].filterType = .parametric
+   eq.bands[0].gain = maxOutputDb  // -6dB 等
+   eq.bypass = false
+   ```
+
+3. **手動のバッファ処理でソフトクリッピング**
+   ```swift
+   // installTap を使ってバッファを加工
+   // ただし計算コストが高い
+   ```
+
+**重要な教訓:**
+
+1. **エフェクトの目的を理解する**
+   - Distortion = 歪み（ギター、シンセ用）
+   - Dynamics Processor = 音量制限（マスタリング用）
+   - 用途が全く違う
+
+2. **問題の切り分けは慎重に**
+   - フォーマット変換の問題かと思われたが、実際はエフェクトの問題だった
+   - 複雑な修正を試す前に、シグナルチェーン全体を確認すべき
+
+3. **エフェクトのバイパスでテスト**
+   - 雑音問題が起きたら、まずすべてのエフェクトをバイパスしてテスト
+   - どのノードが原因か特定できる
+
+4. **プリセット名の意味を調べる**
+   - `multiDecimated4` という名前から「間引き」処理だと推測できた
+   - Appleのドキュメントでプリセットの効果を確認すべき
+
+**デバッグ方法:**
+
+エフェクトが原因か確認するには：
+
+```swift
+// テスト: エフェクトを完全にバイパス
+limiterNode.bypass = true
+
+// または
+limiterNode.wetDryMix = 0
+
+// これで音がクリアになれば、エフェクトが原因
+```
+
+**修正前後の比較:**
+
+| 状態 | 音質 | 音量制限 |
+|------|------|----------|
+| **修正前** | 雑音（デシメーション効果） | 無効（エフェクトが破壊的） |
+| **修正後** | クリア（エフェクトバイパス） | 無効（TODO） |
+| **理想** | クリア | 有効（AVAudioMixerNode.volume で実装予定） |
+
+---
+
 ## ベストプラクティス
 
 ### 1. セッション管理
@@ -933,6 +1080,40 @@ if !sessionActivated {
 }
 ```
 
+### すべての音が雑音になる（最重要）
+
+**症状:**
+- ファイル再生も合成音源もすべて雑音のように聞こえる
+- ザラザラした音、lo-fiな音質
+- iPhoneで直接ファイルを再生すると正常
+
+**原因:** SafeVolumeLimiter の AVAudioUnitDistortion（multiDecimated4 プリセット）
+
+**診断方法:**
+```swift
+// SafeVolumeLimiter.swift の updateLimiterSettings() を確認
+print("Preset: \(limiterNode.presetName)")  // multiDecimated4 なら問題
+print("WetDryMix: \(limiterNode.wetDryMix)")  // 100 なら全適用
+```
+
+**解決策（暫定）:**
+```swift
+// ✅ エフェクトをバイパス
+limiterNode.wetDryMix = 0  // 0% = エフェクトなし
+```
+
+**恒久的な解決策（TODO）:**
+```swift
+// Option 1: AVAudioMixerNode の volume で制御
+masterBusMixer.outputVolume = min(1.0, desiredVolume)
+
+// Option 2: AVAudioUnitEQ でゲイン調整
+let eq = AVAudioUnitEQ(numberOfBands: 1)
+eq.bands[0].gain = maxOutputDb
+```
+
+**重要:** Distortion エフェクトは音量制限に使わない！
+
 ### 停止ボタンを押していないのに止まる（幽霊タスク）
 
 **症状:**
@@ -992,7 +1173,7 @@ if !sessionActivated {
 
 ## まとめ
 
-### 最重要原則（6つ）
+### 最重要原則（7つ）
 
 1. **"Session First, Format Next, Configure Before Start"**
    - セッションアクティベート → フォーマット取得 → Limiter構成 → エンジン起動
@@ -1009,27 +1190,34 @@ if !sessionActivated {
    - Appleの自動配線を尊重
    - 全ての音源が統一された経路を通る
 
-5. **幽霊タスク防止（最重要）**
+5. **幽霊タスク防止**
    - `DispatchWorkItem` で遅延タスクを管理
    - `isCancelled` チェックで幽霊タスクを無害化
    - 世代ガード（Session ID）で古いタスクを無視
    - 再生開始時に必ず古いタスクをキャンセル
 
-6. **エラー時の状態クリーンアップ**
+6. **エフェクトの正しい選択（最重要）**
+   - Distortion は音量制限に使わない（デシメーション効果で雑音になる）
+   - 音量制限には AVAudioMixerNode.volume または AVAudioUnitEQ を使用
+   - 問題が起きたらエフェクトをバイパスしてテスト
+
+7. **エラー時の状態クリーンアップ**
    - 必ず`isPlaying`等をリセット
    - 幽霊タスクもキャンセル
    - UIロックを防ぐ
 
 ### 次のステップ
 
-- [ ] 複数音源の追加（pink/brown noise等）
+- [ ] 適切な音量制限機能の実装（AVAudioMixerNode.volume または AVAudioUnitEQ）
+- [ ] 複数音源の追加（pink/brown noise等） ✅ 完了
+- [ ] WAVフォーマットへの統一 ✅ 完了
 - [ ] クロスフェードの洗練
 - [ ] ストリーミング再生（大容量ファイル対応）
 
 ---
 
 **作成日**: 2025-11-11
-**最終更新**: 2025-11-12 17:30 JST（幽霊タスク対策追加）
+**最終更新**: 2025-11-13 12:00 JST（AVAudioUnitDistortion 雑音問題を追加）
 **対象**: TrackPlayer実装者
 **関連**: Phase 3 Audio Integration
 **謝辞**: ふじこさんの詳細なRCAに感謝 🐰

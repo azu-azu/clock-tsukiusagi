@@ -155,20 +155,15 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
     // MARK: - Private Methods
 
     private func updateLimiterSettings() {
-        // iOS用ソフトクリッピング設定
-        // AVAudioUnitDistortionを使用してソフトリミットを実現
-        // 負のプリゲイン + ソフトクリッピングでダイナミクスプロセッサーに近い効果を得る
+        // TEMPORARY FIX: Bypass distortion effect entirely
+        // The multiDecimated4 preset was causing noise/artifacts
+        // TODO: Find proper limiter solution for iOS (AVAudioUnitEQ or custom gain control)
 
-        limiterNode.loadFactoryPreset(.multiDecimated4)  // ソフトなプリセットを使用
+        // Bypass the effect by setting wet/dry mix to 0% (100% dry = no processing)
+        limiterNode.wetDryMix = 0
 
-        // プリゲイン: maxOutputDbに基づいて調整（-6dB → 約-6dB gain）
-        limiterNode.preGain = maxOutputDb
-
-        // ウェットドライミックス: 100%ウェット（完全に処理を適用）
-        limiterNode.wetDryMix = 100
-
-        print("   Pre-gain: \(maxOutputDb) dB")
-        print("   Preset: MultiDecimated4 (soft clipping)")
-        print("   Wet/Dry: 100% (full processing)")
+        print("   ⚠️  LIMITER BYPASSED (distortion was causing noise)")
+        print("   Pre-gain: \(maxOutputDb) dB (not applied)")
+        print("   Wet/Dry: 0% (bypass mode)")
     }
 }

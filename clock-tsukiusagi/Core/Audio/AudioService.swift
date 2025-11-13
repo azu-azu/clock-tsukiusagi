@@ -980,22 +980,13 @@ public final class AudioService: ObservableObject {
         // Get audio file format first
         let file = try AVAudioFile(forReading: url)
 
-        // CRITICAL: Force Float32 format to avoid CAF PCM_16 decoding issues
-        // soundfile writes CAF as PCM_16, but AVAudioFile.processingFormat may misinterpret
-        // Explicitly specify Float32 to ensure consistent decoding across all files
-        let fileFormat = AVAudioFormat(
-            commonFormat: .pcmFormatFloat32,
-            sampleRate: file.fileFormat.sampleRate,
-            channels: file.fileFormat.channelCount,
-            interleaved: false
-        )!
+        // Use file's processing format (AVAudioEngine will handle conversion at mixer)
+        let fileFormat = file.processingFormat
 
         print("🎵 [AudioService] Audio file format:")
-        print("   File format: \(file.fileFormat.commonFormat.rawValue) (from file)")
-        print("   Processing format: \(file.processingFormat.commonFormat.rawValue) (AVAudioFile)")
-        print("   Using format: \(fileFormat.commonFormat.rawValue) (forced Float32)")
-        print("   Channels: \(fileFormat.channelCount)")
-        print("   Sample rate: \(fileFormat.sampleRate) Hz")
+        print("   File format: \(file.fileFormat.commonFormat.rawValue) (storage format)")
+        print("   Processing format: \(fileFormat.commonFormat.rawValue), \(fileFormat.sampleRate) Hz, \(fileFormat.channelCount) ch")
+        print("   ⚠️  masterBusMixer will automatically convert to output format")
 
         // Phase 2: Configure SafeVolumeLimiter BEFORE engine starts
         // CRITICAL: Use OUTPUT format (48kHz/2ch), NOT file format

@@ -34,26 +34,15 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
         }
     }
 
-    /// File extension (prefer CAF, fallback to WAV)
+    /// File extension (WAV format)
     public var fileExtension: String {
-        return "caf"
-    }
-
-    /// Alternative file extension
-    public var fallbackExtension: String {
         return "wav"
     }
 
     /// Get URL for audio file from bundle
     /// - Returns: URL to audio file, or nil if not found
     public func url() -> URL? {
-        // Try CAF first
         if let url = Bundle.main.url(forResource: rawValue, withExtension: fileExtension) {
-            return url
-        }
-
-        // Fallback to WAV
-        if let url = Bundle.main.url(forResource: rawValue, withExtension: fallbackExtension) {
             return url
         }
 

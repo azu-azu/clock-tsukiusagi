@@ -3,7 +3,7 @@
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-11.
-//  オーディオファイル再生プレイヤー（WAV/CAF対応、シームレスループ＆クロスフェード）
+//  オーディオファイル再生プレイヤー（WAV対応、シームレスループ＆クロスフェード）
 //
 
 import AVFoundation
@@ -32,7 +32,7 @@ public protocol TrackPlaying {
 }
 
 /// オーディオファイル再生プレイヤー
-/// WAV/CAFファイルをシームレスにループ再生（オプションでクロスフェード）
+/// WAVファイルをシームレスにループ再生（オプションでクロスフェード）
 @MainActor
 public final class TrackPlayer: TrackPlaying {
     // MARK: - Internal Properties
@@ -68,7 +68,7 @@ public final class TrackPlayer: TrackPlaying {
     /// プレイヤーをオーディオエンジンに接続
     /// - Parameters:
     ///   - engine: AVAudioEngine
-    ///   - format: オーディオフォーマット
+    ///   - format: オーディオフォーマット（バッファのフォーマット）
     ///   - destination: 接続先ノード（デフォルト: mainMixerNode）
     public func configure(engine: AVAudioEngine, format: AVAudioFormat, destination: AVAudioNode? = nil) {
         self.engine = engine
@@ -77,10 +77,12 @@ public final class TrackPlayer: TrackPlaying {
         engine.attach(playerNode)
 
         // 指定された接続先またはメインミキサーに接続
+        // NOTE: Mixer will automatically convert format if needed
         let targetNode = destination ?? engine.mainMixerNode
         engine.connect(playerNode, to: targetNode, format: format)
 
         print("🎵 [TrackPlayer] Configured and connected to \(destination != nil ? "masterBusMixer" : "mainMixerNode")")
+        print("   Connection format: \(format.commonFormat.rawValue), \(format.sampleRate) Hz, \(format.channelCount) ch")
     }
 
     // MARK: - Public Methods
@@ -107,9 +109,11 @@ public final class TrackPlayer: TrackPlaying {
 
         // Verify we're reading the correct file
         print("   File length: \(file.length) frames")
-        print("   Processing format: \(file.processingFormat.sampleRate) Hz, \(file.processingFormat.channelCount) ch")
+        print("   File format: \(file.fileFormat.commonFormat.rawValue), \(file.fileFormat.sampleRate) Hz, \(file.fileFormat.channelCount) ch")
+        print("   Processing format: \(file.processingFormat.commonFormat.rawValue), \(file.processingFormat.sampleRate) Hz, \(file.processingFormat.channelCount) ch")
 
-        // バッファを作成
+        // バッファを作成（ファイルのprocessingFormatをそのまま使用）
+        // AVAudioEngine's mixer will handle format conversion automatically
         guard let buffer = AVAudioPCMBuffer(
             pcmFormat: file.processingFormat,
             frameCapacity: AVAudioFrameCount(file.length)
@@ -120,16 +124,27 @@ public final class TrackPlayer: TrackPlaying {
         // ファイル全体をバッファに読み込み
         try file.read(into: buffer)
 
-        // CRITICAL: Verify buffer contains data
-        guard let floatChannelData = buffer.floatChannelData else {
-            throw TrackPlayerError.bufferCreationFailed
-        }
+        print("   ✓ Buffer created with \(buffer.frameLength) frames")
 
-        // Sample first 10 samples to verify unique audio data
-        let firstSamples = (0..<min(10, Int(buffer.frameLength))).map {
-            floatChannelData[0][$0]
+        // Verify buffer format
+        print("   Buffer format: \(buffer.format.commonFormat.rawValue), \(buffer.format.sampleRate) Hz, \(buffer.format.channelCount) ch")
+
+        // Sample first 10 samples to verify audio data
+        if buffer.format.commonFormat == .pcmFormatFloat32 {
+            if let floatChannelData = buffer.floatChannelData {
+                let firstSamples = (0..<min(10, Int(buffer.frameLength))).map {
+                    floatChannelData[0][$0]
+                }
+                print("   First 10 samples: \(firstSamples.map { String(format: "%.4f", $0) }.joined(separator: ", "))")
+            }
+        } else if buffer.format.commonFormat == .pcmFormatInt16 {
+            if let int16ChannelData = buffer.int16ChannelData {
+                let firstSamples = (0..<min(10, Int(buffer.frameLength))).map {
+                    int16ChannelData[0][$0]
+                }
+                print("   First 10 samples (int16): \(firstSamples)")
+            }
         }
-        print("   First 10 samples: \(firstSamples.map { String(format: "%.4f", $0) }.joined(separator: ", "))")
 
         // Store references AFTER verification
         self.buffer = buffer
