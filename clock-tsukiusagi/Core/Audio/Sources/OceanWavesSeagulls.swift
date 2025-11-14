@@ -178,7 +178,7 @@ public final class OceanWavesSeagulls: AudioSource {
         guard audioFile == nil else { return }
 
         guard let url = resolveAudioFileURL() else {
-            throw NSError(domain: "OceanWavesSeagulls", code: 1, userInfo: [NSLocalizedDescriptionKey: "seagull.caf not found in bundle"])
+            throw NSError(domain: "OceanWavesSeagulls", code: 1, userInfo: [NSLocalizedDescriptionKey: "seagull_group.caf not found in bundle"])
         }
 
         audioFile = try AVAudioFile(forReading: url)
@@ -191,10 +191,10 @@ public final class OceanWavesSeagulls: AudioSource {
         ]
 
         for bundle in bundles {
-            if let url = bundle.url(forResource: "seagull", withExtension: "caf") {
+            if let url = bundle.url(forResource: "seagull_group", withExtension: "caf") {
                 return url
             }
-            if let url = bundle.url(forResource: "seagull", withExtension: "wav") {
+            if let url = bundle.url(forResource: "seagull_group", withExtension: "wav") {
                 return url
             }
         }

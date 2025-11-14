@@ -136,7 +136,6 @@ public final class AudioService: ObservableObject {
         // システム音量監視を開始
         setupSystemVolumeMonitoring()
 
-        print("🎵 [AudioService] Initialized as singleton")
         print("   Initial output route: \(outputRoute.displayName) \(outputRoute.icon)")
         print("   Quiet breaks: \(settings.quietBreakEnabled ? "Enabled" : "Disabled")")
         print("   Max output: \(settings.maxOutputDb) dB")
@@ -160,7 +159,6 @@ public final class AudioService: ObservableObject {
     /// 音声再生を開始
     /// - Parameter preset: 再生するプリセット
     public func play(preset: NaturalSoundPreset) throws {
-        print("🎵 [AudioService] play() called with preset: \(preset)")
 
         // Wrap entire method in do-catch to ensure state cleanup on error
         do {
@@ -176,7 +174,6 @@ public final class AudioService: ObservableObject {
     /// Internal play implementation (allows proper error handling)
     private func _playInternal(preset: NaturalSoundPreset) throws {
         // Cancel any pending stop/fade tasks from previous session
-        print("🎵 [AudioService] Canceling pending stop/fade tasks before new playback")
         engineStopWorkItem?.cancel()
         fadeTimer?.invalidate()
         engineStopWorkItem = nil
@@ -184,7 +181,6 @@ public final class AudioService: ObservableObject {
 
         // Generate new playback session ID
         playbackSessionId = UUID()
-        print("🎵 [AudioService] New playback session: \(playbackSessionId)")
 
         // セッションを一度だけアクティベート
         if !sessionActivated {
@@ -202,7 +198,6 @@ public final class AudioService: ObservableObject {
         // CRITICAL: Clear all previous sources before registering new one
         // This prevents multiple sources from playing simultaneously
         engine.clearSources()
-        print("🎵 [AudioService] Cleared previous sources")
 
         // Phase 2: Configure limiter BEFORE engine starts (avoid runtime reconfiguration)
         // CRITICAL: Use output format (48kHz/2ch) for consistency across all playback types
@@ -245,7 +240,6 @@ public final class AudioService: ObservableObject {
         updateNowPlaying()
         updateNowPlayingState()
 
-        print("🎵 [AudioService] Playback started successfully")
     }
 
     /// 音声再生を停止して完了を待つ（モード切替用）
@@ -253,9 +247,6 @@ public final class AudioService: ObservableObject {
     ///   - fadeOut: フェードアウト時間（秒）
     ///   - completion: 停止完了後のコールバック
     public func stopAndWait(fadeOut fadeOutDuration: TimeInterval = 0.5, completion: @escaping () -> Void) {
-        print("🎵 [AudioService] stopAndWait() called")
-        print("🎵 [AudioService] Current preset: \(String(describing: currentPreset))")
-        print("🎵 [AudioService] Current audio file: \(currentAudioFile?.displayName ?? "none")")
 
         // Prevent duplicate stop() calls (ghost fade-out protection)
         guard isPlaying else {
@@ -270,13 +261,11 @@ public final class AudioService: ObservableObject {
         if let player = trackPlayer, player.isPlaying {
             playerFadeDuration = settings.crossfadeDuration
             player.stop(fadeOut: playerFadeDuration)
-            print("🎵 [AudioService] TrackPlayer stopped (fade: \(playerFadeDuration)s)")
         }
 
         // 2) Always fade out master volume (regardless of source type)
         let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
         self.fadeOut(duration: masterFadeDuration)
-        print("🎵 [AudioService] Master fade out: \(masterFadeDuration)s")
 
         // 3) ALWAYS stop engine after fade (unified behavior)
         // Use cancellable WorkItem to prevent ghost stop tasks
@@ -301,7 +290,6 @@ public final class AudioService: ObservableObject {
             // Disable sources (suspends timers, keeps nodes attached)
             self.engine.disableSources()
 
-            print("🎵 [AudioService] Engine hard-stopped after master fade")
 
             // 4) Cleanup state and auxiliary features
             self.breakScheduler.stop()
@@ -317,7 +305,6 @@ public final class AudioService: ObservableObject {
             // Phase 3: Now Playingをクリア
             self.nowPlayingController?.clearNowPlaying()
 
-            print("🎵 [AudioService] Stop completed, calling completion handler")
 
             // Call completion handler
             completion()
@@ -330,9 +317,6 @@ public final class AudioService: ObservableObject {
     /// 音声再生を停止
     /// - Parameter fadeOut: フェードアウト時間（秒）
     public func stop(fadeOut fadeOutDuration: TimeInterval = 0.5) {
-        print("🎵 [AudioService] stop() called")
-        print("🎵 [AudioService] Current preset: \(String(describing: currentPreset))")
-        print("🎵 [AudioService] Current audio file: \(currentAudioFile?.displayName ?? "none")")
 
         // Prevent duplicate stop() calls (ghost fade-out protection)
         guard isPlaying else {
@@ -346,13 +330,11 @@ public final class AudioService: ObservableObject {
         if let player = trackPlayer, player.isPlaying {
             playerFadeDuration = settings.crossfadeDuration
             player.stop(fadeOut: playerFadeDuration)
-            print("🎵 [AudioService] TrackPlayer stopped (fade: \(playerFadeDuration)s)")
         }
 
         // 2) Always fade out master volume (regardless of source type)
         let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
         self.fadeOut(duration: masterFadeDuration)
-        print("🎵 [AudioService] Master fade out: \(masterFadeDuration)s")
 
         // 3) ALWAYS stop engine after fade (unified behavior)
         // Use cancellable WorkItem to prevent ghost stop tasks
@@ -376,7 +358,6 @@ public final class AudioService: ObservableObject {
             // Disable sources (suspends timers, keeps nodes attached)
             self.engine.disableSources()
 
-            print("🎵 [AudioService] Engine hard-stopped after master fade")
         }
 
         engineStopWorkItem = workItem
@@ -396,7 +377,6 @@ public final class AudioService: ObservableObject {
         // Phase 3: Now Playingをクリア
         nowPlayingController?.clearNowPlaying()
 
-        print("🎵 [AudioService] Playback stopping with unified master fade")
     }
 
     /// 音声再生を一時停止
@@ -442,7 +422,6 @@ public final class AudioService: ObservableObject {
 
     /// 音声再生を再開
     public func resume() throws {
-        print("🎵 [AudioService] resume() called")
 
         guard let reason = pauseReason else {
             print("⚠️ [AudioService] No pause reason, cannot resume")
@@ -483,7 +462,6 @@ public final class AudioService: ObservableObject {
         // Phase 3: Now Playing状態を更新
         updateNowPlayingState()
 
-        print("🎵 [AudioService] Resumed successfully")
     }
 
     /// 音量を設定（非推奨：システム音量で自動制御されます）
@@ -499,7 +477,6 @@ public final class AudioService: ObservableObject {
     public func updateSettings(_ settings: AudioSettings) {
         self.settings = settings
         settings.save()
-        print("🎵 [AudioService] Settings updated")
     }
 
     // MARK: - Private Methods
@@ -619,12 +596,10 @@ public final class AudioService: ObservableObject {
                     self.pause(reason: .interruption)
 
                 case .ended:
-                    print("🎵 [AudioService] Interruption ended")
                     // 自動再開するかチェック
                     if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
                         let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
                         if options.contains(.shouldResume) && self.settings.autoResumeAfterInterruption {
-                            print("🎵 [AudioService] Auto-resuming after interruption")
                             try? self.resume()
                         }
                     }
@@ -637,7 +612,6 @@ public final class AudioService: ObservableObject {
     }
 
     private func activateAudioSession() throws {
-        print("🎵 [AudioService] Activating audio session...")
 
         let session = AVAudioSession.sharedInstance()
 
@@ -669,11 +643,9 @@ public final class AudioService: ObservableObject {
             throw error
         }
 
-        print("🎵 [AudioService] Audio session activated successfully")
     }
 
     private func registerSource(for preset: NaturalSoundPreset) throws {
-        print("🎵 [AudioService] Registering source for preset: \(preset)")
 
         switch preset {
         case .clickSuppression:
@@ -856,7 +828,6 @@ public final class AudioService: ObservableObject {
         let startVolume = engine.engine.mainMixerNode.outputVolume
         targetVolume = startVolume  // 元の音量を記憶
 
-        print("🎵 [AudioService] Fade out: \(startVolume) → 0.0 over \(duration)s")
 
         let steps = 60  // 60ステップ（60fps想定）
         let stepDuration = duration / Double(steps)
@@ -880,7 +851,6 @@ public final class AudioService: ObservableObject {
                 if currentStep >= steps {
                     timer.invalidate()
                     self.fadeTimer = nil
-                    print("🎵 [AudioService] Fade out complete")
                 }
             }
         }
@@ -893,7 +863,6 @@ public final class AudioService: ObservableObject {
 
         let endVolume = targetVolume  // 記憶した音量に戻す
 
-        print("🎵 [AudioService] Fade in: 0.0 → \(endVolume) over \(duration)s")
 
         let steps = 60  // 60ステップ
         let stepDuration = duration / Double(steps)
@@ -917,7 +886,6 @@ public final class AudioService: ObservableObject {
                 if currentStep >= steps {
                     timer.invalidate()
                     self.fadeTimer = nil
-                    print("🎵 [AudioService] Fade in complete")
                 }
             }
         }
@@ -1019,12 +987,10 @@ public final class AudioService: ObservableObject {
                     self.systemVolume = newVolume
                     self.applyDynamicGainCompensation()
 
-                    print("🔊 [AudioService] System volume changed: \(String(format: "%.2f", newVolume)) (\(Int(newVolume * 100))%)")
                 }
             }
         }
 
-        print("🔊 [AudioService] System volume monitoring started")
         print("   Current system volume: \(String(format: "%.2f", systemVolume)) (\(Int(systemVolume * 100))%)")
     }
 
@@ -1044,7 +1010,6 @@ public final class AudioService: ObservableObject {
         let finalVolume = systemVol * compensatedGain
         let finalDb = 20.0 * log10(max(finalVolume, epsilon))
 
-        print("🔊 [AudioService] Dynamic gain compensation applied")
         print("   System volume: \(String(format: "%.4f", systemVol)) (\(Int(systemVol * 100))%)")
         print("   App gain: \(String(format: "%.4f", compensatedGain)) (\(Int(compensatedGain * 100))%)")
         print("   Final output: \(String(format: "%.4f", finalVolume)) (\(String(format: "%.1f", finalDb)) dB)")
@@ -1063,9 +1028,6 @@ public final class AudioService: ObservableObject {
     /// - Parameter audioFile: Audio file preset to play
     /// - Throws: Audio errors
     public func playAudioFile(_ audioFile: AudioFilePreset) throws {
-        print("🎵 [AudioService] ========================================")
-        print("🎵 [AudioService] playAudioFile() called with: \(audioFile.displayName)")
-        print("🎵 [AudioService] ========================================")
 
         // CRITICAL: Activate session BEFORE getting output format
         // This ensures outputNode.inputFormat returns correct device format (48kHz/2ch)
@@ -1092,7 +1054,6 @@ public final class AudioService: ObservableObject {
     /// Internal playAudioFile implementation (allows proper error handling)
     private func _playAudioFileInternal(_ audioFile: AudioFilePreset) throws {
         // Cancel any pending stop/fade tasks from previous session
-        print("🎵 [AudioService] Canceling pending stop/fade tasks before new file playback")
         engineStopWorkItem?.cancel()
         fadeTimer?.invalidate()
         engineStopWorkItem = nil
@@ -1100,11 +1061,9 @@ public final class AudioService: ObservableObject {
 
         // Generate new playback session ID
         playbackSessionId = UUID()
-        print("🎵 [AudioService] New playback session: \(playbackSessionId)")
 
         // Stop any currently playing audio (synthesis or file)
         if isPlaying {
-            print("🎵 [AudioService] Stopping current playback before file playback")
             engine.stop()
             volumeLimiter.reset()  // Reset limiter when stopping
             isPlaying = false
@@ -1114,7 +1073,6 @@ public final class AudioService: ObservableObject {
 
         // Always stop engine to reset audio graph for file playback
         if engine.isEngineRunning {
-            print("🎵 [AudioService] Stopping engine to reset audio graph")
             engine.stop()
             volumeLimiter.reset()  // Reset limiter when stopping
         }
@@ -1135,7 +1093,6 @@ public final class AudioService: ObservableObject {
         // Use file's processing format (AVAudioEngine will handle conversion at mixer)
         let fileFormat = file.processingFormat
 
-        print("🎵 [AudioService] Audio file format:")
         print("   File format: \(file.fileFormat.commonFormat.rawValue) (storage format)")
         print("   Processing format: \(fileFormat.commonFormat.rawValue), \(fileFormat.sampleRate) Hz, \(fileFormat.channelCount) ch")
         print("   ⚠️  masterBusMixer will automatically convert to output format")
@@ -1151,7 +1108,6 @@ public final class AudioService: ObservableObject {
         volumeLimiter.resetConfigurationState()
         volumeLimiter.configure(engine: engine.engine, format: outputFormat)
 
-        print("🎵 [AudioService] Limiter configured with output format:")
         print("   Sample rate: \(outputFormat.sampleRate) Hz")
         print("   Channels: \(outputFormat.channelCount)")
 
@@ -1163,7 +1119,6 @@ public final class AudioService: ObservableObject {
 
         // Detach TrackPlayer node if already attached (force fresh connection)
         if let playerNode = trackPlayer?.playerNode, engine.engine.attachedNodes.contains(playerNode) {
-            print("🎵 [AudioService] Detaching existing TrackPlayer node to reset audio graph")
             engine.engine.detach(playerNode)
         }
 
@@ -1175,7 +1130,6 @@ public final class AudioService: ObservableObject {
             destination: volumeLimiter.masterBusMixer
         )
 
-        print("🎵 [AudioService] TrackPlayer configured and connected to masterBusMixer")
 
         // Start engine (after limiter configuration)
         // Don't start synthesis sources (startSources: false)
@@ -1209,7 +1163,6 @@ public final class AudioService: ObservableObject {
         updateNowPlaying()
         updateNowPlayingState()
 
-        print("🎵 [AudioService] Audio file playback started successfully")
     }
 
 }

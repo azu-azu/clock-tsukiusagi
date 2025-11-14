@@ -95,12 +95,10 @@ public final class BrownNoise: AudioSource {
 
     public func suspend() {
         audioState.isSuspended = true
-        print("🎵 [BrownNoise] Suspended (output silence)")
     }
 
     public func resume() {
         audioState.isSuspended = false
-        print("🎵 [BrownNoise] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {

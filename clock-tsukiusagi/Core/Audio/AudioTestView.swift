@@ -252,21 +252,15 @@ struct AudioTestView: View {
 
     private func playAudio() {
         do {
-            print("🎵 ==========================================")
-            print("🎵 AudioTestView: Starting audio playback")
-            print("🎵 Selected sound type: \(selectedSound)")
-            print("🎵 ==========================================")
 
             // 選択された音源タイプに応じて再生
             switch selectedSound {
             case .synthesis:
                 // 合成音源
-                print("🎵 AudioTestView: → Playing SYNTHESIZED audio (\(selectedSynthesisPreset.displayName))")
                 try audioService.play(preset: selectedSynthesisPreset)
 
             case .audioFile:
                 // 音源ファイル（TrackPlayer）
-                print("🎵 AudioTestView: → Playing AUDIO FILE (\(selectedAudioFile.displayName))")
                 try audioService.playAudioFile(selectedAudioFile)
             }
 

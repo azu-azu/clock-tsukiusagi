@@ -103,12 +103,10 @@ public final class PinkNoise: AudioSource {
 
     public func suspend() {
         audioState.isSuspended = true
-        print("🎵 [PinkNoise] Suspended (output silence)")
     }
 
     public func resume() {
         audioState.isSuspended = false
-        print("🎵 [PinkNoise] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {

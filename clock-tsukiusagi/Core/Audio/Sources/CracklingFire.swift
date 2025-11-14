@@ -141,12 +141,10 @@ public final class CracklingFire: AudioSource {
 
     public func suspend() {
         audioState.isSuspended = true
-        print("🎵 [CracklingFire] Suspended (output silence)")
     }
 
     public func resume() {
         audioState.isSuspended = false
-        print("🎵 [CracklingFire] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {

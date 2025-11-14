@@ -138,12 +138,10 @@ public final class TibetanBowl: AudioSource {
 
     public func suspend() {
         audioState.isSuspended = true
-        print("🎵 [TibetanBowl] Suspended (output silence)")
     }
 
     public func resume() {
         audioState.isSuspended = false
-        print("🎵 [TibetanBowl] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {

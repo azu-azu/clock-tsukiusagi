@@ -118,12 +118,10 @@ public final class OceanWaves: AudioSource {
 
     public func suspend() {
         audioState.isSuspended = true
-        print("🎵 [OceanWaves] Suspended (output silence)")
     }
 
     public func resume() {
         audioState.isSuspended = false
-        print("🎵 [OceanWaves] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {

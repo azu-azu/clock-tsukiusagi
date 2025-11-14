@@ -36,7 +36,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
 
     public var maxOutputDb: Float {
         didSet {
-            print("🔊 [SafeVolumeLimiter] Max output updated to \(maxOutputDb) dB")
             updateLimiterSettings()
         }
     }
@@ -59,13 +58,11 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
     /// - Parameter engine: AVAudioEngine
     public func attachNodes(to engine: AVAudioEngine) {
         guard !nodesAttached else {
-            print("🔊 [SafeVolumeLimiter] Nodes already attached, skipping")
             return
         }
 
         self.engine = engine
 
-        print("🔊 [SafeVolumeLimiter] Attaching nodes to engine...")
 
         // Attach nodes to engine
         if !engine.attachedNodes.contains(masterBusMixer) {
@@ -79,7 +76,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         }
 
         nodesAttached = true
-        print("🔊 [SafeVolumeLimiter] Nodes attached successfully")
     }
 
     /// Configure limiter with masterBusMixer approach
@@ -94,7 +90,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
            let existing = configuredFormat,
            existing.sampleRate == format.sampleRate,
            existing.channelCount == format.channelCount {
-            print("🔊 [SafeVolumeLimiter] Already configured with same format, skipping")
             return
         }
 
@@ -107,7 +102,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
             return
         }
 
-        print("🔊 [SafeVolumeLimiter] Configuring soft limiter (masterBusMixer approach)")
         print("   Max output: \(maxOutputDb) dB")
         print("   Format: \(format.sampleRate) Hz, \(format.channelCount) channels")
 
@@ -129,7 +123,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         isConfigured = true
         needsRebind = false
         configuredFormat = format
-        print("🔊 [SafeVolumeLimiter] Configuration complete")
     }
 
     public func updateLimit(_ db: Float) {
@@ -138,7 +131,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
 
     /// Reset configuration state (call when engine is stopped)
     public func reset() {
-        print("🔊 [SafeVolumeLimiter] Resetting configuration state")
         needsRebind = true
     }
 
@@ -146,7 +138,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
     /// CRITICAL: Forces complete reconfiguration on next configure() call
     /// This prevents audio buffer cache reuse between different files
     public func resetConfigurationState() {
-        print("🔊 [SafeVolumeLimiter] Resetting configuration state completely for file switch")
         isConfigured = false
         needsRebind = true
         configuredFormat = nil

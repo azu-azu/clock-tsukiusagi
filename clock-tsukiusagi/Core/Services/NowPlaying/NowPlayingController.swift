@@ -63,7 +63,6 @@ public final class NowPlayingController {
 
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
 
-        print("🎵 [NowPlayingController] Updated Now Playing: \(title)")
     }
 
     /// 再生状態を更新（再生/一時停止）
@@ -76,13 +75,11 @@ public final class NowPlayingController {
 
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
 
-        print("🎵 [NowPlayingController] Playback state: \(isPlaying ? "Playing" : "Paused")")
     }
 
     /// Now Playing情報をクリア
     public func clearNowPlaying() {
         nowPlayingInfoCenter.nowPlayingInfo = nil
-        print("🎵 [NowPlayingController] Cleared Now Playing")
     }
 
     // MARK: - Remote Control Commands
@@ -102,7 +99,6 @@ public final class NowPlayingController {
         // Play コマンド
         commandCenter.playCommand.isEnabled = true
         commandCenter.playCommand.addTarget { _ in
-            print("🎵 [NowPlayingController] Remote play command received")
             onPlay()
             return .success
         }
@@ -110,7 +106,6 @@ public final class NowPlayingController {
         // Pause コマンド
         commandCenter.pauseCommand.isEnabled = true
         commandCenter.pauseCommand.addTarget { _ in
-            print("🎵 [NowPlayingController] Remote pause command received")
             onPause()
             return .success
         }
@@ -118,7 +113,6 @@ public final class NowPlayingController {
         // Stop コマンド
         commandCenter.stopCommand.isEnabled = true
         commandCenter.stopCommand.addTarget { _ in
-            print("🎵 [NowPlayingController] Remote stop command received")
             onStop()
             return .success
         }
@@ -129,7 +123,6 @@ public final class NowPlayingController {
         commandCenter.skipForwardCommand.isEnabled = false
         commandCenter.skipBackwardCommand.isEnabled = false
 
-        print("🎵 [NowPlayingController] Remote commands configured")
     }
 
     /// リモートコントロールコマンドを無効化
@@ -140,6 +133,5 @@ public final class NowPlayingController {
         commandCenter.pauseCommand.isEnabled = false
         commandCenter.stopCommand.isEnabled = false
 
-        print("🎵 [NowPlayingController] Remote commands disabled")
     }
 }

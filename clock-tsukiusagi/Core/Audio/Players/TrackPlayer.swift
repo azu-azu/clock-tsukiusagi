@@ -81,7 +81,6 @@ public final class TrackPlayer: TrackPlaying {
         let targetNode = destination ?? engine.mainMixerNode
         engine.connect(playerNode, to: targetNode, format: format)
 
-        print("🎵 [TrackPlayer] Configured and connected to \(destination != nil ? "masterBusMixer" : "mainMixerNode")")
         print("""
             Connection format: \(format.commonFormat.rawValue), \
             \(format.sampleRate) Hz, \(format.channelCount) ch
@@ -103,7 +102,6 @@ public final class TrackPlayer: TrackPlaying {
         buffer = nil
         audioFile = nil
 
-        print("🎵 [TrackPlayer] Loading new file: \(url.lastPathComponent)")
         print("   Full path: \(url.path)")
 
         // CRITICAL: Force fresh AVAudioFile instance to avoid decode cache
@@ -163,7 +161,6 @@ public final class TrackPlayer: TrackPlaying {
         self.buffer = buffer
         self.audioFile = file
 
-        print("🎵 [TrackPlayer] ✅ File loaded successfully")
         print("   Duration: \(Double(buffer.frameLength) / file.fileFormat.sampleRate)s")
         print("   Buffer frame length: \(buffer.frameLength)")
     }
@@ -193,8 +190,6 @@ public final class TrackPlayer: TrackPlaying {
         scheduleBuffer(buffer, loop: loop, crossfadeDuration: crossfadeDuration)
         playerNode.play()
 
-        print("🎵 [TrackPlayer] Playback started (loop: \(loop), crossfade: \(crossfadeDuration)s)")
-        print("🎵 [TrackPlayer] Player node volume: \(playerNode.volume)")
     }
 
     public func stop(fadeOut: TimeInterval) {
@@ -221,7 +216,6 @@ public final class TrackPlayer: TrackPlaying {
                 // Check if this work item was cancelled before execution
                 // This prevents "ghost" fade-out tasks from stopping new playback
                 if workItem.isCancelled {
-                    print("🎵 [TrackPlayer] Fade-out canceled before execution (ghost task prevented)")
                     return
                 }
 
@@ -229,7 +223,6 @@ public final class TrackPlayer: TrackPlaying {
                 self.playerNode.reset()  // Clear pending schedules
                 self.playerNode.volume = currentVolume  // 音量を元に戻す
                 self.fadeOutWorkItem = nil
-                print("🎵 [TrackPlayer] Stopped and reset after fade out")
             }
 
             fadeOutWorkItem = workItem
@@ -238,7 +231,6 @@ public final class TrackPlayer: TrackPlaying {
             // 即座に停止
             playerNode.stop()
             playerNode.reset()  // Clear pending schedules
-            print("🎵 [TrackPlayer] Stopped and reset immediately")
         }
     }
 
@@ -269,7 +261,6 @@ public final class TrackPlayer: TrackPlaying {
                 options: [],
                 completionCallbackType: .dataPlayedBack
             ) { callbackType in
-                print("🎵 [TrackPlayer] Playback completed")
             }
         }
     }

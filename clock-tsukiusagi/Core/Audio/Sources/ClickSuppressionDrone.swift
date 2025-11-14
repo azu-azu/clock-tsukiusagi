@@ -199,7 +199,6 @@ public final class ClickSuppressionDrone: AudioSource {
                         let mixedDb = 20.0 * log10(max(peakMixed, 0.00001))
                         let rmsDb = 20.0 * log10(max(rms, 0.00001))
 
-                        print("🎵 [ClickSuppressionDrone Diagnostics]")
                         print("   Noise: \(String(format: "%.4f", peakNoise)) (\(String(format: "%.1f", noiseDb)) dB)")
                         print("   Drone: \(String(format: "%.4f", peakDrone)) (\(String(format: "%.1f", droneDb)) dB)")
                         print("   Mixed Peak: \(String(format: "%.4f", peakMixed)) (\(String(format: "%.1f", mixedDb)) dB)")
@@ -257,13 +256,11 @@ public final class ClickSuppressionDrone: AudioSource {
     public func suspend() {
         audioState.isSuspended = true
         audioState.diagnosticsEnabled = false
-        print("🎵 [ClickSuppressionDrone] Suspended (output silence, diagnostics off)")
     }
 
     public func resume() {
         audioState.isSuspended = false
         audioState.diagnosticsEnabled = true
-        print("🎵 [ClickSuppressionDrone] Resumed (output active, diagnostics on)")
     }
 
     public func setVolume(_ volume: Float) {

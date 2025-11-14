@@ -206,12 +206,10 @@ public final class WindChime: AudioSource {
 
     public func suspend() {
         audioState.isSuspended = true
-        print("🎵 [WindChime] Suspended (output silence)")
     }
 
     public func resume() {
         audioState.isSuspended = false
-        print("🎵 [WindChime] Resumed (output active)")
     }
 
     public func setVolume(_ volume: Float) {
