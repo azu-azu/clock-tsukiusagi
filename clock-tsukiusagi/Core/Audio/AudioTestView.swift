@@ -9,6 +9,31 @@
 import SwiftUI
 import AVFoundation
 
+private enum AudioTestColors {
+    static let backgroundGradient = LinearGradient(
+        colors: [SkyTone.night.gradStart, SkyTone.night.gradEnd],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    static let navBackground = SkyTone.night.gradStart
+    static let card = Color.white.opacity(0.1)
+    static let accent = Color(hex: "#6CB6FF")
+    static let danger = Color(hex: "#FF5C5C")
+    static let warning = Color(hex: "#FFC069")
+    static let success = Color(hex: "#4ADE80")
+    static let inactive = Color.white.opacity(0.25)
+    static let textPrimary = Color.white
+    static let textSecondary = Color.white.opacity(0.65)
+}
+
+private extension View {
+    func audioTestCardStyle() -> some View {
+        padding()
+            .background(AudioTestColors.card)
+            .cornerRadius(16)
+    }
+}
+
 /// テスト用の音源タイプ
 enum TestSoundType: String, CaseIterable {
     case synthesis = "🎵 合成音源"
@@ -28,25 +53,23 @@ struct AudioTestView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // 音源選択
-                    soundSelectionSection
+            ZStack {
+                AudioTestColors.backgroundGradient
+                    .ignoresSafeArea()
 
-                    // コントロール
-                    controlSection
-
-                    // 音量調整
-                    volumeSection
-
-                    // 設定
-                    settingsSection
-
-                    // ステータス
-                    statusSection
+                ScrollView {
+                    VStack(spacing: 24) {
+                        soundSelectionSection
+                        controlSection
+                        volumeSection
+                        settingsSection
+                        statusSection
+                    }
+                    .padding()
                 }
-                .padding()
             }
+            .toolbarBackground(AudioTestColors.navBackground, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .navigationTitle("Audio Test")
             .navigationBarTitleDisplayMode(.large)
             .alert("エラー", isPresented: $showError) {
@@ -63,6 +86,7 @@ struct AudioTestView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("音源選択")
                 .font(.headline)
+                .foregroundColor(AudioTestColors.textPrimary)
 
             // Sound type picker (Segmented: Synthesis vs Audio File)
             Picker("音源タイプ", selection: $selectedSound) {
@@ -71,9 +95,12 @@ struct AudioTestView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .tint(AudioTestColors.accent)
             .disabled(audioService.isPlaying)
 
-            Divider()
+            Rectangle()
+                .fill(AudioTestColors.textSecondary.opacity(0.3))
+                .frame(height: 1)
 
             // Synthesis preset picker (if synthesis type selected)
             if selectedSound == .synthesis {
@@ -87,7 +114,7 @@ struct AudioTestView: View {
 
                 Text("🎵 \(selectedSynthesisPreset.displayName)")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AudioTestColors.textSecondary)
             }
 
             // Audio file picker (if audio file type selected)
@@ -102,12 +129,10 @@ struct AudioTestView: View {
 
                 Text("📁 \(selectedAudioFile.rawValue).\(selectedAudioFile.fileExtension)")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AudioTestColors.textSecondary)
             }
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .audioTestCardStyle()
     }
 
     private var controlSection: some View {
@@ -118,13 +143,14 @@ struct AudioTestView: View {
                     Text(audioService.isPlaying ? "停止" : "再生")
                 }
                 .font(.title3)
-                .foregroundColor(.white)
+                .foregroundColor(AudioTestColors.textPrimary)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(audioService.isPlaying ? Color.red : Color.blue)
+                .background(audioService.isPlaying ? AudioTestColors.danger : AudioTestColors.accent)
                 .cornerRadius(12)
             }
         }
+        .audioTestCardStyle()
     }
 
     private var volumeSection: some View {
@@ -132,88 +158,88 @@ struct AudioTestView: View {
             HStack {
                 Text("音量（端末ボタンで制御）")
                     .font(.headline)
+                    .foregroundColor(AudioTestColors.textPrimary)
                 Spacer()
                 Text("\(Int(audioService.systemVolume * 100))%")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AudioTestColors.textSecondary)
                     .monospacedDigit()
             }
 
             HStack(spacing: 12) {
                 Image(systemName: "speaker.fill")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AudioTestColors.textSecondary)
 
                 // Read-only progress bar
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         // Background
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.3))
+                            .fill(AudioTestColors.textSecondary.opacity(0.4))
                             .frame(height: 8)
 
                         // Filled portion
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.blue)
+                            .fill(AudioTestColors.accent)
                             .frame(width: geometry.size.width * CGFloat(audioService.systemVolume), height: 8)
                     }
                 }
                 .frame(height: 8)
 
                 Image(systemName: "speaker.wave.3.fill")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AudioTestColors.textSecondary)
             }
 
             Text("💡 音量は端末のボリュームボタンで調整してください")
                 .font(.caption)
-                .foregroundColor(.orange)
+                .foregroundColor(AudioTestColors.warning)
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .audioTestCardStyle()
     }
 
     private var settingsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("設定")
                 .font(.headline)
+                .foregroundColor(AudioTestColors.textPrimary)
 
             Text("設定はAudioServiceで管理されます")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundColor(AudioTestColors.textSecondary)
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .audioTestCardStyle()
     }
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("ステータス")
                 .font(.headline)
+                .foregroundColor(AudioTestColors.textPrimary)
 
             HStack {
                 Circle()
-                    .fill(audioService.isPlaying ? Color.green : Color.gray)
+                    .fill(audioService.isPlaying ? AudioTestColors.success : AudioTestColors.inactive)
                     .frame(width: 10, height: 10)
                 Text(audioService.isPlaying ? "再生中" : "停止中")
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AudioTestColors.textSecondary)
             }
 
             HStack {
                 Text("出力:")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AudioTestColors.textSecondary)
                 Text("\(audioService.outputRoute.icon) \(audioService.outputRoute.displayName)")
                     .font(.caption)
+                    .foregroundColor(AudioTestColors.textPrimary)
             }
 
             if let reason = audioService.pauseReason {
                 HStack {
                     Text("停止理由:")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AudioTestColors.textSecondary)
                     Text(reason.rawValue)
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundColor(AudioTestColors.warning)
                 }
             }
 
@@ -221,23 +247,21 @@ struct AudioTestView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("選択中:")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AudioTestColors.textSecondary)
 
                 switch selectedSound {
                 case .synthesis:
                     Text("🎵 \(selectedSynthesisPreset.displayName)")
                         .font(.caption)
-                        .foregroundColor(.primary)
+                        .foregroundColor(AudioTestColors.textPrimary)
                 case .audioFile:
                     Text("📁 \(selectedAudioFile.displayName)")
                         .font(.caption)
-                        .foregroundColor(.primary)
+                        .foregroundColor(AudioTestColors.textPrimary)
                 }
             }
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
+        .audioTestCardStyle()
     }
 
     // MARK: - Actions
