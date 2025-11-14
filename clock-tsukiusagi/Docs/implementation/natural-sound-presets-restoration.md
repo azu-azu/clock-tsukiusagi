@@ -34,6 +34,98 @@
 
 ## 発見された問題と解決策
 
+### 問題0: 音源復活時の初期エラー（型の曖昧性）
+
+**発生タイミング**: git履歴から音源を復活させた直後
+
+**症状**:
+- `NoiseType is ambiguous` エラー
+- `ChordType is ambiguous` エラー
+- `AudioFilePresets` の switch が非exhaustive エラー
+
+**原因**:
+復活させた音源ファイルが、古いモジュール構造を参照していた。具体的には:
+
+1. **NoiseType の曖昧性**
+   - 古い実装: `NoiseSource.NoiseType` と `NoiseGenerator.NoiseType` が両方存在
+   - 新しい実装: `NoiseGenerator.NoiseType` に統一されている
+   - 復活した音源が古い参照を使用していた
+
+2. **ChordType の曖昧性**
+   - 古い実装: `ChordGenerator.ChordType` が存在
+   - 新しい実装: 別の場所に移動または統一されている
+
+3. **switch の非exhaustive**
+   - 新しいプリセットケースを追加したが、`AudioFilePresets` の switch に追加し忘れ
+
+**解決策**:
+
+#### 1. NoiseType の統一
+
+```swift
+// ❌ 復活直後の古いコード
+let noiseGen = NoiseSource(type: .pink)  // NoiseSource.NoiseType
+
+// ✅ 修正後
+let noiseGen = NoiseGenerator(type: .pink)  // NoiseGenerator.NoiseType
+```
+
+**影響を受けたファイル**:
+- `AmbientDrone.swift`
+- `OceanWaves.swift`
+- `CracklingFire.swift`
+
+#### 2. ChordType の参照修正
+
+```swift
+// ❌ 復活直後の古いコード
+let chord = ChordGenerator.ChordType.sus4
+
+// ✅ 修正後（現在のモジュール構造に合わせる）
+let chordType: ChordType = .sus4
+```
+
+#### 3. AudioFilePresets の switch を exhaustive に
+
+すべての新規プリセットケースを追加:
+
+```swift
+extension NaturalSoundPreset {
+    public var audioFilePreset: AudioFilePreset? {
+        switch self {
+        // ... 既存のケース
+        case .pleasantWarm:
+            return nil  // Uses synthesis
+        case .pleasantCalm:
+            return nil  // Uses synthesis
+        case .pleasantDeep:
+            return nil  // Uses synthesis
+        case .ambientFocus:
+            return nil  // Uses synthesis
+        case .ambientRelax:
+            return nil  // Uses synthesis
+        case .ambientSleep:
+            return nil  // Uses synthesis
+        case .windChime:
+            return nil  // Uses synthesis
+        case .tibetanBowl:
+            return nil  // Uses synthesis
+        case .oceanWaves:
+            return nil  // Uses synthesis
+        case .cracklingFire:
+            return nil  // Uses synthesis
+        }
+    }
+}
+```
+
+**重要な教訓**:
+- git履歴から古いコードを復活させる際は、**必ず現在のモジュール構造に合わせる**こと
+- 型の参照が曖昧な場合は、完全修飾名（`ModuleName.TypeName`）で確認する
+- 新しいenumケースを追加したら、**すべてのswitch文を確認**すること
+
+---
+
 ### 問題1: 停止ボタンが効かない（ゴーストタスク問題）
 
 **症状**:
@@ -183,6 +275,24 @@ public struct PleasantDrone {
 
 ## 実装手順
 
+### 前提条件
+
+**⚠️ 重要**: git履歴から古いコードを復活させる場合、以下の点に注意:
+
+1. **モジュール構造の変更を確認する**
+   - 型の参照が変わっている可能性がある（例: `NoiseSource.NoiseType` → `NoiseGenerator.NoiseType`）
+   - 古い型参照は曖昧性エラーの原因になる
+
+2. **依存関係を確認する**
+   - 復活させた音源が依存する補助クラスもすべて復活させる
+   - 欠けている依存があると、コンパイルエラーになる
+
+3. **enum の変更を追跡する**
+   - 新しいケースを追加したら、すべての switch 文を exhaustive にする
+   - Xcode のコンパイルエラーで見つからない場合もあるので、手動で確認する
+
+---
+
 ### 1. git 履歴から音源を復活
 
 ```bash
@@ -192,6 +302,8 @@ git show e51bc1a^:clock-tsukiusagi/Core/Audio/Sources/TibetanBowl.swift
 git show e51bc1a^:clock-tsukiusagi/Core/Audio/Sources/OceanWaves.swift
 git show e51bc1a^:clock-tsukiusagi/Core/Audio/Sources/CracklingFire.swift
 ```
+
+**⚠️ 注意**: 復活させたコードを**そのままコピーしない**こと。現在のモジュール構造に合わせて修正が必要。
 
 ### 2. 依存する補助クラスも復活
 
@@ -207,6 +319,23 @@ git show e51bc1a^:clock-tsukiusagi/Core/Audio/Sources/MultiOscillator.swift
 git show e51bc1a^:clock-tsukiusagi/Core/Audio/Sources/PulseGenerator.swift
 git show e51bc1a^:clock-tsukiusagi/Core/Audio/Sources/BandpassNoise.swift
 git show e51bc1a^:clock-tsukiusagi/Core/Audio/Sources/NoiseSource.swift
+```
+
+**チェックリスト**:
+- [ ] すべての依存ファイルを復活させた
+- [ ] 型の参照を現在のモジュール構造に合わせて修正した
+- [ ] コンパイルエラー（曖昧性エラー含む）をすべて解消した
+
+### 2.1. 型の曖昧性を解消
+
+復活させたコードで以下のような型参照があれば修正:
+
+```swift
+// ❌ 古い参照（曖昧性エラーの可能性）
+let noiseGen = NoiseSource(type: .pink)
+
+// ✅ 現在の参照
+let noiseGen = NoiseGenerator(type: .pink)
 ```
 
 ### 3. 各音源に suspend/resume を追加
@@ -489,11 +618,56 @@ clock-tsukiusagi/Core/Audio/
 
 ## トラブルシューティング
 
+### 型の曖昧性エラー（"X is ambiguous"）
+
+**症状**: `NoiseType is ambiguous` や `ChordType is ambiguous` などのコンパイルエラー
+
+**原因**: git履歴から復活させたコードが古い型参照を使用している
+
+**解決策**:
+
+1. **エラー箇所を特定**
+   ```
+   error: 'NoiseType' is ambiguous for type lookup in this context
+   ```
+
+2. **完全修飾名で確認**
+   ```swift
+   // どちらの型を使うべきか確認
+   let type1: NoiseSource.NoiseType = .pink
+   let type2: NoiseGenerator.NoiseType = .pink
+   ```
+
+3. **現在のモジュール構造に合わせて修正**
+   ```swift
+   // ❌ 古い参照
+   let noiseGen = NoiseSource(type: .pink)
+
+   // ✅ 現在の参照
+   let noiseGen = NoiseGenerator(type: .pink)
+   ```
+
+4. **影響を受けるファイルをすべて修正**
+   - git履歴から復活させたすべてのファイルをチェック
+   - 特に `AmbientDrone.swift`, `OceanWaves.swift`, `CracklingFire.swift` など
+
+---
+
 ### 音が止まらない場合
 
 1. `suspend()` メソッドが実装されているか確認
 2. render callback 内で `isSuspended` チェックがあるか確認
 3. `AudioState` クラスが正しくキャプチャされているか確認
+
+**デバッグ方法**:
+```swift
+public func suspend() {
+    audioState.isSuspended = true
+    print("🎵 [SourceName] Suspended (output silence)")  // ログで確認
+}
+```
+
+---
 
 ### 複数の音が重なる場合
 
@@ -501,11 +675,59 @@ clock-tsukiusagi/Core/Audio/
 2. `LocalAudioEngine.clearSources()` が正しく実装されているか確認
 3. ノードが正しくデタッチされているか確認
 
+**デバッグ方法**:
+```swift
+public func clearSources() {
+    print("LocalAudioEngine: Clearing all sources (count: \(sources.count))")
+    // ... クリア処理
+    print("LocalAudioEngine: All sources cleared")
+}
+```
+
+プリセット切り替え時に以下のログが出力されるか確認:
+```
+🎵 [AudioService] Cleared previous sources
+LocalAudioEngine: Clearing all sources (count: 1)
+LocalAudioEngine: All sources cleared
+```
+
+---
+
 ### ビルドエラー
 
-1. `AudioFilePresets` の switch が exhaustive か確認
-2. 未使用変数の警告を確認（`let _ = ...` で明示的に破棄）
-3. すべての依存ファイル（Modulation, 基本音源）が存在するか確認
+#### 1. switch が exhaustive でない
+
+**エラー**: `switch must be exhaustive`
+
+**解決策**: 新しいenumケースをすべての switch 文に追加
+
+影響を受けるファイル:
+- `NaturalSoundPreset.displayName`
+- `AudioService.registerSource(for:)`
+- `AudioFilePresets.audioFilePreset`
+
+#### 2. 未使用変数の警告
+
+**警告**: `initialization of immutable value 'localLFODepth' was never used`
+
+**解決策**:
+```swift
+// ❌ 警告が出る
+let localLFODepth = lfoDepth  // 未使用
+
+// ✅ 明示的に破棄
+let _ = lfoDepth  // Note: depth is controlled by other parameters
+```
+
+#### 3. 依存ファイルの欠落
+
+**エラー**: `Cannot find type 'EnvelopeGenerator' in scope`
+
+**解決策**: 依存するすべてのファイルを復活させる
+- `EnvelopeGenerator.swift`
+- `RandomTrigger.swift`
+- `LFO.swift`
+- その他の補助クラス
 
 ---
 

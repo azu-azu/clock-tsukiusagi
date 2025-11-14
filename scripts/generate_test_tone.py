@@ -52,9 +52,12 @@ def save_as_wav(audio_data, filename, sample_rate):
 # Generators
 # ------------------------------------------------------------
 def generate_pink_noise(duration, sample_rate):
-    """Generate pink noise (Voss-McCartney algorithm)"""
+    """Generate pink noise (Voss-McCartney algorithm) (seamless loop)"""
     num_samples = int(duration * sample_rate)
     num_sources = 16
+
+    # Use seed for reproducible noise that loops
+    np.random.seed(999)
     sources = np.random.randn(num_sources, num_samples)
     pink = np.zeros(num_samples)
     for i in range(num_sources):
@@ -63,34 +66,48 @@ def generate_pink_noise(duration, sample_rate):
         up = np.repeat(down, factor)[:num_samples]
         pink += up
     pink = normalize(pink)
-    return apply_fade(pink, sample_rate, 100)
+    return pink  # No fade for seamless loop
 
 
 def generate_ocean_waves(duration, sample_rate):
-    """Generate ocean waves with slow rhythmic modulation"""
+    """Generate ocean waves with slow rhythmic modulation (seamless loop)"""
     num_samples = int(duration * sample_rate)
-    t = np.linspace(0, duration, num_samples)
+    t = np.linspace(0, duration, num_samples, endpoint=False)  # endpoint=False for seamless loop
+
+    # Generate random seed for reproducible noise that loops
+    np.random.seed(42)
     noise = np.random.randn(num_samples)
 
-    # Multi-layer slow sine envelope
+    # Multi-layer slow sine envelope with frequencies that divide evenly into duration
+    # This ensures the envelope starts and ends at the same phase
+    # Using frequencies that are multiples of 1/duration for perfect looping
+    f1 = 3 / duration  # 3 cycles in 60s = 0.05 Hz
+    f2 = 2 / duration  # 2 cycles in 60s = 0.033 Hz
+    f3 = 5 / duration  # 5 cycles in 60s = 0.083 Hz
+
     env = (0.6
-           + 0.3 * np.sin(2 * np.pi * 0.15 * t)
-           + 0.2 * np.sin(2 * np.pi * 0.08 * t + 1.2)
-           + 0.1 * np.sin(2 * np.pi * 0.25 * t + 2.1))
+           + 0.3 * np.sin(2 * np.pi * f1 * t)
+           + 0.2 * np.sin(2 * np.pi * f2 * t)
+           + 0.1 * np.sin(2 * np.pi * f3 * t))
     env = np.clip(env, 0, 1)
 
     wave = noise * env
     sos = signal.butter(4, 2000, "lowpass", fs=sample_rate, output="sos")
     wave = signal.sosfilt(sos, wave)
     wave = normalize(wave)
-    return apply_fade(wave, sample_rate, 200)
+
+    # Remove fade for seamless looping (the envelope already creates natural variation)
+    return wave
 
 
 def generate_rain_sound(duration, sample_rate):
-    """Generate rain ambience using filtered noise layers"""
+    """Generate rain ambience using filtered noise layers (seamless loop)"""
     num_samples = int(duration * sample_rate)
     rain = np.zeros(num_samples)
-    t = np.linspace(0, duration, num_samples)
+    t = np.linspace(0, duration, num_samples, endpoint=False)
+
+    # Use seed for reproducible noise
+    np.random.seed(123)
 
     # Heavy drops
     drops = np.random.randn(num_samples) * 0.3
@@ -107,33 +124,42 @@ def generate_rain_sound(duration, sample_rate):
     sos = signal.butter(2, 3000, "highpass", fs=sample_rate, output="sos")
     rain += signal.sosfilt(sos, hiss)
 
-    # Subtle intensity modulation
-    intensity = 0.8 + 0.2 * np.sin(2 * np.pi * 0.05 * t)
+    # Subtle intensity modulation with frequency that loops perfectly
+    f_mod = 1 / duration  # 1 cycle in 60s
+    intensity = 0.8 + 0.2 * np.sin(2 * np.pi * f_mod * t)
     rain *= intensity
 
     rain = normalize(rain)
-    return apply_fade(rain, sample_rate, 200)
+    return rain  # No fade for seamless loop
 
 
 def generate_forest_ambience(duration, sample_rate):
-    """Generate forest ambience (wind + leaves + birds)"""
+    """Generate forest ambience (wind + leaves + birds) (seamless loop)"""
     num_samples = int(duration * sample_rate)
-    t = np.linspace(0, duration, num_samples)
+    t = np.linspace(0, duration, num_samples, endpoint=False)
+
+    # Use seed for reproducible noise
+    np.random.seed(456)
 
     # 🌬️ Wind (low-frequency noise)
     wind = np.random.randn(num_samples)
     sos = signal.butter(2, 1000, "lowpass", fs=sample_rate, output="sos")
     wind = signal.sosfilt(sos, wind)
-    wind *= 0.6 + 0.4 * np.sin(2 * np.pi * 0.1 * t)
+    # Use frequency that loops perfectly (2 cycles in 60s)
+    f_wind = 2 / duration
+    wind *= 0.6 + 0.4 * np.sin(2 * np.pi * f_wind * t)
 
     # 🍃 Leaves rustling (high-frequency whisper)
     leaves = np.random.randn(num_samples)
     sos = signal.butter(2, 3000, "highpass", fs=sample_rate, output="sos")
     leaves = signal.sosfilt(sos, leaves)
-    leaves *= 0.3 + 0.2 * np.sin(2 * np.pi * 0.3 * t + np.pi / 4)
+    # Use frequency that loops perfectly (6 cycles in 60s)
+    f_leaves = 6 / duration
+    leaves *= 0.3 + 0.2 * np.sin(2 * np.pi * f_leaves * t)
 
     # 🐦 Birds chirping (sporadic high tones)
     birds = np.zeros(num_samples)
+    np.random.seed(789)  # Separate seed for bird positions
     for _ in range(int(duration / 3)):  # roughly 1 chirp every 3 seconds
         start = np.random.randint(0, num_samples - int(sample_rate * 0.2))
         length = np.random.randint(int(sample_rate * 0.1), int(sample_rate * 0.25))
@@ -145,7 +171,7 @@ def generate_forest_ambience(duration, sample_rate):
     # Mix all components
     forest = (0.5 * wind) + (0.3 * leaves) + (0.2 * birds)
     forest = normalize(forest)
-    return apply_fade(forest, sample_rate, 200)
+    return forest  # No fade for seamless loop
 
 
 # ------------------------------------------------------------
