@@ -47,9 +47,7 @@ final class AudioActivityController: ObservableObject {
                 )
             }
             isActivityActive = true
-            print("[AudioActivityController] Live Activity started: \(currentActivity?.id ?? "unknown")")
         } catch {
-            print("[AudioActivityController] Failed to start Live Activity: \(error)")
             isActivityActive = false
         }
     }
@@ -63,7 +61,6 @@ final class AudioActivityController: ObservableObject {
         presetName: String?
     ) {
         guard let activity = currentActivity else {
-            print("[AudioActivityController] No active activity to update")
             return
         }
 
@@ -81,7 +78,6 @@ final class AudioActivityController: ObservableObject {
             } else {
                 await activity.update(using: contentState)
             }
-            print("[AudioActivityController] Live Activity updated")
         }
     }
 
@@ -97,7 +93,6 @@ final class AudioActivityController: ObservableObject {
             }
             currentActivity = nil
             isActivityActive = false
-            print("[AudioActivityController] Live Activity ended")
         }
     }
 
@@ -120,7 +115,6 @@ final class AudioActivityController: ObservableObject {
             }
             currentActivity = nil
             isActivityActive = false
-            print("[AudioActivityController] Live Activity scheduled to end after \(delay)s")
         }
     }
 

@@ -266,8 +266,6 @@ struct AudioTestView: View {
 
             // 音量はシステム音量で自動制御される
 
-            print("AudioTestView: Audio playback started successfully")
-
         } catch let error as NSError {
             let detailedMessage = """
             再生エラー:

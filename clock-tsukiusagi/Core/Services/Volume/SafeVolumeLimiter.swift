@@ -102,9 +102,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
             return
         }
 
-        print("   Max output: \(maxOutputDb) dB")
-        print("   Format: \(format.sampleRate) Hz, \(format.channelCount) channels")
-
         // Disconnect existing connections to ensure clean state
         engine.disconnectNodeOutput(masterBusMixer)
         engine.disconnectNodeOutput(limiterNode)
@@ -114,8 +111,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         // Use nil format for Limiter→mainMixer to allow automatic format conversion
         engine.connect(masterBusMixer, to: limiterNode, format: format)
         engine.connect(limiterNode, to: engine.mainMixerNode, format: nil)  // Auto-conversion
-
-        print("   ✅ Audio path: masterBusMixer → limiter (\(format.sampleRate)Hz/\(format.channelCount)ch) → mainMixer (auto) → output")
 
         // Configure limiter settings
         updateLimiterSettings()
@@ -153,8 +148,5 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         // Bypass the effect by setting wet/dry mix to 0% (100% dry = no processing)
         limiterNode.wetDryMix = 0
 
-        print("   ⚠️  LIMITER BYPASSED (distortion was causing noise)")
-        print("   Pre-gain: \(maxOutputDb) dB (not applied)")
-        print("   Wet/Dry: 0% (bypass mode)")
     }
 }

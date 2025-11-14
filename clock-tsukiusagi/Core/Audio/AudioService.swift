@@ -1007,19 +1007,6 @@ public final class AudioService: ObservableObject {
         // Apply to main mixer
         engine.setMasterVolume(compensatedGain)
 
-        let finalVolume = systemVol * compensatedGain
-        let finalDb = 20.0 * log10(max(finalVolume, epsilon))
-
-        print("   System volume: \(String(format: "%.4f", systemVol)) (\(Int(systemVol * 100))%)")
-        print("   App gain: \(String(format: "%.4f", compensatedGain)) (\(Int(compensatedGain * 100))%)")
-        print("   Final output: \(String(format: "%.4f", finalVolume)) (\(String(format: "%.1f", finalDb)) dB)")
-        print("   Cap: \(String(format: "%.4f", volumeCapLinear)) (-6.0 dB)")
-
-        if finalVolume > volumeCapLinear + 0.001 {
-            print("   ⚠️  WARNING: Final volume exceeds cap!")
-        } else {
-            print("   ✅ Within safe limit")
-        }
     }
 
     // MARK: - Track Player (File-based Playback)

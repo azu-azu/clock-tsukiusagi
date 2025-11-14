@@ -77,19 +77,12 @@ public final class QuietBreakScheduler: QuietBreakScheduling {
 
     public func start() {
         guard isEnabled else {
-            print("⏰ [QuietBreakScheduler] Disabled, not starting")
             return
         }
-
-        print("⏰ [QuietBreakScheduler] Starting scheduler")
-        print("   Play duration: \(Int(playDuration/60)) minutes")
-        print("   Break duration: \(Int(breakDuration/60)) minutes")
 
         // 次の休憩時刻を計算（真値）
         let now = Date()
         _nextBreakAt = now.addingTimeInterval(playDuration)
-
-        print("   Next break at: \(_nextBreakAt!)")
 
         // タイマーを開始
         scheduleTimer(for: playDuration)
@@ -97,7 +90,6 @@ public final class QuietBreakScheduler: QuietBreakScheduling {
     }
 
     public func stop() {
-        print("⏰ [QuietBreakScheduler] Stopping scheduler")
         timer?.cancel()
         timer = nil
         phase = .idle
@@ -105,7 +97,6 @@ public final class QuietBreakScheduler: QuietBreakScheduling {
     }
 
     public func reset() {
-        print("⏰ [QuietBreakScheduler] Resetting scheduler")
         stop()
         if isEnabled {
             start()
@@ -125,15 +116,11 @@ public final class QuietBreakScheduler: QuietBreakScheduling {
         newTimer.resume()
 
         timer = newTimer
-
-        print("⏰ [QuietBreakScheduler] Timer scheduled for \(Int(interval)) seconds")
     }
 
     private func handleTimerFired() {
         switch phase {
         case .playing:
-            print("⏰ [QuietBreakScheduler] Play period ended - starting break")
-
             // 休憩開始を通知
             onBreakStart?()
 
@@ -145,11 +132,7 @@ public final class QuietBreakScheduler: QuietBreakScheduling {
             scheduleTimer(for: breakDuration)
             phase = .breaking(startedAt: now)
 
-            print("   Next resume at: \(_nextBreakAt!)")
-
         case .breaking:
-            print("⏰ [QuietBreakScheduler] Break period ended - resuming play")
-
             // 再生再開を通知
             onBreakEnd?()
 
@@ -161,10 +144,8 @@ public final class QuietBreakScheduler: QuietBreakScheduling {
             scheduleTimer(for: playDuration)
             phase = .playing(startedAt: now)
 
-            print("   Next break at: \(_nextBreakAt!)")
-
         case .idle:
-            print("⏰ [QuietBreakScheduler] Timer fired in idle state (ignoring)")
+            break
         }
     }
 
@@ -182,22 +163,14 @@ public final class QuietBreakScheduler: QuietBreakScheduling {
     private func handleWakeFromSleep() {
         guard let nextBreak = _nextBreakAt else { return }
 
-        print("⏰ [QuietBreakScheduler] App returned to foreground - recalculating timer")
-
         let now = Date()
         let remaining = nextBreak.timeIntervalSince(now)
 
-        print("   Scheduled time: \(nextBreak)")
-        print("   Current time: \(now)")
-        print("   Remaining: \(Int(remaining)) seconds")
-
         if remaining > 0 {
             // まだ時間がある - タイマーを再スケジュール
-            print("   Rescheduling timer with corrected interval")
             scheduleTimer(for: remaining)
         } else {
             // 時間切れ - 即座にトリガー
-            print("   Overdue - triggering immediately")
             handleTimerFired()
         }
     }
