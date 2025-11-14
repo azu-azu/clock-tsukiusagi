@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3220CA1D2EC73525004DB2DD /* sea-and-seagull-wave-5932.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 3220CA1C2EC73525004DB2DD /* sea-and-seagull-wave-5932.mp3 */; };
 		3284D3EA2EC3035B005F899F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3284D3E92EC3035B005F899F /* WidgetKit.framework */; };
 		3284D3EC2EC3035B005F899F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3284D3EB2EC3035B005F899F /* SwiftUI.framework */; };
 		3284D3FD2EC3035F005F899F /* AudioLiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3284D3E72EC3035B005F899F /* AudioLiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -51,6 +52,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3220CA1C2EC73525004DB2DD /* sea-and-seagull-wave-5932.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = "sea-and-seagull-wave-5932.mp3"; sourceTree = "<group>"; };
 		3284D3E72EC3035B005F899F /* AudioLiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AudioLiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3284D3E92EC3035B005F899F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		3284D3EB2EC3035B005F899F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -163,6 +165,7 @@
 				3284D40C2EC30848005F899F /* AudioLiveActivity */,
 				3284D3E82EC3035B005F899F /* Frameworks */,
 				32C0CBE92EA3141F008ACC87 /* Products */,
+				3220CA1C2EC73525004DB2DD /* sea-and-seagull-wave-5932.mp3 */,
 			);
 			sourceTree = "<group>";
 		};
@@ -333,6 +336,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3220CA1D2EC73525004DB2DD /* sea-and-seagull-wave-5932.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

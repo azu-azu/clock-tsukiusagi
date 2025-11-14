@@ -82,7 +82,10 @@ public final class TrackPlayer: TrackPlaying {
         engine.connect(playerNode, to: targetNode, format: format)
 
         print("🎵 [TrackPlayer] Configured and connected to \(destination != nil ? "masterBusMixer" : "mainMixerNode")")
-        print("   Connection format: \(format.commonFormat.rawValue), \(format.sampleRate) Hz, \(format.channelCount) ch")
+        print("""
+            Connection format: \(format.commonFormat.rawValue), \
+            \(format.sampleRate) Hz, \(format.channelCount) ch
+            """)
     }
 
     // MARK: - Public Methods
@@ -109,8 +112,15 @@ public final class TrackPlayer: TrackPlaying {
 
         // Verify we're reading the correct file
         print("   File length: \(file.length) frames")
-        print("   File format: \(file.fileFormat.commonFormat.rawValue), \(file.fileFormat.sampleRate) Hz, \(file.fileFormat.channelCount) ch")
-        print("   Processing format: \(file.processingFormat.commonFormat.rawValue), \(file.processingFormat.sampleRate) Hz, \(file.processingFormat.channelCount) ch")
+        print("""
+            File format: \(file.fileFormat.commonFormat.rawValue), \
+            \(file.fileFormat.sampleRate) Hz, \(file.fileFormat.channelCount) ch
+            """)
+        print("""
+            Processing format: \(file.processingFormat.commonFormat.rawValue), \
+            \(file.processingFormat.sampleRate) Hz, \
+            \(file.processingFormat.channelCount) ch
+            """)
 
         // バッファを作成（ファイルのprocessingFormatをそのまま使用）
         // AVAudioEngine's mixer will handle format conversion automatically
@@ -127,7 +137,10 @@ public final class TrackPlayer: TrackPlaying {
         print("   ✓ Buffer created with \(buffer.frameLength) frames")
 
         // Verify buffer format
-        print("   Buffer format: \(buffer.format.commonFormat.rawValue), \(buffer.format.sampleRate) Hz, \(buffer.format.channelCount) ch")
+        print("""
+            Buffer format: \(buffer.format.commonFormat.rawValue), \
+            \(buffer.format.sampleRate) Hz, \(buffer.format.channelCount) ch
+        """)
 
         // Sample first 10 samples to verify audio data
         if buffer.format.commonFormat == .pcmFormatFloat32 {
@@ -235,7 +248,12 @@ public final class TrackPlayer: TrackPlaying {
     private func scheduleBuffer(_ buffer: AVAudioPCMBuffer, loop: Bool, crossfadeDuration: TimeInterval) {
         if loop {
             // ループ再生：completionCallbackType で次のバッファをスケジュール
-            playerNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { [weak self] callbackType in
+            playerNode.scheduleBuffer(
+                buffer,
+                at: nil,
+                options: [],
+                completionCallbackType: .dataPlayedBack
+            ) { [weak self] callbackType in
                 Task { @MainActor [weak self] in
                     guard let self = self, self.isLooping else { return }
 
@@ -245,7 +263,12 @@ public final class TrackPlayer: TrackPlaying {
             }
         } else {
             // 1回再生
-            playerNode.scheduleBuffer(buffer, at: nil, options: [], completionCallbackType: .dataPlayedBack) { callbackType in
+            playerNode.scheduleBuffer(
+                buffer,
+                at: nil,
+                options: [],
+                completionCallbackType: .dataPlayedBack
+            ) { callbackType in
                 print("🎵 [TrackPlayer] Playback completed")
             }
         }

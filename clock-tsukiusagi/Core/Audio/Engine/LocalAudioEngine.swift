@@ -94,12 +94,17 @@ public final class LocalAudioEngine {
         let format = engine.outputNode.inputFormat(forBus: 0)
         print("LocalAudioEngine: Output format - sampleRate: \(format.sampleRate), channels: \(format.channelCount)")
 
-        // Attach node to engine
-        engine.attach(source.sourceNode)
+        do {
+            try source.attachAndConnect(to: engine, format: format)
+        } catch {
+            print("LocalAudioEngine: Failed to attach/connect source - \(error)")
+            return
+        }
 
-        // Connect to destination (masterBusMixer) or mainMixer
-        let target = destinationNode ?? engine.mainMixerNode
-        engine.connect(source.sourceNode, to: target, format: format)
+        if let target = destinationNode {
+            engine.disconnectNodeOutput(source.sourceNode)
+            engine.connect(source.sourceNode, to: target, format: format)
+        }
 
         sources.append(source)
         print("LocalAudioEngine: Audio source registered and connected to \(destinationNode != nil ? "masterBusMixer" : "mainMixerNode")")
