@@ -108,20 +108,87 @@ def generate_forest_ambience(duration, sample_rate):
     forest = (0.5*wind + 0.3*leaves + 0.2*birds)
     return normalize(forest)
 
+def _create_envelope(duration, sample_rate, nodes):
+    """Piecewise-linear envelope helper."""
+    num_samples = int(duration * sample_rate)
+    positions = np.array([p for p, _ in nodes]) * (num_samples - 1)
+    values = np.array([v for _, v in nodes])
+    x = np.linspace(0, num_samples - 1, num_samples)
+    return np.interp(x, positions, values)
+
+
 def generate_seagull_chirp(sample_rate):
     """Single seagull chirp ~0.8s"""
     duration = 0.8
-    t = np.linspace(0, duration, int(sample_rate*duration), endpoint=False)
+    t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
     base_freq, swing = 1500, 1200
-    pitch = base_freq + swing*np.sin(np.pi*t/duration)
-    phase = 2*np.pi*np.cumsum(pitch)/sample_rate
+    pitch = base_freq + swing * np.sin(np.pi * t / duration)
+    phase = 2 * np.pi * np.cumsum(pitch) / sample_rate
     tone = np.sin(phase)
-    noise = np.random.randn(len(t))*0.15
-    harm = 0.5*np.sin(phase*2)+0.25*np.sin(phase*3)
-    sig = (tone*0.6 + harm*0.4 + noise)*0.8
-    env = np.sin(np.linspace(0, np.pi, len(t)))**1.5
+    noise = np.random.randn(len(t)) * 0.15
+    harm = 0.5 * np.sin(phase * 2) + 0.25 * np.sin(phase * 3)
+    sig = (tone * 0.6 + harm * 0.4 + noise) * 0.8
+    env = np.sin(np.linspace(0, np.pi, len(t))) ** 1.5
     sig *= env
     return normalize(sig)
+
+def place_seagull_group(sample_rate, total_duration_sec, events, max_overlap=2):
+    """
+    複数羽のカモメをランダムに重ねて鳴かせる
+    events: [(start_sec, duration_sec), ...]
+    max_overlap: 一度に鳴く羽の最大数
+    """
+    total = np.zeros(int(sample_rate * total_duration_sec))
+
+    for start_sec, _ in events:
+        # 1イベントあたり 1〜max_overlap 羽を鳴かせる（確率的に1羽だけのこともある）
+        num_gulls = np.random.randint(1, max_overlap + 1)
+        # 複数羽の場合、時間をより分散させる
+        if num_gulls > 1:
+            # 各羽の開始時間をより広く分散（±0.4秒の範囲で均等に配置）
+            jitter_range = 0.4
+            jitters = np.linspace(-jitter_range/2, jitter_range/2, num_gulls)
+            np.random.shuffle(jitters)  # ランダムに並び替え
+        else:
+            jitters = [0]
+
+        for i, jitter_base in enumerate(jitters):
+            gull = generate_seagull_chirp(sample_rate)
+
+            # 個体差を大きく（ピッチ差を広げる）
+            pitch_scale = np.random.uniform(0.75, 1.25)  # より広い範囲
+            amp = np.random.uniform(0.4, 0.9)  # 音量差も大きく
+            # さらに細かい時間ずらしを追加（±0.1秒）
+            jitter = jitter_base + np.random.uniform(-0.1, 0.1)
+
+            # 時間伸縮
+            idx = np.arange(len(gull))
+            stretched = np.interp(
+                np.linspace(0, len(gull) - 1, int(len(gull) / pitch_scale)),
+                idx,
+                gull,
+            )
+
+            # 開始位置（ずらし込み）
+            start = int(sample_rate * max(0, start_sec + jitter))
+            end = min(len(total), start + len(stretched))
+            if end > start:
+                total[start:end] += amp * stretched[: (end - start)]
+
+    return normalize(total)
+
+
+# 実際のmp3から検出したイベントリスト
+EVENTS = [
+    (1.606, 0.526),
+    (11.276, 0.707),
+    (13.555, 0.061),
+    (13.721, 0.078),
+    (17.533, 0.073),
+    (18.014, 0.135),
+    (21.119, 0.096),
+    (53.370, 0.186),
+]
 
 # ------------------------------------------------------------
 # Main
@@ -144,6 +211,11 @@ def main():
     print("\n🐦 Generating seagull chirp...")
     seagull = generate_seagull_chirp(SAMPLE_RATE)
     save_audio(seagull, "seagull", SAMPLE_RATE)
+
+    print("\n🐦🐦 Generating seagull group (with event timing)...")
+    # EVENTSの最後のイベントが53.370秒なので、60秒の長さで生成
+    seagull_group = place_seagull_group(SAMPLE_RATE, DURATION, EVENTS)
+    save_audio(seagull_group, "seagull_group", SAMPLE_RATE)
 
     print("\n✅ All sounds generated successfully!\n")
 
