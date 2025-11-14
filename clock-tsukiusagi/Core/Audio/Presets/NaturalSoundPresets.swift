@@ -23,6 +23,7 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     case windChime          // 癒しチャイム
     case tibetanBowl        // チベタンボウル風
     case oceanWaves         // 波の音
+    case oceanWavesSeagulls // 波 + 海鳥
     case cracklingFire      // 焚き火の音
 
     public var id: String { rawValue }
@@ -56,6 +57,8 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
             return "チベタンボウル"
         case .oceanWaves:
             return "波の音"
+        case .oceanWavesSeagulls:
+            return "波 + 海鳥"
         case .cracklingFire:
             return "焚き火の音"
         }
@@ -353,6 +356,44 @@ public struct NaturalSoundPresets {
 
         /// LFO最大値（音量）
         public static let lfoMaximum: Double = 0.6
+    }
+
+    // MARK: - Ocean Waves + Seagulls（波 + 海鳥）
+
+    /// 波 + 海鳥プリセット設定
+    public struct OceanWavesSeagulls {
+        /// 波ノイズ音量
+        public static let noiseAmplitude: Float = 0.3
+
+        /// 波の周期（穏やかに）
+        public static let lfoFrequency: Double = 0.18
+
+        /// LFO最小値
+        public static let lfoMinimum: Double = 0.1
+
+        /// LFO最大値
+        public static let lfoMaximum: Double = 0.6
+
+        /// 海鳥チャープ音量
+        public static let birdAmplitude: Double = 0.22
+
+        /// チャープ間隔（最小）
+        public static let birdMinInterval: Double = 4.0
+
+        /// チャープ間隔（最大）
+        public static let birdMaxInterval: Double = 11.0
+
+        /// チャープ持続時間（最小）
+        public static let birdMinDuration: Double = 0.25
+
+        /// チャープ持続時間（最大）
+        public static let birdMaxDuration: Double = 0.55
+
+        /// チャープの周波数帯（カモメ風）
+        public static let birdFrequencyRange: ClosedRange<Double> = 1700.0...3200.0
+
+        /// 同時発音数
+        public static let maxConcurrentChirps: Int = 3
     }
 
     // MARK: - Crackling Fire（焚き火の音）

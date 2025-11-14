@@ -151,6 +151,8 @@ extension NaturalSoundPreset {
             return nil  // Uses synthesis (TibetanBowl)
         case .oceanWaves:
             return nil  // Uses synthesis (OceanWaves)
+        case .oceanWavesSeagulls:
+            return nil  // Uses synthesis (OceanWaves + Seagulls)
         case .cracklingFire:
             return nil  // Uses synthesis (CracklingFire)
         }

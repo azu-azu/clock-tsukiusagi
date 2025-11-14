@@ -814,6 +814,22 @@ public final class AudioService: ObservableObject {
             )
             engine.register(source)
 
+        case .oceanWavesSeagulls:
+            let source = OceanWavesSeagulls(
+                noiseAmplitude: NaturalSoundPresets.OceanWavesSeagulls.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.OceanWavesSeagulls.lfoFrequency,
+                lfoMinimum: NaturalSoundPresets.OceanWavesSeagulls.lfoMinimum,
+                lfoMaximum: NaturalSoundPresets.OceanWavesSeagulls.lfoMaximum,
+                birdAmplitude: NaturalSoundPresets.OceanWavesSeagulls.birdAmplitude,
+                birdMinInterval: NaturalSoundPresets.OceanWavesSeagulls.birdMinInterval,
+                birdMaxInterval: NaturalSoundPresets.OceanWavesSeagulls.birdMaxInterval,
+                birdMinDuration: NaturalSoundPresets.OceanWavesSeagulls.birdMinDuration,
+                birdMaxDuration: NaturalSoundPresets.OceanWavesSeagulls.birdMaxDuration,
+                birdFrequencyRange: NaturalSoundPresets.OceanWavesSeagulls.birdFrequencyRange,
+                maxConcurrentChirps: NaturalSoundPresets.OceanWavesSeagulls.maxConcurrentChirps
+            )
+            engine.register(source)
+
         case .cracklingFire:
             let source = CracklingFire(
                 baseAmplitude: NaturalSoundPresets.CracklingFire.baseAmplitude,
