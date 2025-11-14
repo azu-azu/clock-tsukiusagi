@@ -48,21 +48,16 @@ public final class LocalAudioEngine {
 
     /// エンジンとセッションを設定
     public func configure() throws {
-        print("LocalAudioEngine: Configuring audio session...")
-        print("LocalAudioEngine: Background audio enabled: \(settings.isBackgroundAudioEnabled)")
 
         // オーディオセッションをアクティベート
         // .playback カテゴリを使う（サイレントスイッチを無視）
         do {
-            print("LocalAudioEngine: Trying .playback category (ignores silent switch)...")
             try sessionManager.activate(
                 category: .playback,
                 options: [.mixWithOthers],
                 background: false
             )
-            print("LocalAudioEngine: Audio session activated successfully with .playback")
         } catch {
-            print("LocalAudioEngine: .playback failed, trying .ambient...")
             // .playback が失敗したら .ambient を試す
             do {
                 try sessionManager.activate(
@@ -70,34 +65,27 @@ public final class LocalAudioEngine {
                     options: [],
                     background: false
                 )
-                print("LocalAudioEngine: Audio session activated successfully with .ambient")
             } catch {
-                print("LocalAudioEngine: Failed to activate audio session with any category")
                 throw error
             }
         }
 
-        print("LocalAudioEngine: configure() completed successfully")
     }
 
     /// Set destination node for all sources
     /// - Parameter node: Destination audio node (e.g., masterBusMixer)
     public func setDestination(_ node: AVAudioNode) {
         self.destinationNode = node
-        print("LocalAudioEngine: Destination node set to \(type(of: node))")
     }
 
     /// 音源を登録
     /// - Parameter source: 登録する音源
     public func register(_ source: AudioSource) {
-        print("LocalAudioEngine: Registering audio source...")
         let format = engine.outputNode.inputFormat(forBus: 0)
-        print("LocalAudioEngine: Output format - sampleRate: \(format.sampleRate), channels: \(format.channelCount)")
 
         do {
             try source.attachAndConnect(to: engine, format: format)
         } catch {
-            print("LocalAudioEngine: Failed to attach/connect source - \(error)")
             return
         }
 
@@ -107,27 +95,21 @@ public final class LocalAudioEngine {
         }
 
         sources.append(source)
-        print("LocalAudioEngine: Audio source registered and connected to \(destinationNode != nil ? "masterBusMixer" : "mainMixerNode")")
-        print("LocalAudioEngine: Total sources: \(sources.count)")
     }
 
     /// エンジンを開始
     /// - Parameter startSources: 登録済み音源を起動するかどうか（デフォルト: true）
     public func start(startSources: Bool = true) throws {
         guard !isRunning else {
-            print("LocalAudioEngine: Already running, skipping start")
             return
         }
 
-        print("LocalAudioEngine: Starting audio engine (startSources: \(startSources))...")
 
         // エンジンを開始
         if !engine.isRunning {
             do {
                 try engine.start()
-                print("LocalAudioEngine: AVAudioEngine started")
             } catch {
-                print("LocalAudioEngine: Failed to start AVAudioEngine - \(error)")
                 throw error
             }
         }
@@ -136,17 +118,13 @@ public final class LocalAudioEngine {
         if startSources && shouldStartSources {
             do {
                 try sources.forEach { try $0.start() }
-                print("LocalAudioEngine: All audio sources started (\(sources.count) sources)")
             } catch {
-                print("LocalAudioEngine: Failed to start audio sources - \(error)")
                 throw error
             }
         } else {
-            print("LocalAudioEngine: Skipping source start (startSources: \(startSources), shouldStartSources: \(shouldStartSources))")
         }
 
         isRunning = true
-        print("LocalAudioEngine: Engine is now running")
     }
 
     /// エンジンを停止
@@ -164,7 +142,6 @@ public final class LocalAudioEngine {
 
     /// 音源の自動起動を無効化（TrackPlayer使用時など）
     public func disableSources() {
-        print("LocalAudioEngine: Disabling sources (count: \(sources.count))")
 
         // 現在の音源を停止＆サスペンド（ノードは接続されたまま、無音出力）
         sources.forEach {
@@ -175,12 +152,10 @@ public final class LocalAudioEngine {
         // 次回start()時に音源を起動しない
         shouldStartSources = false
 
-        print("LocalAudioEngine: Sources disabled and suspended (nodes remain attached, output silenced)")
     }
 
     /// 音源の自動起動を再有効化
     public func enableSources() {
-        print("LocalAudioEngine: Re-enabling sources")
 
         // Resume all sources (restart audio generation and diagnostics)
         sources.forEach { $0.resume() }
@@ -190,7 +165,6 @@ public final class LocalAudioEngine {
 
     /// すべての音源をクリア（デタッチして削除）
     public func clearSources() {
-        print("LocalAudioEngine: Clearing all sources (count: \(sources.count))")
 
         // Stop and detach all sources
         sources.forEach {
@@ -203,7 +177,6 @@ public final class LocalAudioEngine {
         // Clear the sources array
         sources.removeAll()
 
-        print("LocalAudioEngine: All sources cleared")
     }
 
     /// 全体の音量を設定
@@ -211,7 +184,6 @@ public final class LocalAudioEngine {
     public func setMasterVolume(_ volume: Float) {
         let clampedVolume = max(0.0, min(1.0, volume))
         engine.mainMixerNode.outputVolume = clampedVolume
-        print("LocalAudioEngine: Master volume set to \(clampedVolume)")
     }
 
     // MARK: - Private Methods
