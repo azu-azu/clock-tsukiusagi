@@ -52,31 +52,27 @@ struct AudioTestView: View {
     @State private var showError = false
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AudioTestColors.backgroundGradient
-                    .ignoresSafeArea()
+        ZStack {
+            AudioTestColors.backgroundGradient
+                .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 24) {
-                        soundSelectionSection
-                        controlSection
-                        volumeSection
-                        settingsSection
-                        statusSection
-                    }
-                    .padding()
+            ScrollView {
+                VStack(spacing: 24) {
+                    Spacer(minLength: 64)
+
+                    soundSelectionSection
+                    controlSection
+                    volumeSection
+                    settingsSection
+                    statusSection
                 }
+                .padding()
             }
-            .toolbarBackground(AudioTestColors.navBackground, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .navigationTitle("Audio Test")
-            .navigationBarTitleDisplayMode(.large)
-            .alert("エラー", isPresented: $showError) {
-                Button("OK") { showError = false }
-            } message: {
-                Text(errorMessage ?? "不明なエラー")
-            }
+        }
+        .alert("エラー", isPresented: $showError) {
+            Button("OK") { showError = false }
+        } message: {
+            Text(errorMessage ?? "不明なエラー")
         }
     }
 

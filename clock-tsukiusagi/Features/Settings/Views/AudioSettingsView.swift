@@ -17,29 +17,24 @@ public struct AudioSettingsView: View {
     }
 
     public var body: some View {
-        NavigationStack {
-            ZStack {
-                // 背景グラデーション（時計画面と同様のトーン）
-                LinearGradient(
-                    colors: [
-                        SkyTone.night.gradStart,
-                        SkyTone.night.gradEnd
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+        ZStack {
+            // 背景グラデーション（時計画面と同様のトーン）
+            LinearGradient(
+                colors: [
+                    SkyTone.night.gradStart,
+                    SkyTone.night.gradEnd
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
-                // 設定コンテンツ
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        // 画面内タイトル（従来スタイル）
-                        Text("Audio Settings")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
-                            .padding(.top, 80)
+            // 設定コンテンツ
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    Spacer(minLength: 64)
 
-                        // MARK: - Route Safety Section
+                    // MARK: - Route Safety Section
 
                         SettingsSection(title: "Route Safety") {
                             SettingsToggle(
@@ -177,14 +172,9 @@ public struct AudioSettingsView: View {
 
                         Spacer(minLength: 40)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
-                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(SkyTone.night.gradStart, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
 
