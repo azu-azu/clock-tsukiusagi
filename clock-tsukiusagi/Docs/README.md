@@ -79,7 +79,7 @@
 - [`report-task-terminology-migration.md`](./report-task-terminology-migration.md) - Task用語移行レポート
 
 ### 🎧 リファレンス音声
-- [`reference-audio/README.md`](./reference-audio/README.md) - 解析専用の音声ファイル置き場（アプリには同梱しない）
+- [`reference-audio/reference-audio-guide.md`](./reference-audio/reference-audio-guide.md) - 解析専用の音声ファイル置き場（アプリには同梱しない）
 
 ### 🔧 トラブルシューティング
 - [`trouble-audio-distortion-noise.md`](./trouble-audio-distortion-noise.md) - AVAudioUnitDistortion雑音問題RCA（最重要）
