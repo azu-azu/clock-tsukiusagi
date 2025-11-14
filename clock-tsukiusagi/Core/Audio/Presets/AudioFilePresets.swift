@@ -34,9 +34,9 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
         }
     }
 
-    /// File extension (WAV format)
+    /// File extension (CAF format - Core Audio Format for optimal iOS playback)
     public var fileExtension: String {
-        return "wav"
+        return "caf"
     }
 
     /// Get URL for audio file from bundle
@@ -63,30 +63,30 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
         case .pinkNoise:
             return LoopSettings(
                 shouldLoop: true,
-                crossfadeDuration: 2.0,  // Smooth crossfade for seamless loop
-                fadeInDuration: 1.0,
-                fadeOutDuration: 2.0
+                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
+                fadeInDuration: 0.5,
+                fadeOutDuration: 1.0
             )
         case .oceanWaves:
             return LoopSettings(
                 shouldLoop: true,
-                crossfadeDuration: 3.0,  // Longer crossfade for natural wave rhythm
-                fadeInDuration: 2.0,
-                fadeOutDuration: 3.0
+                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
+                fadeInDuration: 1.0,
+                fadeOutDuration: 2.0
             )
         case .rain:
             return LoopSettings(
                 shouldLoop: true,
-                crossfadeDuration: 2.0,
-                fadeInDuration: 1.5,
-                fadeOutDuration: 2.0
+                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
+                fadeInDuration: 0.8,
+                fadeOutDuration: 1.5
             )
         case .forestAmbience:
             return LoopSettings(
                 shouldLoop: true,
-                crossfadeDuration: 3.0,  // Longer for natural ambient transition
-                fadeInDuration: 2.0,
-                fadeOutDuration: 3.0
+                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
+                fadeInDuration: 1.0,
+                fadeOutDuration: 2.0
             )
         }
     }
