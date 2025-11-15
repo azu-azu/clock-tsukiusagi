@@ -65,4 +65,113 @@ struct DesignTokens {
         /// グロー効果の不透明度（仕上げ）
         static let glowFinishOpacity: CGFloat = 0.05
     }
+
+    // MARK: - Settings Colors
+    enum SettingsColors {
+        /// 背景グラデーション（夜のトーン）
+        static let backgroundGradient = LinearGradient(
+            colors: [SkyTone.night.gradStart, SkyTone.night.gradEnd],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+
+        /// カード背景色
+        static let cardBackground = Color.white.opacity(0.1)
+
+        /// アクセントカラー（システムのアクセントカラー）
+        static let accent = Color.accentColor
+
+        /// プライマリテキスト色
+        static let textPrimary = Color.white
+
+        /// セカンダリテキスト色（説明文など）
+        static let textSecondary = Color.white.opacity(0.7)
+
+        /// Tertiary テキスト色（キャプションなど）
+        static let textTertiary = Color.white.opacity(0.6)
+
+        /// 薄いテキスト色（ヒントなど）
+        static let textQuaternary = Color.white.opacity(0.5)
+
+        /// 強調テキスト色（時刻表示など）
+        static let textHighlight = Color.white.opacity(0.9)
+
+        /// 危険色（停止ボタンなど）
+        static let danger = Color(hex: "#FF5C5C")
+
+        /// 警告色（注意メッセージなど）
+        static let warning = Color(hex: "#FFC069")
+
+        /// 成功色（再生中ステータスなど）
+        static let success = Color(hex: "#4ADE80")
+
+        /// 非アクティブ色
+        static let inactive = Color.white.opacity(0.25)
+    }
+
+    // MARK: - Settings Typography
+    enum SettingsTypography {
+        /// セクションタイトル
+        static let sectionTitle: Font = .system(size: 18, weight: .semibold, design: .rounded)
+
+        /// 項目タイトル
+        static let itemTitle: Font = .body
+
+        /// キャプション
+        static let caption: Font = .caption
+
+        /// 見出し
+        static let headline: Font = .headline
+
+        /// サブ見出し
+        static let subheadline: Font = .subheadline
+    }
+
+    // MARK: - Settings Spacing
+    enum SettingsSpacing {
+        /// 画面の水平パディング
+        static let screenHorizontal: CGFloat = 24
+
+        /// 画面の下部パディング
+        static let screenBottom: CGFloat = 40
+
+        /// 上部スペーサー
+        static let topSpacer: CGFloat = 64
+
+        /// セクション間のスペーシング
+        static let sectionSpacing: CGFloat = 24
+
+        /// カード内のパディング
+        static let cardPadding: CGFloat = 16
+
+        /// セクション内のアイテム間隔
+        static let itemSpacing: CGFloat = 16
+
+        /// セクション内の小さな間隔
+        static let sectionInnerSpacing: CGFloat = 12
+
+        /// 垂直方向の小さなパディング
+        static let verticalSmall: CGFloat = 8
+
+        /// 垂直方向の中程度のパディング
+        static let verticalMedium: CGFloat = 12
+
+        /// 最小のボトムスペーサー
+        static let bottomSpacer: CGFloat = 40
+    }
+
+    // MARK: - Settings Layout
+    enum SettingsLayout {
+        /// カードの角丸半径
+        static let cardCornerRadius: CGFloat = 12
+
+        /// ボタンの角丸半径
+        static let buttonCornerRadius: CGFloat = 12
+
+        /// ボタンの高さ
+        static let buttonHeight: CGFloat = 50
+
+        /// ボタンのパディング
+        static let buttonPadding: CGFloat = 16
+    }
 }

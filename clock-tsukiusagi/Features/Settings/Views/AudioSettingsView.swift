@@ -14,27 +14,45 @@ public struct AudioSettingsView: View {
 
     public init() {
         _settings = State(initialValue: AudioSettings.load())
+        configureNavigationBarAppearance()
+    }
+
+    private func configureNavigationBarAppearance() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = UIColor.clear
+
+        // Large Title のフォント設定（丸ゴシック体、カスタムサイズ）
+        let largeTitleFont = UIFont.systemFont(ofSize: 28, weight: .bold)
+        let largeTitleDescriptor = largeTitleFont.fontDescriptor.withDesign(.rounded) ?? largeTitleFont.fontDescriptor
+        appearance.largeTitleTextAttributes = [
+            .font: UIFont(descriptor: largeTitleDescriptor, size: 28),
+            .foregroundColor: UIColor.white
+        ]
+
+        // Inline Title のフォント設定（スクロール時）
+        let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        let inlineTitleDescriptor = inlineTitleFont.fontDescriptor.withDesign(.rounded) ?? inlineTitleFont.fontDescriptor
+        appearance.titleTextAttributes = [
+            .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
+            .foregroundColor: UIColor.white
+        ]
+
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
 
     public var body: some View {
-        ZStack {
-            // 背景グラデーション（時計画面と同様のトーン）
-            LinearGradient(
-                colors: [
-                    SkyTone.night.gradStart,
-                    SkyTone.night.gradEnd
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+        NavigationView {
+            ZStack {
+                // 背景グラデーション（DesignTokens使用）
+                DesignTokens.SettingsColors.backgroundGradient
+                    .ignoresSafeArea()
 
-            // 設定コンテンツ
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    Spacer(minLength: 64)
-
-                    // MARK: - Route Safety Section
+                // 設定コンテンツ
+                ScrollView {
+                    VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
+                        // MARK: - Route Safety Section
 
                         SettingsSection(title: "Route Safety") {
                             SettingsToggle(
@@ -110,12 +128,14 @@ public struct AudioSettingsView: View {
                                 if let nextBreak = audioService.breakScheduler.nextBreakAt {
                                     HStack {
                                         Text("Next Break")
-                                            .foregroundColor(.white.opacity(0.7))
+                                            .font(DesignTokens.SettingsTypography.itemTitle)
+                                            .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                                         Spacer()
                                         Text(DateFormatter.localizedString(from: nextBreak, dateStyle: .none, timeStyle: .short))
-                                            .foregroundColor(.accentColor)
+                                            .font(DesignTokens.SettingsTypography.itemTitle)
+                                            .foregroundColor(DesignTokens.SettingsColors.accent)
                                     }
-                                    .padding(.vertical, 8)
+                                    .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
                                 }
                             }
                         }
@@ -123,13 +143,15 @@ public struct AudioSettingsView: View {
                         // MARK: - Volume Safety Section (Phase 2)
 
                         SettingsSection(title: "Volume Safety") {
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalMedium) {
                                 HStack {
                                     Text("Maximum Output Level")
-                                        .foregroundColor(.white)
+                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                                     Spacer()
                                     Text("\(String(format: "%.1f", settings.maxOutputDb)) dB")
-                                        .foregroundColor(.accentColor)
+                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .foregroundColor(DesignTokens.SettingsColors.accent)
                                         .monospacedDigit()
                                 }
 
@@ -144,13 +166,13 @@ public struct AudioSettingsView: View {
                                     in: -12.0...0.0,
                                     step: 0.5
                                 )
-                                .tint(.accentColor)
+                                .tint(DesignTokens.SettingsColors.accent)
 
                                 Text("Limits the maximum output volume to protect your hearing. Default: -6.0 dB")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.5))
+                                    .font(DesignTokens.SettingsTypography.caption)
+                                    .foregroundColor(DesignTokens.SettingsColors.textQuaternary)
                             }
-                            .padding(.vertical, 8)
+                            .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
                         }
 
                         // MARK: - Live Activity (Phase 3)
@@ -170,11 +192,15 @@ public struct AudioSettingsView: View {
                             }
                         }
 
-                        Spacer(minLength: 40)
+                        Spacer(minLength: DesignTokens.SettingsSpacing.bottomSpacer)
                     }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 40)
+                    .padding(.top, 16)
+                    .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
+                    .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
+                }
             }
+            .navigationTitle("Audio Settings")
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 
@@ -183,89 +209,6 @@ public struct AudioSettingsView: View {
     private func saveSettings() {
         settings.save()
         audioService.updateSettings(settings)
-    }
-}
-
-// MARK: - Settings Components
-
-struct SettingsSection<Content: View>: View {
-    let title: String
-    let content: Content
-
-    init(title: String, @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.content = content()
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
-                .foregroundColor(.white.opacity(0.9))
-
-            VStack(spacing: 16) {
-                content
-            }
-            .padding(16)
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(12)
-        }
-    }
-}
-
-struct SettingsToggle: View {
-    let title: String
-    let subtitle: String?
-    @Binding var isOn: Bool
-
-    init(title: String, subtitle: String? = nil, isOn: Binding<Bool>) {
-        self.title = title
-        self.subtitle = subtitle
-        self._isOn = isOn
-    }
-
-    var body: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .foregroundColor(.white)
-                if let subtitle = subtitle {
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.6))
-                }
-            }
-            Spacer()
-            Toggle("", isOn: $isOn)
-                .labelsHidden()
-                .tint(.accentColor)
-        }
-    }
-}
-
-struct SettingsStepper: View {
-    let title: String
-    @Binding var value: Int
-    let range: ClosedRange<Int>
-    let step: Int
-    let unit: String
-
-    var body: some View {
-        HStack {
-            Text(title)
-                .foregroundColor(.white)
-            Spacer()
-            Stepper(
-                value: $value,
-                in: range,
-                step: step
-            ) {
-                Text("\(value) \(unit)")
-                    .foregroundColor(.accentColor)
-                    .monospacedDigit()
-                    .frame(minWidth: 80, alignment: .trailing)
-            }
-        }
     }
 }
 
