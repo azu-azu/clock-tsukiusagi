@@ -11,21 +11,26 @@ import SwiftUI
 public struct AudioSettingsView: View {
     @EnvironmentObject private var audioService: AudioService
     @State private var settings: AudioSettings
+    @Binding var selectedTab: Tab
 
-    public init() {
+    public init(selectedTab: Binding<Tab>) {
         _settings = State(initialValue: AudioSettings.load())
+        _selectedTab = selectedTab
         configureNavigationBarAppearance()
     }
 
     private func configureNavigationBarAppearance() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = UIColor.clear
+        // スクロール時の appearance（ブラーあり）
+        let scrolledAppearance = UINavigationBarAppearance()
+        scrolledAppearance.configureWithDefaultBackground()
+        scrolledAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        scrolledAppearance.backgroundColor = .clear
+        scrolledAppearance.shadowColor = .clear
 
         // Large Title のフォント設定（丸ゴシック体、カスタムサイズ）
         let largeTitleFont = UIFont.systemFont(ofSize: 28, weight: .bold)
         let largeTitleDescriptor = largeTitleFont.fontDescriptor.withDesign(.rounded) ?? largeTitleFont.fontDescriptor
-        appearance.largeTitleTextAttributes = [
+        scrolledAppearance.largeTitleTextAttributes = [
             .font: UIFont(descriptor: largeTitleDescriptor, size: 28),
             .foregroundColor: UIColor.white
         ]
@@ -33,13 +38,24 @@ public struct AudioSettingsView: View {
         // Inline Title のフォント設定（スクロール時）
         let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
         let inlineTitleDescriptor = inlineTitleFont.fontDescriptor.withDesign(.rounded) ?? inlineTitleFont.fontDescriptor
-        appearance.titleTextAttributes = [
+        scrolledAppearance.titleTextAttributes = [
             .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
             .foregroundColor: UIColor.white
         ]
 
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        // スクロールしていない時の appearance（完全透明）
+        let transparentAppearance = UINavigationBarAppearance()
+        transparentAppearance.configureWithTransparentBackground()
+        transparentAppearance.backgroundEffect = nil
+        transparentAppearance.backgroundColor = .clear
+        transparentAppearance.shadowColor = .clear
+
+        // フォント設定をコピー
+        transparentAppearance.largeTitleTextAttributes = scrolledAppearance.largeTitleTextAttributes
+        transparentAppearance.titleTextAttributes = scrolledAppearance.titleTextAttributes
+
+        UINavigationBar.appearance().standardAppearance = scrolledAppearance  // スクロール時
+        UINavigationBar.appearance().scrollEdgeAppearance = transparentAppearance  // スクロール前
     }
 
     public var body: some View {
@@ -201,6 +217,29 @@ public struct AudioSettingsView: View {
             }
             .navigationTitle("Audio Settings")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        selectedTab = .clock
+                    }) {
+                        Image(systemName: "clock.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        selectedTab = .audioTest
+                    }) {
+                        Image(systemName: "music.quarternote.3")
+                            .font(.system(size: 20))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+
+                // Settings アイコンは非表示（現在のページ）
+            }
         }
     }
 
@@ -215,6 +254,6 @@ public struct AudioSettingsView: View {
 // MARK: - Preview
 
 #Preview {
-    AudioSettingsView()
+    AudioSettingsView(selectedTab: .constant(.settings))
         .environmentObject(AudioService.shared)
 }

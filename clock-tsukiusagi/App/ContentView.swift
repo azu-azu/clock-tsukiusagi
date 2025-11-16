@@ -20,44 +20,40 @@ public struct ContentView: View {
                     }
 
                 case .audioTest:
-                    AudioTestView()
+                    AudioTestView(selectedTab: $selectedTab)
 
                 case .settings:
-                    AudioSettingsView()
+                    AudioSettingsView(selectedTab: $selectedTab)
                 }
             }
 
-            // 上部のカスタムタブバー（レイヤーを上に、背景透明）
-            VStack(spacing: 0) {
-                HStack(spacing: 0) {
-                    TabButton(
-                        icon: "clock.fill",
-                        label: "Clock",
-                        isSelected: selectedTab == .clock
-                    ) {
-                        selectedTab = .clock
-                    }
+            // 上部のカスタムタブバー（Clock画面のみ表示）
+            if selectedTab == .clock {
+                VStack(spacing: 0) {
+                    HStack(spacing: 0) {
+                        // Clock アイコンは非表示（現在のページなので）
 
-                    TabButton(
-                        icon: "waveform",
-                        label: "Audio Test",
-                        isSelected: selectedTab == .audioTest
-                    ) {
-                        selectedTab = .audioTest
-                    }
+                        TabButton(
+                            icon: "music.quarternote.3",
+                            label: "Audio Test",
+                            isSelected: false
+                        ) {
+                            selectedTab = .audioTest
+                        }
 
-                    TabButton(
-                        icon: "gearshape.fill",
-                        label: "Settings",
-                        isSelected: selectedTab == .settings
-                    ) {
-                        selectedTab = .settings
+                        TabButton(
+                            icon: "gearshape.fill",
+                            label: "Settings",
+                            isSelected: false
+                        ) {
+                            selectedTab = .settings
+                        }
                     }
+                    .frame(height: 60)
+                    .padding(.top, 10)
+
+                    Spacer()
                 }
-                .frame(height: 60)
-                .padding(.top, 10)
-
-                Spacer()
             }
         }
         .statusBarHidden(true)
@@ -66,7 +62,7 @@ public struct ContentView: View {
 
 // MARK: - Tab Enum
 
-private enum Tab {
+public enum Tab {
     case clock
     case audioTest
     case settings

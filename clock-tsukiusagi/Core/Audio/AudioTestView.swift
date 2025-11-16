@@ -18,6 +18,7 @@ enum TestSoundType: String, CaseIterable {
 /// オーディオテストビュー
 struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
+    @Binding var selectedTab: Tab
 
     @State private var selectedSound: TestSoundType = .synthesis
     @State private var selectedSynthesisPreset: NaturalSoundPreset = .clickSuppression
@@ -26,19 +27,23 @@ struct AudioTestView: View {
     @State private var errorMessage: String?
     @State private var showError = false
 
-    init() {
+    init(selectedTab: Binding<Tab>) {
+        _selectedTab = selectedTab
         configureNavigationBarAppearance()
     }
 
     private func configureNavigationBarAppearance() {
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = UIColor.clear
+        // スクロール時の appearance（ブラーあり）
+        let scrolledAppearance = UINavigationBarAppearance()
+        scrolledAppearance.configureWithDefaultBackground()
+        scrolledAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        scrolledAppearance.backgroundColor = .clear
+        scrolledAppearance.shadowColor = .clear
 
         // Large Title のフォント設定（丸ゴシック体、カスタムサイズ）
         let largeTitleFont = UIFont.systemFont(ofSize: 28, weight: .bold)
         let largeTitleDescriptor = largeTitleFont.fontDescriptor.withDesign(.rounded) ?? largeTitleFont.fontDescriptor
-        appearance.largeTitleTextAttributes = [
+        scrolledAppearance.largeTitleTextAttributes = [
             .font: UIFont(descriptor: largeTitleDescriptor, size: 28),
             .foregroundColor: UIColor.white
         ]
@@ -46,13 +51,24 @@ struct AudioTestView: View {
         // Inline Title のフォント設定（スクロール時）
         let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
         let inlineTitleDescriptor = inlineTitleFont.fontDescriptor.withDesign(.rounded) ?? inlineTitleFont.fontDescriptor
-        appearance.titleTextAttributes = [
+        scrolledAppearance.titleTextAttributes = [
             .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
             .foregroundColor: UIColor.white
         ]
 
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        // スクロールしていない時の appearance（完全透明）
+        let transparentAppearance = UINavigationBarAppearance()
+        transparentAppearance.configureWithTransparentBackground()
+        transparentAppearance.backgroundEffect = nil
+        transparentAppearance.backgroundColor = .clear
+        transparentAppearance.shadowColor = .clear
+
+        // フォント設定をコピー
+        transparentAppearance.largeTitleTextAttributes = scrolledAppearance.largeTitleTextAttributes
+        transparentAppearance.titleTextAttributes = scrolledAppearance.titleTextAttributes
+
+        UINavigationBar.appearance().standardAppearance = scrolledAppearance  // スクロール時
+        UINavigationBar.appearance().scrollEdgeAppearance = transparentAppearance  // スクロール前
     }
 
     var body: some View {
@@ -78,6 +94,29 @@ struct AudioTestView: View {
             }
             .navigationTitle("Audio Test")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        selectedTab = .clock
+                    }) {
+                        Image(systemName: "clock.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        selectedTab = .settings
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+
+                // Audio Test アイコンは非表示（現在のページ）
+            }
             .alert("エラー", isPresented: $showError) {
                 Button("OK") { showError = false }
             } message: {
@@ -321,6 +360,6 @@ struct AudioTestView: View {
 }
 
 #Preview {
-    AudioTestView()
+    AudioTestView(selectedTab: .constant(.audioTest))
         .environmentObject(AudioService.shared)
 }
