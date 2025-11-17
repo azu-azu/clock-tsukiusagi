@@ -663,6 +663,52 @@ if let nextBreak = audioService.breakScheduler?.nextBreakAt { }
 if let nextBreak = audioService.breakScheduler.nextBreakAt { }
 ```
 
+### 5.8 Sample Rate Mismatch Issues ⭐ NEW
+
+#### Problem: Crackling/Clicking Noise in Audio
+**Symptoms**:
+- "Pachi-pachi" (clicking/popping) noise in synthesized audio
+- Artifacts at regular intervals
+- LFO/oscillator phase discontinuities
+
+**Cause**: Sample rate mismatch between AudioSource implementations and actual hardware.
+
+**iOS uses 48 kHz as standard**, but some AudioSource files were using 44.1 kHz:
+
+```swift
+// ❌ Wrong (44.1 kHz - causes noise)
+_sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
+    let sampleRate = 44100.0  // Mismatch!
+    lfoPhase += twoPi * frequency / sampleRate
+    return noErr
+}
+
+// ✅ Correct (48 kHz - iOS standard)
+_sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
+    let sampleRate = 48000.0  // Matches iOS hardware
+    lfoPhase += twoPi * frequency / sampleRate
+    return noErr
+}
+```
+
+**Why this causes noise**:
+- Hardware runs at 48 kHz
+- AudioSource calculates phase at 44.1 kHz
+- Phase increments are incorrect: 48000/44100 = 1.088
+- LFO period becomes 4.35s instead of 4.0s → phase discontinuity → clicks
+
+**Fix**: Standardize all AudioSource implementations to 48 kHz.
+
+**Verification**:
+```bash
+# Check for inconsistent sample rates
+grep -rn "44100\|48000" clock-tsukiusagi/Core/Audio/Sources/
+```
+
+**Rule**: **Always use 48000.0 Hz for iOS AudioSource implementations.**
+
+See [trouble-audio-sample-rate-mismatch.md](../trouble-audio-sample-rate-mismatch.md) for detailed RCA.
+
 ---
 
 ## 6. Code Snippets

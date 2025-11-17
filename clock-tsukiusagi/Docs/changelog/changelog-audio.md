@@ -1,8 +1,104 @@
 # Audio System Changelog
 
 **Module**: Audio System (Core/Audio, Core/Services, Features/Settings)
-**Current Version**: Phase 2 Complete
-**Last Updated**: 2025-11-10
+**Current Version**: Phase 2 Complete + Enhancements
+**Last Updated**: 2025-11-17
+
+---
+
+## Enhancements: Audio Presets & Quality (2025-11-17)
+
+**Status**: ✅ Complete
+**Focus**: New audio presets, UI improvements, sample rate standardization
+
+### Added
+
+#### 12 New Natural Sound Presets
+- **Files**: Multiple new AudioSource implementations in `Core/Audio/Sources/`
+- **New Presets**:
+  - MoonlitSea (深夜の海) - Pink noise + slow LFO for deep sea breathing
+  - LunarPulse (月の脈動) - 528Hz pure tone + ultra-slow fade for light breathing
+  - DarkShark (黒いサメの影) - Brown noise + random LFO for underwater presence
+  - MidnightTrain (夜汽車) - Brown noise + rhythmic LFO for train rhythm
+  - LunarTide (月光の潮流) - Pink noise + shimmer band + LFO for moonlit sea
+  - AbyssalBreath (深海の呼吸) - Brown noise + sub-bass sine + LFO for deep sea creature
+  - StardustNoise (星屑ノイズ) - White noise + high-band + micro bursts for star twinkle
+  - LunarDustStorm (月面の砂嵐) - Pink noise + notch filter for vacuum wind
+  - SilentLibrary (夜の図書館) - Brown noise + warm band for quiet space
+  - DistantThunder (遠雷) - Brown noise + low-band pulse for distant thunder
+  - SinkingMoon (沈む月) - 432Hz sine + ultra-slow fade for silence fading
+  - DawnHint (朝の気配) - Pink noise + shimmer band for dawn air
+- **Configuration**: All presets defined in `NaturalSoundPresets.swift`
+- **Implementation**: Each preset has dedicated AudioSource class with custom DSP
+
+#### UI Enhancements
+- **Emoji Icons**: Added emoji to 12 new preset display names
+  - Examples: 🌊 深夜の海, 🦈 黒いサメの影, 🚂 夜汽車
+- **Bilingual Display**:
+  - Picker shows Japanese + emoji (e.g., "💿 🌊 深夜の海")
+  - Selected display shows English title (e.g., "Moonlit Silent Sea")
+- **Production/Test Separation**:
+  - Production presets: 💿 icon
+  - Test presets: ✏️ icon (DEBUG build only)
+- **File**: `AudioTestView.swift` - Added `englishTitle` property to `AudioSourcePreset`
+- **File**: `NaturalSoundPresets.swift` - Added `englishTitle` computed property
+
+### Changed
+
+#### Preset Status Updates
+- **Promoted to Production** (removed from `isTest` array):
+  - 🌊 深夜の海 (Moonlit Silent Sea)
+  - 🦈 黒いサメの影 (Dark Shape Underwater)
+  - 🚂 夜汽車 (Midnight Train in the Distance)
+  - 🌙🌊 月光の潮流 (Lunar Tide Drift)
+  - 🫧💙 深海の呼吸 (Abyssal Breath)
+- These now show 💿 icon instead of ✏️
+
+### Fixed
+
+#### Sample Rate Mismatch Issue ⭐ CRITICAL
+- **Problem**: Crackling/clicking noise ("pachi-pachi") in new audio presets
+- **Root Cause**: Sample rate inconsistency between AudioSource implementations
+  - Old files: 44.1 kHz (OceanWaves, WindChime, TibetanBowl, ClickMaskingDrone)
+  - New files: 48 kHz (all 12 new presets)
+  - iOS hardware: **48 kHz standard**
+  - Mismatch caused LFO phase calculation errors → clicks/pops
+- **Solution**: Standardized ALL AudioSource implementations to **48 kHz**
+- **Files Modified**:
+  - `OceanWaves.swift`: 44100 → 48000 Hz
+  - `WindChime.swift`: 44100 → 48000 Hz
+  - `TibetanBowl.swift`: 44100 → 48000 Hz
+  - `ClickMaskingDrone.swift`: 44100 → 48000 Hz (including diagnostic interval)
+- **Result**: All 16 AudioSource files now use 48 kHz consistently
+- **Impact**: Eliminated all clicking/crackling noise, improved audio quality
+- **Documentation**: See [trouble-audio-sample-rate-mismatch.md](../trouble-audio-sample-rate-mismatch.md)
+
+### Removed
+
+#### Unused Presets Cleanup
+- **Removed from NaturalSoundPreset**:
+  - clickSuppression, pinkNoise, brownNoise, pleasantDrone, pleasantWarm,
+    pleasantCalm, pleasantDeep, ambientFocus, ambientRelax, ambientSleep,
+    oceanWaves (preset, kept OceanWaves class), cracklingFire
+- **Removed from AudioFilePreset**:
+  - testTone (test_tone_440hz)
+  - pinkNoise (pink_noise_60s)
+  - rain (rain_60s)
+- **Files Deleted**: 7 AudioSource implementation files
+- **Reason**: Consolidation and focus on curated preset collection
+
+### Commits
+
+- `849792e` - fix: standardize all audio sources to 48kHz sample rate
+- `4e164c2` - feat: add emoji icons and English titles to audio presets
+- `6cf792a` - refactor: remove 3 unused audio file presets
+- `a830cdf` - refactor: promote 5 audio presets from test to production
+- (Additional commits for 12 new preset implementations)
+
+### Documentation
+
+- **New**: [trouble-audio-sample-rate-mismatch.md](../trouble-audio-sample-rate-mismatch.md) - RCA and fix for sample rate issues
+- **Updated**: [_guide-audio-system-impl.md](../implementation/_guide-audio-system-impl.md) - Added Section 5.8: Sample Rate Mismatch Issues
 
 ---
 
