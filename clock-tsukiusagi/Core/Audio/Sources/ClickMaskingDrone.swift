@@ -74,7 +74,7 @@ public final class ClickMaskingDrone: AudioSource {
 
         // 診断用変数
         var frameCounter: UInt64 = 0
-        let diagnosticInterval: UInt64 = 44100
+        let diagnosticInterval: UInt64 = 48000
         var peakBase: Double = 0.0
         var peakMask: Double = 0.0
         var peakMixed: Double = 0.0
@@ -83,7 +83,7 @@ public final class ClickMaskingDrone: AudioSource {
         // AVAudioSourceNode を作成
         _sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
-            let sampleRate = 44100.0
+            let sampleRate = 48000.0
             let deltaTime = 1.0 / sampleRate
 
             for frame in 0..<Int(frameCount) {

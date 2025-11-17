@@ -74,7 +74,7 @@ public final class TibetanBowl: AudioSource {
                 return noErr
             }
 
-            let sampleRate = 44100.0
+            let sampleRate = 48000.0
             let deltaTime = 1.0 / sampleRate
 
             for frame in 0..<Int(frameCount) {
