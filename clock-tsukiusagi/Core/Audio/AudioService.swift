@@ -647,6 +647,19 @@ public final class AudioService: ObservableObject {
 
     private func registerSource(for preset: NaturalSoundPreset) throws {
 
+        // Try SignalEngine version first (if available)
+        let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
+        let signalBuilder = SignalPresetBuilder(sampleRate: outputFormat.sampleRate)
+
+        if let signalSource = signalBuilder.makeSignal(for: preset) {
+            print("🎵 [AudioService] Using SignalEngine for preset: \(preset.rawValue)")
+            engine.register(signalSource)
+            return
+        }
+
+        // Fallback to original implementation
+        print("🔄 [AudioService] Using legacy AudioSource for preset: \(preset.rawValue)")
+
         switch preset {
         case .windChime:
             let source = WindChime(
