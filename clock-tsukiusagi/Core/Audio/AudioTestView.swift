@@ -24,18 +24,11 @@ enum AudioSourcePreset: Identifiable {
     }
 
     var displayName: String {
-        let icon: String
-        #if DEBUG
-        icon = isTest ? "✏️" : "💿"
-        #else
-        icon = "💿"
-        #endif
-
         switch self {
         case .synthesis(let preset):
-            return "\(icon) \(preset.displayName)"
+            return preset.displayName
         case .audioFile(let preset):
-            return "\(icon) \(preset.displayName)"
+            return preset.displayName
         }
     }
 
@@ -222,7 +215,9 @@ struct AudioTestView: View {
             // Unified audio source picker
             Picker("音源", selection: $selectedSource) {
                 ForEach(AudioSourcePreset.allSources) { source in
-                    Text(source.displayName).tag(source)
+                    Text(source.displayName)
+                        .foregroundColor(source.isTest ? Color.gray : Color.primary)
+                        .tag(source)
                 }
             }
             .pickerStyle(.menu)
