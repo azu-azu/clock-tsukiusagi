@@ -812,6 +812,111 @@ public final class AudioService: ObservableObject {
                 maxPulseDuration: NaturalSoundPresets.CracklingFire.pulseMaxDuration
             )
             engine.register(source)
+
+        case .moonlitSea:
+            let source = MoonlitSea(
+                noiseAmplitude: NaturalSoundPresets.MoonlitSea.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.MoonlitSea.lfoFrequency,
+                lfoMinimum: NaturalSoundPresets.MoonlitSea.lfoMinimum,
+                lfoMaximum: NaturalSoundPresets.MoonlitSea.lfoMaximum
+            )
+            engine.register(source)
+
+        case .lunarPulse:
+            let source = LunarPulse(
+                frequency: NaturalSoundPresets.LunarPulse.frequency,
+                amplitude: NaturalSoundPresets.LunarPulse.amplitude,
+                lfoFrequency: NaturalSoundPresets.LunarPulse.lfoFrequency,
+                lfoMinimum: NaturalSoundPresets.LunarPulse.lfoMinimum,
+                lfoMaximum: NaturalSoundPresets.LunarPulse.lfoMaximum
+            )
+            engine.register(source)
+
+        case .darkShark:
+            let source = DarkShark(
+                noiseAmplitude: NaturalSoundPresets.DarkShark.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.DarkShark.lfoFrequency,
+                lfoMinimum: NaturalSoundPresets.DarkShark.lfoMinimum,
+                lfoMaximum: NaturalSoundPresets.DarkShark.lfoMaximum
+            )
+            engine.register(source)
+
+        case .midnightTrain:
+            let source = MidnightTrain(
+                noiseAmplitude: NaturalSoundPresets.MidnightTrain.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.MidnightTrain.lfoFrequency,
+                lfoMinimum: NaturalSoundPresets.MidnightTrain.lfoMinimum,
+                lfoMaximum: NaturalSoundPresets.MidnightTrain.lfoMaximum
+            )
+            engine.register(source)
+
+        case .lunarTide:
+            let source = LunarTide(
+                noiseAmplitude: NaturalSoundPresets.LunarTide.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.LunarTide.lfoFrequency,
+                lfoDepth: NaturalSoundPresets.LunarTide.lfoDepth
+            )
+            engine.register(source)
+
+        case .abyssalBreath:
+            let source = AbyssalBreath(
+                noiseAmplitude: NaturalSoundPresets.AbyssalBreath.noiseAmplitude,
+                subSineFrequency: NaturalSoundPresets.AbyssalBreath.subSineFrequency,
+                subSineAmplitude: NaturalSoundPresets.AbyssalBreath.subSineAmplitude,
+                lfoFrequency: NaturalSoundPresets.AbyssalBreath.lfoFrequency,
+                lfoDepth: NaturalSoundPresets.AbyssalBreath.lfoDepth
+            )
+            engine.register(source)
+
+        case .stardustNoise:
+            let source = StardustNoise(
+                microBurstAmplitude: NaturalSoundPresets.StardustNoise.microBurstAmplitude,
+                microBurstMinInterval: NaturalSoundPresets.StardustNoise.microBurstMinInterval,
+                microBurstMaxInterval: NaturalSoundPresets.StardustNoise.microBurstMaxInterval
+            )
+            engine.register(source)
+
+        case .lunarDustStorm:
+            let source = LunarDustStorm(
+                noiseAmplitude: NaturalSoundPresets.LunarDustStorm.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.LunarDustStorm.lfoFrequency,
+                lfoDepth: NaturalSoundPresets.LunarDustStorm.lfoDepth
+            )
+            engine.register(source)
+
+        case .silentLibrary:
+            let source = SilentLibrary(
+                noiseAmplitude: NaturalSoundPresets.SilentLibrary.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.SilentLibrary.lfoFrequency,
+                lfoDepth: NaturalSoundPresets.SilentLibrary.lfoDepth
+            )
+            engine.register(source)
+
+        case .distantThunder:
+            let source = DistantThunder(
+                noiseAmplitude: NaturalSoundPresets.DistantThunderPulse.noiseAmplitude,
+                pulseAmplitude: NaturalSoundPresets.DistantThunderPulse.pulseAmplitude,
+                pulseMinInterval: NaturalSoundPresets.DistantThunderPulse.pulseMinInterval,
+                pulseMaxInterval: NaturalSoundPresets.DistantThunderPulse.pulseMaxInterval
+            )
+            engine.register(source)
+
+        case .sinkingMoon:
+            let source = SinkingMoon(
+                sineFrequency: NaturalSoundPresets.SinkingMoon.sineFrequency,
+                sineAmplitude: NaturalSoundPresets.SinkingMoon.sineAmplitude,
+                lfoFrequency: NaturalSoundPresets.SinkingMoon.lfoFrequency,
+                lfoDepth: NaturalSoundPresets.SinkingMoon.lfoDepth
+            )
+            engine.register(source)
+
+        case .dawnHint:
+            let source = DawnHint(
+                noiseAmplitude: NaturalSoundPresets.DawnHint.noiseAmplitude,
+                lfoFrequency: NaturalSoundPresets.DawnHint.lfoFrequency,
+                lfoDepth: NaturalSoundPresets.DawnHint.lfoDepth
+            )
+            engine.register(source)
         }
     }
 

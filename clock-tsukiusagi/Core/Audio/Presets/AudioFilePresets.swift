@@ -210,6 +210,30 @@ extension NaturalSoundPreset {
             return nil  // Uses synthesis (OceanWaves + Seagulls)
         case .cracklingFire:
             return nil  // Uses synthesis (CracklingFire)
+        case .moonlitSea:
+            return nil  // Uses synthesis (MoonlitSea)
+        case .lunarPulse:
+            return nil  // Uses synthesis (LunarPulse)
+        case .darkShark:
+            return nil  // Uses synthesis (DarkShark)
+        case .midnightTrain:
+            return nil  // Uses synthesis (MidnightTrain)
+        case .lunarTide:
+            return nil  // Uses synthesis (LunarTide)
+        case .abyssalBreath:
+            return nil  // Uses synthesis (AbyssalBreath)
+        case .stardustNoise:
+            return nil  // Uses synthesis (StardustNoise)
+        case .lunarDustStorm:
+            return nil  // Uses synthesis (LunarDustStorm)
+        case .silentLibrary:
+            return nil  // Uses synthesis (SilentLibrary)
+        case .distantThunder:
+            return nil  // Uses synthesis (DistantThunder)
+        case .sinkingMoon:
+            return nil  // Uses synthesis (SinkingMoon)
+        case .dawnHint:
+            return nil  // Uses synthesis (DawnHint)
         }
     }
 }
