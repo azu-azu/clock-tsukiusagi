@@ -10,10 +10,7 @@ import Foundation
 
 /// Audio file presets for TrackPlayer
 public enum AudioFilePreset: String, CaseIterable, Identifiable {
-    case testTone = "test_tone_440hz"
-    case pinkNoise = "pink_noise_60s"
     case oceanWaves = "ocean_waves_60s"
-    case rain = "rain_60s"
     case forestAmbience = "forest_ambience_60s"
     case bubblesSoft = "bubbles_soft"
     case forestBirdsSoft = "forest_birds_soft"
@@ -25,10 +22,7 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
     /// Indicates if this is a test/development preset
     public var isTest: Bool {
         [
-            .testTone,
-            .pinkNoise,
             .oceanWaves,
-            .rain,
             .forestAmbience,
             .bubblesSoft,
             .forestBirdsSoft,
@@ -40,14 +34,8 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
     /// Display name for UI
     public var displayName: String {
         switch self {
-        case .testTone:
-            return "Test Tone (440Hz)"
-        case .pinkNoise:
-            return "Pink Noise"
         case .oceanWaves:
             return "Ocean Waves"
-        case .rain:
-            return "Rain"
         case .forestAmbience:
             return "Forest Ambience"
         case .bubblesSoft:
@@ -80,33 +68,12 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
     /// Recommended loop settings
     public var loopSettings: LoopSettings {
         switch self {
-        case .testTone:
-            return LoopSettings(
-                shouldLoop: true,
-                crossfadeDuration: 0.5,
-                fadeInDuration: 0.2,
-                fadeOutDuration: 0.5
-            )
-        case .pinkNoise:
-            return LoopSettings(
-                shouldLoop: true,
-                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
-                fadeInDuration: 0.5,
-                fadeOutDuration: 1.0
-            )
         case .oceanWaves:
             return LoopSettings(
                 shouldLoop: true,
                 crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
                 fadeInDuration: 1.0,
                 fadeOutDuration: 2.0
-            )
-        case .rain:
-            return LoopSettings(
-                shouldLoop: true,
-                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
-                fadeInDuration: 0.8,
-                fadeOutDuration: 1.5
             )
         case .forestAmbience:
             return LoopSettings(
