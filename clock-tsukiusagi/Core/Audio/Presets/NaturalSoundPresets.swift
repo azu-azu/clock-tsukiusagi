@@ -33,12 +33,7 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
         [
             .windChime,
             .tibetanBowl,
-            .moonlitSea,
             .lunarPulse,
-            .darkShark,
-            .midnightTrain,
-            .lunarTide,
-            .abyssalBreath,
             .stardustNoise,
             .lunarDustStorm,
             .silentLibrary,
