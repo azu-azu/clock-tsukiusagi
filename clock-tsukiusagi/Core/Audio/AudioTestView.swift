@@ -47,6 +47,15 @@ enum AudioSourcePreset: Identifiable {
             return preset.isTest
         }
     }
+
+    var englishTitle: String {
+        switch self {
+        case .synthesis(let preset):
+            return preset.englishTitle
+        case .audioFile(let preset):
+            return preset.displayName  // AudioFilePreset already has English names
+        }
+    }
 }
 
 // MARK: - Hashable & Equatable conformance
@@ -220,7 +229,7 @@ struct AudioTestView: View {
             .disabled(audioService.isPlaying)
 
             // Selected source display
-            Text(selectedSource.displayName)
+            Text(selectedSource.englishTitle)
                 .font(DesignTokens.SettingsTypography.caption)
                 .foregroundColor(DesignTokens.SettingsColors.textSecondary)
         }
@@ -335,7 +344,7 @@ struct AudioTestView: View {
                     .font(DesignTokens.SettingsTypography.caption)
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
 
-                Text(selectedSource.displayName)
+                Text(selectedSource.englishTitle)
                     .font(DesignTokens.SettingsTypography.caption)
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             }
