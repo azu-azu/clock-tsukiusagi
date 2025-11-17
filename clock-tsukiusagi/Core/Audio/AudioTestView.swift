@@ -81,9 +81,8 @@ struct AudioTestView: View {
                     VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
                         soundSelectionSection
                         controlSection
-                        volumeSection
-                        settingsSection
                         statusSection
+                        volumeSection
 
                         Spacer(minLength: DesignTokens.SettingsSpacing.bottomSpacer)
                     }
@@ -92,7 +91,7 @@ struct AudioTestView: View {
                     .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
                 }
             }
-            .navigationTitle("Audio Test")
+            .navigationTitle("Audio")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -181,28 +180,25 @@ struct AudioTestView: View {
     }
 
     private var controlSection: some View {
-        VStack(spacing: DesignTokens.SettingsSpacing.itemSpacing) {
-            Button(action: togglePlayback) {
-                HStack {
-                    Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
-                    Text(audioService.isPlaying ? "停止" : "再生")
-                }
-                .font(DesignTokens.SettingsTypography.headline)
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                .frame(maxWidth: .infinity)
-                .padding(DesignTokens.SettingsLayout.buttonPadding)
-                .background(audioService.isPlaying ? DesignTokens.SettingsColors.danger : DesignTokens.SettingsColors.accent)
-                .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
+        Button(action: togglePlayback) {
+            HStack {
+                Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
+                Text(audioService.isPlaying ? "停止" : "再生")
             }
+            .font(DesignTokens.SettingsTypography.headline)
+            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+            .frame(maxWidth: .infinity)
+            .padding(DesignTokens.SettingsLayout.buttonPadding)
+            .background(audioService.isPlaying ? DesignTokens.SettingsColors.danger : DesignTokens.SettingsColors.accent)
+            .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
         }
-        .settingsCardStyle()
     }
 
     private var volumeSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
             HStack {
                 Text("音量（端末ボタンで制御）")
-                    .font(DesignTokens.SettingsTypography.headline)
+                    .font(DesignTokens.SettingsTypography.itemTitle)
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                 Spacer()
                 Text("\(Int(audioService.systemVolume * 100))%")
@@ -220,12 +216,12 @@ struct AudioTestView: View {
                     ZStack(alignment: .leading) {
                         // Background
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.SettingsColors.textSecondary.opacity(0.4))
+                            .fill(DesignTokens.SettingsColors.textSecondary.opacity(0.3))
                             .frame(height: 8)
 
                         // Filled portion
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.SettingsColors.accent)
+                            .fill(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
                             .frame(width: geometry.size.width * CGFloat(audioService.systemVolume), height: 8)
                     }
                 }
@@ -238,19 +234,6 @@ struct AudioTestView: View {
             Text("💡 音量は端末のボリュームボタンで調整してください")
                 .font(DesignTokens.SettingsTypography.caption)
                 .foregroundColor(DesignTokens.SettingsColors.warning)
-        }
-        .settingsCardStyle()
-    }
-
-    private var settingsSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-            Text("設定")
-                .font(DesignTokens.SettingsTypography.headline)
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-
-            Text("設定はAudioServiceで管理されます")
-                .font(DesignTokens.SettingsTypography.caption)
-                .foregroundColor(DesignTokens.SettingsColors.textSecondary)
         }
         .settingsCardStyle()
     }
