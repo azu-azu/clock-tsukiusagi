@@ -9,10 +9,88 @@
 import SwiftUI
 import AVFoundation
 
-/// テスト用の音源タイプ
-enum TestSoundType: String, CaseIterable {
-    case synthesis = "🎵 合成音源"
-    case audioFile = "📁 音源ファイル"
+/// 統合された音源タイプ（合成 + ファイル）
+enum AudioSourcePreset: Identifiable {
+    case synthesis(NaturalSoundPreset)
+    case audioFile(AudioFilePreset)
+
+    var id: String {
+        switch self {
+        case .synthesis(let preset):
+            return "synthesis_\(preset.rawValue)"
+        case .audioFile(let preset):
+            return "file_\(preset.rawValue)"
+        }
+    }
+
+    var displayName: String {
+        let icon: String
+        #if DEBUG
+        icon = isTest ? "✏️" : "💿"
+        #else
+        icon = "💿"
+        #endif
+
+        switch self {
+        case .synthesis(let preset):
+            return "\(icon) \(preset.displayName)"
+        case .audioFile(let preset):
+            return "\(icon) \(preset.displayName)"
+        }
+    }
+
+    var isTest: Bool {
+        switch self {
+        case .synthesis(let preset):
+            return preset.isTest
+        case .audioFile(let preset):
+            return preset.isTest
+        }
+    }
+}
+
+// MARK: - Hashable & Equatable conformance
+extension AudioSourcePreset: Hashable, Equatable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: AudioSourcePreset, rhs: AudioSourcePreset) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    /// All available audio sources (production first, then test in debug)
+    static var allSources: [AudioSourcePreset] {
+        var production: [AudioSourcePreset] = []
+        var test: [AudioSourcePreset] = []
+
+        // Collect synthesis presets
+        for preset in NaturalSoundPreset.allCases {
+            let source = AudioSourcePreset.synthesis(preset)
+            if source.isTest {
+                #if DEBUG
+                test.append(source)
+                #endif
+            } else {
+                production.append(source)
+            }
+        }
+
+        // Collect audio file presets
+        for preset in AudioFilePreset.allCases {
+            let source = AudioSourcePreset.audioFile(preset)
+            if source.isTest {
+                #if DEBUG
+                test.append(source)
+                #endif
+            } else {
+                production.append(source)
+            }
+        }
+
+        // Production first, then test
+        return production + test
+    }
 }
 
 /// オーディオテストビュー
@@ -20,9 +98,7 @@ struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
     @Binding var selectedTab: Tab
 
-    @State private var selectedSound: TestSoundType = .synthesis
-    @State private var selectedSynthesisPreset: NaturalSoundPreset = .clickSuppression
-    @State private var selectedAudioFile: AudioFilePreset = .testTone
+    @State private var selectedSource: AudioSourcePreset = .synthesis(.pinkNoise)
 
     @State private var errorMessage: String?
     @State private var showError = false
@@ -50,7 +126,9 @@ struct AudioTestView: View {
 
         // Inline Title のフォント設定（スクロール時）
         let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        let inlineTitleDescriptor = inlineTitleFont.fontDescriptor.withDesign(.rounded) ?? inlineTitleFont.fontDescriptor
+        let inlineTitleDescriptor = inlineTitleFont.fontDescriptor
+            .withDesign(.rounded)
+            ?? inlineTitleFont.fontDescriptor
         scrolledAppearance.titleTextAttributes = [
             .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
             .foregroundColor: UIColor.white
@@ -132,49 +210,19 @@ struct AudioTestView: View {
                 .font(DesignTokens.SettingsTypography.headline)
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // Sound type picker (Segmented: Synthesis vs Audio File)
-            Picker("音源タイプ", selection: $selectedSound) {
-                ForEach(TestSoundType.allCases, id: \.self) { type in
-                    Text(type.rawValue).tag(type)
+            // Unified audio source picker
+            Picker("音源", selection: $selectedSource) {
+                ForEach(AudioSourcePreset.allSources) { source in
+                    Text(source.displayName).tag(source)
                 }
             }
-            .pickerStyle(.segmented)
-            .tint(DesignTokens.SettingsColors.accent)
+            .pickerStyle(.menu)
             .disabled(audioService.isPlaying)
 
-            Rectangle()
-                .fill(DesignTokens.SettingsColors.textSecondary.opacity(0.3))
-                .frame(height: 1)
-
-            // Synthesis preset picker (if synthesis type selected)
-            if selectedSound == .synthesis {
-                Picker("合成プリセット", selection: $selectedSynthesisPreset) {
-                    ForEach(NaturalSoundPreset.allCases) { preset in
-                        Text(preset.displayName).tag(preset)
-                    }
-                }
-                .pickerStyle(.menu)
-                .disabled(audioService.isPlaying)
-
-                Text("🎵 \(selectedSynthesisPreset.displayName)")
-                    .font(DesignTokens.SettingsTypography.caption)
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-            }
-
-            // Audio file picker (if audio file type selected)
-            if selectedSound == .audioFile {
-                Picker("ファイル", selection: $selectedAudioFile) {
-                    ForEach(AudioFilePreset.allCases) { preset in
-                        Text(preset.displayName).tag(preset)
-                    }
-                }
-                .pickerStyle(.menu)
-                .disabled(audioService.isPlaying)
-
-                Text("📁 \(selectedAudioFile.rawValue).\(selectedAudioFile.fileExtension)")
-                    .font(DesignTokens.SettingsTypography.caption)
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-            }
+            // Selected source display
+            Text(selectedSource.displayName)
+                .font(DesignTokens.SettingsTypography.caption)
+                .foregroundColor(DesignTokens.SettingsColors.textSecondary)
         }
         .settingsCardStyle()
     }
@@ -189,7 +237,11 @@ struct AudioTestView: View {
             .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             .frame(maxWidth: .infinity)
             .padding(DesignTokens.SettingsLayout.buttonPadding)
-            .background(audioService.isPlaying ? DesignTokens.SettingsColors.danger : DesignTokens.SettingsColors.accent)
+            .background(
+                audioService.isPlaying
+                    ? DesignTokens.SettingsColors.danger
+                    : DesignTokens.SettingsColors.accent
+            )
             .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
         }
     }
@@ -246,7 +298,11 @@ struct AudioTestView: View {
 
             HStack {
                 Circle()
-                    .fill(audioService.isPlaying ? DesignTokens.SettingsColors.success : DesignTokens.SettingsColors.inactive)
+                    .fill(
+                        audioService.isPlaying
+                            ? DesignTokens.SettingsColors.success
+                            : DesignTokens.SettingsColors.inactive
+                    )
                     .frame(width: 10, height: 10)
                 Text(audioService.isPlaying ? "再生中" : "停止中")
                     .font(DesignTokens.SettingsTypography.itemTitle)
@@ -279,16 +335,9 @@ struct AudioTestView: View {
                     .font(DesignTokens.SettingsTypography.caption)
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
 
-                switch selectedSound {
-                case .synthesis:
-                    Text("🎵 \(selectedSynthesisPreset.displayName)")
-                        .font(DesignTokens.SettingsTypography.caption)
-                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                case .audioFile:
-                    Text("📁 \(selectedAudioFile.displayName)")
-                        .font(DesignTokens.SettingsTypography.caption)
-                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                }
+                Text(selectedSource.displayName)
+                    .font(DesignTokens.SettingsTypography.caption)
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             }
         }
         .settingsCardStyle()
@@ -306,16 +355,15 @@ struct AudioTestView: View {
 
     private func playAudio() {
         do {
-
             // 選択された音源タイプに応じて再生
-            switch selectedSound {
-            case .synthesis:
+            switch selectedSource {
+            case .synthesis(let preset):
                 // 合成音源
-                try audioService.play(preset: selectedSynthesisPreset)
+                try audioService.play(preset: preset)
 
-            case .audioFile:
+            case .audioFile(let preset):
                 // 音源ファイル（TrackPlayer）
-                try audioService.playAudioFile(selectedAudioFile)
+                try audioService.playAudioFile(preset)
             }
 
             // 音量はシステム音量で自動制御される

@@ -28,6 +28,26 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
 
     public var id: String { rawValue }
 
+    /// Indicates if this is a test/development preset
+    public var isTest: Bool {
+        [
+            .clickSuppression,
+            .pinkNoise,
+            .brownNoise,
+            .pleasantDrone,
+            .pleasantWarm,
+            .pleasantCalm,
+            .pleasantDeep,
+            .ambientFocus,
+            .ambientRelax,
+            .ambientSleep,
+            .windChime,
+            .tibetanBowl,
+            .oceanWaves,
+            .cracklingFire
+        ].contains(self)
+    }
+
     /// Display name for UI
     public var displayName: String {
         switch self {

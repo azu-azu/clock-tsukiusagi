@@ -22,6 +22,21 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
 
     public var id: String { rawValue }
 
+    /// Indicates if this is a test/development preset
+    public var isTest: Bool {
+        [
+            .testTone,
+            .pinkNoise,
+            .oceanWaves,
+            .rain,
+            .forestAmbience,
+            .bubblesSoft,
+            .forestBirdsSoft,
+            .forestWindLeavesSoft,
+            .forestWindLeaves
+        ].contains(self)
+    }
+
     /// Display name for UI
     public var displayName: String {
         switch self {
