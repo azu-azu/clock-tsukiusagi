@@ -180,36 +180,12 @@ extension NaturalSoundPreset {
     /// Optional audio file preset (if using file-based playback instead of synthesis)
     public var audioFilePreset: AudioFilePreset? {
         switch self {
-        case .clickSuppression:
-            return nil  // Uses synthesis (ClickSuppressionDrone)
-        case .pinkNoise:
-            return nil  // Uses synthesis (PinkNoise)
-        case .brownNoise:
-            return nil  // Uses synthesis (BrownNoise)
-        case .pleasantDrone:
-            return nil  // Uses synthesis (PleasantDrone)
-        case .pleasantWarm:
-            return nil  // Uses synthesis (DetunedOscillator)
-        case .pleasantCalm:
-            return nil  // Uses synthesis (DetunedOscillator)
-        case .pleasantDeep:
-            return nil  // Uses synthesis (DetunedOscillator)
-        case .ambientFocus:
-            return nil  // Uses synthesis (AmbientDrone)
-        case .ambientRelax:
-            return nil  // Uses synthesis (AmbientDrone)
-        case .ambientSleep:
-            return nil  // Uses synthesis (AmbientDrone)
         case .windChime:
             return nil  // Uses synthesis (WindChime)
         case .tibetanBowl:
             return nil  // Uses synthesis (TibetanBowl)
-        case .oceanWaves:
-            return nil  // Uses synthesis (OceanWaves)
         case .oceanWavesSeagulls:
             return nil  // Uses synthesis (OceanWaves + Seagulls)
-        case .cracklingFire:
-            return nil  // Uses synthesis (CracklingFire)
         case .moonlitSea:
             return nil  // Uses synthesis (MoonlitSea)
         case .lunarPulse:

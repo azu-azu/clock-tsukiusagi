@@ -98,7 +98,7 @@ struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
     @Binding var selectedTab: Tab
 
-    @State private var selectedSource: AudioSourcePreset = .synthesis(.pinkNoise)
+    @State private var selectedSource: AudioSourcePreset = .synthesis(.windChime)
 
     @State private var errorMessage: String?
     @State private var showError = false
