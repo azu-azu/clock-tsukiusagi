@@ -4,6 +4,7 @@ enum ClockDisplayMode {
     case normal
     case dotMatrix
     case sevenSeg
+    case bunny
 }
 
 struct ClockScreenView: View {
@@ -80,6 +81,9 @@ struct ClockScreenView: View {
                                 textColor: DesignTokens.ClockColors.textPrimary
                             )
                             .offset(y: -8)
+
+                        case .bunny:
+                            BunnyClockView()
                         }
                     }
                     .accessibilityLabel("Current time")
@@ -110,6 +114,8 @@ struct ClockScreenView: View {
                     case .dotMatrix:
                         displayMode = .sevenSeg
                     case .sevenSeg:
+                        displayMode = .bunny
+                    case .bunny:
                         displayMode = .normal
                     }
                 }
