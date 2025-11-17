@@ -109,7 +109,7 @@ struct AudioTestView: View {
                     Button(action: {
                         selectedTab = .settings
                     }) {
-                        Image(systemName: "gearshape.fill")
+                        Image(systemName: "slider.horizontal.3")
                             .font(.system(size: 20))
                             .foregroundColor(.white.opacity(0.8))
                     }

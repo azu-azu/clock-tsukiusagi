@@ -15,6 +15,10 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
     case oceanWaves = "ocean_waves_60s"
     case rain = "rain_60s"
     case forestAmbience = "forest_ambience_60s"
+    case bubblesSoft = "bubbles_soft"
+    case forestBirdsSoft = "forest_birds_soft"
+    case forestWindLeavesSoft = "forest_wind_leaves_soft"
+    case forestWindLeaves = "forest_wind_leaves"
 
     public var id: String { rawValue }
 
@@ -31,6 +35,14 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
             return "Rain"
         case .forestAmbience:
             return "Forest Ambience"
+        case .bubblesSoft:
+            return "Bubbles (Soft)"
+        case .forestBirdsSoft:
+            return "Forest Birds (Soft)"
+        case .forestWindLeavesSoft:
+            return "Forest Wind & Leaves (Soft)"
+        case .forestWindLeaves:
+            return "Forest Wind & Leaves"
         }
     }
 
@@ -87,6 +99,34 @@ public enum AudioFilePreset: String, CaseIterable, Identifiable {
                 crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
                 fadeInDuration: 1.0,
                 fadeOutDuration: 2.0
+            )
+        case .bubblesSoft:
+            return LoopSettings(
+                shouldLoop: true,
+                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
+                fadeInDuration: 1.0,
+                fadeOutDuration: 1.5
+            )
+        case .forestBirdsSoft:
+            return LoopSettings(
+                shouldLoop: true,
+                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
+                fadeInDuration: 1.0,
+                fadeOutDuration: 1.5
+            )
+        case .forestWindLeavesSoft:
+            return LoopSettings(
+                shouldLoop: true,
+                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
+                fadeInDuration: 1.2,
+                fadeOutDuration: 2.0
+            )
+        case .forestWindLeaves:
+            return LoopSettings(
+                shouldLoop: true,
+                crossfadeDuration: 0.0,  // No crossfade needed - seamless loop
+                fadeInDuration: 1.0,
+                fadeOutDuration: 1.8
             )
         }
     }

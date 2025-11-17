@@ -100,17 +100,13 @@ public struct SettingsStepper: View {
                 .font(DesignTokens.SettingsTypography.itemTitle)
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             Spacer()
-            Stepper(
-                value: $value,
-                in: range,
-                step: step
-            ) {
-                Text("\(value) \(unit)")
-                    .font(DesignTokens.SettingsTypography.itemTitle)
-                    .foregroundColor(DesignTokens.SettingsColors.accent)
-                    .monospacedDigit()
-                    .frame(minWidth: 80, alignment: .trailing)
-            }
+            Text("\(value) \(unit)")
+                .font(DesignTokens.SettingsTypography.itemTitle)
+                .foregroundColor(DesignTokens.SettingsColors.accent)
+                .monospacedDigit()
+                .frame(width: DesignTokens.SettingsLayout.stepperValueWidth, alignment: .trailing)
+            Stepper("", value: $value, in: range, step: step)
+                .labelsHidden()
         }
     }
 }

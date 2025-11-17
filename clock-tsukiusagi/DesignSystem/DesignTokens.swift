@@ -173,5 +173,8 @@ struct DesignTokens {
 
         /// ボタンのパディング
         static let buttonPadding: CGFloat = 16
+
+        /// ステッパーの値表示部分の共通幅
+        static let stepperValueWidth: CGFloat = 80
     }
 }

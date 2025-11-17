@@ -34,19 +34,19 @@ public struct ContentView: View {
                         // Clock アイコンは非表示（現在のページなので）
 
                         TabButton(
+                            icon: "slider.horizontal.3",
+                            label: "Settings",
+                            isSelected: false
+                        ) {
+                            selectedTab = .settings
+                        }
+
+                        TabButton(
                             icon: "music.quarternote.3",
                             label: "Audio Test",
                             isSelected: false
                         ) {
                             selectedTab = .audioTest
-                        }
-
-                        TabButton(
-                            icon: "gearshape.fill",
-                            label: "Settings",
-                            isSelected: false
-                        ) {
-                            selectedTab = .settings
                         }
                     }
                     .frame(height: 60)
