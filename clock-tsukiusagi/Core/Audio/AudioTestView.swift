@@ -114,7 +114,7 @@ struct AudioTestView: View {
                     }
                 }
 
-                // Audio Test アイコンは非表示（現在のページ）
+                // Audio アイコンは非表示（現在のページ）
             }
             .alert("エラー", isPresented: $showError) {
                 Button("OK") { showError = false }

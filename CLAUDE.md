@@ -25,7 +25,7 @@ The project follows **Clean Architecture** with **feature-based organization** a
 
 ### Entry Points
 * **App**: `clock-tsukiusagi/App/clock_tsukiusagiApp.swift`
-* **Main View**: `clock-tsukiusagi/App/ContentView.swift` — Tab-based navigation (Clock, Audio Test, Settings)
+* **Main View**: `clock-tsukiusagi/App/ContentView.swift` — Tab-based navigation (Clock, Audio, Settings)
 
 ### Design System
 * **DesignTokens**: `DesignSystem/DesignTokens.swift` — Unified visual tokens for all UI
@@ -41,7 +41,7 @@ The project follows **Clean Architecture** with **feature-based organization** a
 
 ### Features
 * **Clock Screen**: `Features/Clock/Views/ClockScreenView.swift` — Main clock interface with moon visualization
-* **Audio Test**: `Core/Audio/AudioTestView.swift` — Audio system testing interface
+* **Audio**: `Core/Audio/AudioTestView.swift` — Audio playback control interface
 * **Settings**: `Features/Settings/Views/AudioSettingsView.swift` — Audio configuration UI
 
 ---
@@ -84,7 +84,7 @@ See: `Docs/architecture/audio-system-spec.md` for full specification
 
 **Tab-based navigation with conditional UI**:
 - **Clock screen**: Custom tab bar (upper portion), no NavigationView
-- **Audio Test / Settings**: NavigationView with toolbar icons, no custom tab bar
+- **Audio / Settings**: NavigationView with toolbar icons, no custom tab bar
 - Current page icon is hidden from navigation
 - Tab state managed in ContentView, passed via `@Binding`
 

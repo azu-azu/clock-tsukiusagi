@@ -136,7 +136,7 @@ public enum Tab {  // Must be public
 * Tab enum is **public** (defined in ContentView)
 * Tab state passed via `@Binding` to child views
 * **Clock screen**: Custom tab bar, no NavigationView
-* **Audio Test / Settings**: NavigationView with toolbar, no tab bar
+* **Audio / Settings**: NavigationView with toolbar, no tab bar
 * Current page icon hidden from navigation
 * Icons placed left/right using `.navigationBarLeading` and `.navigationBarTrailing`
 

@@ -105,12 +105,12 @@ xcodebuild -scheme clock-tsukiusagi -sdk iphoneos -configuration Debug
 
 **Procedure**:
 1. Launch app
-2. Navigate to **Audio Test** tab
+2. Navigate to **Audio** tab
 3. Tap "Play"
 4. Verify audio playing (listen for sound)
 5. **Navigate to Clock tab**
 6. Wait 5 seconds
-7. **Navigate back to Audio Test tab**
+7. **Navigate back to Audio tab**
 8. **Lock device** (power button)
 9. Wait 5 seconds
 10. **Unlock device**
@@ -178,7 +178,7 @@ xcodebuild -scheme clock-tsukiusagi -sdk iphoneos -configuration Debug
 **Procedure**:
 1. Navigate to **Settings** tab
 2. **Enable** "Headphone-Only Mode"
-3. Navigate to **Audio Test** tab
+3. Navigate to **Audio** tab
 4. **Plug in wired headphones**
 5. Tap "Play"
 6. Verify audio playing in headphones
@@ -237,7 +237,7 @@ xcodebuild -scheme clock-tsukiusagi -sdk iphoneos -configuration Debug
 1. Navigate to **Settings** tab
 2. **Enable** "Quiet Breaks"
 3. Verify "Play Duration: 5 min" and "Break Duration: 1 min"
-4. Navigate to **Audio Test** tab
+4. Navigate to **Audio** tab
 5. Tap "Play"
 6. Observe "Next Break" time in Settings (should be ~5 minutes from now)
 7. **Wait 5 minutes** (use stopwatch)
@@ -291,7 +291,7 @@ xcodebuild -scheme clock-tsukiusagi -sdk iphoneos -configuration Debug
 **Procedure**:
 1. Navigate to **Settings** tab
 2. Set "Maximum Output Level" to **-12 dB** (very low)
-3. Navigate to **Audio Test** tab
+3. Navigate to **Audio** tab
 4. Set volume slider to **maximum (1.0)**
 5. Tap "Play" with **headphones on**
 6. Observe perceived loudness
@@ -317,7 +317,7 @@ xcodebuild -scheme clock-tsukiusagi -sdk iphoneos -configuration Debug
 **Objective**: Fade-in/out without audible clicks
 
 **Procedure**:
-1. Navigate to **Audio Test** tab
+1. Navigate to **Audio** tab
 2. **With headphones**: Tap "Play"
 3. Listen for fade-in (0.5 seconds)
 4. Tap "Stop"
@@ -339,11 +339,11 @@ xcodebuild -scheme clock-tsukiusagi -sdk iphoneos -configuration Debug
 **Objective**: Settings changes apply without restart
 
 **Procedure**:
-1. Navigate to **Audio Test** tab
+1. Navigate to **Audio** tab
 2. Tap "Play"
 3. Navigate to **Settings** tab
 4. Set "Maximum Output Level" to **-12 dB**
-5. Return to **Audio Test** tab
+5. Return to **Audio** tab
 6. Observe volume (should be quieter)
 7. Return to **Settings** tab
 8. **Disable** "Quiet Breaks"

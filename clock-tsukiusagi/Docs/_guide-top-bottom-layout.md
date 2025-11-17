@@ -69,7 +69,7 @@ ZStack(alignment: .top) {
 
             TabButton(
                 icon: "waveform",
-                label: "Audio Test",
+                label: "Audio",
                 isSelected: selectedTab == .audioTest
             ) {
                 selectedTab = .audioTest
@@ -241,7 +241,7 @@ ZStack(alignment: .top)
 
 ## 🔗 関連コミット
 
-- 初回実装: Audio Test追加とTabView実装
+- 初回実装: Audio追加とTabView実装
 - 修正: タブバーを上部に移動、透明化
 - 最終修正: ContentViewから`.ignoresSafeArea()`削除で位置修正完了
 

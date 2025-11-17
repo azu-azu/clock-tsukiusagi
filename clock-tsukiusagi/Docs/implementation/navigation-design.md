@@ -2,7 +2,7 @@
 
 ## 概要
 
-AudioTestView と AudioSettingsView のナビゲーション設計について記録。
+Audio と AudioSettingsView のナビゲーション設計について記録。
 Clock画面のフルスクリーン体験を維持しつつ、他の画面では統一されたナビゲーションUIを提供する。
 
 ## アーキテクチャ
@@ -27,20 +27,20 @@ public enum Tab {
 #### Clock画面
 - **カスタムタブバー表示**: あり（上部2つのアイコン）
 - **NavigationView**: なし
-- **表示アイコン**: Audio Test、Settings（現在のClockアイコンは非表示）
+- **表示アイコン**: Settings、Audio（現在のClockアイコンは非表示）
 - **目的**: フルスクリーンの時計表示を維持
 
 ```swift
 // ContentView.swift
 if selectedTab == .clock {
     HStack(spacing: 0) {
-        TabButton(icon: "music.quarternote.3", label: "Audio Test", ...)
-        TabButton(icon: "gearshape.fill", label: "Settings", ...)
+        TabButton(icon: "slider.horizontal.3", label: "Settings", ...)
+        TabButton(icon: "music.quarternote.3", label: "Audio", ...)
     }
 }
 ```
 
-#### AudioTest / Settings画面
+#### Audio / Settings画面
 - **カスタムタブバー表示**: なし
 - **NavigationView**: あり
 - **ナビバーツールバー**: 左端と右端に1つずつアイコン配置
@@ -54,7 +54,7 @@ if selectedTab == .clock {
         Button { selectedTab = .clock } label: { ... }  // Clock
     }
     ToolbarItem(placement: .navigationBarTrailing) {
-        Button { selectedTab = .audioTest } label: { ... }  // Audio Test
+        Button { selectedTab = .audioTest } label: { ... }  // Audio
     }
     // Settings アイコンは非表示（現在のページ）
 }
@@ -128,15 +128,15 @@ private func configureNavigationBarAppearance() {
 | 画面 | アイコン | SF Symbol | サイズ |
 |------|---------|-----------|--------|
 | Clock | 時計 | `clock.fill` | 20pt（ナビバー）、22pt（タブバー） |
-| Audio Test | 音符 | `music.quarternote.3` | 20pt（ナビバー）、22pt（タブバー） |
-| Settings | 歯車 | `gearshape.fill` | 20pt（ナビバー）、22pt（タブバー） |
+| Audio | 音符 | `music.quarternote.3` | 20pt（ナビバー）、22pt（タブバー） |
+| Settings | スライダー | `slider.horizontal.3` | 20pt（ナビバー）、22pt（タブバー） |
 
 ### アイコン配置ルール
 
 1. **現在のページのアイコンは非表示**
-   - Clock画面: Audio Test + Settings のみ表示
-   - Audio Test画面: Clock + Settings のみ表示
-   - Settings画面: Clock + Audio Test のみ表示
+   - Clock画面: Settings + Audio のみ表示
+   - Audio画面: Clock + Settings のみ表示
+   - Settings画面: Clock + Audio のみ表示
 
 2. **ナビバーでの配置**
    - 左端（`.navigationBarLeading`）: 1つ
@@ -226,7 +226,7 @@ private func configureNavigationBarAppearance() {
 
 5. **TabButton のアイコン名を直接変更しない**
    - アイコン変更時は全箇所を検索して統一すること
-   - 現在使用: `music.quarternote.3`（Audio Test）
+   - 現在使用: `music.quarternote.3`（Audio）、`slider.horizontal.3`（Settings）
 
 ## デザイントークンとの統合
 

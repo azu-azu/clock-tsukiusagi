@@ -43,7 +43,7 @@ public struct ContentView: View {
 
                         TabButton(
                             icon: "music.quarternote.3",
-                            label: "Audio Test",
+                            label: "Audio",
                             isSelected: false
                         ) {
                             selectedTab = .audioTest
