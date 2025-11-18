@@ -1,30 +1,41 @@
 //
-//  SignalAudioSource.swift
+//  FinalMixerOutputNode.swift
 //  clock-tsukiusagi
 //
-//  Created by Claude Code on 2025-11-17.
-//  SignalEngine: Wrapper to convert Signal into AudioSource
+//  Created by Claude Code on 2025-11-18.
+//  SignalEngine: Bridge FinalMixer to AVAudioEngine via AudioSource protocol
 //
 
 import AVFoundation
 
-/// Wrap a Signal into an AudioSource-compatible node.
-/// This does not modify LocalAudioEngine.
+/// Wraps FinalMixer into an AudioSource-compatible node for LocalAudioEngine.
 ///
-/// Claude: This bridges the time-based Signal world
-/// with the sample-based AVAudioEngine world.
-public final class SignalAudioSource: AudioSource {
+/// Architecture:
+/// ```
+/// FinalMixer → FinalMixerOutputNode → AVAudioSourceNode → LocalAudioEngine
+/// ```
+///
+/// Claude:
+/// This is similar to SignalAudioSource but wraps a FinalMixer instead of a single Signal.
+/// It handles:
+/// - Sample-rate conversion (time-based → sample-based)
+/// - Volume control
+/// - Fade envelope support
+/// - AVAudioEngine integration
+public final class FinalMixerOutputNode: AudioSource {
 
-    // State holder for callback
+    // MARK: - State
+
+    /// Internal state holder for render callback
     private class State {
         var time: Float = 0
         var sampleRate: Float = 48000
         var volume: Float = 1.0
-        let signal: Signal
+        let mixer: FinalMixer
         var fadeEnvelope: Signal?  // Optional fade envelope (0..1)
 
-        init(signal: Signal) {
-            self.signal = signal
+        init(mixer: FinalMixer) {
+            self.mixer = mixer
             self.fadeEnvelope = nil
         }
     }
@@ -32,26 +43,36 @@ public final class SignalAudioSource: AudioSource {
     private let state: State
     private let _sourceNode: AVAudioSourceNode
 
+    // MARK: - AudioSource Protocol
+
     public var sourceNode: AVAudioNode {
         return _sourceNode
     }
 
-    public init(signal: Signal) {
-        self.state = State(signal: signal)
+    // MARK: - Initialization
 
+    /// Create a new FinalMixerOutputNode wrapping a FinalMixer
+    /// - Parameter mixer: The FinalMixer to wrap
+    public init(mixer: FinalMixer) {
+        self.state = State(mixer: mixer)
+
+        // Create AVAudioSourceNode with render callback
         self._sourceNode = AVAudioSourceNode { [state] _, _, frameCount, audioBufferList -> OSStatus in
             let ablPointer = UnsafeMutableAudioBufferListPointer(audioBufferList)
 
             for frame in 0..<Int(frameCount) {
-                var value = state.signal(state.time) * state.volume
+                // Get mixed + processed output from FinalMixer
+                var value = state.mixer.output(time: state.time) * state.volume
 
                 // Apply fade envelope if active
                 if let fadeEnvelope = state.fadeEnvelope {
                     value *= fadeEnvelope(state.time)
                 }
 
+                // Advance time
                 state.time += 1.0 / state.sampleRate
 
+                // Write to all channels (mono signal to stereo output)
                 for buffer in ablPointer {
                     let ptr = buffer.mData!.assumingMemoryBound(to: Float.self)
                     ptr[frame] = value
@@ -60,6 +81,8 @@ public final class SignalAudioSource: AudioSource {
             return noErr
         }
     }
+
+    // MARK: - AudioSource Protocol Implementation
 
     public func attachAndConnect(to engine: AVAudioEngine, format: AVAudioFormat) throws {
         state.sampleRate = Float(format.sampleRate)
@@ -111,11 +134,11 @@ public final class SignalAudioSource: AudioSource {
         state.fadeEnvelope = nil
     }
 
-    // MARK: - Signal Access
+    // MARK: - Mixer Access
 
-    /// Get the underlying signal (read-only access)
-    /// Returns a Signal that evaluates to the same output as this AudioSource
-    public func asSignal() -> Signal {
-        return state.signal
+    /// Access the underlying FinalMixer for adding signals/effects
+    /// - Returns: The FinalMixer instance
+    public func getMixer() -> FinalMixer {
+        return state.mixer
     }
 }
