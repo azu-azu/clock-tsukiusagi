@@ -44,6 +44,50 @@ public final class AudioService: ObservableObject {
 
     public static let shared = AudioService()
 
+    // MARK: - SignalEngine Source Wrapper
+
+    /// Internal wrapper to handle fade/reset consistently across SignalEngine nodes
+    private enum SignalEngineSource {
+        case signal(SignalAudioSource)
+        case mixer(FinalMixerOutputNode)
+
+        func applyFadeIn(durationMs: Int) {
+            switch self {
+            case .signal(let source):
+                source.applyFadeIn(durationMs: durationMs)
+            case .mixer(let node):
+                node.applyFadeIn(durationMs: durationMs)
+            }
+        }
+
+        func applyFadeOut(durationMs: Int) {
+            switch self {
+            case .signal(let source):
+                source.applyFadeOut(durationMs: durationMs)
+            case .mixer(let node):
+                node.applyFadeOut(durationMs: durationMs)
+            }
+        }
+
+        func clearFade() {
+            switch self {
+            case .signal(let source):
+                source.clearFade()
+            case .mixer(let node):
+                node.clearFade()
+            }
+        }
+
+        func resetEffectsState() {
+            switch self {
+            case .signal(let source):
+                source.resetEffectsState()
+            case .mixer(let node):
+                node.resetEffectsState()
+            }
+        }
+    }
+
     // MARK: - Published Properties
 
     @Published public private(set) var isPlaying = false
@@ -83,7 +127,7 @@ public final class AudioService: ObservableObject {
     private var playbackSessionId = UUID()  // Generational guard against stale stops
 
     // SignalEngine fade control
-    private var currentSignalSource: SignalAudioSource?
+    private var currentSignalSource: SignalEngineSource?
 
     // MARK: - Initialization
 
@@ -267,9 +311,7 @@ public final class AudioService: ObservableObject {
         }
 
         // 2) Apply fade out to SignalAudioSource (if using SignalEngine)
-        if let signalSource = currentSignalSource {
-            signalSource.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
-        }
+        currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
 
         // 3) Always fade out master volume (regardless of source type)
         let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
@@ -298,6 +340,9 @@ public final class AudioService: ObservableObject {
             // Disable sources (suspends timers, keeps nodes attached)
             self.engine.disableSources()
 
+            // Reset effect state to avoid tail carry-over
+            self.currentSignalSource?.resetEffectsState()
+
 
             // 4) Cleanup state and auxiliary features
             self.breakScheduler.stop()
@@ -305,7 +350,7 @@ public final class AudioService: ObservableObject {
             // isPlaying already set to false at the beginning of stopAndWait()
             self.currentPreset = nil
             self.currentAudioFile = nil
-            self.currentSignalSource = nil
+            self.clearCurrentSignalSource()
             self.pauseReason = nil
 
             // Phase 3: Live Activityを終了
@@ -342,9 +387,7 @@ public final class AudioService: ObservableObject {
         }
 
         // 2) Apply fade out to SignalAudioSource (if using SignalEngine)
-        if let signalSource = currentSignalSource {
-            signalSource.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
-        }
+        currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
 
         // 3) Always fade out master volume (regardless of source type)
         let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
@@ -372,6 +415,12 @@ public final class AudioService: ObservableObject {
             // Disable sources (suspends timers, keeps nodes attached)
             self.engine.disableSources()
 
+            // Reset effect state to avoid tail carry-over
+            self.currentSignalSource?.resetEffectsState()
+
+            // Clear SignalEngine reference after reset
+            self.clearCurrentSignalSource()
+
         }
 
         engineStopWorkItem = workItem
@@ -398,6 +447,9 @@ public final class AudioService: ObservableObject {
     public func pause(reason: PauseReason) {
         print("⚠️ [AudioService] pause() called, reason: \(reason)")
 
+        // Apply per-source fade to match master fade timing
+        currentSignalSource?.applyFadeOut(durationMs: 500)
+
         // フェードアウト
         fadeOut(duration: 0.5)
 
@@ -416,6 +468,7 @@ public final class AudioService: ObservableObject {
             }
 
             self.engine.stop()
+            self.currentSignalSource?.resetEffectsState()
             print("⚠️ [AudioService] Engine stopped after fade")
         }
 
@@ -509,7 +562,8 @@ public final class AudioService: ObservableObject {
         isPlaying = false
         currentPreset = nil
         currentAudioFile = nil
-        currentSignalSource = nil
+        resetCurrentSignalEffectsState()
+        clearCurrentSignalSource()
         pauseReason = nil
 
         // Stop engine if running
@@ -527,6 +581,17 @@ public final class AudioService: ObservableObject {
         nowPlayingController?.clearNowPlaying()
 
         print("🧹 [AudioService] State cleanup complete")
+    }
+
+    /// Reset DSP state for current SignalEngine-based source (filters/reverb/fades)
+    private func resetCurrentSignalEffectsState() {
+        currentSignalSource?.resetEffectsState()
+    }
+
+    /// Clear references to the current SignalEngine source
+    private func clearCurrentSignalSource() {
+        currentSignalSource?.clearFade()
+        currentSignalSource = nil
     }
 
     private func setupCallbacks() {
@@ -662,15 +727,35 @@ public final class AudioService: ObservableObject {
 
     private func registerSource(for preset: NaturalSoundPreset) throws {
 
+        // Reset any existing SignalEngine state before switching presets
+        resetCurrentSignalEffectsState()
+        clearCurrentSignalSource()
+
         // Try SignalEngine version first (if available)
         let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
         let signalBuilder = SignalPresetBuilder(sampleRate: outputFormat.sampleRate)
+
+        // Prefer FinalMixer-based pipeline (with effects)
+        if let mixerOutput = signalBuilder.makeMixerOutput(for: preset) {
+            print("🎵 [AudioService] Using FinalMixer for preset: \(preset.rawValue)")
+
+            // Store reference for fade/effect control
+            currentSignalSource = .mixer(mixerOutput)
+
+            // Register source with engine
+            engine.register(mixerOutput)
+
+            // Apply fade in (300ms)
+            mixerOutput.applyFadeIn(durationMs: 300)
+
+            return
+        }
 
         if let signalSource = signalBuilder.makeSignal(for: preset) {
             print("🎵 [AudioService] Using SignalEngine for preset: \(preset.rawValue)")
 
             // Store reference for fade control
-            currentSignalSource = signalSource
+            currentSignalSource = .signal(signalSource)
 
             // Register source with engine
             engine.register(signalSource)
@@ -682,7 +767,7 @@ public final class AudioService: ObservableObject {
         }
 
         // Clear SignalSource reference if using legacy AudioSource
-        currentSignalSource = nil
+        clearCurrentSignalSource()
 
         // Fallback to original implementation
         print("🔄 [AudioService] Using legacy AudioSource for preset: \(preset.rawValue)")
@@ -1082,6 +1167,10 @@ public final class AudioService: ObservableObject {
             engine.stop()
             volumeLimiter.reset()  // Reset limiter when stopping
         }
+
+        // Ensure SignalEngine state is cleared when switching to file playback
+        resetCurrentSignalEffectsState()
+        clearCurrentSignalSource()
 
         // Disable synthesis sources for file playback (but don't detach nodes)
         engine.disableSources()

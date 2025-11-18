@@ -126,6 +126,11 @@ public final class FinalMixer {
             return self.output(time: time)
         }
     }
+
+    /// Reset all effects' internal state (used on stop/preset switch)
+    public func resetEffectsState() {
+        effects.forEach { $0.reset() }
+    }
 }
 
 // MARK: - AudioEffect Protocol

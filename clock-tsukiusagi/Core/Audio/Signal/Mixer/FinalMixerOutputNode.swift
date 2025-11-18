@@ -134,6 +134,12 @@ public final class FinalMixerOutputNode: AudioSource {
         state.fadeEnvelope = nil
     }
 
+    /// Reset mixer-attached effect states (reverb tail/filters) and fade envelope
+    public func resetEffectsState() {
+        state.mixer.resetEffectsState()
+        state.fadeEnvelope = nil
+    }
+
     // MARK: - Mixer Access
 
     /// Access the underlying FinalMixer for adding signals/effects

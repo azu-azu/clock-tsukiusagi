@@ -111,6 +111,11 @@ public final class SignalAudioSource: AudioSource {
         state.fadeEnvelope = nil
     }
 
+    /// Reset any internal DSP state (placeholder for effectless sources)
+    public func resetEffectsState() {
+        state.fadeEnvelope = nil
+    }
+
     // MARK: - Signal Access
 
     /// Get the underlying signal (read-only access)
