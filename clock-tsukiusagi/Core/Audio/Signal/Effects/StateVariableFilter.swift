@@ -43,17 +43,13 @@ public final class StateVariableFilter: AudioEffect {
 
     /// Cutoff frequency in Hz (20 - 20000)
     public var cutoffFrequency: Float {
-        didSet {
-            updateCoefficients()
-        }
+        didSet { targetCutoffFrequency = clampCutoff(cutoffFrequency) }
     }
 
     /// Resonance / Q-factor (0.5 - 10.0)
     /// Higher Q = sharper peak at cutoff
     public var resonance: Float {
-        didSet {
-            updateCoefficients()
-        }
+        didSet { targetResonance = clampResonance(resonance) }
     }
 
     /// Sample rate in Hz
@@ -64,6 +60,18 @@ public final class StateVariableFilter: AudioEffect {
     /// Internal filter states (z-domain)
     private var z1_lowpass: Float = 0   // Lowpass state
     private var z1_bandpass: Float = 0  // Bandpass state
+
+    // Smoothed parameters
+    private var targetCutoffFrequency: Float
+    private var smoothedCutoff: Float
+    private var targetResonance: Float
+    private var smoothedResonance: Float
+
+    // Smoothing coefficients (1-pole)
+    private var cutoffSmoothingCoeff: Float
+    private var resonanceSmoothingCoeff: Float
+    private var cutoffSmoothingTime: Float
+    private var resonanceSmoothingTime: Float
 
     // MARK: - Coefficients
 
@@ -85,23 +93,32 @@ public final class StateVariableFilter: AudioEffect {
         type: FilterType = .lowpass,
         cutoff: Float = 1000,
         resonance: Float = 0.707,
-        sampleRate: Float = 48000
+        sampleRate: Float = 48000,
+        cutoffSmoothingTime: Float = 0.02,    // seconds
+        resonanceSmoothingTime: Float = 0.08  // seconds
     ) {
         self.filterType = type
         self.cutoffFrequency = cutoff
         self.resonance = resonance
         self.sampleRate = sampleRate
+        self.cutoffSmoothingTime = cutoffSmoothingTime
+        self.resonanceSmoothingTime = resonanceSmoothingTime
+        self.targetCutoffFrequency = clampCutoff(cutoff)
+        self.smoothedCutoff = self.targetCutoffFrequency
+        self.targetResonance = clampResonance(resonance)
+        self.smoothedResonance = self.targetResonance
+        self.cutoffSmoothingCoeff = Self.smoothingCoeff(time: cutoffSmoothingTime, sampleRate: sampleRate)
+        self.resonanceSmoothingCoeff = Self.smoothingCoeff(time: resonanceSmoothingTime, sampleRate: sampleRate)
 
-        updateCoefficients()
+        updateCoefficients(cutoff: smoothedCutoff, resonance: smoothedResonance)
     }
 
     // MARK: - Coefficient Calculation
 
-    /// Update filter coefficients based on cutoff and resonance
-    private func updateCoefficients() {
-        // Clamp parameters to safe ranges
-        let fc = max(20, min(cutoffFrequency, sampleRate / 2 - 100))
-        let Q = max(0.5, min(resonance, 10.0))
+    /// Update filter coefficients based on provided cutoff and resonance
+    private func updateCoefficients(cutoff: Float, resonance: Float) {
+        let fc = clampCutoff(cutoff)
+        let Q = clampResonance(resonance)
 
         // Calculate frequency warping factor (bilinear transform)
         let wd = 2 * Float.pi * fc
@@ -126,6 +143,9 @@ public final class StateVariableFilter: AudioEffect {
         // v1 = bandpass output
         // v2 = lowpass output
         // v3 = highpass output = v0 - k*v1 - v2
+
+        // Smooth parameters toward targets
+        applyParameterSmoothing()
 
         let v0 = input
         let v3 = v0 - k * z1_bandpass - z1_lowpass  // Highpass
@@ -152,6 +172,9 @@ public final class StateVariableFilter: AudioEffect {
     public func reset() {
         z1_lowpass = 0
         z1_bandpass = 0
+        smoothedCutoff = targetCutoffFrequency
+        smoothedResonance = targetResonance
+        updateCoefficients(cutoff: smoothedCutoff, resonance: smoothedResonance)
     }
 
     // MARK: - Convenience Methods
@@ -160,6 +183,41 @@ public final class StateVariableFilter: AudioEffect {
     /// - Parameter sampleRate: New sample rate in Hz
     public func setSampleRate(_ sampleRate: Float) {
         self.sampleRate = sampleRate
-        updateCoefficients()
+        cutoffSmoothingCoeff = Self.smoothingCoeff(time: cutoffSmoothingTime, sampleRate: sampleRate)
+        resonanceSmoothingCoeff = Self.smoothingCoeff(time: resonanceSmoothingTime, sampleRate: sampleRate)
+        // Re-clamp targets to new Nyquist limit
+        targetCutoffFrequency = clampCutoff(targetCutoffFrequency)
+        smoothedCutoff = clampCutoff(smoothedCutoff)
+        updateCoefficients(cutoff: smoothedCutoff, resonance: smoothedResonance)
+    }
+
+    // MARK: - Private Helpers
+
+    private func clampCutoff(_ value: Float) -> Float {
+        return max(20, min(value, sampleRate / 2 - 100))
+    }
+
+    private func clampResonance(_ value: Float) -> Float {
+        return max(0.5, min(value, 10.0))
+    }
+
+    private static func smoothingCoeff(time: Float, sampleRate: Float) -> Float {
+        guard time > 0 else { return 1.0 }
+        return 1 - exp(-1 / (time * sampleRate))
+    }
+
+    /// Smooth cutoff/resonance toward targets and refresh coefficients when needed
+    private func applyParameterSmoothing() {
+        let newCutoff = smoothedCutoff + cutoffSmoothingCoeff * (targetCutoffFrequency - smoothedCutoff)
+        let newResonance = smoothedResonance + resonanceSmoothingCoeff * (targetResonance - smoothedResonance)
+
+        let cutoffChanged = abs(newCutoff - smoothedCutoff) > 0.01
+        let resonanceChanged = abs(newResonance - smoothedResonance) > 0.001
+
+        if cutoffChanged || resonanceChanged {
+            smoothedCutoff = newCutoff
+            smoothedResonance = newResonance
+            updateCoefficients(cutoff: smoothedCutoff, resonance: smoothedResonance)
+        }
     }
 }

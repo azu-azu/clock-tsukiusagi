@@ -186,10 +186,19 @@ public struct SignalPresetBuilder {
         switch preset {
         // Ocean/Water presets: Low-pass filter + Medium reverb
         case .moonlitSea, .lunarTide, .abyssalBreath:
+            let filterParams: (cutoff: Float, resonance: Float) = {
+                switch preset {
+                case .moonlitSea: return (3500, 0.6)
+                case .lunarTide: return (4500, 0.7)
+                case .abyssalBreath: return (2500, 0.8)
+                default: return (4000, 0.707)
+                }
+            }()
+
             let filter = CascadeFilter(
                 type: .lowpass,
-                cutoff: 4000,
-                resonance: 0.707,
+                cutoff: filterParams.cutoff,
+                resonance: filterParams.resonance,
                 sampleRate: sampleRate
             )
             mixer.addEffect(filter)
@@ -228,8 +237,8 @@ public struct SignalPresetBuilder {
         case .darkShark, .midnightTrain:
             let filter = CascadeFilter(
                 type: .lowpass,
-                cutoff: 2000,
-                resonance: 0.8,
+                cutoff: 1600,
+                resonance: 0.85,
                 sampleRate: sampleRate
             )
             mixer.addEffect(filter)
@@ -248,8 +257,8 @@ public struct SignalPresetBuilder {
         case .stardustNoise, .lunarDustStorm, .silentLibrary, .distantThunder, .sinkingMoon, .dawnHint:
             let filter = CascadeFilter(
                 type: .lowpass,
-                cutoff: 8000,
-                resonance: 0.707,
+                cutoff: 9500,
+                resonance: 0.6,
                 sampleRate: sampleRate
             )
             mixer.addEffect(filter)
