@@ -35,13 +35,13 @@ public final class CascadeFilter: AudioEffect {
         sampleRate: Float = 48000
     ) {
         stage1 = StateVariableFilter(
-            type: mapType(type),
+            type: Self.mapType(type),
             cutoff: cutoff,
             resonance: resonance,
             sampleRate: sampleRate
         )
         stage2 = StateVariableFilter(
-            type: mapType(type),
+            type: Self.mapType(type),
             cutoff: cutoff,
             resonance: resonance,
             sampleRate: sampleRate
