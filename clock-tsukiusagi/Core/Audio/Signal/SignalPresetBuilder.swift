@@ -204,10 +204,10 @@ public struct SignalPresetBuilder {
             mixer.addEffect(filter)
 
             let reverb = SchroederReverb(
-                roomSize: 1.5,
-                damping: 0.6,
-                decay: 0.75,
-                mix: 0.35,
+                roomSize: 1.6,
+                damping: 0.58,
+                decay: 0.78,
+                mix: 0.32,      // 少し控えめに
                 predelay: 0.02,
                 sampleRate: sampleRate
             )
@@ -215,7 +215,7 @@ public struct SignalPresetBuilder {
 
         // Celestial/Ambient: Band-pass filter + Large reverb
         case .lunarPulse:
-            let filter = StateVariableFilter(
+            let filter = CascadeFilter(
                 type: .bandpass,
                 cutoff: 1000,
                 resonance: 1.2,
@@ -224,10 +224,10 @@ public struct SignalPresetBuilder {
             mixer.addEffect(filter)
 
             let reverb = SchroederReverb(
-                roomSize: 2.0,
-                damping: 0.4,
-                decay: 0.85,
-                mix: 0.5,
+                roomSize: 2.1,
+                damping: 0.38,
+                decay: 0.9,
+                mix: 0.48,
                 predelay: 0.03,
                 sampleRate: sampleRate
             )
@@ -246,9 +246,9 @@ public struct SignalPresetBuilder {
             let reverb = SchroederReverb(
                 roomSize: 1.8,
                 damping: 0.7,
-                decay: 0.8,
-                mix: 0.4,
-                predelay: 0.025,
+                decay: 0.82,
+                mix: 0.42,
+                predelay: 0.028,
                 sampleRate: sampleRate
             )
             mixer.addEffect(reverb)
@@ -264,11 +264,11 @@ public struct SignalPresetBuilder {
             mixer.addEffect(filter)
 
             let reverb = SchroederReverb(
-                roomSize: 1.2,
-                damping: 0.5,
-                decay: 0.65,
-                mix: 0.25,
-                predelay: 0.015,
+                roomSize: 1.25,
+                damping: 0.52,
+                decay: 0.68,
+                mix: 0.22,          // 少し下げる
+                predelay: 0.012,    // 短めで明瞭に
                 sampleRate: sampleRate
             )
             mixer.addEffect(reverb)
@@ -279,7 +279,7 @@ public struct SignalPresetBuilder {
                 roomSize: 1.4,
                 damping: 0.45,
                 decay: 0.7,
-                mix: 0.3,
+                mix: 0.25,   // 少し控えめ
                 predelay: 0.02,
                 sampleRate: sampleRate
             )
@@ -291,6 +291,6 @@ public struct SignalPresetBuilder {
         }
 
         // Add soft limiter at the end for gentle peak control
-        mixer.addEffect(SoftLimiter(drive: 1.15, ceiling: 0.98))
+        mixer.addEffect(SoftLimiter(drive: 1.1, ceiling: 0.98)) // driveわずかに抑制
     }
 }
