@@ -170,7 +170,8 @@ public final class FinalMixer {
         // Step 3: Apply master gain and clip
         for frame in 0..<frameCount {
             let v = buffer[frame] * masterGain
-            buffer[frame] = max(-1.0, min(1.0, v))
+            let clipped = max(-1.0, min(1.0, v))
+            buffer[frame] = clipped.isFinite ? clipped : 0
         }
     }
 
