@@ -138,7 +138,8 @@ public final class FinalMixer {
 
         // Step 1: Mix all signals per frame
         for frame in 0..<frameCount {
-            let t = startTime + Float(frame) / sampleRate
+            let sr = sampleRate > 0 ? sampleRate : 48000
+            let t = startTime + Float(frame) / sr
             var mixed: Float = 0
             for (signal, gain) in signals {
                 mixed += signal(t) * gain

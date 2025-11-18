@@ -31,7 +31,6 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     /// Indicates if this is a test/development preset
     public var isTest: Bool {
         [
-            .windChime,
             .tibetanBowl,
             .lunarPulse,
             .stardustNoise,

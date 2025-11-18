@@ -127,54 +127,49 @@ public struct SignalPresetBuilder {
         switch preset {
         case .moonlitSea:
             let src = MoonlitSeaSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .lunarTide:
             let src = LunarTideSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .abyssalBreath:
             let src = AbyssalBreathSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .lunarPulse:
             let src = LunarPulseSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .darkShark:
             let src = DarkSharkSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .midnightTrain:
             let src = MidnightTrainSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .stardustNoise:
             let src = StardustNoiseSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .lunarDustStorm:
             let src = LunarDustStormSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .silentLibrary:
             let src = SilentLibrarySignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .distantThunder:
             let src = DistantThunderSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .sinkingMoon:
             let src = SinkingMoonSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .dawnHint:
             let src = DawnHintSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .windChime:
             let src = WindChimeSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .tibetanBowl:
             let src = TibetanBowlSignal.make(sampleRate: sampleRate)
-            return extractSignalFromAudioSource(src)
+            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
         case .oceanWavesSeagulls:
             return nil
         }
-    }
-
-    /// Extract Signal from SignalAudioSource using the asSignal() method
-    private func extractSignalFromAudioSource(_ source: SignalAudioSource) -> Signal {
-        return source.asSignal()
     }
 
     // MARK: - Effects Application

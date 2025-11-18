@@ -123,4 +123,15 @@ public final class SignalAudioSource: AudioSource {
     public func asSignal() -> Signal {
         return state.signal
     }
+
+    /// Get a time-advancing signal that preserves internal state (phase/noise)
+    /// - Parameter sampleRate: Sample rate used to advance time
+    public func asTimeAdvancingSignal(sampleRate: Double) -> Signal {
+        state.sampleRate = Float(sampleRate > 0 ? sampleRate : 48000)
+        return Signal { _ in
+            let value = state.signal(state.time)
+            state.time += 1.0 / state.sampleRate
+            return value
+        }
+    }
 }

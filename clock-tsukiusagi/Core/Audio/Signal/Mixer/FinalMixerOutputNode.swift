@@ -91,7 +91,8 @@ public final class FinalMixerOutputNode: AudioSource {
     // MARK: - AudioSource Protocol Implementation
 
     public func attachAndConnect(to engine: AVAudioEngine, format: AVAudioFormat) throws {
-        state.sampleRate = Float(format.sampleRate)
+        let sr = format.sampleRate > 0 ? Float(format.sampleRate) : 48000
+        state.sampleRate = sr
         engine.attach(_sourceNode)
         engine.connect(_sourceNode, to: engine.mainMixerNode, format: format)
     }
