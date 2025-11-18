@@ -186,7 +186,7 @@ public struct SignalPresetBuilder {
         switch preset {
         // Ocean/Water presets: Low-pass filter + Medium reverb
         case .moonlitSea, .lunarTide, .abyssalBreath:
-            let filter = StateVariableFilter(
+            let filter = CascadeFilter(
                 type: .lowpass,
                 cutoff: 4000,
                 resonance: 0.707,
@@ -226,7 +226,7 @@ public struct SignalPresetBuilder {
 
         // Dark/Atmospheric: Low-pass filter + Dark reverb
         case .darkShark, .midnightTrain:
-            let filter = StateVariableFilter(
+            let filter = CascadeFilter(
                 type: .lowpass,
                 cutoff: 2000,
                 resonance: 0.8,
@@ -246,7 +246,7 @@ public struct SignalPresetBuilder {
 
         // Noise/Atmospheric: Minimal filtering + Subtle reverb
         case .stardustNoise, .lunarDustStorm, .silentLibrary, .distantThunder, .sinkingMoon, .dawnHint:
-            let filter = StateVariableFilter(
+            let filter = CascadeFilter(
                 type: .lowpass,
                 cutoff: 8000,
                 resonance: 0.707,
@@ -280,5 +280,8 @@ public struct SignalPresetBuilder {
         case .oceanWavesSeagulls:
             break
         }
+
+        // Add soft limiter at the end for gentle peak control
+        mixer.addEffect(SoftLimiter(drive: 1.15, ceiling: 0.98))
     }
 }
