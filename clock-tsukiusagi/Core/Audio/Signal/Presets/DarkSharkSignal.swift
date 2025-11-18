@@ -21,7 +21,8 @@ import Foundation
 /// - lfoRange: 0.02 to 0.08
 public struct DarkSharkSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         // Random wandering LFO (frequency drifts)
         // Combine slow sine with drift to mimic the frequency-changing behavior
@@ -45,10 +46,13 @@ public struct DarkSharkSignal {
         let noise = Noise.brown()
 
         // Compose: noise * baseAmplitude * modulatedAmplitude
-        let final = Signal { t in
+        return Signal { t in
             noise(t) * 0.4 * modulatedAmplitude(t)
         }
+    }
 
-        return SignalAudioSource(signal: final)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

@@ -23,7 +23,8 @@ import Foundation
 /// - vibratoDepth: 0.02 (2% pitch modulation)
 public struct TibetanBowlSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         let fundamentalFreq = 220.0  // A3
 
@@ -39,7 +40,7 @@ public struct TibetanBowlSignal {
         // Vibrato LFO (5 Hz)
         let vibrato = SignalLFO.sine(frequency: 5.0)
 
-        let bowlSignal = Signal { t in
+        return Signal { t in
             // Calculate pitch modulation from vibrato
             let vibratoValue = vibrato(t)
             let pitchMod = 1.0 + (Double(vibratoValue) * 0.02)  // ±2% pitch variation
@@ -57,7 +58,10 @@ public struct TibetanBowlSignal {
             let normalizedSample = mixedSample / Float(harmonics.count)
             return normalizedSample * 0.2
         }
+    }
 
-        return SignalAudioSource(signal: bowlSignal)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

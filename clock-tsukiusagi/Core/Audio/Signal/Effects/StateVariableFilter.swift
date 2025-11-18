@@ -3,29 +3,25 @@
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-18.
-//  SignalEngine: Professional-grade State Variable Filter (SVF)
+//  SignalEngine: TPT (Topology-Preserving Transform) State Variable Filter
 //
 
 import Foundation
 
-/// State Variable Filter (SVF) - Professional quality filter with simultaneous outputs
+/// State Variable Filter (SVF) - TPT implementation for numerical stability
 ///
 /// Features:
 /// - Lowpass, Highpass, Bandpass modes
 /// - Resonance (Q-factor) control for frequency response shaping
-/// - Transparent sound quality
-/// - Numerically stable for all frequencies
+/// - Unconditionally stable at all frequencies (TPT topology)
+/// - Proper frequency response without limiting artifacts
 ///
 /// Mathematical Reference:
-/// SVF uses a 2-pole topology with feedback for high Q values.
-/// Transfer function: H(s) = G / (s² + s/Q + 1)
+/// TPT-SVF uses trapezoidal integration with topology-preserving transform.
+/// The key difference from Chamberlin SVF is the g1 coefficient that ensures
+/// numerical stability at all frequencies, even when g >> 1.
 ///
-/// Claude:
-/// This is the filter recommended in the user's review for professional audio quality.
-/// It's superior to basic 1st-order filters due to:
-/// - Better frequency response
-/// - Resonance control
-/// - Multi-mode output (LP/HP/BP)
+/// Reference: Vadim Zavalishin, "The Art of VA Filter Design"
 public final class StateVariableFilter: AudioEffect {
 
     // MARK: - Filter Type
@@ -43,13 +39,13 @@ public final class StateVariableFilter: AudioEffect {
 
     /// Cutoff frequency in Hz (20 - 20000)
     public var cutoffFrequency: Float {
-        didSet { targetCutoffFrequency = clampCutoff(cutoffFrequency) }
+        didSet { updateCoefficients() }
     }
 
     /// Resonance / Q-factor (0.5 - 10.0)
     /// Higher Q = sharper peak at cutoff
     public var resonance: Float {
-        didSet { targetResonance = clampResonance(resonance) }
+        didSet { updateCoefficients() }
     }
 
     /// Sample rate in Hz
@@ -57,33 +53,24 @@ public final class StateVariableFilter: AudioEffect {
 
     // MARK: - Internal State
 
-    /// Internal filter states (z-domain)
-    private var z1_lowpass: Float = 0   // Lowpass state
-    private var z1_bandpass: Float = 0  // Bandpass state
-
-    // Smoothed parameters
-    private var targetCutoffFrequency: Float
-    private var smoothedCutoff: Float
-    private var targetResonance: Float
-    private var smoothedResonance: Float
-
-    // Smoothing coefficients (1-pole)
-    private var cutoffSmoothingCoeff: Float
-    private var resonanceSmoothingCoeff: Float
-    private var cutoffSmoothingTime: Float
-    private var resonanceSmoothingTime: Float
+    /// TPT filter states
+    private var z1: Float = 0  // Integrator 1 state
+    private var z2: Float = 0  // Integrator 2 state
 
     // MARK: - Coefficients
 
-    /// Filter coefficient: frequency factor
+    /// TPT frequency coefficient
     private var g: Float = 0
 
-    /// Filter coefficient: resonance factor
+    /// Damping coefficient (related to Q)
     private var k: Float = 0
+
+    /// TPT stability coefficient (this is the key to numerical stability)
+    private var g1: Float = 0
 
     // MARK: - Initialization
 
-    /// Create a State Variable Filter
+    /// Create a TPT State Variable Filter
     /// - Parameters:
     ///   - type: Filter type (lowpass, highpass, bandpass)
     ///   - cutoff: Cutoff frequency in Hz (default: 1000 Hz)
@@ -93,77 +80,54 @@ public final class StateVariableFilter: AudioEffect {
         type: FilterType = .lowpass,
         cutoff: Float = 1000,
         resonance: Float = 0.707,
-        sampleRate: Float = 48000,
-        cutoffSmoothingTime: Float = 0.02,    // seconds
-        resonanceSmoothingTime: Float = 0.08  // seconds
+        sampleRate: Float = 48000
     ) {
         self.filterType = type
         self.cutoffFrequency = cutoff
         self.resonance = resonance
         self.sampleRate = sampleRate
-        self.cutoffSmoothingTime = cutoffSmoothingTime
-        self.resonanceSmoothingTime = resonanceSmoothingTime
-        self.targetCutoffFrequency = 0  // temp
-        self.smoothedCutoff = 0         // temp
-        self.targetResonance = 0        // temp
-        self.smoothedResonance = 0      // temp
-        self.cutoffSmoothingCoeff = 0   // temp
-        self.resonanceSmoothingCoeff = 0// temp
-
-        // After stored properties are initialized, compute clamped/smoothed params
-        self.targetCutoffFrequency = clampCutoff(cutoff)
-        self.smoothedCutoff = self.targetCutoffFrequency
-        self.targetResonance = clampResonance(resonance)
-        self.smoothedResonance = self.targetResonance
-        self.cutoffSmoothingCoeff = Self.smoothingCoeff(time: cutoffSmoothingTime, sampleRate: sampleRate)
-        self.resonanceSmoothingCoeff = Self.smoothingCoeff(time: resonanceSmoothingTime, sampleRate: sampleRate)
-
-        updateCoefficients(cutoff: smoothedCutoff, resonance: smoothedResonance)
+        updateCoefficients()
     }
 
     // MARK: - Coefficient Calculation
 
-    /// Update filter coefficients based on provided cutoff and resonance
-    private func updateCoefficients(cutoff: Float, resonance: Float) {
-        let fc = clampCutoff(cutoff)
-        let Q = clampResonance(resonance)
+    /// Update TPT filter coefficients
+    private func updateCoefficients() {
+        // Clamp parameters to safe ranges
+        let fc = max(20, min(cutoffFrequency, sampleRate * 0.49))
+        let Q = max(0.5, min(resonance, 10.0))
 
-        // Calculate frequency warping factor (bilinear transform)
-        let wd = 2 * Float.pi * fc
-        let T = 1.0 / sampleRate
-        let wa = (2 / T) * tan(wd * T / 2)
+        // TPT coefficient calculation (simplified bilinear transform)
+        g = tan(Float.pi * fc / sampleRate)
 
-        // Calculate SVF coefficients
-        g = wa * T / 2
-        k = 2 - 2 / Q
+        // Damping from Q factor
+        k = 1.0 / Q
+
+        // TPT stability coefficient - this is what makes it unconditionally stable
+        // Without this, the filter will diverge at high frequencies
+        g1 = 1.0 / (1.0 + g * (g + k))
     }
 
     // MARK: - AudioEffect Protocol
 
-    /// Process a single audio sample through the SVF
+    /// Process a single audio sample through the TPT-SVF
     /// - Parameters:
     ///   - input: Input sample
     ///   - time: Current time (unused for SVF)
     /// - Returns: Filtered output sample
     public func process(_ input: Float, time: Float) -> Float {
-        // SVF topology (Chamberlin form)
-        // v0 = input
-        // v1 = bandpass output
-        // v2 = lowpass output
-        // v3 = highpass output = v0 - k*v1 - v2
+        // TPT-SVF equations (trapezoidal integration)
+        // v3: highpass output
+        // v1: bandpass output
+        // v2: lowpass output
 
-        // Smooth parameters toward targets
-        applyParameterSmoothing()
-
-        let v0 = input
-        let v3 = v0 - k * z1_bandpass - z1_lowpass  // Highpass
-
-        let v1 = g * v3 + z1_bandpass               // Bandpass
-        let v2 = g * v1 + z1_lowpass                 // Lowpass
+        let v3 = (input - z1 - k * z2) * g1
+        let v1 = g * v3 + z2
+        let v2 = g * v1 + z1
 
         // Update states
-        z1_bandpass = v1
-        z1_lowpass = v2
+        z1 = v2
+        z2 = v1
 
         // Return appropriate output based on filter type
         switch filterType {
@@ -178,11 +142,8 @@ public final class StateVariableFilter: AudioEffect {
 
     /// Reset filter state
     public func reset() {
-        z1_lowpass = 0
-        z1_bandpass = 0
-        smoothedCutoff = targetCutoffFrequency
-        smoothedResonance = targetResonance
-        updateCoefficients(cutoff: smoothedCutoff, resonance: smoothedResonance)
+        z1 = 0
+        z2 = 0
     }
 
     // MARK: - Convenience Methods
@@ -191,41 +152,6 @@ public final class StateVariableFilter: AudioEffect {
     /// - Parameter sampleRate: New sample rate in Hz
     public func setSampleRate(_ sampleRate: Float) {
         self.sampleRate = sampleRate
-        cutoffSmoothingCoeff = Self.smoothingCoeff(time: cutoffSmoothingTime, sampleRate: sampleRate)
-        resonanceSmoothingCoeff = Self.smoothingCoeff(time: resonanceSmoothingTime, sampleRate: sampleRate)
-        // Re-clamp targets to new Nyquist limit
-        targetCutoffFrequency = clampCutoff(targetCutoffFrequency)
-        smoothedCutoff = clampCutoff(smoothedCutoff)
-        updateCoefficients(cutoff: smoothedCutoff, resonance: smoothedResonance)
-    }
-
-    // MARK: - Private Helpers
-
-    private func clampCutoff(_ value: Float) -> Float {
-        return max(20, min(value, sampleRate / 2 - 100))
-    }
-
-    private func clampResonance(_ value: Float) -> Float {
-        return max(0.5, min(value, 10.0))
-    }
-
-    private static func smoothingCoeff(time: Float, sampleRate: Float) -> Float {
-        guard time > 0 else { return 1.0 }
-        return 1 - exp(-1 / (time * sampleRate))
-    }
-
-    /// Smooth cutoff/resonance toward targets and refresh coefficients when needed
-    private func applyParameterSmoothing() {
-        let newCutoff = smoothedCutoff + cutoffSmoothingCoeff * (targetCutoffFrequency - smoothedCutoff)
-        let newResonance = smoothedResonance + resonanceSmoothingCoeff * (targetResonance - smoothedResonance)
-
-        let cutoffChanged = abs(newCutoff - smoothedCutoff) > 0.01
-        let resonanceChanged = abs(newResonance - smoothedResonance) > 0.001
-
-        if cutoffChanged || resonanceChanged {
-            smoothedCutoff = newCutoff
-            smoothedResonance = newResonance
-            updateCoefficients(cutoff: smoothedCutoff, resonance: smoothedResonance)
-        }
+        updateCoefficients()
     }
 }

@@ -21,7 +21,8 @@ import Foundation
 /// - lfoDepth: 0.40 (40% modulation)
 public struct DawnHintSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         // Brightening LFO
         let lfo = SignalLFO.sine(frequency: 0.10)
@@ -38,10 +39,13 @@ public struct DawnHintSignal {
         let noise = Noise.pink()
 
         // Compose: noise * baseAmplitude * modulatedAmplitude
-        let final = Signal { t in
+        return Signal { t in
             noise(t) * 0.08 * modulatedAmplitude(t)
         }
+    }
 
-        return SignalAudioSource(signal: final)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

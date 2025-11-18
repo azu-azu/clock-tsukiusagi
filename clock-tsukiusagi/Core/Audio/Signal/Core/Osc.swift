@@ -19,13 +19,22 @@ public enum Osc {
     /// --- Phase accumulator shared by oscillators ---
     private class PhaseBox {
         var phase: Double = 0
+        var lastTime: Double? = nil
     }
 
     /// Sine oscillator
     public static func sine(frequency: Double) -> Signal {
         let box = PhaseBox()
         return Signal { t in
-            let dt = Double(t) - (box.phase.truncatingRemainder(dividingBy: 1) / frequency)
+            let time = Double(t)
+            let dt: Double
+            if let last = box.lastTime {
+                dt = time - last
+            } else {
+                dt = 0  // First call: no time delta
+            }
+            box.lastTime = time
+
             box.phase += frequency * dt
             box.phase = box.phase.truncatingRemainder(dividingBy: 1)
             return sin(Float(box.phase * 2 * .pi))
@@ -36,7 +45,15 @@ public enum Osc {
     public static func triangle(frequency: Double) -> Signal {
         let box = PhaseBox()
         return Signal { t in
-            let dt = Double(t) - (box.phase.truncatingRemainder(dividingBy: 1) / frequency)
+            let time = Double(t)
+            let dt: Double
+            if let last = box.lastTime {
+                dt = time - last
+            } else {
+                dt = 0
+            }
+            box.lastTime = time
+
             box.phase += frequency * dt
             let p = box.phase.truncatingRemainder(dividingBy: 1)
             return Float(2 * abs(2 * p - 1) - 1)
@@ -47,7 +64,15 @@ public enum Osc {
     public static func sawUp(frequency: Double) -> Signal {
         let box = PhaseBox()
         return Signal { t in
-            let dt = Double(t) - (box.phase.truncatingRemainder(dividingBy: 1) / frequency)
+            let time = Double(t)
+            let dt: Double
+            if let last = box.lastTime {
+                dt = time - last
+            } else {
+                dt = 0
+            }
+            box.lastTime = time
+
             box.phase += frequency * dt
             return Float((box.phase - floor(box.phase)) * 2 - 1)
         }
@@ -57,7 +82,15 @@ public enum Osc {
     public static func sawDown(frequency: Double) -> Signal {
         let box = PhaseBox()
         return Signal { t in
-            let dt = Double(t) - (box.phase.truncatingRemainder(dividingBy: 1) / frequency)
+            let time = Double(t)
+            let dt: Double
+            if let last = box.lastTime {
+                dt = time - last
+            } else {
+                dt = 0
+            }
+            box.lastTime = time
+
             box.phase += frequency * dt
             let ph = box.phase - floor(box.phase)
             return Float((1 - ph) * 2 - 1)
@@ -72,7 +105,15 @@ public enum Osc {
     ) -> Signal {
         let box = PhaseBox()
         return Signal { t in
-            let dt = Double(t) - (box.phase.truncatingRemainder(dividingBy: 1) / frequency)
+            let time = Double(t)
+            let dt: Double
+            if let last = box.lastTime {
+                dt = time - last
+            } else {
+                dt = 0
+            }
+            box.lastTime = time
+
             box.phase += frequency * dt
             let raw = (box.phase.truncatingRemainder(dividingBy: 1) < 0.5) ? 1.0 : -1.0
 

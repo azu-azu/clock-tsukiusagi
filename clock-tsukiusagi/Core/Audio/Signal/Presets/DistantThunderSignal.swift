@@ -23,7 +23,8 @@ import Foundation
 /// - Pulse decay: 0.9999 per sample
 public struct DistantThunderSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         // Brown noise (rumble base)
         let noise = Noise.brown()
@@ -34,7 +35,7 @@ public struct DistantThunderSignal {
         var pulseDecay: Float = 0.0
         var pulseActive = false
 
-        let thunderModulated = Signal { t in
+        return Signal { t in
             // Check if it's time for a new pulse
             if t - lastPulseTime >= nextPulseTime {
                 pulseActive = true
@@ -57,7 +58,10 @@ public struct DistantThunderSignal {
 
             return noise(t) * totalAmplitude
         }
+    }
 
-        return SignalAudioSource(signal: thunderModulated)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

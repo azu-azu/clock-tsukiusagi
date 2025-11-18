@@ -21,17 +21,10 @@ import Foundation
 /// - lfoRange: 0.03 to 0.10
 public struct MoonlitSeaSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
-
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
         // Slow wave LFO (breathing pattern)
         let lfo = SignalLFO.sine(frequency: 0.12)
-
-        // Map LFO from -1...1 to 0.03...0.10 (amplitude range)
-        let modulatedAmplitude = Signal { t in
-            let lfoValue = lfo(t)
-            let normalized = (lfoValue + 1) * 0.5  // 0...1
-            return Float(0.03 + (0.10 - 0.03) * Double(normalized))
-        }
 
         // Low deep body (underwater presence)
         let deep = Osc.sine(frequency: 110)
@@ -39,15 +32,23 @@ public struct MoonlitSeaSignal {
         // Pink noise (water texture)
         let noise = Noise.pink()
 
-        // Compose: (deep * lfo) * 0.6 + noise * 0.08
-        let deepModulated = Signal { t in
-            deep(t) * modulatedAmplitude(t)
-        }
+        // Compose: (deep * lfo-modulated-amplitude) * 0.6 + noise * 0.08
+        // Flatten structure to single Signal closure (like LunarPulse)
+        return Signal { t in
+            // Calculate modulated amplitude inline
+            let lfoValue = lfo(t)
+            let normalized = (lfoValue + 1) * 0.5  // 0...1
+            let modulatedAmp = Float(0.03 + (0.10 - 0.03) * Double(normalized))
 
-        let final = Signal { t in
-            deepModulated(t) * 0.6 + noise(t) * 0.08
+            // Mix deep tone and noise
+            let deepValue = deep(t) * modulatedAmp * 0.6
+            let noiseValue = noise(t) * 0.08
+            return deepValue + noiseValue
         }
+    }
 
-        return SignalAudioSource(signal: final)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

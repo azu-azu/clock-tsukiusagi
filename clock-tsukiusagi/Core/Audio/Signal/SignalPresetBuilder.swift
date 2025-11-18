@@ -108,65 +108,37 @@ public struct SignalPresetBuilder {
     // MARK: - Raw Signal Creation
 
     /// Create the raw Signal (not wrapped in AudioSource) for a preset
-    /// This duplicates the signal-building logic from each preset's make() method
+    /// Uses the makeSignal() factory method from each preset builder
     private func createRawSignal(for preset: NaturalSoundPreset) -> Signal? {
-        // We need to call the preset builders and extract their Signal
-        // The cleanest way is to duplicate the signal creation inline
-        // or have each preset provide a makeSignal() method
-        //
-        // For now, let's use a simpler approach: convert the existing makeSignal
-        // return value by calling it again and extracting via asSignal()
-
-        // Since SignalAudioSource wraps a signal, we can create a new signal
-        // that calls the same logic. The easiest way is to just inline
-        // the signal creation for each preset type.
-
-        // Actually, let's use a simpler approach: create the Signal by
-        // calling the existing make() methods and using their output as a Signal function
-
         switch preset {
         case .moonlitSea:
-            let src = MoonlitSeaSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return MoonlitSeaSignal.makeSignal()
         case .lunarTide:
-            let src = LunarTideSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return LunarTideSignal.makeSignal()
         case .abyssalBreath:
-            let src = AbyssalBreathSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return AbyssalBreathSignal.makeSignal()
         case .lunarPulse:
-            let src = LunarPulseSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return LunarPulseSignal.makeSignal()
         case .darkShark:
-            let src = DarkSharkSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return DarkSharkSignal.makeSignal()
         case .midnightTrain:
-            let src = MidnightTrainSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return MidnightTrainSignal.makeSignal()
         case .stardustNoise:
-            let src = StardustNoiseSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return StardustNoiseSignal.makeSignal()
         case .lunarDustStorm:
-            let src = LunarDustStormSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return LunarDustStormSignal.makeSignal()
         case .silentLibrary:
-            let src = SilentLibrarySignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return SilentLibrarySignal.makeSignal()
         case .distantThunder:
-            let src = DistantThunderSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return DistantThunderSignal.makeSignal()
         case .sinkingMoon:
-            let src = SinkingMoonSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return SinkingMoonSignal.makeSignal()
         case .dawnHint:
-            let src = DawnHintSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return DawnHintSignal.makeSignal()
         case .windChime:
-            let src = WindChimeSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return WindChimeSignal.makeSignal()
         case .tibetanBowl:
-            let src = TibetanBowlSignal.make(sampleRate: sampleRate)
-            return src.asTimeAdvancingSignal(sampleRate: sampleRate)
+            return TibetanBowlSignal.makeSignal()
         case .oceanWavesSeagulls:
             return nil
         }

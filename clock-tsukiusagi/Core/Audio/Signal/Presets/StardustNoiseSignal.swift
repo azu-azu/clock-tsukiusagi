@@ -22,7 +22,8 @@ import Foundation
 /// - Amplitude toggles between full and 30% on each burst
 public struct StardustNoiseSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         // White noise (sparkle texture)
         let noise = Noise.white
@@ -33,7 +34,7 @@ public struct StardustNoiseSignal {
         var nextBurstTime: Float = Float.random(in: 0.4...1.2)
         var burstActive = false
 
-        let burstModulated = Signal { t in
+        return Signal { t in
             // Check if it's time to toggle
             if t - lastToggleTime >= nextBurstTime {
                 burstActive.toggle()
@@ -44,7 +45,10 @@ public struct StardustNoiseSignal {
             let amplitude: Float = burstActive ? 0.12 : 0.12 * 0.3
             return noise(t) * amplitude
         }
+    }
 
-        return SignalAudioSource(signal: burstModulated)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

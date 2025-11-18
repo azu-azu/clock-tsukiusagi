@@ -24,8 +24,8 @@ import Foundation
 /// - lfoDepth: 0.25
 public struct AbyssalBreathSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
-
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
         // Ultra-slow breathing LFO
         let lfo = SignalLFO.sine(frequency: 0.05)
 
@@ -45,12 +45,15 @@ public struct AbyssalBreathSignal {
         let noise = Noise.brown()
 
         // Compose: (noise * 0.10 + subBass * 0.03) * modulatedAmplitude
-        let final = Signal { t in
+        return Signal { t in
             let noisePart = noise(t) * 0.10
             let subPart = subBass(t) * 0.03
             return (noisePart + subPart) * modulatedAmplitude(t)
         }
+    }
 
-        return SignalAudioSource(signal: final)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

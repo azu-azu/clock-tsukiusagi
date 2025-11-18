@@ -21,7 +21,8 @@ import Foundation
 /// - lfoDepth: 0.03 (3% modulation)
 public struct SilentLibrarySignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         // Ultra-slow stillness LFO
         let lfo = SignalLFO.sine(frequency: 0.01)
@@ -38,10 +39,13 @@ public struct SilentLibrarySignal {
         let noise = Noise.brown()
 
         // Compose: noise * baseAmplitude * modulatedAmplitude
-        let final = Signal { t in
+        return Signal { t in
             noise(t) * 0.10 * modulatedAmplitude(t)
         }
+    }
 
-        return SignalAudioSource(signal: final)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

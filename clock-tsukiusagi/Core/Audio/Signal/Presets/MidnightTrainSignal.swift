@@ -21,7 +21,8 @@ import Foundation
 /// - lfoRange: 0.03 to 0.12
 public struct MidnightTrainSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         // Rhythmic LFO (train clack-clack pattern)
         let lfo = SignalLFO.sine(frequency: 1.0)
@@ -37,10 +38,13 @@ public struct MidnightTrainSignal {
         let noise = Noise.brown()
 
         // Compose: noise * baseAmplitude * modulatedAmplitude
-        let final = Signal { t in
+        return Signal { t in
             noise(t) * 0.3 * modulatedAmplitude(t)
         }
+    }
 
-        return SignalAudioSource(signal: final)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

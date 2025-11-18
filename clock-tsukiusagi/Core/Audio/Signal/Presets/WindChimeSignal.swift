@@ -24,7 +24,8 @@ import Foundation
 /// - sustainLevel: 0.0, releaseTime: 1.0
 public struct WindChimeSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         // Pentatonic scale (C major pentatonic across 2 octaves)
         let pentatonicFrequencies: [Double] = [
@@ -47,7 +48,7 @@ public struct WindChimeSignal {
         var lastTriggerTime: Float = 0
         var nextTriggerTime: Float = Float.random(in: 2.0...8.0)
 
-        let chimeSignal = Signal { t in
+        return Signal { t in
             // Check if it's time for a new chime
             if t - lastTriggerTime >= nextTriggerTime {
                 let randomFreq = pentatonicFrequencies.randomElement() ?? 440.0
@@ -94,7 +95,10 @@ public struct WindChimeSignal {
 
             return mixedSample / Float(max(activeChimes.count, 1))
         }
+    }
 
-        return SignalAudioSource(signal: chimeSignal)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }

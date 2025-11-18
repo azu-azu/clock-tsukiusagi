@@ -19,13 +19,22 @@ public enum SignalLFO {
     // Shared phase accumulator
     private class PhaseBox {
         var phase: Double = 0
+        var lastTime: Double? = nil
     }
 
     /// Smooth sine LFO (most important for ambient)
     public static func sine(frequency: Double) -> Signal {
         let box = PhaseBox()
         return Signal { t in
-            let dt = Double(t) - (box.phase / frequency)
+            let time = Double(t)
+            let dt: Double
+            if let last = box.lastTime {
+                dt = time - last
+            } else {
+                dt = 0  // First call: no time delta
+            }
+            box.lastTime = time
+
             box.phase += frequency * dt
             let p = box.phase.truncatingRemainder(dividingBy: 1)
             return sin(Float(2 * .pi * p))
@@ -36,7 +45,15 @@ public enum SignalLFO {
     public static func triangle(frequency: Double) -> Signal {
         let box = PhaseBox()
         return Signal { t in
-            let dt = Double(t) - (box.phase / frequency)
+            let time = Double(t)
+            let dt: Double
+            if let last = box.lastTime {
+                dt = time - last
+            } else {
+                dt = 0
+            }
+            box.lastTime = time
+
             box.phase += frequency * dt
             let p = box.phase.truncatingRemainder(dividingBy: 1)
             return Float(2 * abs(2 * p - 1) - 1)

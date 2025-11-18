@@ -22,7 +22,8 @@ import Foundation
 /// - lfoDepth: 0.25
 public struct SinkingMoonSignal {
 
-    public static func make(sampleRate: Double) -> SignalAudioSource {
+    /// Create raw Signal (for FinalMixer usage)
+    public static func makeSignal() -> Signal {
 
         // Ultra-slow fade LFO
         let lfo = SignalLFO.sine(frequency: 0.04)
@@ -39,10 +40,13 @@ public struct SinkingMoonSignal {
         let tone = Osc.sine(frequency: 432.0)
 
         // Compose: tone * baseAmplitude * modulatedAmplitude
-        let final = Signal { t in
+        return Signal { t in
             tone(t) * 0.06 * modulatedAmplitude(t)
         }
+    }
 
-        return SignalAudioSource(signal: final)
+    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+        return SignalAudioSource(signal: makeSignal())
     }
 }
