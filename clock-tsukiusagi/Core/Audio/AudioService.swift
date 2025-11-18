@@ -82,6 +82,9 @@ public final class AudioService: ObservableObject {
     private var engineStopWorkItem: DispatchWorkItem?
     private var playbackSessionId = UUID()  // Generational guard against stale stops
 
+    // SignalEngine fade control
+    private var currentSignalSource: SignalAudioSource?
+
     // MARK: - Initialization
 
     private init() {
@@ -263,7 +266,12 @@ public final class AudioService: ObservableObject {
             player.stop(fadeOut: playerFadeDuration)
         }
 
-        // 2) Always fade out master volume (regardless of source type)
+        // 2) Apply fade out to SignalAudioSource (if using SignalEngine)
+        if let signalSource = currentSignalSource {
+            signalSource.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
+        }
+
+        // 3) Always fade out master volume (regardless of source type)
         let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
         self.fadeOut(duration: masterFadeDuration)
 
@@ -297,6 +305,7 @@ public final class AudioService: ObservableObject {
             // isPlaying already set to false at the beginning of stopAndWait()
             self.currentPreset = nil
             self.currentAudioFile = nil
+            self.currentSignalSource = nil
             self.pauseReason = nil
 
             // Phase 3: Live Activityを終了
@@ -332,7 +341,12 @@ public final class AudioService: ObservableObject {
             player.stop(fadeOut: playerFadeDuration)
         }
 
-        // 2) Always fade out master volume (regardless of source type)
+        // 2) Apply fade out to SignalAudioSource (if using SignalEngine)
+        if let signalSource = currentSignalSource {
+            signalSource.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
+        }
+
+        // 3) Always fade out master volume (regardless of source type)
         let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
         self.fadeOut(duration: masterFadeDuration)
 
@@ -495,6 +509,7 @@ public final class AudioService: ObservableObject {
         isPlaying = false
         currentPreset = nil
         currentAudioFile = nil
+        currentSignalSource = nil
         pauseReason = nil
 
         // Stop engine if running
@@ -653,9 +668,21 @@ public final class AudioService: ObservableObject {
 
         if let signalSource = signalBuilder.makeSignal(for: preset) {
             print("🎵 [AudioService] Using SignalEngine for preset: \(preset.rawValue)")
+
+            // Store reference for fade control
+            currentSignalSource = signalSource
+
+            // Register source with engine
             engine.register(signalSource)
+
+            // Apply fade in (300ms)
+            signalSource.applyFadeIn(durationMs: 300)
+
             return
         }
+
+        // Clear SignalSource reference if using legacy AudioSource
+        currentSignalSource = nil
 
         // Fallback to original implementation
         print("🔄 [AudioService] Using legacy AudioSource for preset: \(preset.rawValue)")

@@ -21,9 +21,11 @@ public final class SignalAudioSource: AudioSource {
         var sampleRate: Float = 48000
         var volume: Float = 1.0
         let signal: Signal
+        var fadeEnvelope: Signal?  // Optional fade envelope (0..1)
 
         init(signal: Signal) {
             self.signal = signal
+            self.fadeEnvelope = nil
         }
     }
 
@@ -41,7 +43,13 @@ public final class SignalAudioSource: AudioSource {
             let ablPointer = UnsafeMutableAudioBufferListPointer(audioBufferList)
 
             for frame in 0..<Int(frameCount) {
-                let value = state.signal(state.time) * state.volume
+                var value = state.signal(state.time) * state.volume
+
+                // Apply fade envelope if active
+                if let fadeEnvelope = state.fadeEnvelope {
+                    value *= fadeEnvelope(state.time)
+                }
+
                 state.time += 1.0 / state.sampleRate
 
                 for buffer in ablPointer {
@@ -78,5 +86,28 @@ public final class SignalAudioSource: AudioSource {
 
     public func setVolume(_ volume: Float) {
         state.volume = max(0, min(1, volume))
+    }
+
+    // MARK: - Fade Control
+
+    /// Apply fade in envelope starting from current time
+    /// - Parameter durationMs: Fade duration in milliseconds (default: 300ms)
+    public func applyFadeIn(durationMs: Int = 300) {
+        let duration = Double(durationMs) / 1000.0
+        let startTime = Double(state.time)
+        state.fadeEnvelope = Envelope.fadeIn(duration: duration, startTime: startTime)
+    }
+
+    /// Apply fade out envelope starting from current time
+    /// - Parameter durationMs: Fade duration in milliseconds (default: 300ms)
+    public func applyFadeOut(durationMs: Int = 300) {
+        let duration = Double(durationMs) / 1000.0
+        let startTime = Double(state.time)
+        state.fadeEnvelope = Envelope.fadeOut(duration: duration, startTime: startTime)
+    }
+
+    /// Clear any active fade envelope (return to full volume)
+    public func clearFade() {
+        state.fadeEnvelope = nil
     }
 }

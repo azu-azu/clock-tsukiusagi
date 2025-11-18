@@ -94,4 +94,46 @@ public enum Envelope {
             return last
         }
     }
+
+    // MARK: - Fade In/Out (for smooth preset transitions)
+
+    /// Fade in using exponential curve
+    /// - Parameters:
+    ///   - duration: Fade duration in seconds
+    ///   - startTime: Time when fade starts
+    /// - Returns: Signal that goes from 0 to 1 over duration
+    public static func fadeIn(
+        duration: Double,
+        startTime: Double = 0
+    ) -> Signal {
+        return Signal { t in
+            let dt = Double(t) - startTime
+            if dt < 0 { return 0 }
+            if dt >= duration { return 1 }
+
+            // Exponential ease-in curve: 1 - e^(-4t/duration)
+            let normalized = dt / duration
+            return Float(1.0 - exp(-4.0 * normalized))
+        }
+    }
+
+    /// Fade out using exponential curve
+    /// - Parameters:
+    ///   - duration: Fade duration in seconds
+    ///   - startTime: Time when fade starts
+    /// - Returns: Signal that goes from 1 to 0 over duration
+    public static func fadeOut(
+        duration: Double,
+        startTime: Double = 0
+    ) -> Signal {
+        return Signal { t in
+            let dt = Double(t) - startTime
+            if dt < 0 { return 1 }
+            if dt >= duration { return 0 }
+
+            // Exponential ease-out curve: e^(-4t/duration)
+            let normalized = dt / duration
+            return Float(exp(-4.0 * normalized))
+        }
+    }
 }
