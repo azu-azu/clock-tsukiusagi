@@ -33,7 +33,6 @@ public struct MoonlitSeaSignal {
         let noise = Noise.pink()
 
         // Compose: (deep * lfo-modulated-amplitude) * 0.6 + noise * 0.08
-        // Flatten structure to single Signal closure (like LunarPulse)
         return Signal { t in
             // Calculate modulated amplitude inline
             let lfoValue = lfo(t)
