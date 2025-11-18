@@ -30,13 +30,25 @@ public struct SignalPresetBuilder {
         case .moonlitSea:
             return MoonlitSeaSignal.make(sampleRate: sampleRate)
 
+        case .lunarTide:
+            return LunarTideSignal.make(sampleRate: sampleRate)
+
+        case .abyssalBreath:
+            return AbyssalBreathSignal.make(sampleRate: sampleRate)
+
+        // ---- Celestial / Ambient ----
+        case .lunarPulse:
+            return LunarPulseSignal.make(sampleRate: sampleRate)
+
+        // ---- Dark / Atmospheric ----
+        case .darkShark:
+            return DarkSharkSignal.make(sampleRate: sampleRate)
+
+        case .midnightTrain:
+            return MidnightTrainSignal.make(sampleRate: sampleRate)
+
         // Not yet implemented in SignalEngine
         case .oceanWavesSeagulls,
-             .lunarPulse,
-             .darkShark,
-             .midnightTrain,
-             .lunarTide,
-             .abyssalBreath,
              .stardustNoise,
              .lunarDustStorm,
              .silentLibrary,
