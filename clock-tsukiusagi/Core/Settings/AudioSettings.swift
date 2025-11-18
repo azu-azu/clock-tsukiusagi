@@ -51,12 +51,6 @@ public struct AudioSettings: Codable {
     /// Picture in Pictureを有効化
     public var pipEnabled: Bool = false
 
-    // MARK: - Development/Comparison (DEBUG)
-
-    /// 従来式SignalAudioSourceを使用（エフェクトなし、比較用）
-    /// デフォルト: false（FinalMixer使用）
-    public var useLegacySignalEngine: Bool = false
-
     // MARK: - Initialization
 
     public init(
