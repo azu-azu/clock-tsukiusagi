@@ -128,10 +128,11 @@ public final class SignalAudioSource: AudioSource {
     /// - Parameter sampleRate: Sample rate used to advance time
     public func asTimeAdvancingSignal(sampleRate: Double) -> Signal {
         state.sampleRate = Float(sampleRate > 0 ? sampleRate : 48000)
-        return Signal { _ in
-            let value = state.signal(state.time)
-            state.time += 1.0 / state.sampleRate
-            return value
+        return Signal { [weak self] _ in
+            guard let self = self else { return 0 }
+            let value = self.state.signal(self.state.time)
+            self.state.time += 1.0 / self.state.sampleRate
+            return value.isFinite ? value : 0
         }
     }
 }
