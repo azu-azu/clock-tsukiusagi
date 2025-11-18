@@ -1,0 +1,50 @@
+//
+//  StardustNoiseSignal.swift
+//  clock-tsukiusagi
+//
+//  Created by Claude Code on 2025-11-18.
+//  SignalEngine: Stardust Noise — white noise with micro bursts
+//
+
+import Foundation
+
+/// Stardust Noise — twinkling white noise like distant stars
+///
+/// This preset creates a shimmering white noise texture:
+/// - White noise for high-frequency sparkle
+/// - Micro burst modulation (toggles between high/low amplitude)
+/// - Random burst intervals (0.4-1.2 seconds)
+///
+/// Original parameters from StardustNoise.swift:
+/// - microBurstAmplitude: 0.12
+/// - microBurstMinInterval: 0.4 seconds
+/// - microBurstMaxInterval: 1.2 seconds
+/// - Amplitude toggles between full and 30% on each burst
+public struct StardustNoiseSignal {
+
+    public static func make(sampleRate: Double) -> SignalAudioSource {
+
+        // White noise (sparkle texture)
+        let noise = Noise.white
+
+        // Micro burst modulation using random LFO
+        // To simulate toggle behavior, we use a stepped random signal
+        var lastToggleTime: Float = 0
+        var nextBurstTime: Float = Float.random(in: 0.4...1.2)
+        var burstActive = false
+
+        let burstModulated = Signal { t in
+            // Check if it's time to toggle
+            if t - lastToggleTime >= nextBurstTime {
+                burstActive.toggle()
+                lastToggleTime = t
+                nextBurstTime = Float.random(in: 0.4...1.2)
+            }
+
+            let amplitude: Float = burstActive ? 0.12 : 0.12 * 0.3
+            return noise(t) * amplitude
+        }
+
+        return SignalAudioSource(signal: burstModulated)
+    }
+}

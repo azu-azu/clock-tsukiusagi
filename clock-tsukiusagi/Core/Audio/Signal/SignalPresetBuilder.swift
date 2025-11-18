@@ -47,16 +47,34 @@ public struct SignalPresetBuilder {
         case .midnightTrain:
             return MidnightTrainSignal.make(sampleRate: sampleRate)
 
-        // Not yet implemented in SignalEngine
-        case .oceanWavesSeagulls,
-             .stardustNoise,
-             .lunarDustStorm,
-             .silentLibrary,
-             .distantThunder,
-             .sinkingMoon,
-             .dawnHint,
-             .windChime,
-             .tibetanBowl:
+        // ---- Noise / Atmospheric ----
+        case .stardustNoise:
+            return StardustNoiseSignal.make(sampleRate: sampleRate)
+
+        case .lunarDustStorm:
+            return LunarDustStormSignal.make(sampleRate: sampleRate)
+
+        case .silentLibrary:
+            return SilentLibrarySignal.make(sampleRate: sampleRate)
+
+        case .distantThunder:
+            return DistantThunderSignal.make(sampleRate: sampleRate)
+
+        case .sinkingMoon:
+            return SinkingMoonSignal.make(sampleRate: sampleRate)
+
+        case .dawnHint:
+            return DawnHintSignal.make(sampleRate: sampleRate)
+
+        // ---- Tonal / Musical ----
+        case .windChime:
+            return WindChimeSignal.make(sampleRate: sampleRate)
+
+        case .tibetanBowl:
+            return TibetanBowlSignal.make(sampleRate: sampleRate)
+
+        // Not yet implemented in SignalEngine (uses external audio file)
+        case .oceanWavesSeagulls:
             return nil
         }
     }
