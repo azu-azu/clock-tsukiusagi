@@ -33,6 +33,7 @@ public final class FinalMixerOutputNode: AudioSource {
         var volume: Float = 1.0
         let mixer: FinalMixer
         var fadeEnvelope: Signal?  // Optional fade envelope (0..1)
+        var blockBuffer: [Float] = [] // Scratch mono buffer for block processing
 
         init(mixer: FinalMixer) {
             self.mixer = mixer
@@ -60,24 +61,29 @@ public final class FinalMixerOutputNode: AudioSource {
         self._sourceNode = AVAudioSourceNode { [state] _, _, frameCount, audioBufferList -> OSStatus in
             let ablPointer = UnsafeMutableAudioBufferListPointer(audioBufferList)
 
-            for frame in 0..<Int(frameCount) {
-                // Get mixed + processed output from FinalMixer
-                var value = state.mixer.output(time: state.time) * state.volume
+            let frames = Int(frameCount)
 
-                // Apply fade envelope if active
+            // Render mono block
+            state.mixer.outputBlock(
+                startTime: state.time,
+                sampleRate: state.sampleRate,
+                frameCount: frames,
+                buffer: &state.blockBuffer
+            )
+
+            // Apply volume and fade envelope, then copy to all channels
+            for frame in 0..<frames {
+                let t = state.time + Float(frame) / state.sampleRate
+                var value = state.blockBuffer[frame] * state.volume
                 if let fadeEnvelope = state.fadeEnvelope {
-                    value *= fadeEnvelope(state.time)
+                    value *= fadeEnvelope(t)
                 }
-
-                // Advance time
-                state.time += 1.0 / state.sampleRate
-
-                // Write to all channels (mono signal to stereo output)
                 for buffer in ablPointer {
                     let ptr = buffer.mData!.assumingMemoryBound(to: Float.self)
                     ptr[frame] = value
                 }
             }
+            state.time += Float(frames) / state.sampleRate
             return noErr
         }
     }

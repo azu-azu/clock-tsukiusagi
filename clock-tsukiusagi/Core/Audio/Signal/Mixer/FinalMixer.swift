@@ -118,6 +118,62 @@ public final class FinalMixer {
         return max(-1.0, min(1.0, final))
     }
 
+    /// Generate a block of audio samples.
+    /// - Parameters:
+    ///   - startTime: Time at start of block
+    ///   - sampleRate: Sample rate in Hz
+    ///   - frameCount: Number of frames to render
+    ///   - buffer: In/out mono buffer (resized as needed)
+    public func outputBlock(
+        startTime: Float,
+        sampleRate: Float,
+        frameCount: Int,
+        buffer: inout [Float]
+    ) {
+        if buffer.count < frameCount {
+            buffer = Array(repeating: 0, count: frameCount)
+        } else {
+            buffer.replaceSubrange(0..<frameCount, with: repeatElement(0, count: frameCount))
+        }
+
+        // Step 1: Mix all signals per frame
+        for frame in 0..<frameCount {
+            let t = startTime + Float(frame) / sampleRate
+            var mixed: Float = 0
+            for (signal, gain) in signals {
+                mixed += signal(t) * gain
+            }
+            buffer[frame] = mixed
+        }
+
+        // Step 2: Apply effects chain (block-aware when possible)
+        for effect in effects {
+            if let blockEffect = effect as? BlockAudioEffect {
+                buffer.withUnsafeMutableBufferPointer { ptr in
+                    blockEffect.processBlock(
+                        input: ptr.baseAddress!,
+                        output: ptr.baseAddress!,
+                        count: frameCount,
+                        time: startTime,
+                        sampleRate: sampleRate
+                    )
+                }
+            } else {
+                // Fallback to per-sample processing
+                for frame in 0..<frameCount {
+                    let t = startTime + Float(frame) / sampleRate
+                    buffer[frame] = effect.process(buffer[frame], time: t)
+                }
+            }
+        }
+
+        // Step 3: Apply master gain and clip
+        for frame in 0..<frameCount {
+            let v = buffer[frame] * masterGain
+            buffer[frame] = max(-1.0, min(1.0, v))
+        }
+    }
+
     /// Convert this FinalMixer to a Signal function
     /// - Returns: Signal that outputs the mixed result
     public func asSignal() -> Signal {
@@ -151,4 +207,15 @@ public protocol AudioEffect {
     /// Reset the effect's internal state (if any)
     /// Called when playback stops or switches presets
     func reset()
+}
+
+/// Optional block-based processing for effects (used when available)
+public protocol BlockAudioEffect {
+    func processBlock(
+        input: UnsafePointer<Float>,
+        output: UnsafeMutablePointer<Float>,
+        count: Int,
+        time: Float,
+        sampleRate: Float
+    )
 }

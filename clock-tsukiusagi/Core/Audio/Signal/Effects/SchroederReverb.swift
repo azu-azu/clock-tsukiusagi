@@ -29,7 +29,40 @@ import Foundation
 /// Claude:
 /// This is the reverb architecture recommended in the user's review.
 /// It creates natural-sounding reverb suitable for ambient/meditation presets.
-public final class SchroederReverb: AudioEffect {
+public final class SchroederReverb: AudioEffect, BlockAudioEffect {
+    public init(
+        roomSize: Float = 1.0,
+        damping: Float = 0.5,
+        decay: Float = 0.7,
+        mix: Float = 0.3,
+        predelay: Float = 0.02,
+        sampleRate: Float = 48000
+    ) {
+        self.roomSize = roomSize
+        self.damping = damping
+        self.decay = decay
+        self.mix = mix
+        self.predelay = predelay
+        self.sampleRate = sampleRate
+
+        // Initialize comb filters
+        combDelayTimes = Array(repeating: 0, count: combCount)
+        combBuffers = []
+        combReadPos = Array(repeating: 0, count: combCount)
+        combWritePos = Array(repeating: 0, count: combCount)
+        combGains = Array(repeating: decay, count: combCount)
+        combDampStates = Array(repeating: 0, count: combCount)
+
+        // Initialize all-pass filters
+        allpassDelayTimes = Array(repeating: 0, count: allpassCount)
+        allpassBuffers = []
+        allpassReadPos = Array(repeating: 0, count: allpassCount)
+        allpassWritePos = Array(repeating: 0, count: allpassCount)
+
+        // Setup delay times and buffers
+        updateDelayTimes()
+        updatePredelaySize()
+    }
 
     // MARK: - Parameters
 
@@ -248,6 +281,21 @@ public final class SchroederReverb: AudioEffect {
         let output = input * (1 - mix) + allpassed * mix
 
         return output
+    }
+
+    public func processBlock(
+        input: UnsafePointer<Float>,
+        output: UnsafeMutablePointer<Float>,
+        count: Int,
+        time: Float,
+        sampleRate: Float
+    ) {
+        var t = time
+        let dt = 1.0 / sampleRate
+        for i in 0..<count {
+            output[i] = process(input[i], time: t)
+            t += dt
+        }
     }
 
     /// Reset all reverb state
