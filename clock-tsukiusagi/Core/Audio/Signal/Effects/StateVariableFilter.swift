@@ -103,6 +103,14 @@ public final class StateVariableFilter: AudioEffect {
         self.sampleRate = sampleRate
         self.cutoffSmoothingTime = cutoffSmoothingTime
         self.resonanceSmoothingTime = resonanceSmoothingTime
+        self.targetCutoffFrequency = 0  // temp
+        self.smoothedCutoff = 0         // temp
+        self.targetResonance = 0        // temp
+        self.smoothedResonance = 0      // temp
+        self.cutoffSmoothingCoeff = 0   // temp
+        self.resonanceSmoothingCoeff = 0// temp
+
+        // After stored properties are initialized, compute clamped/smoothed params
         self.targetCutoffFrequency = clampCutoff(cutoff)
         self.smoothedCutoff = self.targetCutoffFrequency
         self.targetResonance = clampResonance(resonance)
