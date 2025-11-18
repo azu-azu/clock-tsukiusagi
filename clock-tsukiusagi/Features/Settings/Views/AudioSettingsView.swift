@@ -208,6 +208,23 @@ public struct AudioSettingsView: View {
                             }
                         }
 
+                        // MARK: - Development/Comparison (DEBUG)
+                        #if DEBUG
+                        SettingsSection(title: "🔧 Development (Comparison)") {
+                            SettingsToggle(
+                                title: "Use Legacy Signal Engine",
+                                subtitle: "Switch to old engine (no filters/reverb) for A/B comparison. Requires restart.",
+                                isOn: Binding(
+                                    get: { settings.useLegacySignalEngine },
+                                    set: {
+                                        settings.useLegacySignalEngine = $0
+                                        saveSettings()
+                                    }
+                                )
+                            )
+                        }
+                        #endif
+
                         Spacer(minLength: DesignTokens.SettingsSpacing.bottomSpacer)
                     }
                     .padding(.top, 16)

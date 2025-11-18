@@ -735,6 +735,24 @@ public final class AudioService: ObservableObject {
         let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
         let signalBuilder = SignalPresetBuilder(sampleRate: outputFormat.sampleRate)
 
+        // DEBUG: Check if legacy engine is requested for comparison
+        if settings.useLegacySignalEngine {
+            if let signalSource = signalBuilder.makeSignal(for: preset) {
+                print("🔧 [AudioService] Using LEGACY SignalEngine (no effects) for preset: \(preset.rawValue)")
+
+                // Store reference for fade control
+                currentSignalSource = .signal(signalSource)
+
+                // Register source with engine
+                engine.register(signalSource)
+
+                // Apply fade in (300ms)
+                signalSource.applyFadeIn(durationMs: 300)
+
+                return
+            }
+        }
+
         // Prefer FinalMixer-based pipeline (with effects)
         if let mixerOutput = signalBuilder.makeMixerOutput(for: preset) {
             print("🎵 [AudioService] Using FinalMixer for preset: \(preset.rawValue)")
