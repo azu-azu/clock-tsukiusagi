@@ -33,9 +33,8 @@ public struct DarkSharkSignal {
     public static func makeSignal() -> Signal {
 
         // 1. Define constants
-        let baseAmplitude: Float = 0.4
-        let lfoMin = 0.075
-        let lfoMax = 0.30
+        let lfoMin = 0.02
+        let lfoMax = 0.08
         let lfoFrequency = 0.115  // Mid-point of 0.05-0.18
         let driftRate: Float = 0.0005
         let driftAmount: Float = 0.3
@@ -63,7 +62,7 @@ public struct DarkSharkSignal {
 
         // 6. Return final signal
         return Signal { t in
-            noise(t) * baseAmplitude * modulatedAmplitude(t)
+            noise(t) * modulatedAmplitude(t)
         }
     }
 }

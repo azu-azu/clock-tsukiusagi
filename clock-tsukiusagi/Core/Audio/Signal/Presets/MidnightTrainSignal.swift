@@ -32,9 +32,8 @@ public struct MidnightTrainSignal {
     public static func makeSignal() -> Signal {
 
         // 1. Define constants
-        let baseAmplitude: Float = 0.3
-        let lfoMin = 0.10
-        let lfoMax = 0.40
+        let lfoMin = 0.03
+        let lfoMax = 0.12
         let lfoFrequency = 1.0
 
         // 2. Define LFO (simple sine)
@@ -53,7 +52,7 @@ public struct MidnightTrainSignal {
 
         // 6. Return final signal
         return Signal { t in
-            noise(t) * baseAmplitude * modulatedAmplitude(t)
+            noise(t) * modulatedAmplitude(t)
         }
     }
 }
