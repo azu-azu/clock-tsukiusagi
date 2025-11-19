@@ -231,7 +231,7 @@ struct AudioTestView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // ✂️ Picker with centered layout and 70% width
+            // ✂️ Picker with centered layout and 60% width (narrower than before)
             GeometryReader { geometry in
                 HStack {
                     Spacer()
@@ -247,21 +247,21 @@ struct AudioTestView: View {
                     } label: {
                         HStack {
                             Text(selectedSource.displayName)
-                                .font(.system(size: 15, design: .monospaced))
+                                .font(.system(size: 17, design: .monospaced)) // ✂️ Larger font (15 -> 17)
                                 .foregroundColor(DesignTokens.SettingsColors.accent) // ✂️ Blue for standard iOS look
                             Spacer()
                             Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(size: 12))
+                                .font(.system(size: 14)) // ✂️ Slightly larger chevron (12 -> 14)
                                 .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
                         }
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
                     }
-                    .frame(width: geometry.size.width * 0.7)
+                    .frame(width: geometry.size.width * 0.6) // ✂️ Narrower card (70% -> 60%)
                     Spacer()
                 }
             }
-            .frame(height: 40)
+            .frame(height: 44) // ✂️ Slightly taller for larger font (40 -> 44)
 
             // ✂️ English name inside card, right-aligned
             HStack {
