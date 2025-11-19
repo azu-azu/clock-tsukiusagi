@@ -13,12 +13,12 @@ import Foundation
 /// This preset creates the sound of a train moving through the night:
 /// - Brown noise for deep mechanical rumble
 /// - Fast sine LFO (1.0 Hz) for rhythmic "clack-clack" pattern
-/// - Amplitude range 0.03 to 0.12 for pronounced rhythm
+/// - Amplitude range 0.10 to 0.40 (expanded for better presence)
 ///
 /// Original parameters from MidnightTrain.swift:
 /// - noiseAmplitude: 0.3
 /// - lfoFrequency: 1.0 Hz (rhythmic pattern)
-/// - lfoRange: 0.03 to 0.12
+/// - lfoRange: 0.10 to 0.40 (expanded from original 0.03-0.12)
 public struct MidnightTrainSignal {
 
     /// Create raw Signal (for FinalMixer usage)
@@ -27,11 +27,12 @@ public struct MidnightTrainSignal {
         // Rhythmic LFO (train clack-clack pattern)
         let lfo = SignalLFO.sine(frequency: 1.0)
 
-        // Map LFO from -1...1 to 0.03...0.12 (amplitude range)
+        // Map LFO from -1...1 to 0.10...0.40 (amplitude range)
+        // Expanded range for better volume presence (0.3 * 0.40 = 0.12 max)
         let modulatedAmplitude = Signal { t in
             let lfoValue = lfo(t)
             let normalized = (lfoValue + 1) * 0.5  // 0...1
-            return Float(0.03 + (0.12 - 0.03) * Double(normalized))
+            return Float(0.10 + (0.40 - 0.10) * Double(normalized))
         }
 
         // Brown noise (deep mechanical rumble)

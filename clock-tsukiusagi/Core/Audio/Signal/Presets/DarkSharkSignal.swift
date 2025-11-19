@@ -13,12 +13,12 @@ import Foundation
 /// This preset creates a menacing underwater presence:
 /// - Brown noise for deep rumbling texture
 /// - Random LFO that changes frequency (0.05-0.18 Hz)
-/// - Amplitude range 0.02 to 0.08 for subtle breathing
+/// - Amplitude range 0.075 to 0.30 (expanded for better presence)
 ///
 /// Original parameters from DarkShark.swift:
 /// - noiseAmplitude: 0.4
 /// - lfoFrequency: Random 0.05-0.18 Hz (changes every ~5s)
-/// - lfoRange: 0.02 to 0.08
+/// - lfoRange: 0.075 to 0.30 (expanded from original 0.02-0.08)
 public struct DarkSharkSignal {
 
     /// Create raw Signal (for FinalMixer usage)
@@ -35,11 +35,13 @@ public struct DarkSharkSignal {
             return base * (1.0 + driftAmount * 0.3)  // Modulate the LFO itself
         }
 
-        // Map LFO from -1...1 to 0.02...0.08 (amplitude range)
+        // Map LFO from -1...1 to 0.075...0.30 (amplitude range)
+        // Expanded range for better volume presence (0.4 * 0.30 = 0.12 max)
+        // Wider dynamics enhance the "shadow wavering" effect
         let modulatedAmplitude = Signal { t in
             let lfoValue = wanderingLFO(t)
             let normalized = (lfoValue + 1) * 0.5  // 0...1
-            return Float(0.02 + (0.08 - 0.02) * Double(normalized))
+            return Float(0.075 + (0.30 - 0.075) * Double(normalized))
         }
 
         // Brown noise (deep rumbling texture)
