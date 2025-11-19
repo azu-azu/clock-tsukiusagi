@@ -257,7 +257,7 @@ struct AudioTestView: View {
                                 .font(.system(size: 14)) // ✂️ Slightly larger chevron (12 -> 14)
                                 .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
                         }
-                        .frame(width: 180) // ✂️ Fixed width for picker (roughly 70% of card at 70% screen width)
+                        .frame(width: UIScreen.main.bounds.width * 0.49) // ✂️ 70% of card (which is 70% of screen) = 0.7 × 0.7 = 0.49
                         .contentShape(Rectangle())
                     }
                     Spacer()
