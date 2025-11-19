@@ -20,42 +20,32 @@ public struct AudioSettingsView: View {
     }
 
     private func configureNavigationBarAppearance() {
+        // Inline Title のフォント設定（丸ゴシック体）
+        let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        let inlineTitleDescriptor = inlineTitleFont.fontDescriptor.withDesign(.rounded) ?? inlineTitleFont.fontDescriptor
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
+            .foregroundColor: UIColor.white
+        ]
+
         // スクロール時の appearance（ブラーあり）
         let scrolledAppearance = UINavigationBarAppearance()
         scrolledAppearance.configureWithDefaultBackground()
         scrolledAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
         scrolledAppearance.backgroundColor = .clear
         scrolledAppearance.shadowColor = .clear
+        scrolledAppearance.titleTextAttributes = titleAttributes
 
-        // Large Title のフォント設定（丸ゴシック体、カスタムサイズ）
-        let largeTitleFont = UIFont.systemFont(ofSize: 28, weight: .bold)
-        let largeTitleDescriptor = largeTitleFont.fontDescriptor.withDesign(.rounded) ?? largeTitleFont.fontDescriptor
-        scrolledAppearance.largeTitleTextAttributes = [
-            .font: UIFont(descriptor: largeTitleDescriptor, size: 28),
-            .foregroundColor: UIColor.white
-        ]
-
-        // Inline Title のフォント設定（スクロール時）
-        let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        let inlineTitleDescriptor = inlineTitleFont.fontDescriptor.withDesign(.rounded) ?? inlineTitleFont.fontDescriptor
-        scrolledAppearance.titleTextAttributes = [
-            .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
-            .foregroundColor: UIColor.white
-        ]
-
-        // スクロールしていない時の appearance（完全透明）
+        // スクロールしていない時の appearance（背景透明、タイトルは表示）
         let transparentAppearance = UINavigationBarAppearance()
         transparentAppearance.configureWithTransparentBackground()
         transparentAppearance.backgroundEffect = nil
         transparentAppearance.backgroundColor = .clear
         transparentAppearance.shadowColor = .clear
+        transparentAppearance.titleTextAttributes = titleAttributes
 
-        // フォント設定をコピー
-        transparentAppearance.largeTitleTextAttributes = scrolledAppearance.largeTitleTextAttributes
-        transparentAppearance.titleTextAttributes = scrolledAppearance.titleTextAttributes
-
-        UINavigationBar.appearance().standardAppearance = scrolledAppearance  // スクロール時
-        UINavigationBar.appearance().scrollEdgeAppearance = transparentAppearance  // スクロール前
+        UINavigationBar.appearance().standardAppearance = scrolledAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = transparentAppearance
     }
 
     public var body: some View {
@@ -216,7 +206,7 @@ public struct AudioSettingsView: View {
                 }
             }
             .navigationTitle("Audio Settings")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
