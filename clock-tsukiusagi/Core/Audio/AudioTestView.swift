@@ -225,14 +225,16 @@ struct AudioTestView: View {
     }
 
     private var soundSelectionSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-            // ✂️ Title inside card for unified appearance
-            Text("音源選択")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+        // ✂️ Wrapper to center the narrower card
+        HStack {
+            Spacer()
+            VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
+                // ✂️ Title inside card for unified appearance
+                Text("音源選択")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // ✂️ Picker with centered layout and 60% width (narrower than before)
-            GeometryReader { geometry in
+                // ✂️ Picker with centered layout
                 HStack {
                     Spacer()
                     Menu {
@@ -254,33 +256,31 @@ struct AudioTestView: View {
                                 .font(.system(size: 14)) // ✂️ Slightly larger chevron (12 -> 14)
                                 .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
                         }
-                        .frame(maxWidth: .infinity)
-                        .contentShape(Rectangle())
                     }
-                    .frame(width: geometry.size.width * 0.6) // ✂️ Narrower card (70% -> 60%)
                     Spacer()
                 }
-            }
-            .frame(height: 44) // ✂️ Slightly taller for larger font (40 -> 44)
 
-            // ✂️ English name inside card, right-aligned
-            HStack {
-                Spacer()
-                Text(selectedSource.englishTitle)
-                    .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                // ✂️ English name inside card, right-aligned
+                HStack {
+                    Spacer()
+                    Text(selectedSource.englishTitle)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(DesignTokens.SettingsSpacing.cardPadding)
+            .padding(.vertical, 4)
+            .background(Color.white.opacity(0.15)) // ✂️ Darker background
+            .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow
+            .frame(maxWidth: UIScreen.main.bounds.width * 0.85) // ✂️ Card is 85% of screen width
+            Spacer()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(DesignTokens.SettingsSpacing.cardPadding)
-        .padding(.vertical, 4)
-        .background(Color.white.opacity(0.15)) // ✂️ Darker background
-        .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                .stroke(Color.white.opacity(0.3), lineWidth: 1)
-        )
-        .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow
     }
 
     private var controlSection: some View {
