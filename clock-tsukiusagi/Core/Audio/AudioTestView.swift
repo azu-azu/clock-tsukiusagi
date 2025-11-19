@@ -226,11 +226,12 @@ struct AudioTestView: View {
 
     private var soundSelectionSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
+            // ✂️ Title outside of card for clarity
             Text("音源選択")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // Unified audio source picker (centered, no border)
+            // ✂️ Card wraps only the picker (interactive part)
             GeometryReader { geometry in
                 HStack {
                     Spacer()
@@ -247,22 +248,31 @@ struct AudioTestView: View {
                         HStack {
                             Text(selectedSource.displayName)
                                 .font(.system(size: 15, design: .monospaced))
-                                .foregroundColor(.black)
+                                .foregroundColor(DesignTokens.SettingsColors.accent) // ✂️ Blue for standard iOS look
                             Spacer()
                             Image(systemName: "chevron.up.chevron.down")
                                 .font(.system(size: 12))
-                                .foregroundColor(.black.opacity(0.6))
+                                .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
                         }
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
                     }
-                    .frame(width: geometry.size.width * 0.7) // 親要素の70%
+                    .frame(width: geometry.size.width * 0.7)
+                    .padding(DesignTokens.SettingsSpacing.cardPadding)
+                    .padding(.vertical, 4)
+                    .background(Color.white.opacity(0.15)) // ✂️ Darker background than before (0.25 -> 0.15)
+                    .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    )
+                    .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow (0.3 -> 0.5, radius 4 -> 6, y 1 -> 2)
                     Spacer()
                 }
             }
-            .frame(height: 40) // GeometryReaderの高さを指定
+            .frame(height: 50)
 
-            // Selected source display (right-aligned)
+            // ✂️ English name outside of card, right-aligned
             HStack {
                 Spacer()
                 Text(selectedSource.englishTitle)
@@ -271,7 +281,6 @@ struct AudioTestView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .interactiveCardStyle()
     }
 
     private var controlSection: some View {
