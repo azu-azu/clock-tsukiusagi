@@ -250,7 +250,7 @@ struct AudioTestView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .settingsCardStyle()
+        .interactiveCardStyle()
     }
 
     private var controlSection: some View {
