@@ -211,12 +211,8 @@ struct AudioTestView: View {
         HStack(spacing: 8) {
             Spacer()
 
-            Text("B")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.white)
-                .frame(width: 24, height: 24)
-                .background(Color.red)
-                .cornerRadius(4)
+            Text(audioService.outputRoute.icon)
+                .font(.system(size: 20))
 
             Text(audioService.outputRoute.displayName)
                 .font(.system(size: 15, design: .monospaced))
@@ -225,7 +221,7 @@ struct AudioTestView: View {
             Spacer()
         }
         .padding(.horizontal, DesignTokens.SettingsSpacing.cardPadding)
-        .padding(.vertical, 12)
+        .padding(.vertical, 6)
     }
 
     private var soundSelectionSection: some View {
@@ -358,7 +354,7 @@ struct AudioTestView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .settingsCardStyle()
+        .padding(DesignTokens.SettingsSpacing.cardPadding)
     }
 
     // MARK: - Actions
