@@ -212,30 +212,28 @@ struct AudioTestView: View {
 
     @ViewBuilder
     private var bluetoothStatusIndicator: some View {
-        if audioService.outputRoute == .bluetooth {
-            HStack(spacing: 8) {
-                Text("B")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(width: 24, height: 24)
-                    .background(Color.red)
-                    .cornerRadius(4)
+        HStack(spacing: 8) {
+            Text("B")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 24, height: 24)
+                .background(Color.red)
+                .cornerRadius(4)
 
-                Text("Bluetooth")
-                    .font(DesignTokens.SettingsTypography.itemTitle)
-                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+            Text(audioService.outputRoute.displayName)
+                .font(.system(size: 15, design: .monospaced))
+                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-                Spacer()
-            }
-            .padding(.horizontal, DesignTokens.SettingsSpacing.cardPadding)
-            .padding(.vertical, 12)
+            Spacer()
         }
+        .padding(.horizontal, DesignTokens.SettingsSpacing.cardPadding)
+        .padding(.vertical, 12)
     }
 
     private var soundSelectionSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
             Text("音源選択")
-                .font(DesignTokens.SettingsTypography.headline)
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
             // Unified audio source picker
@@ -247,12 +245,14 @@ struct AudioTestView: View {
             }
             .pickerStyle(.menu)
             .disabled(audioService.isPlaying)
+            .font(.system(size: 15, design: .monospaced))
 
             // Selected source display
             Text(selectedSource.englishTitle)
-                .font(DesignTokens.SettingsTypography.caption)
+                .font(.system(size: 13, design: .monospaced))
                 .foregroundColor(DesignTokens.SettingsColors.textSecondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .settingsCardStyle()
     }
 
@@ -279,13 +279,12 @@ struct AudioTestView: View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
             HStack {
                 Text("音量（端末ボタンで制御）")
-                    .font(DesignTokens.SettingsTypography.itemTitle)
+                    .font(.system(size: 15, design: .monospaced))
                     .foregroundColor(Color.gray.opacity(0.7))
                 Spacer()
                 Text("\(Int(audioService.systemVolume * 100))%")
-                    .font(DesignTokens.SettingsTypography.itemTitle)
+                    .font(.system(size: 15, design: .monospaced))
                     .foregroundColor(Color.gray.opacity(0.7))
-                    .monospacedDigit()
             }
 
             HStack(spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
@@ -312,13 +311,14 @@ struct AudioTestView: View {
                     .foregroundColor(Color.gray.opacity(0.6))
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .settingsCardStyle()
     }
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalSmall) {
             Text("ステータス")
-                .font(DesignTokens.SettingsTypography.headline)
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
             HStack {
@@ -330,17 +330,17 @@ struct AudioTestView: View {
                     )
                     .frame(width: 10, height: 10)
                 Text(audioService.isPlaying ? "再生中" : "停止中")
-                    .font(DesignTokens.SettingsTypography.itemTitle)
+                    .font(.system(size: 15, design: .monospaced))
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
             }
 
             if let reason = audioService.pauseReason {
                 HStack {
                     Text("停止理由:")
-                        .font(DesignTokens.SettingsTypography.caption)
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                     Text(reason.rawValue)
-                        .font(DesignTokens.SettingsTypography.caption)
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(DesignTokens.SettingsColors.warning)
                 }
             }
@@ -348,14 +348,15 @@ struct AudioTestView: View {
             // Selected source
             VStack(alignment: .leading, spacing: 4) {
                 Text("選択中:")
-                    .font(DesignTokens.SettingsTypography.caption)
+                    .font(.system(size: 13, design: .monospaced))
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
 
                 Text(selectedSource.englishTitle)
-                    .font(DesignTokens.SettingsTypography.caption)
+                    .font(.system(size: 13, design: .monospaced))
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .settingsCardStyle()
     }
 
