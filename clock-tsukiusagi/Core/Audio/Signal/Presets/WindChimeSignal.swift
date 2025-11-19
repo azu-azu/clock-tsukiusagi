@@ -62,6 +62,13 @@ private final class WindChimeGenerator {
     private var lastTriggerTime: Float = 0
     private var nextTriggerTime: Float = Float.random(in: 2.0...8.0)
 
+    /// Reset generator state to initial values
+    func reset() {
+        activeChimes.removeAll()
+        lastTriggerTime = 0
+        nextTriggerTime = Float.random(in: 2.0...8.0)
+    }
+
     func sample(at t: Float) -> Float {
         // Check if it's time for a new chime
         if t - lastTriggerTime >= nextTriggerTime {

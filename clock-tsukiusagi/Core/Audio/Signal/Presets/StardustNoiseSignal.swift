@@ -40,6 +40,13 @@ private final class StardustNoiseGenerator {
     private var nextBurstTime: Float = Float.random(in: 0.4...1.2)
     private var burstActive = false
 
+    /// Reset generator state to initial values
+    func reset() {
+        lastToggleTime = 0
+        nextBurstTime = Float.random(in: 0.4...1.2)
+        burstActive = false
+    }
+
     func sample(at t: Float) -> Float {
         // Check if it's time to toggle
         if t - lastToggleTime >= nextBurstTime {

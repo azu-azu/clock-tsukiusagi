@@ -42,6 +42,14 @@ private final class DistantThunderGenerator {
     private var pulseDecay: Float = 0.0
     private var pulseActive = false
 
+    /// Reset generator state to initial values
+    func reset() {
+        lastPulseTime = 0
+        nextPulseTime = Float.random(in: 2.0...7.0)
+        pulseDecay = 0.0
+        pulseActive = false
+    }
+
     func sample(at t: Float) -> Float {
         // Check if it's time for a new pulse
         if t - lastPulseTime >= nextPulseTime {
