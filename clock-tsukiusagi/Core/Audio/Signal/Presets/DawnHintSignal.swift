@@ -11,36 +11,49 @@ import Foundation
 /// Dawn Hint — the first light of morning
 ///
 /// This preset creates a gradually brightening atmosphere:
+/// Components:
 /// - Pink noise for warm morning air
 /// - Moderate LFO (0.10 Hz) for gentle breathing
 /// - Deeper modulation (40%) for noticeable brightness variation
 ///
-/// Original parameters from DawnHint.swift:
+/// Original parameters from legacy AudioSource (DawnHint.swift):
 /// - noiseAmplitude: 0.08
 /// - lfoFrequency: 0.10 Hz (10 second cycle)
-/// - lfoDepth: 0.40 (40% modulation)
+/// - lfoDepth: 0.40 (40% modulation depth)
+///
+/// Modifications:
+/// - Structure unified to standard 6-step Signal pattern
+/// - Parameter naming standardized (baseAmplitude, lfoMin, lfoMax)
+/// - LFO mapping converted from depth formula to canonical range formula
+/// - Depth 0.40 maps to range: 0.80...1.0 (preserves original behavior)
 public struct DawnHintSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
 
-        // Brightening LFO
-        let lfo = SignalLFO.sine(frequency: 0.10)
+        // 1. Define constants
+        let baseAmplitude: Float = 0.08
+        let lfoMin = 0.80   // Equivalent to depth 0.40 at minimum
+        let lfoMax = 1.0    // Equivalent to depth 0.40 at maximum
+        let lfoFrequency = 0.10
 
-        // Map LFO with deeper modulation for brightness
+        // 2. Define LFO (simple sine)
+        let lfo = SignalLFO.sine(frequency: lfoFrequency)
+
+        // 3. Normalize LFO (0...1)
+        // 4. Map amplitude (lfoMin...lfoMax)
         let modulatedAmplitude = Signal { t in
             let lfoValue = lfo(t)
-            let depth = 0.40
-            let modulation = 1.0 - (depth * (1.0 - Double(lfoValue)) / 2.0)
-            return Float(modulation)
+            let normalized = (lfoValue + 1) * 0.5  // 0...1
+            return Float(lfoMin + (lfoMax - lfoMin) * Double(normalized))
         }
 
-        // Pink noise (morning warmth)
+        // 5. Generate base noise
         let noise = Noise.pink()
 
-        // Compose: noise * baseAmplitude * modulatedAmplitude
+        // 6. Return final signal
         return Signal { t in
-            noise(t) * 0.08 * modulatedAmplitude(t)
+            noise(t) * baseAmplitude * modulatedAmplitude(t)
         }
     }
 }

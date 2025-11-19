@@ -11,17 +11,25 @@ import Foundation
 /// Wind Chime — healing pentatonic tones
 ///
 /// This preset creates gentle chime sounds:
+/// Components:
 /// - Random pentatonic frequencies (C, D, E, G, A at different octaves)
-/// - Random trigger intervals (2-8 seconds)
-/// - ADSR envelope (fast attack, slow decay)
+/// - Random trigger intervals (2-8 seconds, first chime immediate)
+/// - ADSR envelope (fast attack 0.01s, exponential decay 3.0s)
 ///
-/// Original parameters from WindChime.swift:
-/// - frequencies: Pentatonic scale array
+/// Original parameters from legacy AudioSource (WindChime.swift):
+/// - frequencies: Pentatonic scale array (C4-E5)
 /// - amplitude: 0.3
 /// - minInterval: 2.0 seconds
 /// - maxInterval: 8.0 seconds
 /// - attackTime: 0.01, decayTime: 3.0
 /// - sustainLevel: 0.0, releaseTime: 1.0
+///
+/// Modifications:
+/// - Structure unified to standard pattern with stateful generator
+/// - Parameter naming standardized (baseAmplitude, minInterval, maxInterval, etc.)
+/// - Documentation follows standard format
+/// - Stateful generator with reset() method
+/// - First chime triggers immediately (nextTriggerTime = 0)
 public struct WindChimeSignal {
 
     /// Create raw Signal (for FinalMixer usage)
@@ -33,6 +41,13 @@ public struct WindChimeSignal {
 
 /// Stateful generator for wind chime with random pentatonic bells
 private final class WindChimeGenerator {
+
+    // Constants
+    private let baseAmplitude: Float = 0.3
+    private let minInterval: Float = 2.0
+    private let maxInterval: Float = 8.0
+    private let attackTime: Float = 0.01
+    private let decayTime: Float = 3.0
 
     // Pentatonic scale (C major pentatonic across 2 octaves)
     private let pentatonicFrequencies: [Double] = [
@@ -75,7 +90,7 @@ private final class WindChimeGenerator {
             let randomFreq = pentatonicFrequencies.randomElement() ?? 440.0
             activeChimes.append(ActiveChime(frequency: randomFreq, envelope: 0.0, stage: .attack, time: 0.0))
             lastTriggerTime = t
-            nextTriggerTime = Float.random(in: 2.0...8.0)
+            nextTriggerTime = Float.random(in: minInterval...maxInterval)
         }
 
         // Update and mix all active chimes
@@ -89,13 +104,13 @@ private final class WindChimeGenerator {
             // Update envelope (ADSR)
             switch chime.stage {
             case .attack:
-                chime.envelope = min(chime.time / 0.01, 1.0)
-                if chime.time >= 0.01 {
+                chime.envelope = min(chime.time / attackTime, 1.0)
+                if chime.time >= attackTime {
                     chime.stage = .decay
                     chime.time = 0.0
                 }
             case .decay:
-                chime.envelope = 1.0 * exp(-chime.time / 3.0)  // Exponential decay
+                chime.envelope = 1.0 * exp(-chime.time / decayTime)  // Exponential decay
                 if chime.envelope < 0.001 {
                     chime.stage = .idle
                 }
@@ -105,7 +120,7 @@ private final class WindChimeGenerator {
 
             if chime.envelope > 0.001 {
                 let phase = Float(2.0 * .pi * chime.frequency) * t
-                mixedSample += sin(phase) * chime.envelope * 0.3
+                mixedSample += sin(phase) * chime.envelope * baseAmplitude
             }
 
             activeChimes[i] = chime

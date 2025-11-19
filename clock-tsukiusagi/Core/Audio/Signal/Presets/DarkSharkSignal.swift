@@ -11,45 +11,59 @@ import Foundation
 /// Dark Shark Shadow — brown noise with wandering presence
 ///
 /// This preset creates a menacing underwater presence:
+/// Components:
 /// - Brown noise for deep rumbling texture
-/// - Random LFO that changes frequency (0.05-0.18 Hz)
+/// - Wandering LFO with frequency drift (base 0.115 Hz, drift rate 0.0005)
 /// - Amplitude range 0.075 to 0.30 (expanded for better presence)
 ///
-/// Original parameters from DarkShark.swift:
+/// Original parameters from legacy AudioSource (DarkShark.swift):
 /// - noiseAmplitude: 0.4
 /// - lfoFrequency: Random 0.05-0.18 Hz (changes every ~5s)
-/// - lfoRange: 0.075 to 0.30 (expanded from original 0.02-0.08)
+/// - lfoRange: 0.02 to 0.08 (original)
+///
+/// Modifications:
+/// - Structure unified to standard 6-step Signal pattern
+/// - Parameter naming standardized (baseAmplitude, lfoMin, lfoMax, driftAmount)
+/// - LFO mapping uses canonical formula
+/// - Expanded LFO range to 0.075...0.30 to match other presets' max volume (~0.12)
+/// - Wandering LFO implemented using drift modulation
 public struct DarkSharkSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
 
-        // Random wandering LFO (frequency drifts)
-        // Combine slow sine with drift to mimic the frequency-changing behavior
-        let baseLFO = SignalLFO.sine(frequency: 0.115)  // Mid-point of 0.05-0.18
-        let drift = SignalLFO.drift(rate: 0.0005)  // Very slow drift
+        // 1. Define constants
+        let baseAmplitude: Float = 0.4
+        let lfoMin = 0.075
+        let lfoMax = 0.30
+        let lfoFrequency = 0.115  // Mid-point of 0.05-0.18
+        let driftRate: Float = 0.0005
+        let driftAmount: Float = 0.3
+
+        // 2. Define LFO (wandering with drift)
+        let baseLFO = SignalLFO.sine(frequency: lfoFrequency)
+        let drift = SignalLFO.drift(rate: driftRate)
 
         let wanderingLFO = Signal { t in
             let base = baseLFO(t)
-            let driftAmount = drift(t)
-            return base * (1.0 + driftAmount * 0.3)  // Modulate the LFO itself
+            let driftValue = drift(t)
+            return base * (1.0 + driftValue * driftAmount)
         }
 
-        // Map LFO from -1...1 to 0.075...0.30 (amplitude range)
-        // Expanded range for better volume presence (0.4 * 0.30 = 0.12 max)
-        // Wider dynamics enhance the "shadow wavering" effect
+        // 3. Normalize LFO (0...1)
+        // 4. Map amplitude (lfoMin...lfoMax)
         let modulatedAmplitude = Signal { t in
             let lfoValue = wanderingLFO(t)
             let normalized = (lfoValue + 1) * 0.5  // 0...1
-            return Float(0.075 + (0.30 - 0.075) * Double(normalized))
+            return Float(lfoMin + (lfoMax - lfoMin) * Double(normalized))
         }
 
-        // Brown noise (deep rumbling texture)
+        // 5. Generate base noise
         let noise = Noise.brown()
 
-        // Compose: noise * baseAmplitude * modulatedAmplitude
+        // 6. Return final signal
         return Signal { t in
-            noise(t) * 0.4 * modulatedAmplitude(t)
+            noise(t) * baseAmplitude * modulatedAmplitude(t)
         }
     }
 }

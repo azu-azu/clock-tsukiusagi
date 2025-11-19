@@ -11,37 +11,51 @@ import Foundation
 /// Sinking Moon — softly fading celestial tone
 ///
 /// This preset creates a meditative fading tone:
+/// Components:
 /// - Pure sine (432 Hz) for calming frequency
 /// - Ultra-slow LFO (0.04 Hz) for gentle fade
 /// - Moderate depth (25%) for noticeable but gentle variation
 ///
-/// Original parameters from SinkingMoon.swift:
+/// Original parameters from legacy AudioSource (SinkingMoon.swift):
 /// - sineFrequency: 432.0 Hz
 /// - sineAmplitude: 0.06
 /// - lfoFrequency: 0.04 Hz (25 second cycle)
-/// - lfoDepth: 0.25
+/// - lfoDepth: 0.25 (25% modulation depth)
+///
+/// Modifications:
+/// - Structure unified to standard 6-step Signal pattern
+/// - Parameter naming standardized (baseAmplitude, lfoMin, lfoMax)
+/// - LFO mapping converted from depth formula to canonical range formula
+/// - Depth 0.25 maps to range: 0.875...1.0 (preserves original behavior)
 public struct SinkingMoonSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
 
-        // Ultra-slow fade LFO
-        let lfo = SignalLFO.sine(frequency: 0.04)
+        // 1. Define constants
+        let baseAmplitude: Float = 0.06
+        let lfoMin = 0.875  // Equivalent to depth 0.25 at minimum
+        let lfoMax = 1.0    // Equivalent to depth 0.25 at maximum
+        let lfoFrequency = 0.04
+        let toneFrequency = 432.0
 
-        // Map LFO with depth modulation
+        // 2. Define LFO (simple sine)
+        let lfo = SignalLFO.sine(frequency: lfoFrequency)
+
+        // 3. Normalize LFO (0...1)
+        // 4. Map amplitude (lfoMin...lfoMax)
         let modulatedAmplitude = Signal { t in
             let lfoValue = lfo(t)
-            let depth = 0.25
-            let modulation = 1.0 - (depth * (1.0 - Double(lfoValue)) / 2.0)
-            return Float(modulation)
+            let normalized = (lfoValue + 1) * 0.5  // 0...1
+            return Float(lfoMin + (lfoMax - lfoMin) * Double(normalized))
         }
 
-        // Pure sine tone (432 Hz)
-        let tone = Osc.sine(frequency: 432.0)
+        // 5. Generate base tone
+        let tone = Osc.sine(frequency: toneFrequency)
 
-        // Compose: tone * baseAmplitude * modulatedAmplitude
+        // 6. Return final signal
         return Signal { t in
-            tone(t) * 0.06 * modulatedAmplitude(t)
+            tone(t) * baseAmplitude * modulatedAmplitude(t)
         }
     }
 }

@@ -11,36 +11,49 @@ import Foundation
 /// Silent Library — the sound of complete stillness
 ///
 /// This preset creates the quietest ambient texture:
+/// Components:
 /// - Brown noise for deep room tone
 /// - Extremely slow LFO (0.01 Hz) for breath-like movement
 /// - Minimal depth (3%) for near-imperceptible variation
 ///
-/// Original parameters from SilentLibrary.swift:
+/// Original parameters from legacy AudioSource (SilentLibrary.swift):
 /// - noiseAmplitude: 0.10
 /// - lfoFrequency: 0.01 Hz (100 second cycle)
-/// - lfoDepth: 0.03 (3% modulation)
+/// - lfoDepth: 0.03 (3% modulation depth)
+///
+/// Modifications:
+/// - Structure unified to standard 6-step Signal pattern
+/// - Parameter naming standardized (baseAmplitude, lfoMin, lfoMax)
+/// - LFO mapping converted from depth formula to canonical range formula
+/// - Depth 0.03 maps to range: 0.985...1.0 (preserves original behavior)
 public struct SilentLibrarySignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
 
-        // Ultra-slow stillness LFO
-        let lfo = SignalLFO.sine(frequency: 0.01)
+        // 1. Define constants
+        let baseAmplitude: Float = 0.10
+        let lfoMin = 0.985  // Equivalent to depth 0.03 at minimum
+        let lfoMax = 1.0    // Equivalent to depth 0.03 at maximum
+        let lfoFrequency = 0.01
 
-        // Map LFO with minimal depth
+        // 2. Define LFO (simple sine)
+        let lfo = SignalLFO.sine(frequency: lfoFrequency)
+
+        // 3. Normalize LFO (0...1)
+        // 4. Map amplitude (lfoMin...lfoMax)
         let modulatedAmplitude = Signal { t in
             let lfoValue = lfo(t)
-            let depth = 0.03
-            let modulation = 1.0 - (depth * (1.0 - Double(lfoValue)) / 2.0)
-            return Float(modulation)
+            let normalized = (lfoValue + 1) * 0.5  // 0...1
+            return Float(lfoMin + (lfoMax - lfoMin) * Double(normalized))
         }
 
-        // Brown noise (library room tone)
+        // 5. Generate base noise
         let noise = Noise.brown()
 
-        // Compose: noise * baseAmplitude * modulatedAmplitude
+        // 6. Return final signal
         return Signal { t in
-            noise(t) * 0.10 * modulatedAmplitude(t)
+            noise(t) * baseAmplitude * modulatedAmplitude(t)
         }
     }
 }
