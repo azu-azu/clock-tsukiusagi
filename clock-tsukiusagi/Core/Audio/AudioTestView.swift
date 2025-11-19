@@ -121,21 +121,17 @@ struct AudioTestView: View {
         scrolledAppearance.backgroundColor = .clear
         scrolledAppearance.shadowColor = .clear
 
-        // Large Title のフォント設定（丸ゴシック体、カスタムサイズ）
-        let largeTitleFont = UIFont.systemFont(ofSize: 28, weight: .bold)
-        let largeTitleDescriptor = largeTitleFont.fontDescriptor.withDesign(.rounded) ?? largeTitleFont.fontDescriptor
+        // Large Title のフォント設定（モノスペース、カスタムサイズ）
+        let largeTitleFont = UIFont.monospacedSystemFont(ofSize: 28, weight: .bold)
         scrolledAppearance.largeTitleTextAttributes = [
-            .font: UIFont(descriptor: largeTitleDescriptor, size: 28),
+            .font: largeTitleFont,
             .foregroundColor: UIColor.white
         ]
 
         // Inline Title のフォント設定（スクロール時）
-        let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        let inlineTitleDescriptor = inlineTitleFont.fontDescriptor
-            .withDesign(.rounded)
-            ?? inlineTitleFont.fontDescriptor
+        let inlineTitleFont = UIFont.monospacedSystemFont(ofSize: 17, weight: .semibold)
         scrolledAppearance.titleTextAttributes = [
-            .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
+            .font: inlineTitleFont,
             .foregroundColor: UIColor.white
         ]
 
@@ -213,6 +209,8 @@ struct AudioTestView: View {
     @ViewBuilder
     private var bluetoothStatusIndicator: some View {
         HStack(spacing: 8) {
+            Spacer()
+
             Text("B")
                 .font(.system(size: 14, weight: .bold))
                 .foregroundColor(.white)
@@ -247,10 +245,13 @@ struct AudioTestView: View {
             .disabled(audioService.isPlaying)
             .font(.system(size: 15, design: .monospaced))
 
-            // Selected source display
-            Text(selectedSource.englishTitle)
-                .font(.system(size: 13, design: .monospaced))
-                .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+            // Selected source display (right-aligned)
+            HStack {
+                Spacer()
+                Text(selectedSource.englishTitle)
+                    .font(.system(size: 13, design: .monospaced))
+                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .settingsCardStyle()
@@ -345,8 +346,8 @@ struct AudioTestView: View {
                 }
             }
 
-            // Selected source
-            VStack(alignment: .leading, spacing: 4) {
+            // Selected source (inline)
+            HStack(spacing: 4) {
                 Text("選択中:")
                     .font(.system(size: 13, design: .monospaced))
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
