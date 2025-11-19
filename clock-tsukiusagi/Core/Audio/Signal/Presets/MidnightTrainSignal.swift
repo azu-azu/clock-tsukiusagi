@@ -32,8 +32,8 @@ public struct MidnightTrainSignal {
     public static func makeSignal() -> Signal {
 
         // 1. Define constants
-        let lfoMin = 0.03
-        let lfoMax = 0.12
+        let lfoMin = 0.08
+        let lfoMax = 0.25
         let lfoFrequency = 1.0
 
         // 2. Define LFO (simple sine)
