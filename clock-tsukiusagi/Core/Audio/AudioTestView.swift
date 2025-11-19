@@ -231,21 +231,24 @@ struct AudioTestView: View {
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
             // Unified audio source picker (centered, no border)
-            HStack {
-                Spacer()
-                Picker("音源", selection: $selectedSource) {
-                    ForEach(AudioSourcePreset.allSources) { source in
-                        Text(source.displayName)
-                            .tag(source)
+            GeometryReader { geometry in
+                HStack {
+                    Spacer()
+                    Picker("音源", selection: $selectedSource) {
+                        ForEach(AudioSourcePreset.allSources) { source in
+                            Text(source.displayName)
+                                .tag(source)
+                        }
                     }
+                    .pickerStyle(.menu)
+                    .disabled(audioService.isPlaying)
+                    .font(.system(size: 15, design: .monospaced))
+                    .foregroundColor(.black)
+                    .frame(width: geometry.size.width * 0.7) // 親要素の70%
+                    Spacer()
                 }
-                .pickerStyle(.menu)
-                .disabled(audioService.isPlaying)
-                .font(.system(size: 15, design: .monospaced))
-                .foregroundColor(.black)
-                .frame(width: 220) // 幅を固定して両端揃え
-                Spacer()
             }
+            .frame(height: 40) // GeometryReaderの高さを指定
 
             // Selected source display (right-aligned)
             HStack {
