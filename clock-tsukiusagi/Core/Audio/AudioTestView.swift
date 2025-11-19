@@ -180,7 +180,7 @@ struct AudioTestView: View {
                     }) {
                         Image(systemName: "clock.fill")
                             .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.white.opacity(0.6))
                     }
                 }
 
@@ -190,7 +190,7 @@ struct AudioTestView: View {
                     }) {
                         Image(systemName: "slider.horizontal.3")
                             .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.white.opacity(0.6))
                     }
                 }
 
@@ -242,6 +242,7 @@ struct AudioTestView: View {
                 .pickerStyle(.menu)
                 .disabled(audioService.isPlaying)
                 .font(.system(size: 15, design: .monospaced))
+                .foregroundColor(.black)
                 Spacer()
             }
 
