@@ -264,24 +264,26 @@ struct AudioTestView: View {
 
     private var controlSection: some View {
         GeometryReader { geometry in
-            Button(action: togglePlayback) {
-                HStack {
-                    Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
-                    Text(audioService.isPlaying ? "停止" : "再生")
+            HStack {
+                Spacer()
+                Button(action: togglePlayback) {
+                    HStack {
+                        Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
+                        Text(audioService.isPlaying ? "停止" : "再生")
+                    }
+                    .font(DesignTokens.SettingsTypography.headline)
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                    .padding(DesignTokens.SettingsLayout.buttonPadding)
+                    .background(
+                        audioService.isPlaying
+                            ? DesignTokens.SettingsColors.danger
+                            : DesignTokens.SettingsColors.accent
+                    )
+                    .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
                 }
-                .font(DesignTokens.SettingsTypography.headline)
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                .frame(maxWidth: .infinity)
-                .padding(DesignTokens.SettingsLayout.buttonPadding)
-                .background(
-                    audioService.isPlaying
-                        ? DesignTokens.SettingsColors.danger
-                        : DesignTokens.SettingsColors.accent
-                )
-                .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
+                .frame(width: geometry.size.width * 0.8)
+                Spacer()
             }
-            .frame(width: geometry.size.width * 0.8)
-            .frame(maxWidth: .infinity)
         }
         .frame(height: 60)
     }
