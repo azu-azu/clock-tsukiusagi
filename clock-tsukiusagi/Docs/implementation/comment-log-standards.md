@@ -4,60 +4,145 @@
 **Status**: Active
 **Last Updated**: 2025-11-19
 
-This document defines standards for comments and debug logs in the clock-tsukiusagi codebase to maintain code cleanliness and prevent accidental inclusion of temporary debugging artifacts in production.
+This document defines the mandatory comment and debug log standards for Claude Code when working with the clock-tsukiusagi codebase. The core principle: **learning comes first, cleanup comes last**.
 
 ---
 
-## Overview
+## Core Philosophy
 
-During development, temporary comments and logs are useful for learning and debugging. However, production code must remain clean and professional. This standard provides a systematic approach to distinguish temporary artifacts from permanent documentation.
+This project prioritizes **learning and understanding** during development. Claude Code must help the user (Azu) learn by adding explanatory comments to all code modifications. Production cleanup happens only when explicitly requested.
 
 ---
 
-## ✂️ Rule for Learning Comments
+## ✂️ Learning Comment Generation Rule (MANDATORY)
 
-### Purpose
+### Default Behavior
 
-Temporary comments added for personal understanding or debugging must be clearly marked and removed before production deployment.
+**Claude Code MUST automatically add ✂️ learning comments whenever generating or modifying code.**
 
-### Emoji Marker
+This is the **default mode** for all development sessions. Do not skip or omit comments unless explicitly instructed to do so.
 
-All temporary learning comments must include a **✂️ (scissors)** mark:
+### When to Add Learning Comments
+
+Claude Code must add ✂️ comments in these situations:
+
+1. **Every code modification or generation**
+2. **Complex logic or non-obvious implementations**
+3. **Important design decisions or trade-offs**
+4. **Potential side effects or gotchas**
+5. **Background context for why this approach was chosen**
+
+### Comment Content Guidelines
+
+Learning comments should explain:
+
+- **Intent** (修正意図): Why this change was made
+- **Background** (背景): Context or problem being solved
+- **Rationale** (選択理由): Why this approach over alternatives
+- **Caveats** (注意点): Side effects, limitations, or future considerations
+
+### Example: Good Learning Comments
 
 ```swift
-// ✂️ This is a temporary learning comment - remove before production
-// This is a permanent documentation comment - keep in production
+// ✂️ Using Menu instead of Picker because .menu style doesn't respect .foregroundColor()
+// ✂️ This custom implementation gives us full control over text color and layout
+Menu {
+    ForEach(sources) { source in
+        Button(action: { selectedSource = source }) {
+            Text(source.displayName)
+        }
+    }
+} label: {
+    // ✂️ HStack with Spacer() creates justified layout: text left, chevron right
+    HStack {
+        Text(selectedSource.displayName)
+            .foregroundColor(.black)  // ✂️ Black for readability on bright background
+        Spacer()
+        Image(systemName: "chevron.up.chevron.down")
+    }
+}
 ```
 
-### When to Use
+### Example: Insufficient Comments (❌ AVOID)
 
-- Personal understanding notes during development
-- Temporary explanations for complex logic
-- Debugging annotations
-- Learning references
+```swift
+// Changed to Menu
+Menu { ... }
+```
 
-### When NOT to Use
-
-- API documentation
-- Architecture explanations
-- Important warnings or caveats
-- Production-ready inline comments
-
-### Workflow
-
-1. **During Development**: Add ✂️ to all temporary learning comments
-2. **Before Merging**: Search for "✂️" in the codebase and delete all matches
-3. **Result**: Production code remains clean and professional
+**Problem**: Doesn't explain *why* the change was made or what problem it solves.
 
 ---
 
-## Debug Log Emoji Rule
+## Learning Session vs. Production Mode
 
-### Purpose
+### Default: Learning Session Mode (Always ON)
 
-Debug logs are essential during development but must be removed before production to avoid noise and performance issues.
+**Claude Code operates in "learning session mode" by default.**
 
-### Emoji Tags
+Assumptions in this mode:
+- User wants to understand every change
+- Comments are valuable learning artifacts
+- Code cleanliness is secondary to comprehension
+- ✂️ markers will be cleaned up later when explicitly requested
+
+### Exception: Production Cleanup Mode (Explicitly Triggered)
+
+**Only enter cleanup mode when user explicitly requests it** with phrases like:
+
+- "Clean up the code for production"
+- "Remove all learning comments"
+- "Prepare for merge/release"
+- "クリーンナップして" (Japanese: clean up)
+- "リリース用に" (Japanese: for release)
+
+**DO NOT** assume production mode just because:
+- Code is in a certain file or directory
+- Code looks "production-ready"
+- A commit is being made
+- Time has passed since initial implementation
+
+---
+
+## ✂️ Comment Cleanup Workflow
+
+### When to Remove ✂️ Comments
+
+**Only remove ✂️ comments when explicitly instructed by the user.**
+
+Typical cleanup triggers:
+1. User says "Clean up for production"
+2. User says "Remove learning comments"
+3. User requests pre-merge cleanup
+4. User specifies release preparation
+
+### How to Clean Up
+
+1. Search for all ✂️ markers:
+   ```bash
+   grep -r "✂️" clock-tsukiusagi/
+   ```
+
+2. Review each comment:
+   - **Delete** if it's temporary learning content
+   - **Keep** if it's evolved into permanent documentation
+
+3. Verify no ✂️ markers remain before committing
+
+### Cleanup Checklist
+
+Before finalizing cleanup:
+
+- [ ] All ✂️ markers removed or converted to permanent comments
+- [ ] No temporary learning comments remain
+- [ ] Permanent documentation comments are clear and concise
+- [ ] Code is self-documenting where possible
+
+---
+
+## 🔥 Debug Log Emoji Rule
+
+### Emoji Tags for Temporary Logs
 
 All temporary debug logs must include a specific emoji tag:
 
@@ -67,7 +152,7 @@ All temporary debug logs must include a specific emoji tag:
 | **🐛** | Bug investigation logs | `print("🐛 [Bug] Investigating issue #123")` |
 | **🧪** | Experimental / testing logs | `print("🧪 [Test] Feature flag enabled")` |
 
-### Examples
+### Usage Guidelines
 
 ```swift
 // ✅ Correct - tagged for removal
@@ -80,53 +165,82 @@ print("Debug: Current volume level")
 print("Testing new feature...")
 ```
 
-### Workflow
+### Cleanup
 
-1. **During Development**: Add 🔥 / 🐛 / 🧪 to all temporary logs
-2. **Before Merging**: Search for these emojis and delete all matches
-3. **Result**: Production code has no debug noise
-
-### Search Commands
+Remove all 🔥 / 🐛 / 🧪 logs during production cleanup:
 
 ```bash
-# Find all temporary logs
 grep -r "🔥\|🐛\|🧪" clock-tsukiusagi/
-
-# Find all learning comments
-grep -r "✂️" clock-tsukiusagi/
 ```
 
 ---
 
-## Benefits
+## Benefits of This Approach
 
-1. **Clear Distinction**: Temporary vs. permanent artifacts are immediately recognizable
-2. **Easy Cleanup**: Single emoji search finds all items to remove
-3. **No Accidental Leftovers**: Visual markers prevent forgetting cleanup
-4. **Debugging Freedom**: Developers can add as many temporary notes as needed
-5. **Production Quality**: Final code remains clean and professional
+### For Learning (Development Phase)
+
+1. **Accelerated Understanding**: User learns why decisions were made
+2. **Context Preservation**: Rationale is captured at decision time
+3. **No Cognitive Load**: User doesn't need to reverse-engineer intent
+4. **Debugging Aid**: Comments help troubleshoot issues later
+
+### For Production (Cleanup Phase)
+
+1. **Clean Separation**: ✂️ markers make temporary vs. permanent obvious
+2. **Easy Cleanup**: Single search operation finds all artifacts
+3. **No Accidental Leftovers**: Visual markers prevent missed removals
+4. **Professional Result**: Final code is clean and maintainable
 
 ---
 
-## Integration with Development Workflow
+## Important Reminders for Claude Code
 
-### Pull Request Checklist
+### Always Add ✂️ Comments
 
-Before creating a PR, verify:
+- **DO**: Add explanatory ✂️ comments to every code change
+- **DO**: Explain intent, background, rationale, and caveats
+- **DO NOT**: Skip comments to "keep code clean"
+- **DO NOT**: Assume user already understands the change
 
-- [ ] No ✂️ markers in code
-- [ ] No 🔥 / 🐛 / 🧪 emoji logs
-- [ ] All temporary debugging artifacts removed
-- [ ] Only production-ready comments remain
+### Never Auto-Cleanup Without Instruction
 
-### CI/CD Integration (Future)
+- **DO**: Keep ✂️ comments throughout development
+- **DO**: Wait for explicit cleanup request from user
+- **DO NOT**: Remove ✂️ comments proactively
+- **DO NOT**: Assume production mode without being told
 
-Consider adding automated checks:
+### Treat Every Session as Learning
+
+- **DO**: Default to learning session mode
+- **DO**: Prioritize comprehension over brevity
+- **DO NOT**: Make assumptions about "production readiness"
+- **DO NOT**: Self-censor comments for cleanliness
+
+---
+
+## Search Commands
+
+```bash
+# Find all temporary learning comments
+grep -r "✂️" clock-tsukiusagi/
+
+# Find all temporary debug logs
+grep -r "🔥\|🐛\|🧪" clock-tsukiusagi/
+
+# Find all temporary artifacts (comments + logs)
+grep -r "✂️\|🔥\|🐛\|🧪" clock-tsukiusagi/
+```
+
+---
+
+## CI/CD Integration (Future)
+
+Automated pre-merge check:
 
 ```bash
 # Fail build if temporary markers found
 if grep -r "✂️\|🔥\|🐛\|🧪" clock-tsukiusagi/; then
-  echo "❌ Temporary debug artifacts found - remove before merging"
+  echo "❌ Temporary artifacts found - run cleanup before merging"
   exit 1
 fi
 ```
@@ -141,4 +255,10 @@ fi
 
 ---
 
-**Note**: This standard applies to all Swift code, configuration files, and scripts. Documentation files (`.md`) are exempt from emoji rules but should still maintain appropriate cleanup before major releases.
+## Summary
+
+**Default Behavior**: Claude Code always adds ✂️ learning comments to help user understand changes.
+
+**Cleanup Trigger**: Only remove ✂️ comments when user explicitly requests production cleanup.
+
+**Core Principle**: Learning comes first, cleanup comes last.
