@@ -287,21 +287,26 @@ struct AudioTestView: View {
     }
 
     private var controlSection: some View {
-        Button(action: togglePlayback) {
-            HStack {
-                Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
-                Text(audioService.isPlaying ? "停止" : "再生")
+        HStack {
+            Spacer()
+            Button(action: togglePlayback) {
+                HStack {
+                    Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
+                    Text(audioService.isPlaying ? "停止" : "再生")
+                }
+                .font(DesignTokens.SettingsTypography.headline)
+                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                .frame(maxWidth: .infinity)
+                .padding(DesignTokens.SettingsLayout.buttonPadding)
+                .background(
+                    audioService.isPlaying
+                        ? DesignTokens.SettingsColors.danger
+                        : DesignTokens.SettingsColors.accent
+                )
+                .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
             }
-            .font(DesignTokens.SettingsTypography.headline)
-            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-            .frame(maxWidth: .infinity)
-            .padding(DesignTokens.SettingsLayout.buttonPadding)
-            .background(
-                audioService.isPlaying
-                    ? DesignTokens.SettingsColors.danger
-                    : DesignTokens.SettingsColors.accent
-            )
-            .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
+            .frame(maxWidth: UIScreen.main.bounds.width * 0.7)
+            Spacer()
         }
     }
 
