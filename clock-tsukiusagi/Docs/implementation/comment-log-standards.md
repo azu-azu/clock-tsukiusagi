@@ -36,56 +36,60 @@ Claude Code must add ✂️ comments in these situations:
 
 **IMPORTANT**: Not all comments should have ✂️ markers. Distinguish between temporary learning comments and permanent documentation comments.
 
+**Guiding Principle**: In production code, comments should be minimal and only explain **non-obvious information**. Most code should be self-documenting through clear naming and structure.
+
 #### ✂️ Mark These (Temporary Learning Comments)
 
-Use ✂️ for comments that explain **why you made specific implementation choices during development**:
+Use ✂️ for comments that explain **your development process and decision-making**:
 
-- Technical reasons for choosing one approach over another
-- Explanations of workarounds or fixes for specific issues
-- Details about library limitations or SwiftUI quirks
-- Step-by-step reasoning behind complex logic
-- Calculations or formulas with derivation details
-- Temporary notes about trade-offs or alternatives considered
+- Step-by-step reasoning during implementation
+- Verbose explanations of what the code does (should be self-explanatory)
+- Redundant calculations already evident in code
+- Progress notes or implementation status
+- Overly detailed justifications for straightforward choices
 
 **Examples**:
 ```swift
-// ✂️ Using Menu instead of Picker because .menu style doesn't respect .foregroundColor()
-// ✂️ GeometryReader was removed to prevent VStack spacing issues
+// ✂️ This custom implementation gives us full control over text color and layout
+// ✂️ HStack with Spacer() creates justified layout: text left, chevron right
 // ✂️ 70% of card (which is 70% of screen) = 0.7 × 0.7 = 0.49
-// ✂️ Reduced to account for Large Title's built-in bottom spacing
+// ✂️ Black for readability on bright background
 ```
 
 #### ❌ DON'T Mark These (Permanent Documentation Comments)
 
-Do NOT use ✂️ for comments that describe **what the code does or important specifications**:
+Do NOT use ✂️ for comments that prevent future developers from repeating mistakes or misunderstanding critical behavior:
 
-- Feature descriptions or functional specifications
-- Important warnings or gotchas for future developers
-- Business logic explanations
-- API usage notes that should remain long-term
-- Architectural decisions that define the codebase structure
-- Section markers or organizational comments
+- **Technical gotchas and pitfalls**: Known issues with libraries/frameworks that cause problems
+- **Non-obvious workarounds**: Why a seemingly strange approach is necessary
+- **Critical constraints**: System limitations or requirements that affect design
+- **Business logic**: Domain-specific rules that aren't apparent from code alone
+- **Section markers**: MARK comments for code organization
+
+**Keep comments minimal—only document what isn't obvious.**
 
 **Examples**:
 ```swift
-// Audio アイコンは非表示（現在のページ）
+// GeometryReader prevents VStack spacing from working correctly
+// Picker's .menu style doesn't respect .foregroundColor() modifier
+// No top padding needed: Large Title mode provides built-in spacing
+// Audio icon hidden on current page
 // MARK: - Sections
-// Important: Volume limiter must be applied before final output
-// This implements the Calm Technology philosophy by...
-// Falls back to speaker if headphones are disconnected
 ```
 
 #### Decision Framework
 
-Ask yourself: **"Is this explaining my implementation choice, or is this documenting what the code does?"**
+Ask yourself: **"Would removing this comment cause future developers to waste time or repeat my mistakes?"**
 
-- **Implementation choice** → Use ✂️ (temporary)
-- **Code documentation** → No ✂️ (permanent)
+- **YES** → No ✂️ (critical knowledge, keep it)
+- **NO** → ✂️ (learning content, remove later)
 
-Another way to think about it:
+Another test: **"Is this obvious from the code itself?"**
 
-- **"I chose this because..."** → ✂️
-- **"This code does..."** → No ✂️
+- **YES** → ✂️ (redundant, remove later)
+- **NO** → Evaluate: Is it a gotcha/constraint? → No ✂️ | Is it my thought process? → ✂️
+
+**Default mindset**: Favor self-documenting code over comments. Only add comments when necessary.
 
 ### Comment Content Guidelines
 
@@ -258,25 +262,27 @@ grep -r "🔥\|🐛\|🧪" clock-tsukiusagi/
 
 ### Distinguish ✂️ Learning Comments from Permanent Comments
 
-- **DO**: Use ✂️ for implementation choices, workarounds, and technical reasoning
-- **DO NOT**: Use ✂️ for feature descriptions, specifications, or MARK comments
-- **Decision Test**: "Am I explaining WHY I chose this?" → ✂️ | "Am I explaining WHAT this does?" → No ✂️
+- **DO**: Use ✂️ for your thought process, step-by-step reasoning, and redundant explanations
+- **DO NOT**: Use ✂️ for technical gotchas, critical constraints, or non-obvious workarounds
+- **DO**: Keep permanent comments minimal—only document what prevents future mistakes
+- **Decision Test**: "Would removing this waste someone's time?" → No ✂️ | "Is this my development notes?" → ✂️
 
 **Examples**:
 ```swift
-// ✂️ Using Menu instead of Picker because .menu style doesn't respect .foregroundColor()  ← YES ✂️
-// Audio アイコンは非表示（現在のページ）  ← NO ✂️
-// ✂️ Reduced to 8pt to account for Large Title's built-in bottom spacing  ← YES ✂️
-// MARK: - Sections  ← NO ✂️
+// ✂️ This custom implementation gives us full control  ← YES ✂️ (verbose, obvious)
+// GeometryReader prevents VStack spacing from working correctly  ← NO ✂️ (gotcha)
+// ✂️ HStack with Spacer() creates justified layout  ← YES ✂️ (redundant)
+// Picker's .menu style doesn't respect .foregroundColor() modifier  ← NO ✂️ (framework limitation)
+// MARK: - Sections  ← NO ✂️ (organizational)
 ```
 
 ### Always Add Learning Comments (with Correct Marking)
 
-- **DO**: Add explanatory comments to every code change
-- **DO**: Explain intent, background, rationale, and caveats
-- **DO**: Use ✂️ for temporary learning content, no ✂️ for permanent documentation
-- **DO NOT**: Skip comments to "keep code clean"
-- **DO NOT**: Assume user already understands the change
+- **DO**: Add explanatory comments during development to aid your learning
+- **DO**: Use ✂️ for verbose explanations, step-by-step reasoning, and development notes
+- **DO**: Preserve critical gotchas and constraints WITHOUT ✂️ for production
+- **DO**: Favor self-documenting code—keep final comments minimal
+- **DO NOT**: Add unnecessary comments that restate obvious code behavior
 
 ### Never Auto-Cleanup Without Instruction
 
