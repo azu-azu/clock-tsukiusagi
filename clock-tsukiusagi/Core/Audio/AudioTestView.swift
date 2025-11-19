@@ -230,23 +230,20 @@ struct AudioTestView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // Unified audio source picker with border
-            Picker("音源", selection: $selectedSource) {
-                ForEach(AudioSourcePreset.allSources) { source in
-                    Text(source.displayName)
-                        .tag(source)
+            // Unified audio source picker (centered, no border)
+            HStack {
+                Spacer()
+                Picker("音源", selection: $selectedSource) {
+                    ForEach(AudioSourcePreset.allSources) { source in
+                        Text(source.displayName)
+                            .tag(source)
+                    }
                 }
+                .pickerStyle(.menu)
+                .disabled(audioService.isPlaying)
+                .font(.system(size: 15, design: .monospaced))
+                Spacer()
             }
-            .pickerStyle(.menu)
-            .disabled(audioService.isPlaying)
-            .font(.system(size: 15, design: .monospaced))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(Color.clear)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-            )
 
             // Selected source display (right-aligned)
             HStack {
