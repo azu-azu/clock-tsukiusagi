@@ -228,7 +228,7 @@ struct AudioTestView: View {
         // ✂️ Wrapper to center the narrower card
         HStack {
             Spacer()
-            VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
+            VStack(alignment: .leading, spacing: 12) { // ✂️ Uniform spacing of 12pt between all 3 rows
                 // ✂️ Title inside card for unified appearance
                 Text("音源選択")
                     .font(.system(size: 17, weight: .semibold))
