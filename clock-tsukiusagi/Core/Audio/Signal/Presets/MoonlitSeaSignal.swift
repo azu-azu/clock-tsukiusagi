@@ -45,9 +45,4 @@ public struct MoonlitSeaSignal {
             return deepValue + noiseValue
         }
     }
-
-    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
-    public static func make(sampleRate: Double) -> SignalAudioSource {
-        return SignalAudioSource(signal: makeSignal())
-    }
 }

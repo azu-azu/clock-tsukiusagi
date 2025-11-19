@@ -9,14 +9,12 @@
 import Foundation
 import AVFoundation
 
-/// Factory that creates SignalAudioSource or FinalMixerOutputNode from NaturalSoundPreset ID
+/// Factory that creates FinalMixerOutputNode from NaturalSoundPreset ID
 ///
 /// Claude: Simple switch-based builder for SignalEngine presets.
 /// This allows easy extension without modifying AudioService or UI code.
 ///
-/// Two methods available:
-/// 1. makeSignal() - Legacy method, returns SignalAudioSource (single signal, no effects)
-/// 2. makeMixerOutput() - New method, returns FinalMixerOutputNode (supports effects chain)
+/// Creates FinalMixerOutputNode with full effects chain (filters, reverb, limiter).
 public struct SignalPresetBuilder {
 
     private let sampleRate: Double
@@ -25,65 +23,7 @@ public struct SignalPresetBuilder {
         self.sampleRate = sampleRate
     }
 
-    /// Create a ready-to-use SignalAudioSource for a given preset.
-    /// Returns nil if the preset is not yet implemented in SignalEngine.
-    public func makeSignal(for preset: NaturalSoundPreset) -> SignalAudioSource? {
-        switch preset {
-
-        // ---- Ocean / Water ----
-        case .moonlitSea:
-            return MoonlitSeaSignal.make(sampleRate: sampleRate)
-
-        case .lunarTide:
-            return LunarTideSignal.make(sampleRate: sampleRate)
-
-        case .abyssalBreath:
-            return AbyssalBreathSignal.make(sampleRate: sampleRate)
-
-        // ---- Celestial / Ambient ----
-        case .lunarPulse:
-            return LunarPulseSignal.make(sampleRate: sampleRate)
-
-        // ---- Dark / Atmospheric ----
-        case .darkShark:
-            return DarkSharkSignal.make(sampleRate: sampleRate)
-
-        case .midnightTrain:
-            return MidnightTrainSignal.make(sampleRate: sampleRate)
-
-        // ---- Noise / Atmospheric ----
-        case .stardustNoise:
-            return StardustNoiseSignal.make(sampleRate: sampleRate)
-
-        case .lunarDustStorm:
-            return LunarDustStormSignal.make(sampleRate: sampleRate)
-
-        case .silentLibrary:
-            return SilentLibrarySignal.make(sampleRate: sampleRate)
-
-        case .distantThunder:
-            return DistantThunderSignal.make(sampleRate: sampleRate)
-
-        case .sinkingMoon:
-            return SinkingMoonSignal.make(sampleRate: sampleRate)
-
-        case .dawnHint:
-            return DawnHintSignal.make(sampleRate: sampleRate)
-
-        // ---- Tonal / Musical ----
-        case .windChime:
-            return WindChimeSignal.make(sampleRate: sampleRate)
-
-        case .tibetanBowl:
-            return TibetanBowlSignal.make(sampleRate: sampleRate)
-
-        // Not yet implemented in SignalEngine (uses external audio file)
-        case .oceanWavesSeagulls:
-            return nil
-        }
-    }
-
-    // MARK: - FinalMixer-based Creation (New Method)
+    // MARK: - FinalMixer-based Creation
 
     /// Create a ready-to-use FinalMixerOutputNode for a given preset with effects support.
     /// Returns nil if the preset is not yet implemented in SignalEngine.

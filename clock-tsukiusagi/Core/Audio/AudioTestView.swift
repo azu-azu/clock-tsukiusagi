@@ -9,11 +9,10 @@
 import SwiftUI
 import AVFoundation
 
-/// 統合された音源タイプ（合成 + ファイル + 比較用レガシー）
+/// 統合された音源タイプ（合成 + ファイル）
 enum AudioSourcePreset: Identifiable {
     case synthesis(NaturalSoundPreset)
     case audioFile(AudioFilePreset)
-    case legacy(NaturalSoundPreset)  // Legacy SignalAudioSource for comparison
 
     var id: String {
         switch self {
@@ -21,8 +20,6 @@ enum AudioSourcePreset: Identifiable {
             return "synthesis_\(preset.rawValue)"
         case .audioFile(let preset):
             return "file_\(preset.rawValue)"
-        case .legacy(let preset):
-            return "legacy_\(preset.rawValue)"
         }
     }
 
@@ -33,8 +30,6 @@ enum AudioSourcePreset: Identifiable {
             return icon + preset.displayName
         case .audioFile(let preset):
             return icon + preset.displayName
-        case .legacy(let preset):
-            return icon + preset.displayName + " (Legacy)"
         }
     }
 
@@ -43,8 +38,6 @@ enum AudioSourcePreset: Identifiable {
         case .synthesis(let preset):
             return preset.isTest
         case .audioFile(let preset):
-            return preset.isTest
-        case .legacy(let preset):
             return preset.isTest
         }
     }
@@ -55,8 +48,6 @@ enum AudioSourcePreset: Identifiable {
             return preset.englishTitle
         case .audioFile(let preset):
             return preset.displayName  // AudioFilePreset already has English names
-        case .legacy(let preset):
-            return preset.englishTitle + " (Legacy)"
         }
     }
 }
@@ -76,21 +67,15 @@ extension AudioSourcePreset: Hashable, Equatable {
         var production: [AudioSourcePreset] = []
         var test: [AudioSourcePreset] = []
 
-        // Collect synthesis presets (new + legacy pairs)
+        // Collect synthesis presets
         for preset in NaturalSoundPreset.allCases {
-            let newSource = AudioSourcePreset.synthesis(preset)
-            let legacySource = AudioSourcePreset.legacy(preset)
-
-            if newSource.isTest {
+            let source = AudioSourcePreset.synthesis(preset)
+            if source.isTest {
                 #if DEBUG
-                test.append(newSource)
-                test.append(legacySource)
+                test.append(source)
                 #endif
             } else {
-                production.append(newSource)
-                #if DEBUG
-                production.append(legacySource)
-                #endif
+                production.append(source)
             }
         }
 
@@ -377,12 +362,8 @@ struct AudioTestView: View {
             // 選択された音源タイプに応じて再生
             switch selectedSource {
             case .synthesis(let preset):
-                // 合成音源（新式：FinalMixer）
+                // 合成音源（FinalMixer）
                 try audioService.play(preset: preset)
-
-            case .legacy(let preset):
-                // レガシー合成音源（従来式：SignalAudioSource、エフェクトなし）
-                try audioService.playLegacy(preset: preset)
 
             case .audioFile(let preset):
                 // 音源ファイル（TrackPlayer）

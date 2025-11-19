@@ -209,7 +209,7 @@ public final class AudioService: ObservableObject {
 
         // Wrap entire method in do-catch to ensure state cleanup on error
         do {
-            try _playInternal(preset: preset, useLegacy: false)
+            try _playInternal(preset: preset)
         } catch {
             // CRITICAL: Cleanup state on error to unlock UI
             print("❌ [AudioService] play() failed: \(error)")
@@ -218,23 +218,8 @@ public final class AudioService: ObservableObject {
         }
     }
 
-    /// レガシー音声再生を開始（従来式SignalAudioSource、エフェクトなし）
-    /// - Parameter preset: 再生するプリセット
-    public func playLegacy(preset: NaturalSoundPreset) throws {
-
-        // Wrap entire method in do-catch to ensure state cleanup on error
-        do {
-            try _playInternal(preset: preset, useLegacy: true)
-        } catch {
-            // CRITICAL: Cleanup state on error to unlock UI
-            print("❌ [AudioService] playLegacy() failed: \(error)")
-            cleanupStateOnError()
-            throw error
-        }
-    }
-
     /// Internal play implementation (allows proper error handling)
-    private func _playInternal(preset: NaturalSoundPreset, useLegacy: Bool) throws {
+    private func _playInternal(preset: NaturalSoundPreset) throws {
         // Cancel any pending stop/fade tasks from previous session
         engineStopWorkItem?.cancel()
         fadeTimer?.invalidate()
@@ -268,7 +253,7 @@ public final class AudioService: ObservableObject {
 
         // 音源を登録（masterBusMixerに接続される）
         do {
-            try registerSource(for: preset, useLegacy: useLegacy)
+            try registerSource(for: preset)
         } catch {
             print("⚠️ [AudioService] Source registration failed: \(error)")
             throw AudioError.engineStartFailed(error)
@@ -740,35 +725,17 @@ public final class AudioService: ObservableObject {
 
     }
 
-    private func registerSource(for preset: NaturalSoundPreset, useLegacy: Bool) throws {
+    private func registerSource(for preset: NaturalSoundPreset) throws {
 
         // Reset any existing SignalEngine state before switching presets
         resetCurrentSignalEffectsState()
         clearCurrentSignalSource()
 
-        // Try SignalEngine version first (if available)
+        // Try SignalEngine version (FinalMixer with effects)
         let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
         let signalBuilder = SignalPresetBuilder(sampleRate: outputFormat.sampleRate)
 
-        // Check if legacy engine is requested from UI selection
-        if useLegacy {
-            if let signalSource = signalBuilder.makeSignal(for: preset) {
-                print("🔧 [AudioService] Using LEGACY SignalEngine (no effects) for preset: \(preset.rawValue)")
-
-                // Store reference for fade control
-                currentSignalSource = .signal(signalSource)
-
-                // Register source with engine
-                engine.register(signalSource)
-
-                // Apply fade in (300ms)
-                signalSource.applyFadeIn(durationMs: 300)
-
-                return
-            }
-        }
-
-        // Prefer FinalMixer-based pipeline (with effects)
+        // Use FinalMixer-based pipeline (with effects)
         if let mixerOutput = signalBuilder.makeMixerOutput(for: preset) {
             print("🎵 [AudioService] Using FinalMixer for preset: \(preset.rawValue)")
 
@@ -784,26 +751,9 @@ public final class AudioService: ObservableObject {
             return
         }
 
-        if let signalSource = signalBuilder.makeSignal(for: preset) {
-            print("🎵 [AudioService] Using SignalEngine for preset: \(preset.rawValue)")
-
-            // Store reference for fade control
-            currentSignalSource = .signal(signalSource)
-
-            // Register source with engine
-            engine.register(signalSource)
-
-            // Apply fade in (300ms)
-            signalSource.applyFadeIn(durationMs: 300)
-
-            return
-        }
-
-        // Clear SignalSource reference if using legacy AudioSource
-        clearCurrentSignalSource()
-
-        // Fallback to original implementation
+        // If FinalMixer not available, fallback to original implementation
         print("🔄 [AudioService] Using legacy AudioSource for preset: \(preset.rawValue)")
+        clearCurrentSignalSource()
 
         switch preset {
         case .windChime:

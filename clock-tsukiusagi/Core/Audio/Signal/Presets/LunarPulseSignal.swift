@@ -42,9 +42,4 @@ public struct LunarPulseSignal {
             tone(t) * 0.2 * modulatedAmplitude(t)
         }
     }
-
-    /// Create SignalAudioSource (legacy method for direct AudioSource usage)
-    public static func make(sampleRate: Double) -> SignalAudioSource {
-        return SignalAudioSource(signal: makeSignal())
-    }
 }
