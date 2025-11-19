@@ -226,12 +226,12 @@ struct AudioTestView: View {
 
     private var soundSelectionSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-            // ✂️ Title outside of card for clarity
+            // ✂️ Title inside card for unified appearance
             Text("音源選択")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // ✂️ Card wraps only the picker (interactive part)
+            // ✂️ Picker with centered layout and 70% width
             GeometryReader { geometry in
                 HStack {
                     Spacer()
@@ -258,21 +258,12 @@ struct AudioTestView: View {
                         .contentShape(Rectangle())
                     }
                     .frame(width: geometry.size.width * 0.7)
-                    .padding(DesignTokens.SettingsSpacing.cardPadding)
-                    .padding(.vertical, 4)
-                    .background(Color.white.opacity(0.15)) // ✂️ Darker background than before (0.25 -> 0.15)
-                    .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                            .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                    )
-                    .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow (0.3 -> 0.5, radius 4 -> 6, y 1 -> 2)
                     Spacer()
                 }
             }
-            .frame(height: 50)
+            .frame(height: 40)
 
-            // ✂️ English name outside of card, right-aligned
+            // ✂️ English name inside card, right-aligned
             HStack {
                 Spacer()
                 Text(selectedSource.englishTitle)
@@ -281,6 +272,15 @@ struct AudioTestView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DesignTokens.SettingsSpacing.cardPadding)
+        .padding(.vertical, 4)
+        .background(Color.white.opacity(0.15)) // ✂️ Darker background
+        .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
+        .overlay(
+            RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                .stroke(Color.white.opacity(0.3), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow
     }
 
     private var controlSection: some View {
