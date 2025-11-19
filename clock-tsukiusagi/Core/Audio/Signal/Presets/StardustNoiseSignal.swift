@@ -24,26 +24,31 @@ public struct StardustNoiseSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
+        let generator = StardustNoiseGenerator()
+        return Signal { t in generator.sample(at: t) }
+    }
+}
 
-        // White noise (sparkle texture)
-        let noise = Noise.white
+/// Stateful generator for stardust noise with micro bursts
+private final class StardustNoiseGenerator {
 
-        // Micro burst modulation using random LFO
-        // To simulate toggle behavior, we use a stepped random signal
-        var lastToggleTime: Float = 0
-        var nextBurstTime: Float = Float.random(in: 0.4...1.2)
-        var burstActive = false
+    // White noise (sparkle texture)
+    private let noise = Noise.white
 
-        return Signal { t in
-            // Check if it's time to toggle
-            if t - lastToggleTime >= nextBurstTime {
-                burstActive.toggle()
-                lastToggleTime = t
-                nextBurstTime = Float.random(in: 0.4...1.2)
-            }
+    // Micro burst state (preserved across calls)
+    private var lastToggleTime: Float = 0
+    private var nextBurstTime: Float = Float.random(in: 0.4...1.2)
+    private var burstActive = false
 
-            let amplitude: Float = burstActive ? 0.12 : 0.12 * 0.3
-            return noise(t) * amplitude
+    func sample(at t: Float) -> Float {
+        // Check if it's time to toggle
+        if t - lastToggleTime >= nextBurstTime {
+            burstActive.toggle()
+            lastToggleTime = t
+            nextBurstTime = Float.random(in: 0.4...1.2)
         }
+
+        let amplitude: Float = burstActive ? 0.12 : 0.12 * 0.3
+        return noise(t) * amplitude
     }
 }

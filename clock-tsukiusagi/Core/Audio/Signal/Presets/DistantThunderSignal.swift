@@ -25,38 +25,44 @@ public struct DistantThunderSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
+        let generator = DistantThunderGenerator()
+        return Signal { t in generator.sample(at: t) }
+    }
+}
 
-        // Brown noise (rumble base)
-        let noise = Noise.brown()
+/// Stateful generator for distant thunder with random pulses
+private final class DistantThunderGenerator {
 
-        // Pulse state
-        var lastPulseTime: Float = 0
-        var nextPulseTime: Float = Float.random(in: 2.0...7.0)
-        var pulseDecay: Float = 0.0
-        var pulseActive = false
+    // Brown noise (rumble base)
+    private let noise = Noise.brown()
 
-        return Signal { t in
-            // Check if it's time for a new pulse
-            if t - lastPulseTime >= nextPulseTime {
-                pulseActive = true
-                pulseDecay = 1.0
-                lastPulseTime = t
-                nextPulseTime = Float.random(in: 2.0...7.0)
-            }
+    // Pulse state (preserved across calls)
+    private var lastPulseTime: Float = 0
+    private var nextPulseTime: Float = Float.random(in: 2.0...7.0)
+    private var pulseDecay: Float = 0.0
+    private var pulseActive = false
 
-            // Update pulse decay
-            if pulseActive {
-                pulseDecay *= 0.9999
-                if pulseDecay < 0.01 {
-                    pulseActive = false
-                }
-            }
-
-            let baseAmplitude: Float = 0.15
-            let pulseAmplitude: Float = pulseActive ? 0.08 * pulseDecay : 0.0
-            let totalAmplitude = baseAmplitude + pulseAmplitude
-
-            return noise(t) * totalAmplitude
+    func sample(at t: Float) -> Float {
+        // Check if it's time for a new pulse
+        if t - lastPulseTime >= nextPulseTime {
+            pulseActive = true
+            pulseDecay = 1.0
+            lastPulseTime = t
+            nextPulseTime = Float.random(in: 2.0...7.0)
         }
+
+        // Update pulse decay
+        if pulseActive {
+            pulseDecay *= 0.9999
+            if pulseDecay < 0.01 {
+                pulseActive = false
+            }
+        }
+
+        let baseAmplitude: Float = 0.15
+        let pulseAmplitude: Float = pulseActive ? 0.08 * pulseDecay : 0.0
+        let totalAmplitude = baseAmplitude + pulseAmplitude
+
+        return noise(t) * totalAmplitude
     }
 }
