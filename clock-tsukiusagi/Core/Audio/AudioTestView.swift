@@ -151,7 +151,7 @@ struct AudioTestView: View {
 
                         Spacer(minLength: DesignTokens.SettingsSpacing.bottomSpacer)
                     }
-                    // No top padding needed: Large Title mode provides built-in spacing
+                    .padding(.top, 16)
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
                     .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
                 }
