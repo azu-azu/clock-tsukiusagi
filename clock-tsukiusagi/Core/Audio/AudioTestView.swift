@@ -234,31 +234,37 @@ struct AudioTestView: View {
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-                // ✂️ Picker with centered layout
-                HStack {
-                    Spacer()
-                    Menu {
-                        ForEach(AudioSourcePreset.allSources) { source in
-                            Button(action: {
-                                selectedSource = source
-                            }) {
-                                Text(source.displayName)
+                // ✂️ Picker with centered layout, 70% of card width
+                GeometryReader { geometry in
+                    HStack {
+                        Spacer()
+                        Menu {
+                            ForEach(AudioSourcePreset.allSources) { source in
+                                Button(action: {
+                                    selectedSource = source
+                                }) {
+                                    Text(source.displayName)
+                                }
+                                .disabled(audioService.isPlaying)
                             }
-                            .disabled(audioService.isPlaying)
+                        } label: {
+                            HStack {
+                                Text(selectedSource.displayName)
+                                    .font(.system(size: 17, design: .monospaced)) // ✂️ Larger font (15 -> 17)
+                                    .foregroundColor(DesignTokens.SettingsColors.accent) // ✂️ Blue for standard iOS look
+                                Spacer()
+                                Image(systemName: "chevron.up.chevron.down")
+                                    .font(.system(size: 14)) // ✂️ Slightly larger chevron (12 -> 14)
+                                    .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .contentShape(Rectangle())
                         }
-                    } label: {
-                        HStack {
-                            Text(selectedSource.displayName)
-                                .font(.system(size: 17, design: .monospaced)) // ✂️ Larger font (15 -> 17)
-                                .foregroundColor(DesignTokens.SettingsColors.accent) // ✂️ Blue for standard iOS look
-                            Spacer()
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(size: 14)) // ✂️ Slightly larger chevron (12 -> 14)
-                                .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
-                        }
+                        .frame(width: geometry.size.width * 0.7) // ✂️ Picker is 70% of card width
+                        Spacer()
                     }
-                    Spacer()
                 }
+                .frame(height: 44) // ✂️ Fixed height for GeometryReader
 
                 // ✂️ English name inside card, right-aligned
                 HStack {
@@ -278,7 +284,7 @@ struct AudioTestView: View {
                     .stroke(Color.white.opacity(0.3), lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow
-            .frame(maxWidth: UIScreen.main.bounds.width * 0.85) // ✂️ Card is 85% of screen width
+            .frame(maxWidth: UIScreen.main.bounds.width * 0.7) // ✂️ Card is 70% of screen width
             Spacer()
         }
     }
