@@ -48,7 +48,7 @@ public struct MidnightTrainSignal {
         }
 
         // 5. Generate base noise
-        let noise = Noise.brown()
+        let noise = Noise.brown(smoothing: 0.1)
 
         // 6. Return final signal
         return Signal { t in
