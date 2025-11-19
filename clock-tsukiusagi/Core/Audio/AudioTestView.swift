@@ -208,153 +208,175 @@ struct AudioTestView: View {
 
     @ViewBuilder
     private var bluetoothStatusIndicator: some View {
-        HStack(spacing: 8) {
-            Spacer()
+        GeometryReader { geometry in
+            HStack(spacing: 8) {
+                Spacer()
 
-            Text(audioService.outputRoute.icon)
-                .font(.system(size: 20))
+                Text(audioService.outputRoute.icon)
+                    .font(.system(size: 20))
 
-            Text(audioService.outputRoute.displayName)
-                .font(.system(size: 15, design: .monospaced))
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                Text(audioService.outputRoute.displayName)
+                    .font(.system(size: 15, design: .monospaced))
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            Spacer()
+                Spacer()
+            }
+            .padding(.horizontal, DesignTokens.SettingsSpacing.cardPadding)
+            .padding(.vertical, 6)
+            .frame(width: geometry.size.width * 0.8)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, DesignTokens.SettingsSpacing.cardPadding)
-        .padding(.vertical, 6)
+        .frame(height: 40)
     }
 
     private var soundSelectionSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-            Text("音源選択")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+        GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
+                Text("音源選択")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // Unified audio source picker
-            Picker("音源", selection: $selectedSource) {
-                ForEach(AudioSourcePreset.allSources) { source in
-                    Text(source.displayName)
-                        .tag(source)
+                // Unified audio source picker
+                Picker("音源", selection: $selectedSource) {
+                    ForEach(AudioSourcePreset.allSources) { source in
+                        Text(source.displayName)
+                            .tag(source)
+                    }
+                }
+                .pickerStyle(.menu)
+                .disabled(audioService.isPlaying)
+                .font(.system(size: 15, design: .monospaced))
+
+                // Selected source display (right-aligned)
+                HStack {
+                    Spacer()
+                    Text(selectedSource.englishTitle)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                 }
             }
-            .pickerStyle(.menu)
-            .disabled(audioService.isPlaying)
-            .font(.system(size: 15, design: .monospaced))
-
-            // Selected source display (right-aligned)
-            HStack {
-                Spacer()
-                Text(selectedSource.englishTitle)
-                    .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-            }
+            .frame(width: geometry.size.width * 0.8, alignment: .leading)
+            .settingsCardStyle()
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .settingsCardStyle()
+        .frame(height: 140)
     }
 
     private var controlSection: some View {
-        Button(action: togglePlayback) {
-            HStack {
-                Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
-                Text(audioService.isPlaying ? "停止" : "再生")
+        GeometryReader { geometry in
+            Button(action: togglePlayback) {
+                HStack {
+                    Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
+                    Text(audioService.isPlaying ? "停止" : "再生")
+                }
+                .font(DesignTokens.SettingsTypography.headline)
+                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                .frame(maxWidth: .infinity)
+                .padding(DesignTokens.SettingsLayout.buttonPadding)
+                .background(
+                    audioService.isPlaying
+                        ? DesignTokens.SettingsColors.danger
+                        : DesignTokens.SettingsColors.accent
+                )
+                .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
             }
-            .font(DesignTokens.SettingsTypography.headline)
-            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+            .frame(width: geometry.size.width * 0.8)
             .frame(maxWidth: .infinity)
-            .padding(DesignTokens.SettingsLayout.buttonPadding)
-            .background(
-                audioService.isPlaying
-                    ? DesignTokens.SettingsColors.danger
-                    : DesignTokens.SettingsColors.accent
-            )
-            .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
         }
+        .frame(height: 60)
     }
 
     private var volumeSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-            HStack {
-                Text("音量（端末ボタンで制御）")
-                    .font(.system(size: 15, design: .monospaced))
-                    .foregroundColor(Color.gray.opacity(0.7))
-                Spacer()
-                Text("\(Int(audioService.systemVolume * 100))%")
-                    .font(.system(size: 15, design: .monospaced))
-                    .foregroundColor(Color.gray.opacity(0.7))
-            }
-
-            HStack(spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-                Image(systemName: "speaker.fill")
-                    .foregroundColor(Color.gray.opacity(0.6))
-
-                // Read-only progress bar
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        // Background
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 8)
-
-                        // Filled portion
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.5))
-                            .frame(width: geometry.size.width * CGFloat(audioService.systemVolume), height: 8)
-                    }
+        GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
+                HStack {
+                    Text("音量（端末ボタンで制御）")
+                        .font(.system(size: 15, design: .monospaced))
+                        .foregroundColor(Color.gray.opacity(0.7))
+                    Spacer()
+                    Text("\(Int(audioService.systemVolume * 100))%")
+                        .font(.system(size: 15, design: .monospaced))
+                        .foregroundColor(Color.gray.opacity(0.7))
                 }
-                .frame(height: 8)
 
-                Image(systemName: "speaker.wave.3.fill")
-                    .foregroundColor(Color.gray.opacity(0.6))
+                HStack(spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
+                    Image(systemName: "speaker.fill")
+                        .foregroundColor(Color.gray.opacity(0.6))
+
+                    // Read-only progress bar
+                    GeometryReader { barGeometry in
+                        ZStack(alignment: .leading) {
+                            // Background
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(height: 8)
+
+                            // Filled portion
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.gray.opacity(0.5))
+                                .frame(width: barGeometry.size.width * CGFloat(audioService.systemVolume), height: 8)
+                        }
+                    }
+                    .frame(height: 8)
+
+                    Image(systemName: "speaker.wave.3.fill")
+                        .foregroundColor(Color.gray.opacity(0.6))
+                }
             }
+            .frame(width: geometry.size.width * 0.8, alignment: .leading)
+            .settingsCardStyle()
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .settingsCardStyle()
+        .frame(height: 100)
     }
 
     private var statusSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalSmall) {
-            Text("ステータス")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+        GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalSmall) {
+                Text("ステータス")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            HStack {
-                Circle()
-                    .fill(
-                        audioService.isPlaying
-                            ? DesignTokens.SettingsColors.success
-                            : DesignTokens.SettingsColors.inactive
-                    )
-                    .frame(width: 10, height: 10)
-                Text(audioService.isPlaying ? "再生中" : "停止中")
-                    .font(.system(size: 15, design: .monospaced))
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-            }
-
-            if let reason = audioService.pauseReason {
                 HStack {
-                    Text("停止理由:")
+                    Circle()
+                        .fill(
+                            audioService.isPlaying
+                                ? DesignTokens.SettingsColors.success
+                                : DesignTokens.SettingsColors.inactive
+                        )
+                        .frame(width: 10, height: 10)
+                    Text(audioService.isPlaying ? "再生中" : "停止中")
+                        .font(.system(size: 15, design: .monospaced))
+                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                }
+
+                if let reason = audioService.pauseReason {
+                    HStack {
+                        Text("停止理由:")
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                        Text(reason.rawValue)
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundColor(DesignTokens.SettingsColors.warning)
+                    }
+                }
+
+                // Selected source (inline)
+                HStack(spacing: 4) {
+                    Text("選択中:")
                         .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                    Text(reason.rawValue)
+
+                    Text(selectedSource.englishTitle)
                         .font(.system(size: 13, design: .monospaced))
-                        .foregroundColor(DesignTokens.SettingsColors.warning)
+                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                 }
             }
-
-            // Selected source (inline)
-            HStack(spacing: 4) {
-                Text("選択中:")
-                    .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-
-                Text(selectedSource.englishTitle)
-                    .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-            }
+            .frame(width: geometry.size.width * 0.8, alignment: .leading)
+            .settingsCardStyle()
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(DesignTokens.SettingsSpacing.cardPadding)
+        .frame(height: 120)
     }
 
     // MARK: - Actions
