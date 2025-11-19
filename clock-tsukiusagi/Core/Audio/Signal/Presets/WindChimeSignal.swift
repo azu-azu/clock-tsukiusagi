@@ -60,13 +60,13 @@ private final class WindChimeGenerator {
 
     private var activeChimes: [ActiveChime] = []
     private var lastTriggerTime: Float = 0
-    private var nextTriggerTime: Float = Float.random(in: 2.0...8.0)
+    private var nextTriggerTime: Float = 0  // Start immediately, then use random intervals
 
     /// Reset generator state to initial values
     func reset() {
         activeChimes.removeAll()
         lastTriggerTime = 0
-        nextTriggerTime = Float.random(in: 2.0...8.0)
+        nextTriggerTime = 0  // Trigger immediately on next playback
     }
 
     func sample(at t: Float) -> Float {
