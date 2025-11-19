@@ -166,7 +166,7 @@ struct AudioTestView: View {
 
                         Spacer(minLength: DesignTokens.SettingsSpacing.bottomSpacer)
                     }
-                    .padding(.top, 16)
+                    .padding(.top, DesignTokens.SettingsSpacing.sectionSpacing) // ✂️ Match section spacing for uniform layout
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
                     .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
                 }
