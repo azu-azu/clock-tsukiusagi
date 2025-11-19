@@ -78,7 +78,7 @@ AudioService (singleton)
     └── TrackPlayer (file playback)
 ```
 
-See: `Docs/architecture/audio-system-spec.md` for full specification
+See: `clock-tsukiusagi/Docs/architecture/audio-system-spec.md` for full specification
 
 ### Navigation Design
 
@@ -88,7 +88,7 @@ See: `Docs/architecture/audio-system-spec.md` for full specification
 - Current page icon is hidden from navigation
 - Tab state managed in ContentView, passed via `@Binding`
 
-See: `Docs/implementation/navigation-design.md` for full specification
+See: `clock-tsukiusagi/Docs/implementation/navigation-design.md` for full specification
 
 ---
 
@@ -163,7 +163,7 @@ clock-tsukiusagi/
 - Volume limiting: User-configurable maximum output (-12dB to 0dB)
 - Quiet breaks: Scheduled pause periods (configurable duration)
 
-See: `Docs/implementation/_guide-audio-system-impl.md`
+See: `clock-tsukiusagi/Docs/implementation/_guide-audio-system-impl.md`
 
 ### Navigation & UI
 
@@ -180,7 +180,7 @@ See: `Docs/implementation/_guide-audio-system-impl.md`
 - Font: Rounded design (`.withDesign(.rounded)`)
 - Large Title: 28pt bold, Inline Title: 17pt semibold
 
-See: `Docs/implementation/navigation-design.md`
+See: `clock-tsukiusagi/Docs/implementation/navigation-design.md`
 
 ### Design System
 
@@ -219,7 +219,7 @@ See: `Docs/implementation/navigation-design.md`
 
 **All temporary comments and debug logs must be marked with emojis (✂️ / 🔥 / 🐛 / 🧪) and removed before production.**
 
-See: `Docs/implementation/comment-log-standards.md` for full specification
+See: `clock-tsukiusagi/Docs/implementation/comment-log-standards.md` for full specification
 
 ---
 
@@ -233,7 +233,7 @@ See: `Docs/implementation/comment-log-standards.md` for full specification
 4. Register in `AudioService.register()` switch statement
 5. Add to picker in `AudioTestView`
 
-See: `Docs/implementation/natural-sound-presets-restoration.md`
+See: `clock-tsukiusagi/Docs/implementation/natural-sound-presets-restoration.md`
 
 ### Adding a Settings Option
 
@@ -257,28 +257,29 @@ See: `Docs/implementation/natural-sound-presets-restoration.md`
 3. Check for AVAudioUnitDistortion — remove if not needed
 4. Force audio graph rebuild if switching between sources
 
-See: `Docs/trouble-audio-distortion-noise.md`
+See: `clock-tsukiusagi/Docs/trouble-audio-distortion-noise.md`
 
 ---
 
 ## Documentation References
 
 ### Architecture & Specs
-* `Docs/architecture/audio-system-spec.md` — Complete audio system specification
-* `Docs/implementation/navigation-design.md` — Navigation bar and tab integration
+* `clock-tsukiusagi/Docs/architecture/audio-system-spec.md` — Complete audio system specification
+* `clock-tsukiusagi/Docs/implementation/navigation-design.md` — Navigation bar and tab integration
 
 ### Implementation Guides
-* `Docs/implementation/_guide-audio-system-impl.md` — Audio system implementation guide
-* `Docs/implementation/seamless-loop-audio-generation.md` — Audio file generation for seamless loops
-* `Docs/implementation/natural-sound-presets-restoration.md` — Restoring natural sound presets
+* `clock-tsukiusagi/Docs/implementation/_guide-audio-system-impl.md` — Audio system implementation guide
+* `clock-tsukiusagi/Docs/implementation/seamless-loop-audio-generation.md` — Audio file generation for seamless loops
+* `clock-tsukiusagi/Docs/implementation/natural-sound-presets-restoration.md` — Restoring natural sound presets
+* `clock-tsukiusagi/Docs/implementation/comment-log-standards.md` — Comment and log standards
 
 ### Troubleshooting
-* `Docs/trouble-audio-distortion-noise.md` — Audio distortion RCA
-* `Docs/trouble-audio-no-sound-silent-switch.md` — Silent switch issues
-* `Docs/_guide-error-resolution.md` — General error resolution checklist
+* `clock-tsukiusagi/Docs/trouble-audio-distortion-noise.md` — Audio distortion RCA
+* `clock-tsukiusagi/Docs/trouble-audio-no-sound-silent-switch.md` — Silent switch issues
+* `clock-tsukiusagi/Docs/_guide-error-resolution.md` — General error resolution checklist
 
 ### Other
-* `Docs/README.md` — Documentation index with naming conventions
+* `clock-tsukiusagi/Docs/README.md` — Documentation index with naming conventions
 * `ENGINEERING_RULES.md` — Project-wide development rules (inherited from parent project)
 
 ---
