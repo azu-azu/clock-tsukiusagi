@@ -234,16 +234,28 @@ struct AudioTestView: View {
             GeometryReader { geometry in
                 HStack {
                     Spacer()
-                    Picker("音源", selection: $selectedSource) {
+                    Menu {
                         ForEach(AudioSourcePreset.allSources) { source in
-                            Text(source.displayName)
-                                .tag(source)
+                            Button(action: {
+                                selectedSource = source
+                            }) {
+                                Text(source.displayName)
+                            }
+                            .disabled(audioService.isPlaying)
                         }
+                    } label: {
+                        HStack {
+                            Text(selectedSource.displayName)
+                                .font(.system(size: 15, design: .monospaced))
+                                .foregroundColor(.black)
+                            Spacer()
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 12))
+                                .foregroundColor(.black.opacity(0.6))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
                     }
-                    .pickerStyle(.menu)
-                    .disabled(audioService.isPlaying)
-                    .font(.system(size: 15, design: .monospaced))
-                    .foregroundColor(.black)
                     .frame(width: geometry.size.width * 0.7) // 親要素の70%
                     Spacer()
                 }
