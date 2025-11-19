@@ -32,6 +32,61 @@ Claude Code must add ✂️ comments in these situations:
 4. **Potential side effects or gotchas**
 5. **Background context for why this approach was chosen**
 
+### ✂️ vs Permanent Comments: What to Mark
+
+**IMPORTANT**: Not all comments should have ✂️ markers. Distinguish between temporary learning comments and permanent documentation comments.
+
+#### ✂️ Mark These (Temporary Learning Comments)
+
+Use ✂️ for comments that explain **why you made specific implementation choices during development**:
+
+- Technical reasons for choosing one approach over another
+- Explanations of workarounds or fixes for specific issues
+- Details about library limitations or SwiftUI quirks
+- Step-by-step reasoning behind complex logic
+- Calculations or formulas with derivation details
+- Temporary notes about trade-offs or alternatives considered
+
+**Examples**:
+```swift
+// ✂️ Using Menu instead of Picker because .menu style doesn't respect .foregroundColor()
+// ✂️ GeometryReader was removed to prevent VStack spacing issues
+// ✂️ 70% of card (which is 70% of screen) = 0.7 × 0.7 = 0.49
+// ✂️ Reduced to account for Large Title's built-in bottom spacing
+```
+
+#### ❌ DON'T Mark These (Permanent Documentation Comments)
+
+Do NOT use ✂️ for comments that describe **what the code does or important specifications**:
+
+- Feature descriptions or functional specifications
+- Important warnings or gotchas for future developers
+- Business logic explanations
+- API usage notes that should remain long-term
+- Architectural decisions that define the codebase structure
+- Section markers or organizational comments
+
+**Examples**:
+```swift
+// Audio アイコンは非表示（現在のページ）
+// MARK: - Sections
+// Important: Volume limiter must be applied before final output
+// This implements the Calm Technology philosophy by...
+// Falls back to speaker if headphones are disconnected
+```
+
+#### Decision Framework
+
+Ask yourself: **"Is this explaining my implementation choice, or is this documenting what the code does?"**
+
+- **Implementation choice** → Use ✂️ (temporary)
+- **Code documentation** → No ✂️ (permanent)
+
+Another way to think about it:
+
+- **"I chose this because..."** → ✂️
+- **"This code does..."** → No ✂️
+
 ### Comment Content Guidelines
 
 Learning comments should explain:
@@ -124,10 +179,16 @@ Typical cleanup triggers:
    ```
 
 2. Review each comment:
-   - **Delete** if it's temporary learning content
-   - **Keep** if it's evolved into permanent documentation
+   - **Delete the entire comment** if it's temporary learning content (e.g., "✂️ Using Menu instead of Picker because...")
+   - **Remove only the ✂️ marker** if the comment has evolved into permanent documentation
+   - **Keep as-is** if it's essential technical context that should remain
 
 3. Verify no ✂️ markers remain before committing
+
+**Decision Guide**:
+- "✂️ This fixes the spacing issue by..." → **Delete entire comment**
+- "✂️ Falls back to speaker if headphones are disconnected" → **Remove ✂️, keep comment**
+- "// MARK: - Sections" → **Keep as-is** (should never have ✂️)
 
 ### Cleanup Checklist
 
@@ -195,10 +256,25 @@ grep -r "🔥\|🐛\|🧪" clock-tsukiusagi/
 
 ## Important Reminders for Claude Code
 
-### Always Add ✂️ Comments
+### Distinguish ✂️ Learning Comments from Permanent Comments
 
-- **DO**: Add explanatory ✂️ comments to every code change
+- **DO**: Use ✂️ for implementation choices, workarounds, and technical reasoning
+- **DO NOT**: Use ✂️ for feature descriptions, specifications, or MARK comments
+- **Decision Test**: "Am I explaining WHY I chose this?" → ✂️ | "Am I explaining WHAT this does?" → No ✂️
+
+**Examples**:
+```swift
+// ✂️ Using Menu instead of Picker because .menu style doesn't respect .foregroundColor()  ← YES ✂️
+// Audio アイコンは非表示（現在のページ）  ← NO ✂️
+// ✂️ Reduced to 8pt to account for Large Title's built-in bottom spacing  ← YES ✂️
+// MARK: - Sections  ← NO ✂️
+```
+
+### Always Add Learning Comments (with Correct Marking)
+
+- **DO**: Add explanatory comments to every code change
 - **DO**: Explain intent, background, rationale, and caveats
+- **DO**: Use ✂️ for temporary learning content, no ✂️ for permanent documentation
 - **DO NOT**: Skip comments to "keep code clean"
 - **DO NOT**: Assume user already understands the change
 
