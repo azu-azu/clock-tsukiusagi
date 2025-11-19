@@ -166,7 +166,7 @@ struct AudioTestView: View {
 
                         Spacer(minLength: DesignTokens.SettingsSpacing.bottomSpacer)
                     }
-                    .padding(.top, 8) // ✂️ Reduced to account for Large Title's built-in bottom spacing
+                    // No top padding needed: Large Title mode provides built-in spacing
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
                     .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
                 }
