@@ -217,40 +217,9 @@ See: `Docs/implementation/navigation-design.md`
 
 ### Comment & Log Standards
 
-**✂️ Rule for Learning Comments (学習コメントの✂️運用ルール)**
+**All temporary comments and debug logs must be marked with emojis (✂️ / 🔥 / 🐛 / 🧪) and removed before production.**
 
-To improve learning efficiency during development, all comments meant **only for personal understanding or debugging** must include a **✂️ mark**. This clearly distinguishes "comments to be removed before production" from "comments meant to remain."
-
-```swift
-// ✂️ This is a temporary learning comment
-// This is a permanent documentation comment
-```
-
-**Workflow:**
-1. Add ✂️ to all temporary learning comments
-2. Before merging: Search "✂️" → delete all matches
-3. Production code remains clean and professional
-
-**Debug Log Emoji Rule (デバッグログ絵文字ルール)**
-
-All debug logs that must be removed before production must include a specific emoji tag:
-
-- **🔥** — Temporary debug logs (must be deleted)
-- **🐛** — Bug investigation logs
-- **🧪** — Experimental / testing logs
-
-```swift
-print("🔥 [Debug] Temporary trace log")
-print("🐛 [Bug] Investigating issue #123")
-print("🧪 [Test] Experimental feature enabled")
-```
-
-**Workflow:**
-1. Add 🔥 / 🐛 / 🧪 to all temporary logs
-2. Before merging: Search for these emojis → delete all
-3. Production code stays clean and professional
-
-This system avoids accidentally leaving noisy logs in the final code while maintaining debugging flexibility during development.
+See: `Docs/implementation/comment-log-standards.md` for full specification
 
 ---
 
