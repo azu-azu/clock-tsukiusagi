@@ -149,6 +149,45 @@ extension View {
     public func interactiveCardStyle() -> some View {
         modifier(InteractiveCardStyle())
     }
+
+    /// ナビゲーションバースタイルを適用
+    public func configureNavigationBar(fontStyle: NavigationBarFontStyle) -> some View {
+        modifier(NavigationBarStyleModifier(fontStyle: fontStyle))
+    }
+}
+
+// MARK: - Navigation Bar Style
+
+/// ナビゲーションバーのフォントスタイル
+public enum NavigationBarFontStyle {
+    case monospaced
+    case rounded
+}
+
+/// ナビゲーションバースタイルを設定する ViewModifier
+public struct NavigationBarStyleModifier: ViewModifier {
+    let fontStyle: NavigationBarFontStyle
+
+    public init(fontStyle: NavigationBarFontStyle) {
+        self.fontStyle = fontStyle
+        configureAppearance()
+    }
+
+    private func configureAppearance() {
+        let titleFont: UIFont
+        switch fontStyle {
+        case .monospaced:
+            titleFont = NavigationBarTokens.monospacedTitleFont()
+        case .rounded:
+            titleFont = NavigationBarTokens.roundedTitleFont()
+        }
+
+        NavigationBarTokens.configureAppearance(titleFont: titleFont)
+    }
+
+    public func body(content: Content) -> some View {
+        content
+    }
 }
 
 // MARK: - Preview

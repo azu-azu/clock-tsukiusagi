@@ -16,30 +16,6 @@ public struct AudioSettingsView: View {
     public init(selectedTab: Binding<Tab>) {
         _settings = State(initialValue: AudioSettings.load())
         _selectedTab = selectedTab
-        configureNavigationBarAppearance()
-    }
-
-    private func configureNavigationBarAppearance() {
-        // Inline Title のフォント設定（丸ゴシック体）
-        let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        let inlineTitleDescriptor = inlineTitleFont.fontDescriptor.withDesign(.rounded) ?? inlineTitleFont.fontDescriptor
-        let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
-            .foregroundColor: UIColor.white
-        ]
-
-        // Slightly darker than background gradient for navigation bar
-        let navBarColor = UIColor(red: 0x0A/255.0, green: 0x0D/255.0, blue: 0x15/255.0, alpha: 1.0)
-
-        // Unified appearance (same for both scrolled and not scrolled)
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = navBarColor
-        appearance.shadowColor = .clear
-        appearance.titleTextAttributes = titleAttributes
-
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
 
     public var body: some View {
@@ -201,6 +177,7 @@ public struct AudioSettingsView: View {
             }
             .navigationTitle("Audio Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .configureNavigationBar(fontStyle: .rounded)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
