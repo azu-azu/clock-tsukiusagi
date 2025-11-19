@@ -106,6 +106,8 @@ struct AudioTestView: View {
     @State private var errorMessage: String?
     @State private var showError = false
 
+    @AppStorage("showAudioTitle") private var showAudioTitle: Bool = true
+
     init(selectedTab: Binding<Tab>) {
         _selectedTab = selectedTab
         configureNavigationBarAppearance()
@@ -160,6 +162,7 @@ struct AudioTestView: View {
 
                 ScrollView {
                     VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
+                        bluetoothStatusIndicator
                         soundSelectionSection
                         controlSection
                         statusSection
@@ -172,8 +175,8 @@ struct AudioTestView: View {
                     .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
                 }
             }
-            .navigationTitle("Audio")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle(showAudioTitle ? "Audio" : "")
+            .navigationBarTitleDisplayMode(showAudioTitle ? .large : .inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
@@ -206,6 +209,28 @@ struct AudioTestView: View {
     }
 
     // MARK: - Sections
+
+    @ViewBuilder
+    private var bluetoothStatusIndicator: some View {
+        if audioService.outputRoute == .bluetooth {
+            HStack(spacing: 8) {
+                Text("B")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(width: 24, height: 24)
+                    .background(Color.red)
+                    .cornerRadius(4)
+
+                Text("Bluetooth")
+                    .font(DesignTokens.SettingsTypography.itemTitle)
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+
+                Spacer()
+            }
+            .padding(.horizontal, DesignTokens.SettingsSpacing.cardPadding)
+            .padding(.vertical, 12)
+        }
+    }
 
     private var soundSelectionSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
@@ -255,41 +280,37 @@ struct AudioTestView: View {
             HStack {
                 Text("音量（端末ボタンで制御）")
                     .font(DesignTokens.SettingsTypography.itemTitle)
-                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                    .foregroundColor(Color.gray.opacity(0.7))
                 Spacer()
                 Text("\(Int(audioService.systemVolume * 100))%")
                     .font(DesignTokens.SettingsTypography.itemTitle)
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                    .foregroundColor(Color.gray.opacity(0.7))
                     .monospacedDigit()
             }
 
             HStack(spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
                 Image(systemName: "speaker.fill")
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                    .foregroundColor(Color.gray.opacity(0.6))
 
                 // Read-only progress bar
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         // Background
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.SettingsColors.textSecondary.opacity(0.3))
+                            .fill(Color.gray.opacity(0.3))
                             .frame(height: 8)
 
                         // Filled portion
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
+                            .fill(Color.gray.opacity(0.5))
                             .frame(width: geometry.size.width * CGFloat(audioService.systemVolume), height: 8)
                     }
                 }
                 .frame(height: 8)
 
                 Image(systemName: "speaker.wave.3.fill")
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                    .foregroundColor(Color.gray.opacity(0.6))
             }
-
-            Text("💡 音量は端末のボリュームボタンで調整してください")
-                .font(DesignTokens.SettingsTypography.caption)
-                .foregroundColor(DesignTokens.SettingsColors.warning)
         }
         .settingsCardStyle()
     }
@@ -311,15 +332,6 @@ struct AudioTestView: View {
                 Text(audioService.isPlaying ? "再生中" : "停止中")
                     .font(DesignTokens.SettingsTypography.itemTitle)
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-            }
-
-            HStack {
-                Text("出力:")
-                    .font(DesignTokens.SettingsTypography.caption)
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                Text("\(audioService.outputRoute.icon) \(audioService.outputRoute.displayName)")
-                    .font(DesignTokens.SettingsTypography.caption)
-                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             }
 
             if let reason = audioService.pauseReason {
