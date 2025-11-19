@@ -28,24 +28,18 @@ public struct AudioSettingsView: View {
             .foregroundColor: UIColor.white
         ]
 
-        // スクロール時の appearance（ブラーあり）
-        let scrolledAppearance = UINavigationBarAppearance()
-        scrolledAppearance.configureWithDefaultBackground()
-        scrolledAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
-        scrolledAppearance.backgroundColor = .clear
-        scrolledAppearance.shadowColor = .clear
-        scrolledAppearance.titleTextAttributes = titleAttributes
+        // Slightly darker than background gradient for navigation bar
+        let navBarColor = UIColor(red: 0x0A/255.0, green: 0x0D/255.0, blue: 0x15/255.0, alpha: 1.0)
 
-        // スクロールしていない時の appearance（背景透明、タイトルは表示）
-        let transparentAppearance = UINavigationBarAppearance()
-        transparentAppearance.configureWithTransparentBackground()
-        transparentAppearance.backgroundEffect = nil
-        transparentAppearance.backgroundColor = .clear
-        transparentAppearance.shadowColor = .clear
-        transparentAppearance.titleTextAttributes = titleAttributes
+        // Unified appearance (same for both scrolled and not scrolled)
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = navBarColor
+        appearance.shadowColor = .clear
+        appearance.titleTextAttributes = titleAttributes
 
-        UINavigationBar.appearance().standardAppearance = scrolledAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = transparentAppearance
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
 
     public var body: some View {
