@@ -243,6 +243,7 @@ struct AudioTestView: View {
                 .disabled(audioService.isPlaying)
                 .font(.system(size: 15, design: .monospaced))
                 .foregroundColor(.black)
+                .frame(width: 220) // 幅を固定して両端揃え
                 Spacer()
             }
 
