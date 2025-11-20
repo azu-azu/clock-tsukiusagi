@@ -66,6 +66,16 @@ struct DesignTokens {
         static let glowFinishOpacity: CGFloat = 0.05
     }
 
+    // MARK: - Cosmos Colors
+    enum CosmosColors {
+        /// 宇宙空間の背景色（濃紺）
+        static let background = Color(hex: "#0A0F1C")
+
+        /// カード背景色（代替・subtle用）
+        /// 例: サイドメニューのブロック背景
+        static let cardBackgroundAlt = Color.white.opacity(0.10)
+    }
+
     // MARK: - Settings Colors
     enum SettingsColors {
         /// 背景グラデーション（夜のトーン）
@@ -180,8 +190,8 @@ struct DesignTokens {
 
     // MARK: - SideMenu Colors
     enum SideMenuColors {
-        /// メニュー背景色
-        static let background = Color.black.opacity(0.9)
+        /// メニュー背景色（宇宙空間の濃紺）
+        static let background = CosmosColors.background.opacity(0.9)
 
         /// オーバーレイ背景色
         static let overlay = Color.black.opacity(0.35)
