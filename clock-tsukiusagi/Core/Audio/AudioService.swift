@@ -110,10 +110,6 @@ public final class AudioService: ObservableObject {
     // Phase 3: Now Playing Controller
     private var nowPlayingController: NowPlayingController?
 
-    // Phase 3: Track Player (file-based playback)
-    private var trackPlayer: TrackPlayer?
-    @Published public private(set) var currentAudioFile: AudioFilePreset?
-
     // System Volume Monitoring
     @Published public private(set) var systemVolume: Float = 1.0
     private var volumeObservation: NSKeyValueObservation?
@@ -303,21 +299,13 @@ public final class AudioService: ObservableObject {
         }
         isPlaying = false  // Immediately set to prevent re-entrance
 
-        // 1) Stop individual players first (if any)
-        var playerFadeDuration: TimeInterval = 0
-        if let player = trackPlayer, player.isPlaying {
-            playerFadeDuration = settings.crossfadeDuration
-            player.stop(fadeOut: playerFadeDuration)
-        }
-
-        // 2) Apply fade out to SignalAudioSource (if using SignalEngine)
+        // Apply fade out to SignalAudioSource
         currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
 
-        // 3) Always fade out master volume (regardless of source type)
-        let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
-        self.fadeOut(duration: masterFadeDuration)
+        // Fade out master volume
+        self.fadeOut(duration: fadeOutDuration)
 
-        // 3) ALWAYS stop engine after fade (unified behavior)
+        // ALWAYS stop engine after fade (unified behavior)
         // Use cancellable WorkItem to prevent ghost stop tasks
         let stopSessionId = playbackSessionId  // Capture current session ID
         engineStopWorkItem?.cancel()  // Cancel any pending stop from previous session
@@ -344,12 +332,11 @@ public final class AudioService: ObservableObject {
             self.currentSignalSource?.resetEffectsState()
 
 
-            // 4) Cleanup state and auxiliary features
+            // Cleanup state and auxiliary features
             self.breakScheduler.stop()
 
             // isPlaying already set to false at the beginning of stopAndWait()
             self.currentPreset = nil
-            self.currentAudioFile = nil
             self.clearCurrentSignalSource()
             self.pauseReason = nil
 
@@ -365,7 +352,7 @@ public final class AudioService: ObservableObject {
         }
 
         engineStopWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration, execute: workItem)
     }
 
     /// 音声再生を停止
@@ -379,21 +366,13 @@ public final class AudioService: ObservableObject {
         }
         isPlaying = false  // Immediately set to prevent re-entrance
 
-        // 1) Stop individual players first (if any)
-        var playerFadeDuration: TimeInterval = 0
-        if let player = trackPlayer, player.isPlaying {
-            playerFadeDuration = settings.crossfadeDuration
-            player.stop(fadeOut: playerFadeDuration)
-        }
-
-        // 2) Apply fade out to SignalAudioSource (if using SignalEngine)
+        // Apply fade out to SignalAudioSource
         currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
 
-        // 3) Always fade out master volume (regardless of source type)
-        let masterFadeDuration = max(fadeOutDuration, playerFadeDuration)
-        self.fadeOut(duration: masterFadeDuration)
+        // Fade out master volume
+        self.fadeOut(duration: fadeOutDuration)
 
-        // 3) ALWAYS stop engine after fade (unified behavior)
+        // ALWAYS stop engine after fade (unified behavior)
         // Use cancellable WorkItem to prevent ghost stop tasks
         let stopSessionId = playbackSessionId  // Capture current session ID
         engineStopWorkItem?.cancel()  // Cancel any pending stop from previous session
@@ -424,14 +403,13 @@ public final class AudioService: ObservableObject {
         }
 
         engineStopWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + masterFadeDuration, execute: workItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration, execute: workItem)
 
-        // 4) Cleanup state and auxiliary features
+        // Cleanup state and auxiliary features
         breakScheduler.stop()
 
         // isPlaying already set to false at the beginning of stop()
         currentPreset = nil
-        currentAudioFile = nil
         pauseReason = nil
 
         // Phase 3: Live Activityを終了
@@ -561,7 +539,6 @@ public final class AudioService: ObservableObject {
         // Reset playback state
         isPlaying = false
         currentPreset = nil
-        currentAudioFile = nil
         resetCurrentSignalEffectsState()
         clearCurrentSignalSource()
         pauseReason = nil
@@ -780,20 +757,9 @@ public final class AudioService: ObservableObject {
             engine.register(source)
 
         case .oceanWavesSeagulls:
-            let source = OceanWavesSeagulls(
-                noiseAmplitude: NaturalSoundPresets.OceanWavesSeagulls.noiseAmplitude,
-                lfoFrequency: NaturalSoundPresets.OceanWavesSeagulls.lfoFrequency,
-                lfoMinimum: NaturalSoundPresets.OceanWavesSeagulls.lfoMinimum,
-                lfoMaximum: NaturalSoundPresets.OceanWavesSeagulls.lfoMaximum,
-                birdAmplitude: NaturalSoundPresets.OceanWavesSeagulls.birdAmplitude,
-                birdMinInterval: NaturalSoundPresets.OceanWavesSeagulls.birdMinInterval,
-                birdMaxInterval: NaturalSoundPresets.OceanWavesSeagulls.birdMaxInterval,
-                birdMinDuration: NaturalSoundPresets.OceanWavesSeagulls.birdMinDuration,
-                birdMaxDuration: NaturalSoundPresets.OceanWavesSeagulls.birdMaxDuration,
-                birdFrequencyRange: NaturalSoundPresets.OceanWavesSeagulls.birdFrequencyRange,
-                maxConcurrentChirps: NaturalSoundPresets.OceanWavesSeagulls.maxConcurrentChirps
-            )
-            engine.register(source)
+            // Removed: Legacy AudioSource implementation deleted
+            // This preset now uses SignalEngine-based FinalMixer output
+            print("⚠️ [AudioService] oceanWavesSeagulls should use FinalMixer path")
 
         case .moonlitSea:
             let source = MoonlitSea(
@@ -1093,153 +1059,6 @@ public final class AudioService: ObservableObject {
 
         // Apply to main mixer
         engine.setMasterVolume(compensatedGain)
-
-    }
-
-    // MARK: - Track Player (File-based Playback)
-
-    /// Play audio file using TrackPlayer
-    /// - Parameter audioFile: Audio file preset to play
-    /// - Throws: Audio errors
-    public func playAudioFile(_ audioFile: AudioFilePreset) throws {
-
-        // CRITICAL: Activate session BEFORE getting output format
-        // This ensures outputNode.inputFormat returns correct device format (48kHz/2ch)
-        if !sessionActivated {
-            do {
-                try activateAudioSession()
-                sessionActivated = true
-            } catch {
-                throw AudioError.sessionActivationFailed(error)
-            }
-        }
-
-        // Wrap entire method in do-catch to ensure state cleanup on error
-        do {
-            try _playAudioFileInternal(audioFile)
-        } catch {
-            // CRITICAL: Cleanup state on error to unlock UI
-            print("❌ [AudioService] playAudioFile() failed: \(error)")
-            cleanupStateOnError()
-            throw error
-        }
-    }
-
-    /// Internal playAudioFile implementation (allows proper error handling)
-    private func _playAudioFileInternal(_ audioFile: AudioFilePreset) throws {
-        // Cancel any pending stop/fade tasks from previous session
-        engineStopWorkItem?.cancel()
-        fadeTimer?.invalidate()
-        engineStopWorkItem = nil
-        fadeTimer = nil
-
-        // Generate new playback session ID
-        playbackSessionId = UUID()
-
-        // Stop any currently playing audio (synthesis or file)
-        if isPlaying {
-            engine.stop()
-            volumeLimiter.reset()  // Reset limiter when stopping
-            isPlaying = false
-            currentPreset = nil
-            currentAudioFile = nil
-        }
-
-        // Always stop engine to reset audio graph for file playback
-        if engine.isEngineRunning {
-            engine.stop()
-            volumeLimiter.reset()  // Reset limiter when stopping
-        }
-
-        // Ensure SignalEngine state is cleared when switching to file playback
-        resetCurrentSignalEffectsState()
-        clearCurrentSignalSource()
-
-        // Disable synthesis sources for file playback (but don't detach nodes)
-        engine.disableSources()
-
-        // Get audio file URL
-        guard let url = audioFile.url() else {
-            throw AudioError.engineStartFailed(NSError(domain: "AudioService", code: -1, userInfo: [
-                NSLocalizedDescriptionKey: "Audio file not found: \(audioFile.rawValue)"
-            ]))
-        }
-
-        // Get audio file format first
-        let file = try AVAudioFile(forReading: url)
-
-        // Use file's processing format (AVAudioEngine will handle conversion at mixer)
-        let fileFormat = file.processingFormat
-
-        print("   File format: \(file.fileFormat.commonFormat.rawValue) (storage format)")
-        print("   Processing format: \(fileFormat.commonFormat.rawValue), \(fileFormat.sampleRate) Hz, \(fileFormat.channelCount) ch")
-        print("   ⚠️  masterBusMixer will automatically convert to output format")
-
-        // Phase 2: Configure SafeVolumeLimiter BEFORE engine starts
-        // CRITICAL: Use OUTPUT format (48kHz/2ch), NOT file format
-        // This maintains consistent format throughout the limiter chain
-        // Format conversion happens at masterBusMixer (accepts any file format)
-        let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
-
-        // CRITICAL: Reset limiter configuration state to prevent buffer reuse
-        // This ensures fresh audio graph for each file switch
-        volumeLimiter.resetConfigurationState()
-        volumeLimiter.configure(engine: engine.engine, format: outputFormat)
-
-        print("   Sample rate: \(outputFormat.sampleRate) Hz")
-        print("   Channels: \(outputFormat.channelCount)")
-
-        // CRITICAL: Reconfigure TrackPlayer for EVERY file switch
-        // This prevents audio buffer cache reuse between different files
-        if trackPlayer == nil {
-            trackPlayer = TrackPlayer()
-        }
-
-        // Detach TrackPlayer node if already attached (force fresh connection)
-        if let playerNode = trackPlayer?.playerNode, engine.engine.attachedNodes.contains(playerNode) {
-            engine.engine.detach(playerNode)
-        }
-
-        // Configure TrackPlayer to connect to masterBusMixer (not mainMixer directly)
-        // TrackPlayer uses file's native format, masterBusMixer will convert
-        trackPlayer?.configure(
-            engine: engine.engine,
-            format: fileFormat,
-            destination: volumeLimiter.masterBusMixer
-        )
-
-
-        // Start engine (after limiter configuration)
-        // Don't start synthesis sources (startSources: false)
-        try engine.start(startSources: false)
-
-        // Load audio file
-        try trackPlayer?.load(url: url)
-
-        // Start playback with loop settings
-        let settings = audioFile.loopSettings
-        trackPlayer?.play(loop: settings.shouldLoop, crossfadeDuration: settings.crossfadeDuration)
-
-        // Update state
-        isPlaying = true
-        currentAudioFile = audioFile
-        currentPreset = nil  // File-based playback doesn't use presets
-        pauseReason = nil
-
-        // Route monitoring is already running from init
-
-        // Start quiet break scheduler
-        breakScheduler.start()
-
-        // Fade in
-        fadeIn(duration: settings.fadeInDuration)
-
-        // Update Live Activity
-        updateLiveActivity()
-
-        // Update Now Playing
-        updateNowPlaying()
-        updateNowPlayingState()
 
     }
 

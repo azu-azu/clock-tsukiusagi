@@ -9,26 +9,21 @@
 import SwiftUI
 import AVFoundation
 
-/// 統合された音源タイプ（合成 + ファイル）
+/// 音源プリセット（SignalEngine による合成音源）
 enum AudioSourcePreset: Identifiable {
     case synthesis(NaturalSoundPreset)
-    case audioFile(AudioFilePreset)
 
     var id: String {
         switch self {
         case .synthesis(let preset):
             return "synthesis_\(preset.rawValue)"
-        case .audioFile(let preset):
-            return "file_\(preset.rawValue)"
         }
     }
 
     var displayName: String {
-        let icon = isTest ? "♟️ " : ""
         switch self {
         case .synthesis(let preset):
-            return icon + preset.displayName
-        case .audioFile(let preset):
+            let icon = preset.isTest ? "♟️ " : ""
             return icon + preset.displayName
         }
     }
@@ -37,8 +32,6 @@ enum AudioSourcePreset: Identifiable {
         switch self {
         case .synthesis(let preset):
             return preset.isTest
-        case .audioFile(let preset):
-            return preset.isTest
         }
     }
 
@@ -46,8 +39,6 @@ enum AudioSourcePreset: Identifiable {
         switch self {
         case .synthesis(let preset):
             return preset.englishTitle
-        case .audioFile(let preset):
-            return preset.displayName  // AudioFilePreset already has English names
         }
     }
 }
@@ -70,18 +61,6 @@ extension AudioSourcePreset: Hashable, Equatable {
         // Collect synthesis presets
         for preset in NaturalSoundPreset.allCases {
             let source = AudioSourcePreset.synthesis(preset)
-            if source.isTest {
-                #if DEBUG
-                test.append(source)
-                #endif
-            } else {
-                production.append(source)
-            }
-        }
-
-        // Collect audio file presets
-        for preset in AudioFilePreset.allCases {
-            let source = AudioSourcePreset.audioFile(preset)
             if source.isTest {
                 #if DEBUG
                 test.append(source)
@@ -370,18 +349,11 @@ struct AudioTestView: View {
 
     private func playAudio() {
         do {
-            // 選択された音源タイプに応じて再生
+            // SignalEngine による合成音源を再生
             switch selectedSource {
             case .synthesis(let preset):
-                // 合成音源（FinalMixer）
                 try audioService.play(preset: preset)
-
-            case .audioFile(let preset):
-                // 音源ファイル（TrackPlayer）
-                try audioService.playAudioFile(preset)
             }
-
-            // 音量はシステム音量で自動制御される
 
         } catch let error as NSError {
             let detailedMessage = """
