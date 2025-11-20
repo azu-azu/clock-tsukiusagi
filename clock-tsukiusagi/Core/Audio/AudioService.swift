@@ -733,19 +733,6 @@ public final class AudioService: ObservableObject {
         clearCurrentSignalSource()
 
         switch preset {
-        case .windChime:
-            let source = WindChime(
-                frequencies: NaturalSoundPresets.WindChime.frequencies,
-                amplitude: NaturalSoundPresets.WindChime.amplitude,
-                minInterval: NaturalSoundPresets.WindChime.minInterval,
-                maxInterval: NaturalSoundPresets.WindChime.maxInterval,
-                attackTime: NaturalSoundPresets.WindChime.attackTime,
-                decayTime: NaturalSoundPresets.WindChime.decayTime,
-                sustainLevel: NaturalSoundPresets.WindChime.sustainLevel,
-                releaseTime: NaturalSoundPresets.WindChime.releaseTime
-            )
-            engine.register(source)
-
         case .oceanWavesSeagulls:
             // Removed: Legacy AudioSource implementation deleted
             // This preset now uses SignalEngine-based FinalMixer output
@@ -761,14 +748,8 @@ public final class AudioService: ObservableObject {
             engine.register(source)
 
         case .lunarPulse:
-            let source = LunarPulse(
-                frequency: NaturalSoundPresets.LunarPulse.frequency,
-                amplitude: NaturalSoundPresets.LunarPulse.amplitude,
-                lfoFrequency: NaturalSoundPresets.LunarPulse.lfoFrequency,
-                lfoMinimum: NaturalSoundPresets.LunarPulse.lfoMinimum,
-                lfoMaximum: NaturalSoundPresets.LunarPulse.lfoMaximum
-            )
-            engine.register(source)
+            // Now uses SignalEngine-based FinalMixer output (chime-style)
+            print("⚠️ [AudioService] lunarPulse should use FinalMixer path")
 
         case .darkShark:
             let source = DarkShark(

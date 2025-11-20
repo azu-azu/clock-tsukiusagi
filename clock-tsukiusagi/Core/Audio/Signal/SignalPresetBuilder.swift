@@ -75,8 +75,6 @@ public struct SignalPresetBuilder {
             return SinkingMoonSignal.makeSignal()
         case .dawnHint:
             return DawnHintSignal.makeSignal()
-        case .windChime:
-            return WindChimeSignal.makeSignal()
         case .oceanWavesSeagulls:
             return nil
         }
@@ -118,22 +116,14 @@ public struct SignalPresetBuilder {
             )
             mixer.addEffect(reverb)
 
-        // Celestial/Ambient: Band-pass filter + Large reverb
+        // Tonal/Musical: Minimal filtering + Natural reverb (same as windChime)
         case .lunarPulse:
-            let filter = CascadeFilter(
-                type: .bandpass,
-                cutoff: 1000,
-                resonance: 1.2,
-                sampleRate: sampleRate
-            )
-            mixer.addEffect(filter)
-
             let reverb = SchroederReverb(
-                roomSize: 2.1,
-                damping: 0.38,
-                decay: 0.9,
-                mix: 0.48,
-                predelay: 0.03,
+                roomSize: 1.4,
+                damping: 0.45,
+                decay: 0.7,
+                mix: 0.25,
+                predelay: 0.02,
                 sampleRate: sampleRate
             )
             mixer.addEffect(reverb)
@@ -174,18 +164,6 @@ public struct SignalPresetBuilder {
                 decay: 0.68,
                 mix: 0.22,          // 少し下げる
                 predelay: 0.012,    // 短めで明瞭に
-                sampleRate: sampleRate
-            )
-            mixer.addEffect(reverb)
-
-        // Tonal/Musical: Minimal filtering + Natural reverb
-        case .windChime:
-            let reverb = SchroederReverb(
-                roomSize: 1.4,
-                damping: 0.45,
-                decay: 0.7,
-                mix: 0.25,   // 少し控えめ
-                predelay: 0.02,
                 sampleRate: sampleRate
             )
             mixer.addEffect(reverb)

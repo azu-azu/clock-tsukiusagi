@@ -2,59 +2,134 @@
 //  LunarPulseSignal.swift
 //  clock-tsukiusagi
 //
-//  Created by Claude Code on 2025-11-18.
-//  SignalEngine: Lunar Pulse — soft light breathing with pure tone
+//  Created by Claude Code on 2025-11-20.
+//  SignalEngine: Lunar Pulse — pentatonic random bells (healing chimes)
 //
 
 import Foundation
 
-/// Lunar Pulse — soft light breathing with pure tone
+/// Lunar Pulse — healing pentatonic tones
 ///
-/// This preset creates a gentle pulsing tone like moonlight breathing:
+/// This preset creates gentle chime sounds:
 /// Components:
-/// - Pure sine tone (528 Hz) for celestial quality
-/// - Ultra-slow LFO (0.06 Hz) for breathing rhythm
-/// - Quiet amplitude range (0.02 to 0.12)
+/// - Random pentatonic frequencies (C, D, E, G, A at different octaves)
+/// - Random trigger intervals (2-8 seconds, first chime immediate)
+/// - ADSR envelope (fast attack 0.01s, exponential decay 3.0s)
 ///
-/// Original parameters from legacy AudioSource (LunarPulse.swift):
-/// - frequency: 528 Hz (Solfeggio frequency)
-/// - amplitude: 0.2
-/// - lfoFrequency: 0.06 Hz (16.7 second cycle)
-/// - lfoRange: 0.02 to 0.12
+/// Original parameters from WindChime preset:
+/// - frequencies: Pentatonic scale array (C4-E5)
+/// - amplitude: 0.3
+/// - minInterval: 2.0 seconds
+/// - maxInterval: 8.0 seconds
+/// - attackTime: 0.01, decayTime: 3.0
+/// - sustainLevel: 0.0, releaseTime: 1.0
 ///
 /// Modifications:
-/// - Structure unified to standard 6-step Signal pattern
-/// - Parameter naming standardized (baseAmplitude, lfoMin, lfoMax)
-/// - LFO mapping uses canonical formula
+/// - Renamed from WindChime to LunarPulse
+/// - Structure unified to standard pattern with stateful generator
+/// - Parameter naming standardized (baseAmplitude, minInterval, maxInterval, etc.)
+/// - Documentation follows standard format
+/// - Stateful generator with reset() method
+/// - First chime triggers immediately (nextTriggerTime = 0)
 public struct LunarPulseSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
+        let generator = LunarPulseGenerator()
+        return Signal { t in generator.sample(at: t) }
+    }
+}
 
-        // 1. Define constants
-        let baseAmplitude: Float = 0.2
-        let lfoMin = 0.02
-        let lfoMax = 0.12
-        let lfoFrequency = 0.06
-        let toneFrequency = 528.0
+/// Stateful generator for lunar pulse chime with random pentatonic bells
+private final class LunarPulseGenerator {
 
-        // 2. Define LFO (simple sine)
-        let lfo = SignalLFO.sine(frequency: lfoFrequency)
+    // Constants
+    private let baseAmplitude: Float = 0.3
+    private let minInterval: Float = 2.0
+    private let maxInterval: Float = 8.0
+    private let attackTime: Float = 0.01
+    private let decayTime: Float = 3.0
 
-        // 3. Normalize LFO (0...1)
-        // 4. Map amplitude (lfoMin...lfoMax)
-        let modulatedAmplitude = Signal { t in
-            let lfoValue = lfo(t)
-            let normalized = (lfoValue + 1) * 0.5  // 0...1
-            return Float(lfoMin + (lfoMax - lfoMin) * Double(normalized))
+    // Pentatonic scale (C major pentatonic across 2 octaves)
+    private let pentatonicFrequencies: [Double] = [
+        261.63,  // C4
+        293.66,  // D4
+        329.63,  // E4
+        392.00,  // G4
+        440.00,  // A4
+        523.25,  // C5
+        587.33,  // D5
+        659.25   // E5
+    ]
+
+    // State for random chiming
+    private enum ChimeStage {
+        case idle, attack, decay
+    }
+
+    private struct ActiveChime {
+        var frequency: Double
+        var envelope: Float
+        var stage: ChimeStage
+        var time: Float
+    }
+
+    private var activeChimes: [ActiveChime] = []
+    private var lastTriggerTime: Float = 0
+    private var nextTriggerTime: Float = 0  // Start immediately, then use random intervals
+
+    /// Reset generator state to initial values
+    func reset() {
+        activeChimes.removeAll()
+        lastTriggerTime = 0
+        nextTriggerTime = 0  // Trigger immediately on next playback
+    }
+
+    func sample(at t: Float) -> Float {
+        // Check if it's time for a new chime
+        if t - lastTriggerTime >= nextTriggerTime {
+            let randomFreq = pentatonicFrequencies.randomElement() ?? 440.0
+            activeChimes.append(ActiveChime(frequency: randomFreq, envelope: 0.0, stage: .attack, time: 0.0))
+            lastTriggerTime = t
+            nextTriggerTime = Float.random(in: minInterval...maxInterval)
         }
 
-        // 5. Generate base tone
-        let tone = Osc.sine(frequency: toneFrequency)
+        // Update and mix all active chimes
+        var mixedSample: Float = 0.0
+        let deltaTime: Float = 1.0 / 48000.0
 
-        // 6. Return final signal
-        return Signal { t in
-            tone(t) * baseAmplitude * modulatedAmplitude(t)
+        for i in 0..<activeChimes.count {
+            var chime = activeChimes[i]
+            chime.time += deltaTime
+
+            // Update envelope (ADSR)
+            switch chime.stage {
+            case .attack:
+                chime.envelope = min(chime.time / attackTime, 1.0)
+                if chime.time >= attackTime {
+                    chime.stage = .decay
+                    chime.time = 0.0
+                }
+            case .decay:
+                chime.envelope = 1.0 * exp(-chime.time / decayTime)  // Exponential decay
+                if chime.envelope < 0.001 {
+                    chime.stage = .idle
+                }
+            default:
+                chime.envelope = 0.0
+            }
+
+            if chime.envelope > 0.001 {
+                let phase = Float(2.0 * .pi * chime.frequency) * t
+                mixedSample += sin(phase) * chime.envelope * baseAmplitude
+            }
+
+            activeChimes[i] = chime
         }
+
+        // Remove inactive chimes
+        activeChimes.removeAll { $0.stage == .idle }
+
+        return mixedSample / Float(max(activeChimes.count, 1))
     }
 }
