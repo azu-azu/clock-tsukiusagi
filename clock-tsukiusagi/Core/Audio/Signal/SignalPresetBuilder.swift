@@ -77,8 +77,6 @@ public struct SignalPresetBuilder {
             return DawnHintSignal.makeSignal()
         case .windChime:
             return WindChimeSignal.makeSignal()
-        case .tibetanBowl:
-            return TibetanBowlSignal.makeSignal()
         case .oceanWavesSeagulls:
             return nil
         }
@@ -181,7 +179,7 @@ public struct SignalPresetBuilder {
             mixer.addEffect(reverb)
 
         // Tonal/Musical: Minimal filtering + Natural reverb
-        case .windChime, .tibetanBowl:
+        case .windChime:
             let reverb = SchroederReverb(
                 roomSize: 1.4,
                 damping: 0.45,

@@ -11,7 +11,6 @@ import Foundation
 /// 自然音プリセット
 public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     case windChime          // 癒しチャイム
-    case tibetanBowl        // チベタンボウル風
     case oceanWavesSeagulls // 波 + 海鳥
     case moonlitSea         // 深夜の海
     case lunarPulse         // 月の脈動
@@ -31,7 +30,6 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     /// Indicates if this is a test/development preset
     public var isTest: Bool {
         [
-            .tibetanBowl,
             .lunarPulse,
             .stardustNoise,
             .lunarDustStorm,
@@ -47,8 +45,6 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
         switch self {
         case .windChime:
             return "癒しチャイム"
-        case .tibetanBowl:
-            return "チベタンボウル"
         case .oceanWavesSeagulls:
             return "波 + 海鳥"
         case .moonlitSea:
@@ -83,8 +79,6 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
         switch self {
         case .windChime:
             return "Wind Chime"
-        case .tibetanBowl:
-            return "Tibetan Bowl"
         case .oceanWavesSeagulls:
             return "Ocean Waves + Seagulls"
         case .moonlitSea:
@@ -151,32 +145,6 @@ public struct NaturalSoundPresets {
 
         /// エンベロープ - リリース時間
         public static let releaseTime: Double = 1.0
-    }
-
-    // MARK: - Tibetan Bowl（チベタンボウル風）
-
-    /// チベタンボウル風プリセット設定
-    public struct TibetanBowl {
-        /// 基音の周波数
-        public static let fundamentalFrequency: Double = 220.0  // A3
-
-        /// 全体の音量
-        public static let amplitude: Double = 0.2
-
-        /// 倍音構造
-        public static let harmonics: [Harmonic] = [
-            Harmonic(multiplier: 1.0, amplitude: 1.0),   // 基音
-            Harmonic(multiplier: 2.0, amplitude: 0.7),   // 2倍音
-            Harmonic(multiplier: 3.0, amplitude: 0.5),   // 3倍音
-            Harmonic(multiplier: 4.0, amplitude: 0.3),   // 4倍音
-            Harmonic(multiplier: 5.0, amplitude: 0.2)    // 5倍音
-        ]
-
-        /// ビブラートLFO周波数
-        public static let vibratoFrequency: Double = 5.0
-
-        /// ビブラート深さ（周波数変調）
-        public static let vibratoDepth: Double = 0.02
     }
 
     // MARK: - Ocean Waves + Seagulls（波 + 海鳥）

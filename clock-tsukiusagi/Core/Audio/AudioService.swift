@@ -746,16 +746,6 @@ public final class AudioService: ObservableObject {
             )
             engine.register(source)
 
-        case .tibetanBowl:
-            let source = TibetanBowl(
-                fundamentalFrequency: NaturalSoundPresets.TibetanBowl.fundamentalFrequency,
-                amplitude: NaturalSoundPresets.TibetanBowl.amplitude,
-                harmonics: NaturalSoundPresets.TibetanBowl.harmonics,
-                vibratoFrequency: NaturalSoundPresets.TibetanBowl.vibratoFrequency,
-                vibratoDepth: NaturalSoundPresets.TibetanBowl.vibratoDepth
-            )
-            engine.register(source)
-
         case .oceanWavesSeagulls:
             // Removed: Legacy AudioSource implementation deleted
             // This preset now uses SignalEngine-based FinalMixer output
