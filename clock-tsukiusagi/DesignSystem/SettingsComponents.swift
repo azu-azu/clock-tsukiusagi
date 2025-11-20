@@ -170,23 +170,15 @@ public struct NavigationBarStyleModifier: ViewModifier {
 
     public init(fontStyle: NavigationBarFontStyle) {
         self.fontStyle = fontStyle
-        configureAppearance()
-    }
-
-    private func configureAppearance() {
-        let titleFont: UIFont
-        switch fontStyle {
-        case .monospaced:
-            titleFont = NavigationBarTokens.monospacedTitleFont()
-        case .rounded:
-            titleFont = NavigationBarTokens.roundedTitleFont()
-        }
-
-        NavigationBarTokens.configureAppearance(titleFont: titleFont)
     }
 
     public func body(content: Content) -> some View {
         content
+            .toolbarBackground(
+                NavigationBarTokens.backgroundColor,
+                for: .navigationBar
+            )
+            .toolbarBackground(.visible, for: .navigationBar)
     }
 }
 

@@ -177,6 +177,7 @@ public struct AudioSettingsView: View {
             }
             .navigationTitle("Audio Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .font(NavigationBarTokens.roundedTitleFont)
             .configureNavigationBar(fontStyle: .rounded)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

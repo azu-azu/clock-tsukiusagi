@@ -114,6 +114,7 @@ struct AudioTestView: View {
             }
             .navigationTitle("Audio")
             .navigationBarTitleDisplayMode(.inline)
+            .font(NavigationBarTokens.monospacedTitleFont)
             .configureNavigationBar(fontStyle: .monospaced)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
