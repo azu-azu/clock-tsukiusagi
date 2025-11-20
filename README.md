@@ -119,6 +119,19 @@ clock-tsukiusagi/
 
 ---
 
+## 📖 Documentation
+
+### Architecture Guides
+
+* **[SwiftUI-First Architecture Guide](docs/SwiftUI-First-Architecture-Guide.md)** - Architectural principles for UIKit avoidance and SwiftUI-first development
+
+### Implementation Notes
+
+* [Live Activity Setup Guide](docs/LiveActivity-Setup-Guide.md)
+* [TrackPlayer Implementation Notes](docs/TrackPlayer-Implementation-Notes.md)
+
+---
+
 ## 🔧 Development
 
 ### Build

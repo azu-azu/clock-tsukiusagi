@@ -1,4 +1,4 @@
-# Why Not UIKit: SwiftUI-First Architecture Guide
+# SwiftUI-First Architecture Guide
 
 **Version**: 1.0
 **Last Updated**: 2025-11-20
