@@ -9,26 +9,21 @@
 import SwiftUI
 import AVFoundation
 
-/// 統合された音源タイプ（合成 + ファイル）
+/// 音源プリセット（SignalEngine による合成音源）
 enum AudioSourcePreset: Identifiable {
     case synthesis(NaturalSoundPreset)
-    case audioFile(AudioFilePreset)
 
     var id: String {
         switch self {
         case .synthesis(let preset):
             return "synthesis_\(preset.rawValue)"
-        case .audioFile(let preset):
-            return "file_\(preset.rawValue)"
         }
     }
 
     var displayName: String {
-        let icon = isTest ? "♟️ " : ""
         switch self {
         case .synthesis(let preset):
-            return icon + preset.displayName
-        case .audioFile(let preset):
+            let icon = preset.isTest ? "♟️ " : ""
             return icon + preset.displayName
         }
     }
@@ -37,8 +32,6 @@ enum AudioSourcePreset: Identifiable {
         switch self {
         case .synthesis(let preset):
             return preset.isTest
-        case .audioFile(let preset):
-            return preset.isTest
         }
     }
 
@@ -46,8 +39,6 @@ enum AudioSourcePreset: Identifiable {
         switch self {
         case .synthesis(let preset):
             return preset.englishTitle
-        case .audioFile(let preset):
-            return preset.displayName  // AudioFilePreset already has English names
         }
     }
 }
@@ -79,18 +70,6 @@ extension AudioSourcePreset: Hashable, Equatable {
             }
         }
 
-        // Collect audio file presets
-        for preset in AudioFilePreset.allCases {
-            let source = AudioSourcePreset.audioFile(preset)
-            if source.isTest {
-                #if DEBUG
-                test.append(source)
-                #endif
-            } else {
-                production.append(source)
-            }
-        }
-
         // Production first, then test
         return production + test
     }
@@ -101,55 +80,15 @@ struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
     @Binding var selectedTab: Tab
 
-    @State private var selectedSource: AudioSourcePreset = .synthesis(.windChime)
+    @State private var selectedSource: AudioSourcePreset = .synthesis(.lunarPulse)
 
     @State private var errorMessage: String?
     @State private var showError = false
 
+    @AppStorage("showAudioTitle") private var showAudioTitle: Bool = true
+
     init(selectedTab: Binding<Tab>) {
         _selectedTab = selectedTab
-        configureNavigationBarAppearance()
-    }
-
-    private func configureNavigationBarAppearance() {
-        // スクロール時の appearance（ブラーあり）
-        let scrolledAppearance = UINavigationBarAppearance()
-        scrolledAppearance.configureWithDefaultBackground()
-        scrolledAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
-        scrolledAppearance.backgroundColor = .clear
-        scrolledAppearance.shadowColor = .clear
-
-        // Large Title のフォント設定（丸ゴシック体、カスタムサイズ）
-        let largeTitleFont = UIFont.systemFont(ofSize: 28, weight: .bold)
-        let largeTitleDescriptor = largeTitleFont.fontDescriptor.withDesign(.rounded) ?? largeTitleFont.fontDescriptor
-        scrolledAppearance.largeTitleTextAttributes = [
-            .font: UIFont(descriptor: largeTitleDescriptor, size: 28),
-            .foregroundColor: UIColor.white
-        ]
-
-        // Inline Title のフォント設定（スクロール時）
-        let inlineTitleFont = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        let inlineTitleDescriptor = inlineTitleFont.fontDescriptor
-            .withDesign(.rounded)
-            ?? inlineTitleFont.fontDescriptor
-        scrolledAppearance.titleTextAttributes = [
-            .font: UIFont(descriptor: inlineTitleDescriptor, size: 17),
-            .foregroundColor: UIColor.white
-        ]
-
-        // スクロールしていない時の appearance（完全透明）
-        let transparentAppearance = UINavigationBarAppearance()
-        transparentAppearance.configureWithTransparentBackground()
-        transparentAppearance.backgroundEffect = nil
-        transparentAppearance.backgroundColor = .clear
-        transparentAppearance.shadowColor = .clear
-
-        // フォント設定をコピー
-        transparentAppearance.largeTitleTextAttributes = scrolledAppearance.largeTitleTextAttributes
-        transparentAppearance.titleTextAttributes = scrolledAppearance.titleTextAttributes
-
-        UINavigationBar.appearance().standardAppearance = scrolledAppearance  // スクロール時
-        UINavigationBar.appearance().scrollEdgeAppearance = transparentAppearance  // スクロール前
     }
 
     var body: some View {
@@ -160,6 +99,7 @@ struct AudioTestView: View {
 
                 ScrollView {
                     VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
+                        bluetoothStatusIndicator
                         soundSelectionSection
                         controlSection
                         statusSection
@@ -173,7 +113,10 @@ struct AudioTestView: View {
                 }
             }
             .navigationTitle("Audio")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .font(NavigationBarTokens.monospacedTitleFont)
+            .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
@@ -181,7 +124,7 @@ struct AudioTestView: View {
                     }) {
                         Image(systemName: "clock.fill")
                             .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.white.opacity(0.6))
                     }
                 }
 
@@ -191,7 +134,7 @@ struct AudioTestView: View {
                     }) {
                         Image(systemName: "slider.horizontal.3")
                             .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(.white.opacity(0.6))
                     }
                 }
 
@@ -207,46 +150,107 @@ struct AudioTestView: View {
 
     // MARK: - Sections
 
-    private var soundSelectionSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-            Text("音源選択")
-                .font(DesignTokens.SettingsTypography.headline)
+    @ViewBuilder
+    private var bluetoothStatusIndicator: some View {
+        HStack(spacing: 8) {
+            Spacer()
+
+            Text(audioService.outputRoute.icon)
+                .font(.system(size: 20))
+
+            Text(audioService.outputRoute.displayName)
+                .font(.system(size: 15, design: .monospaced))
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // Unified audio source picker
-            Picker("音源", selection: $selectedSource) {
-                ForEach(AudioSourcePreset.allSources) { source in
-                    Text(source.displayName)
-                        .tag(source)
+            Spacer()
+        }
+        .padding(.horizontal, DesignTokens.SettingsSpacing.cardPadding)
+        .padding(.vertical, 6)
+    }
+
+    private var soundSelectionSection: some View {
+        // ✂️ Wrapper to center the narrower card
+        HStack {
+            Spacer()
+            VStack(alignment: .leading, spacing: 16) { // ✂️ Uniform spacing of 16pt between all 3 rows
+                // ✂️ Title inside card for unified appearance
+                Text("音源選択")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+
+                // ✂️ Picker with centered layout
+                // ✂️ Using HStack with Spacer() instead of GeometryReader to maintain proper spacing
+                HStack {
+                    Spacer()
+                    Menu {
+                        ForEach(AudioSourcePreset.allSources) { source in
+                            Button(action: {
+                                selectedSource = source
+                            }) {
+                                Text(source.displayName)
+                            }
+                            .disabled(audioService.isPlaying)
+                        }
+                    } label: {
+                        HStack {
+                            Text(selectedSource.displayName)
+                                .font(.system(size: 17, design: .monospaced)) // ✂️ Larger font (15 -> 17)
+                                .foregroundColor(DesignTokens.SettingsColors.accent) // ✂️ Blue for standard iOS look
+                            Spacer()
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.system(size: 14)) // ✂️ Slightly larger chevron (12 -> 14)
+                                .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
+                        }
+                        .frame(width: UIScreen.main.bounds.width * 0.49) // ✂️ 70% of card (which is 70% of screen) = 0.7 × 0.7 = 0.49
+                        .contentShape(Rectangle())
+                    }
+                    Spacer()
+                }
+
+                // ✂️ English name inside card, right-aligned
+                HStack {
+                    Spacer()
+                    Text(selectedSource.englishTitle)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                 }
             }
-            .pickerStyle(.menu)
-            .disabled(audioService.isPlaying)
-
-            // Selected source display
-            Text(selectedSource.englishTitle)
-                .font(DesignTokens.SettingsTypography.caption)
-                .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(DesignTokens.SettingsSpacing.cardPadding)
+            .padding(.vertical, 4)
+            .background(Color.white.opacity(0.15)) // ✂️ Darker background
+            .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow
+            .frame(maxWidth: UIScreen.main.bounds.width * 0.7) // ✂️ Card is 70% of screen width
+            Spacer()
         }
-        .settingsCardStyle()
     }
 
     private var controlSection: some View {
-        Button(action: togglePlayback) {
-            HStack {
-                Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
-                Text(audioService.isPlaying ? "停止" : "再生")
+        HStack {
+            Spacer()
+            Button(action: togglePlayback) {
+                HStack {
+                    Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
+                    Text(audioService.isPlaying ? "停止" : "再生")
+                }
+                .font(DesignTokens.SettingsTypography.headline)
+                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                .frame(maxWidth: .infinity)
+                .padding(DesignTokens.SettingsLayout.buttonPadding)
+                .background(
+                    audioService.isPlaying
+                        ? DesignTokens.SettingsColors.danger
+                        : DesignTokens.SettingsColors.accent
+                )
+                .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
             }
-            .font(DesignTokens.SettingsTypography.headline)
-            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-            .frame(maxWidth: .infinity)
-            .padding(DesignTokens.SettingsLayout.buttonPadding)
-            .background(
-                audioService.isPlaying
-                    ? DesignTokens.SettingsColors.danger
-                    : DesignTokens.SettingsColors.accent
-            )
-            .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
+            .frame(maxWidth: UIScreen.main.bounds.width * 0.7)
+            Spacer()
         }
     }
 
@@ -254,50 +258,46 @@ struct AudioTestView: View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
             HStack {
                 Text("音量（端末ボタンで制御）")
-                    .font(DesignTokens.SettingsTypography.itemTitle)
-                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                    .font(.system(size: 15, design: .monospaced))
+                    .foregroundColor(Color.gray.opacity(0.7))
                 Spacer()
                 Text("\(Int(audioService.systemVolume * 100))%")
-                    .font(DesignTokens.SettingsTypography.itemTitle)
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                    .monospacedDigit()
+                    .font(.system(size: 15, design: .monospaced))
+                    .foregroundColor(Color.gray.opacity(0.7))
             }
 
             HStack(spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
                 Image(systemName: "speaker.fill")
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                    .foregroundColor(Color.gray.opacity(0.6))
 
                 // Read-only progress bar
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
                         // Background
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.SettingsColors.textSecondary.opacity(0.3))
+                            .fill(Color.gray.opacity(0.3))
                             .frame(height: 8)
 
                         // Filled portion
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
+                            .fill(Color.gray.opacity(0.5))
                             .frame(width: geometry.size.width * CGFloat(audioService.systemVolume), height: 8)
                     }
                 }
                 .frame(height: 8)
 
                 Image(systemName: "speaker.wave.3.fill")
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                    .foregroundColor(Color.gray.opacity(0.6))
             }
-
-            Text("💡 音量は端末のボリュームボタンで調整してください")
-                .font(DesignTokens.SettingsTypography.caption)
-                .foregroundColor(DesignTokens.SettingsColors.warning)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .settingsCardStyle()
     }
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalSmall) {
             Text("ステータス")
-                .font(DesignTokens.SettingsTypography.headline)
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
             HStack {
@@ -309,41 +309,33 @@ struct AudioTestView: View {
                     )
                     .frame(width: 10, height: 10)
                 Text(audioService.isPlaying ? "再生中" : "停止中")
-                    .font(DesignTokens.SettingsTypography.itemTitle)
+                    .font(.system(size: 15, design: .monospaced))
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-            }
-
-            HStack {
-                Text("出力:")
-                    .font(DesignTokens.SettingsTypography.caption)
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                Text("\(audioService.outputRoute.icon) \(audioService.outputRoute.displayName)")
-                    .font(DesignTokens.SettingsTypography.caption)
-                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             }
 
             if let reason = audioService.pauseReason {
                 HStack {
                     Text("停止理由:")
-                        .font(DesignTokens.SettingsTypography.caption)
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                     Text(reason.rawValue)
-                        .font(DesignTokens.SettingsTypography.caption)
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(DesignTokens.SettingsColors.warning)
                 }
             }
 
-            // Selected source
-            VStack(alignment: .leading, spacing: 4) {
+            // Selected source (inline)
+            HStack(spacing: 4) {
                 Text("選択中:")
-                    .font(DesignTokens.SettingsTypography.caption)
+                    .font(.system(size: 13, design: .monospaced))
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
 
                 Text(selectedSource.englishTitle)
-                    .font(DesignTokens.SettingsTypography.caption)
+                    .font(.system(size: 13, design: .monospaced))
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .settingsCardStyle()
     }
 
@@ -359,18 +351,11 @@ struct AudioTestView: View {
 
     private func playAudio() {
         do {
-            // 選択された音源タイプに応じて再生
+            // SignalEngine による合成音源を再生
             switch selectedSource {
             case .synthesis(let preset):
-                // 合成音源
                 try audioService.play(preset: preset)
-
-            case .audioFile(let preset):
-                // 音源ファイル（TrackPlayer）
-                try audioService.playAudioFile(preset)
             }
-
-            // 音量はシステム音量で自動制御される
 
         } catch let error as NSError {
             let detailedMessage = """

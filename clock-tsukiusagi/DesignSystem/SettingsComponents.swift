@@ -123,10 +123,31 @@ public struct SettingsCardStyle: ViewModifier {
     }
 }
 
+/// 音源選択カード専用のスタイル（強調表示）
+public struct InteractiveCardStyle: ViewModifier {
+    public func body(content: Content) -> some View {
+        content
+            .padding(DesignTokens.SettingsSpacing.cardPadding)
+            .padding(.vertical, 4) // 行間を少し広げる
+            .background(Color.white.opacity(0.25)) // 通常のカードより明るい
+            .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1) // カード全体に枠線
+            )
+            .shadow(color: Color.black.opacity(0.3), radius: 4, y: 1) // 微妙な影で浮き上がる
+    }
+}
+
 extension View {
     /// 設定カードスタイルを適用
     public func settingsCardStyle() -> some View {
         modifier(SettingsCardStyle())
+    }
+
+    /// インタラクティブカードスタイルを適用（操作可能なカード用）
+    public func interactiveCardStyle() -> some View {
+        modifier(InteractiveCardStyle())
     }
 }
 
