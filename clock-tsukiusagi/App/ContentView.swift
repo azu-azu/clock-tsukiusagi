@@ -92,7 +92,41 @@ public struct ContentView: View {
                 )
             }
         }
+        .gesture(sideMenuDragGesture())
         .statusBarHidden(true)
+    }
+
+    // MARK: - Swipe Gesture
+
+    /// ✂️ 左端からのスワイプでSideMenuを開くジェスチャー
+    /// ✂️ Timer app と同じロジック: 左端20px以内からのスワイプのみ検知
+    private func sideMenuDragGesture() -> some Gesture {
+        DragGesture()
+            .onEnded { value in
+                let horizontalAmount = value.translation.width
+                let verticalAmount = abs(value.translation.height)
+                // ✂️ 画面幅の10%を最小閾値として使用（最低50px）
+                let openThreshold: CGFloat = 50
+                let closeThreshold = -openThreshold
+
+                // ✂️ 水平方向のスワイプのみ処理（垂直スクロールとの競合を避ける）
+                if abs(horizontalAmount) > verticalAmount {
+                    // ✂️ 右スワイプ & 左端20px以内からのスワイプのみメニューを開く
+                    if horizontalAmount > openThreshold && !isMenuPresented {
+                        if value.startLocation.x <= 20 {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isMenuPresented = true
+                            }
+                        }
+                    }
+                    // ✂️ 左スワイプでメニューを閉じる
+                    else if horizontalAmount < closeThreshold && isMenuPresented {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isMenuPresented = false
+                        }
+                    }
+                }
+            }
     }
 }
 

@@ -39,14 +39,33 @@ struct ClockSideMenu: View {
                         VStack(alignment: .leading, spacing: 0) {
 
                             // Header
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("🌙 TsukiUsagi")
-                                    .font(DesignTokens.SideMenuTypography.headerTitle)
-                                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Text("🌙")
+                                        .font(.title)
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("TsukiUsagi")
+                                            .font(DesignTokens.SideMenuTypography.headerTitle)
+                                            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                                    }
+
+                                    Spacer()
+                                }
                             }
-                            .padding(.top, safe.top + DesignTokens.SideMenuLayout.headerTopPadding)
-                            .padding(.bottom, 20)
                             .sideMenuPadding(leadingOffset: leadingOffset)
+                            .padding(.top, safe.top + 60)
+                            .padding(.bottom, 16)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        DesignTokens.CosmosColors.background,
+                                        DesignTokens.CosmosColors.background.opacity(0.95)
+                                    ]),
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
 
                             Divider()
                                 .background(DesignTokens.SideMenuColors.divider)
@@ -83,6 +102,22 @@ struct ClockSideMenu: View {
                                 )
 
                                 // TODO: App Settings (未実装)
+
+                                Divider()
+                                    .background(DesignTokens.SideMenuColors.divider)
+                                    .padding(.top, DesignTokens.SideMenuLayout.itemSpacing)
+
+                                // フッター（アプリ情報）
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("TsukiUsagi Clock")
+                                        .font(DesignTokens.SideMenuTypography.itemTitle)
+                                        .foregroundColor(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
+
+                                    Text("Version 1.0.0")
+                                        .font(DesignTokens.SideMenuTypography.itemTitle)
+                                        .foregroundColor(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
+                                }
+                                .padding(.top, DesignTokens.SideMenuLayout.itemSpacing)
 
                                 Spacer()
                             }

@@ -249,5 +249,8 @@ struct DesignTokens {
 
         /// シェブロンフォント
         static let chevron: Font = .system(size: 13)
+
+        /// フッター用フォント（アプリ情報表示）
+        static let footerInfo: Font = .caption
     }
 }
