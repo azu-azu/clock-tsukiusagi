@@ -2,11 +2,12 @@ import SwiftUI
 
 public struct ContentView: View {
     @State private var selectedTab: Tab = .clock
+    @State private var isMenuPresented = false
 
     public init() {}
 
     public var body: some View {
-        ZStack(alignment: .top) {
+        ZStack(alignment: .topLeading) {
             // 選択されたビューを全画面表示（背景）
             Group {
                 switch selectedTab {
@@ -54,6 +55,41 @@ public struct ContentView: View {
 
                     Spacer()
                 }
+            }
+
+            // SideMenu関連（Clock画面のみ）
+            if selectedTab == .clock {
+                // トリガーボタン（左上）
+                VStack {
+                    HStack {
+                        SideMenuTriggerButton {
+                            withAnimation {
+                                isMenuPresented = true
+                            }
+                        }
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                .padding(.top, 8)
+                .padding(.leading, 8)
+
+                // オーバーレイ
+                SideMenuOverlay(isPresented: $isMenuPresented)
+
+                // メニュー本体
+                ClockSideMenu(
+                    isPresented: $isMenuPresented,
+                    onBackToFront: {
+                        selectedTab = .clock
+                    },
+                    onOpenAudio: {
+                        selectedTab = .audioTest
+                    },
+                    onOpenAudioSettings: {
+                        selectedTab = .settings
+                    }
+                )
             }
         }
         .statusBarHidden(true)

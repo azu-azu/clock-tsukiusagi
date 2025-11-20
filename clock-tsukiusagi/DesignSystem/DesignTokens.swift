@@ -177,4 +177,67 @@ struct DesignTokens {
         /// ステッパーの値表示部分の共通幅
         static let stepperValueWidth: CGFloat = 80
     }
+
+    // MARK: - SideMenu Colors
+    enum SideMenuColors {
+        /// メニュー背景色
+        static let background = Color.black.opacity(0.9)
+
+        /// オーバーレイ背景色
+        static let overlay = Color.black.opacity(0.35)
+
+        /// 区切り線色
+        static let divider = Color.white.opacity(0.2)
+
+        /// アイコン色
+        static let iconColor = Color.white.opacity(0.8)
+
+        /// シェブロン色
+        static let chevronColor = Color.white.opacity(0.5)
+    }
+
+    // MARK: - SideMenu Layout
+    enum SideMenuLayout {
+        /// メニュー幅の画面比率
+        static let menuWidthRatio: CGFloat = 0.8
+
+        /// メニューの最大幅
+        static let menuMaxWidth: CGFloat = 300
+
+        /// メニューの水平パディング
+        static let menuHorizontalPadding: CGFloat = 16
+
+        /// メニュー非表示時のオフセット
+        static let menuHideOffset: CGFloat = 20
+
+        /// 最小のleadingオフセット
+        static let minLeadingOffset: CGFloat = 16
+
+        /// メニューの角丸半径
+        static let cornerRadius: CGFloat = 10
+
+        /// ヘッダーの上部パディング
+        static let headerTopPadding: CGFloat = 40
+
+        /// メニュー項目の垂直パディング
+        static let itemVerticalPadding: CGFloat = 14
+
+        /// メニュー項目間のスペーシング
+        static let itemSpacing: CGFloat = 20
+    }
+
+    // MARK: - SideMenu Typography
+    enum SideMenuTypography {
+        /// ヘッダータイトル
+        static let headerTitle: Font = .title3.bold()
+
+        /// メニュー項目タイトル（既存 SettingsTypography.itemTitle を活用）
+        static let itemTitle: Font = SettingsTypography.itemTitle
+
+        /// アイコンフォント
+        static let itemIcon: Font = .system(size: 18)
+
+        /// シェブロンフォント
+        static let chevron: Font = .system(size: 13)
+    }
 }
