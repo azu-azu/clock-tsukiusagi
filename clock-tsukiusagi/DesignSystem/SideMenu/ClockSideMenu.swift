@@ -32,13 +32,13 @@ struct ClockSideMenu: View {
             let menuWidth: CGFloat = baseMenuWidth
             let effectiveMenuWidth: CGFloat = menuWidth + leadingOffset + DesignTokens.SideMenuLayout.menuHorizontalPadding
 
-            ZStack {
+            ZStack(alignment: .topLeading) {
                 // メニュー本体
                 HStack(spacing: 0) {
                     ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 0) {
+                            VStack(alignment: .leading, spacing: 0) {
 
-                            // Header
+                                // Header
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
                                     Text("🌙")
@@ -54,7 +54,7 @@ struct ClockSideMenu: View {
                                 }
                             }
                             .sideMenuPadding(leadingOffset: leadingOffset)
-                            .padding(.top, safe.top + 60)
+                            .padding(.top, 60)
                             .padding(.bottom, 16)
                             .background(
                                 LinearGradient(
@@ -128,20 +128,21 @@ struct ClockSideMenu: View {
                         }
                     }
                     .frame(width: menuWidth)
+                    .frame(maxHeight: .infinity, alignment: .top)
                     .padding(.leading, leadingOffset + DesignTokens.SideMenuLayout.menuHorizontalPadding)
-                    .frame(maxHeight: .infinity)
-
                     .background(DesignTokens.SideMenuColors.background)
-                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.SideMenuLayout.cornerRadius))
+                    .cornerRadius(DesignTokens.SideMenuLayout.cornerRadius)
                     .shadow(color: Color.black.opacity(0.4), radius: 8, x: -4, y: 0)
                     .shadow(color: Color.black.opacity(0.4), radius: 8, x: 4, y: 0)
-
                     .offset(x: isPresented ? 0 : -effectiveMenuWidth - DesignTokens.SideMenuLayout.menuHideOffset)
                     .transition(.move(edge: .leading).combined(with: .opacity))
 
                     Spacer()
                 }
+                .frame(maxHeight: .infinity)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .edgesIgnoringSafeArea(.all)
             .animation(.easeInOut(duration: 0.3), value: isPresented)
         }
     }
