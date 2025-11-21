@@ -120,9 +120,9 @@ struct AudioTestView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
-                        selectedTab = .appSettings
+                        selectedTab = .clock
                     }) {
-                        Image(systemName: "gearshape.fill")
+                        Image(systemName: "clock.fill")
                             .font(.system(size: 20))
                             .foregroundColor(.white.opacity(0.6))
                     }
@@ -130,9 +130,9 @@ struct AudioTestView: View {
 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        selectedTab = .clock
+                        selectedTab = .settings
                     }) {
-                        Image(systemName: "clock.fill")
+                        Image(systemName: "slider.horizontal.3")
                             .font(.system(size: 20))
                             .foregroundColor(.white.opacity(0.6))
                     }
