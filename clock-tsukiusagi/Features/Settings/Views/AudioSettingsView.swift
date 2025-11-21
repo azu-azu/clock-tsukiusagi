@@ -177,7 +177,7 @@ public struct AudioSettingsView: View {
             }
             .navigationTitle("Audio Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .font(NavigationBarTokens.titleFont)
+            .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {

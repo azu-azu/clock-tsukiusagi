@@ -57,4 +57,17 @@ public enum FontStyle: String, Codable, CaseIterable {
         case .rounded: return "Soft, friendly rounded edges"
         }
     }
+
+    public var font: Font {
+        switch self {
+        case .monospaced:
+            return Font.system(size: 17, weight: .semibold, design: .monospaced)
+        case .rounded:
+            return Font.system(size: 17, weight: .semibold, design: .rounded)
+        }
+    }
+
+    // MARK: - UserDefaults Key
+
+    public static let userDefaultsKey = "app_font_style"
 }

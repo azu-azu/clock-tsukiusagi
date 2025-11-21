@@ -10,11 +10,14 @@ import SwiftUI
 
 public struct AppSettingsView: View {
     @Binding var selectedTab: Tab
-    @State private var settings: AppSettings
+    @AppStorage(FontStyle.userDefaultsKey) private var fontStyleRaw: String = FontStyle.rounded.rawValue
+
+    private var fontStyle: FontStyle {
+        FontStyle(rawValue: fontStyleRaw) ?? .rounded
+    }
 
     public init(selectedTab: Binding<Tab>) {
         _selectedTab = selectedTab
-        _settings = State(initialValue: AppSettings.load())
     }
 
     public var body: some View {
@@ -31,7 +34,7 @@ public struct AppSettingsView: View {
             }
             .navigationTitle("App Settings")
             .navigationBarTitleDisplayMode(.inline)
-            .font(NavigationBarTokens.titleFont)
+            .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
@@ -149,14 +152,13 @@ public struct AppSettingsView: View {
 
     private func fontStyleOption(_ style: FontStyle) -> some View {
         Button(action: {
-            settings.fontStyle = style
-            saveSettings()
+            fontStyleRaw = style.rawValue
         }) {
             HStack(spacing: 12) {
                 // 選択インジケーター
-                Image(systemName: settings.fontStyle == style ? "checkmark.circle.fill" : "circle")
+                Image(systemName: fontStyle == style ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
-                    .foregroundColor(settings.fontStyle == style ? DesignTokens.SettingsColors.accent : DesignTokens.SettingsColors.textSecondary)
+                    .foregroundColor(fontStyle == style ? DesignTokens.SettingsColors.accent : DesignTokens.SettingsColors.textSecondary)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(style.displayName)
@@ -179,18 +181,7 @@ public struct AppSettingsView: View {
     // MARK: - Helper Methods
 
     private func fontForStyle(_ style: FontStyle) -> Font {
-        switch style {
-        case .monospaced:
-            return Font.system(size: 17, weight: .semibold, design: .monospaced)
-        case .rounded:
-            return Font.system(size: 17, weight: .semibold, design: .rounded)
-        }
-    }
-
-    private func saveSettings() {
-        settings.save()
-        // フォント変更を反映するために画面を再描画
-        // (NavigationBarTokens.titleFont は次回の画面表示時に反映される)
+        style.font
     }
 }
 
