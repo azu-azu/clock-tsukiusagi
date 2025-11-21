@@ -192,22 +192,12 @@ public struct AudioSettingsView: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button(action: {
-                            selectedTab = .appSettings
-                        }) {
-                            Image(systemName: "gearshape.fill")
-                                .font(.system(size: 20))
-                                .foregroundColor(.white.opacity(0.8))
-                        }
-
-                        Button(action: {
-                            selectedTab = .audioTest
-                        }) {
-                            Image(systemName: "music.quarternote.3")
-                                .font(.system(size: 20))
-                                .foregroundColor(.white.opacity(0.8))
-                        }
+                    Button(action: {
+                        selectedTab = .audioTest
+                    }) {
+                        Image(systemName: "music.quarternote.3")
+                            .font(.system(size: 20))
+                            .foregroundColor(.white.opacity(0.8))
                     }
                 }
 

@@ -49,22 +49,12 @@ public struct AppSettingsView: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button(action: {
-                            selectedTab = .settings
-                        }) {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: 20))
-                                .foregroundColor(.white.opacity(0.8))
-                        }
-
-                        Button(action: {
-                            selectedTab = .audioTest
-                        }) {
-                            Image(systemName: "music.quarternote.3")
-                                .font(.system(size: 20))
-                                .foregroundColor(.white.opacity(0.8))
-                        }
+                    Button(action: {
+                        selectedTab = .audioTest
+                    }) {
+                        Image(systemName: "music.quarternote.3")
+                            .font(.system(size: 20))
+                            .foregroundColor(.white.opacity(0.8))
                     }
                 }
             }
@@ -75,45 +65,9 @@ public struct AppSettingsView: View {
     private var settingsContent: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
 
-            // MARK: - About Section
+            // MARK: - Appearance Section
 
-            SettingsSection(title: "About") {
-                            VStack(alignment: .leading, spacing: 16) {
-                                HStack {
-                                    Text("Version")
-                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-
-                                    Spacer()
-
-                                    Text("1.0.0")
-                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                                }
-                                .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
-
-                                Divider()
-                                    .background(Color.white.opacity(0.2))
-
-                                HStack {
-                                    Text("App Name")
-                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-
-                                    Spacer()
-
-                                    Text("TsukiUsagi Clock")
-                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                                }
-                                .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
-                            }
-                            .padding(DesignTokens.SettingsSpacing.cardPadding)
-                        }
-
-                        // MARK: - Appearance Section
-
-                        SettingsSection(title: "Appearance") {
+            SettingsSection(title: "Appearance") {
                             VStack(alignment: .leading, spacing: 16) {
                                 // Font Style
                                 VStack(alignment: .leading, spacing: 8) {
@@ -126,18 +80,6 @@ public struct AppSettingsView: View {
                                     }
                                 }
                                 .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
-                            }
-                            .padding(DesignTokens.SettingsSpacing.cardPadding)
-                        }
-
-                        // MARK: - Data Section (placeholder for future features)
-
-                        SettingsSection(title: "Data & Privacy") {
-                            VStack(alignment: .leading, spacing: 16) {
-                                Text("Coming Soon")
-                                    .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                                    .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
                             }
                             .padding(DesignTokens.SettingsSpacing.cardPadding)
                         }
