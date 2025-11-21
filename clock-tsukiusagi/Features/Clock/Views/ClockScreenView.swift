@@ -137,19 +137,31 @@ final class ClockScreenVM: ObservableObject {
         let caption: String
     }
 
+    #if DEBUG
+    @State private var lastLoggedPhase: String?
+    #endif
+
     func snapshot(at date: Date) -> Snapshot {
         let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
         let tone = SkyTone.forHour(comps.hour ?? 0)
         let mp = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
+
         #if DEBUG
-        print("=== ClockCaption Debug ===")
-        print("Date: \(date)")
-        print("Phase: \(String(format: "%.6f", mp.phase))")
-        print("Illumination: \(String(format: "%.2f%%", mp.illumination * 100))")
-        let captionResult = ClockCaption.forMoonPhase(phase: mp.phase, illumination: mp.illumination)
-        print("Caption Key: \(captionResult.captionKey)")
-        print("========================")
+        // 位相が変化したときだけログ出力（毎秒の出力を防ぐ）
+        let currentPhase = String(format: "%.6f", mp.phase)
+        let shouldLog = lastLoggedPhase != currentPhase
+        if shouldLog {
+            print("🐛 === ClockCaption Debug ===")
+            print("Date: \(date)")
+            print("Phase: \(currentPhase)")
+            print("Illumination: \(String(format: "%.2f%%", mp.illumination * 100))")
+            let captionResult = ClockCaption.forMoonPhase(phase: mp.phase, illumination: mp.illumination)
+            print("Caption Key: \(captionResult.captionKey)")
+            print("========================")
+            lastLoggedPhase = currentPhase
+        }
         #endif
+
         let caption = ClockCaption.forMoonPhase(phase: mp.phase, illumination: mp.illumination).captionKey
         return Snapshot(time: date, skyTone: tone, caption: caption)
     }

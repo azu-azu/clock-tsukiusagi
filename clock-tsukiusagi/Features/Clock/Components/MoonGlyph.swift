@@ -14,14 +14,6 @@ struct MoonGlyph: View {
     var body: some View {
         let mp = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
 
-        // デバッグログを別の場所で実行
-        let _ = {
-            #if DEBUG
-            print("MoonGlyph: illumination=\(mp.illumination), thinThreshold=\(thinThreshold)")
-            print("MoonGlyph: phase=\(mp.phase), date=\(date)")
-            #endif
-        }()
-
         // 新月（黒円）だけは薄くても表示したい
         let newMoonThreshold = 0.08   // 約±2.5日
         let isNewMoon = isInPhaseRange(mp.phase, 0.0, newMoonThreshold)
@@ -30,9 +22,6 @@ struct MoonGlyph: View {
             Color.clear
         } else {
             Canvas { ctx, canvasSize in
-                #if DEBUG
-                print("MoonGlyph: Calling MoonPainter.draw")
-                #endif
                 MoonPainter.draw(
                     in: ctx,
                     size: canvasSize,

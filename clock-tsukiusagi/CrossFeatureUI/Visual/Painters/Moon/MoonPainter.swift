@@ -24,29 +24,8 @@ enum MoonPainter {
         let isFirstQuarter = isInPhaseRange(phase, 0.25, phaseThreshold)
         let isThirdQuarter = isInPhaseRange(phase, 0.75, phaseThreshold)
 
-        #if DEBUG
-        print(
-            String(
-                format: """
-                    MoonPainter.draw: phase=%.6f,
-                    isNewMoon=%@,
-                    isFirstQuarter=%@,
-                    isFullMoon=%@,
-                    isThirdQuarter=%@
-                    """,
-                    phase,
-                    isNewMoon ? "YES" : "NO",
-                    isFirstQuarter ? "YES" : "NO",
-                    isFullMoon ? "YES" : "NO",
-                    isThirdQuarter ? "YES" : "NO"
-                ))
-        #endif
-
         // 新月（薄い黒円）
         if isNewMoon {
-            #if DEBUG
-            print("MoonPainter.draw: Drawing new moon template")
-            #endif
             // 太陽方向（右=0°）: 位相から近似（waxingなら右、waningなら左）
             let isRightLit = sin(2.0 * .pi * phase) > 0
             let sunAngle: Angle = isRightLit ? .degrees(0) : .degrees(180)
@@ -55,10 +34,6 @@ enum MoonPainter {
         }
 
         if isFullMoon {
-            #if DEBUG
-            print("MoonPainter.draw: Drawing full moon template")
-            #endif
-
             // 満月テンプレートを使用
             let fullMoonPath = FullMoon.shape(center: center, radius: radius)
 
@@ -105,10 +80,6 @@ enum MoonPainter {
         }
 
         if isFirstQuarter {
-            #if DEBUG
-            print("MoonPainter.draw: Drawing first quarter moon template")
-            #endif
-
             let quarterPath = FirstQuarterMoon.shape(center: center, radius: radius)
 
             // 放射グラデーションで塗る
@@ -169,10 +140,6 @@ enum MoonPainter {
         }
 
         if isThirdQuarter {
-            #if DEBUG
-            print("MoonPainter.draw: Drawing third quarter moon template")
-            #endif
-
             let quarterPath = ThirdQuarterMoon.shape(center: center, radius: radius)
 
             // 放射グラデーションで塗る
