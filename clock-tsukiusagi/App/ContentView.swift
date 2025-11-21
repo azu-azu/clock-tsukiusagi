@@ -35,16 +35,18 @@ public struct ContentView: View {
             if selectedTab == .clock {
                 VStack(spacing: 0) {
                     HStack(spacing: 0) {
-                        // Clock アイコンは非表示（現在のページなので）
-
+                        // 左側：ギアボタン（SideMenu トリガー）
                         TabButton(
-                            icon: "slider.horizontal.3",
-                            label: "Settings",
+                            icon: "gearshape.fill",
+                            label: "Menu",
                             isSelected: false
                         ) {
-                            selectedTab = .settings
+                            withAnimation {
+                                isMenuPresented = true
+                            }
                         }
 
+                        // 右側：Audio
                         TabButton(
                             icon: "music.quarternote.3",
                             label: "Audio",
@@ -62,20 +64,6 @@ public struct ContentView: View {
 
             // SideMenu関連（Clock画面のみ）
             if selectedTab == .clock {
-                // トリガーボタン（左上）
-                VStack {
-                    HStack {
-                        SideMenuTriggerButton {
-                            withAnimation {
-                                isMenuPresented = true
-                            }
-                        }
-                        Spacer()
-                    }
-                    Spacer()
-                }
-                .padding(.top, 8)
-                .padding(.leading, 8)
 
                 // オーバーレイ
                 SideMenuOverlay(isPresented: $isMenuPresented)
