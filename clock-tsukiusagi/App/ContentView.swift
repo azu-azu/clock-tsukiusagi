@@ -25,6 +25,9 @@ public struct ContentView: View {
 
                 case .settings:
                     AudioSettingsView(selectedTab: $selectedTab)
+
+                case .appSettings:
+                    AppSettingsView(selectedTab: $selectedTab)
                 }
             }
 
@@ -88,6 +91,9 @@ public struct ContentView: View {
                     },
                     onOpenAudioSettings: {
                         selectedTab = .settings
+                    },
+                    onOpenAppSettings: {
+                        selectedTab = .appSettings
                     }
                 )
             }
@@ -136,6 +142,7 @@ public enum Tab {
     case clock
     case audioTest
     case settings
+    case appSettings
 }
 
 // MARK: - TabButton

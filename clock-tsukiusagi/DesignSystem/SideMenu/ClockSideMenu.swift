@@ -14,6 +14,7 @@ struct ClockSideMenu: View {
     var onBackToFront: () -> Void
     var onOpenAudio: () -> Void
     var onOpenAudioSettings: () -> Void
+    var onOpenAppSettings: () -> Void
 
     var body: some View {
         GeometryReader { geo in
@@ -101,7 +102,14 @@ struct ClockSideMenu: View {
                                     }
                                 )
 
-                                // TODO: App Settings (未実装)
+                                menuItem(
+                                    icon: "gearshape.fill",
+                                    title: "App Settings",
+                                    action: {
+                                        onOpenAppSettings()
+                                        close()
+                                    }
+                                )
 
                                 Divider()
                                     .background(DesignTokens.SideMenuColors.divider)
