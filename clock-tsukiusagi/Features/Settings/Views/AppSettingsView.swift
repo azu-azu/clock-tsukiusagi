@@ -81,13 +81,13 @@ public struct AppSettingsView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 HStack {
                                     Text("Version")
-                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
                                     Spacer()
 
                                     Text("1.0.0")
-                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                                 }
                                 .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
@@ -97,13 +97,13 @@ public struct AppSettingsView: View {
 
                                 HStack {
                                     Text("App Name")
-                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
                                     Spacer()
 
                                     Text("TsukiUsagi Clock")
-                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                                 }
                                 .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
@@ -118,7 +118,7 @@ public struct AppSettingsView: View {
                                 // Font Style
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Font Style")
-                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
                                     ForEach(FontStyle.allCases, id: \.self) { style in
@@ -135,7 +135,7 @@ public struct AppSettingsView: View {
                         SettingsSection(title: "Data & Privacy") {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Coming Soon")
-                                    .font(DesignTokens.SettingsTypography.itemTitle)
+                                    .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                                     .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
                             }
@@ -166,7 +166,7 @@ public struct AppSettingsView: View {
                         .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
                     Text(style.description)
-                        .font(DesignTokens.SettingsTypography.itemTitle)
+                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                 }
 

@@ -121,20 +121,25 @@ struct DesignTokens {
 
     // MARK: - Settings Typography
     enum SettingsTypography {
-        /// セクションタイトル
-        static let sectionTitle: Font = .system(size: 18, weight: .semibold, design: .rounded)
+        /// セクションタイトルのサイズ
+        static let sectionTitleSize: CGFloat = 18
+        static let sectionTitleWeight: Font.Weight = .semibold
 
-        /// 項目タイトル
-        static let itemTitle: Font = .body
+        /// 項目タイトルのサイズ
+        static let itemTitleSize: CGFloat = 17
+        static let itemTitleWeight: Font.Weight = .regular
 
-        /// キャプション
-        static let caption: Font = .caption
+        /// キャプションのサイズ
+        static let captionSize: CGFloat = 12
+        static let captionWeight: Font.Weight = .regular
 
-        /// 見出し
-        static let headline: Font = .headline
+        /// 見出しのサイズ
+        static let headlineSize: CGFloat = 17
+        static let headlineWeight: Font.Weight = .semibold
 
-        /// サブ見出し
-        static let subheadline: Font = .subheadline
+        /// サブ見出しのサイズ
+        static let subheadlineSize: CGFloat = 15
+        static let subheadlineWeight: Font.Weight = .regular
     }
 
     // MARK: - Settings Spacing
@@ -238,19 +243,22 @@ struct DesignTokens {
 
     // MARK: - SideMenu Typography
     enum SideMenuTypography {
-        /// ヘッダータイトル
-        static let headerTitle: Font = .title3.bold()
+        /// ヘッダータイトルのサイズ
+        static let headerTitleSize: CGFloat = 20
+        static let headerTitleWeight: Font.Weight = .bold
 
-        /// メニュー項目タイトル（既存 SettingsTypography.itemTitle を活用）
-        static let itemTitle: Font = SettingsTypography.itemTitle
+        /// メニュー項目タイトルのサイズ
+        static let itemTitleSize: CGFloat = 17
+        static let itemTitleWeight: Font.Weight = .regular
 
-        /// アイコンフォント
-        static let itemIcon: Font = .system(size: 18)
+        /// アイコンのサイズ
+        static let itemIconSize: CGFloat = 18
 
-        /// シェブロンフォント
-        static let chevron: Font = .system(size: 13)
+        /// シェブロンのサイズ
+        static let chevronSize: CGFloat = 13
 
-        /// フッター用フォント（アプリ情報表示）
-        static let footerInfo: Font = .caption
+        /// フッター用のサイズ
+        static let footerInfoSize: CGFloat = 12
+        static let footerInfoWeight: Font.Weight = .regular
     }
 }

@@ -3,6 +3,7 @@ import SwiftUI
 public struct ContentView: View {
     @State private var selectedTab: Tab = .clock
     @State private var isMenuPresented = false
+    @StateObject private var fontStyleProvider = FontStyleProvider()
 
     public init() {}
 
@@ -86,6 +87,7 @@ public struct ContentView: View {
                 )
             }
         }
+        .withFontStyleProvider(fontStyleProvider)
         .gesture(sideMenuDragGesture())
         .statusBarHidden(true)
     }

@@ -104,11 +104,11 @@ public struct AudioSettingsView: View {
                                 if let nextBreak = audioService.breakScheduler.nextBreakAt {
                                     HStack {
                                         Text("Next Break")
-                                            .font(DesignTokens.SettingsTypography.itemTitle)
+                                            .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                             .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                                         Spacer()
                                         Text(DateFormatter.localizedString(from: nextBreak, dateStyle: .none, timeStyle: .short))
-                                            .font(DesignTokens.SettingsTypography.itemTitle)
+                                            .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                             .foregroundColor(DesignTokens.SettingsColors.accent)
                                     }
                                     .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
@@ -122,11 +122,11 @@ public struct AudioSettingsView: View {
                             VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalMedium) {
                                 HStack {
                                     Text("Maximum Output Level")
-                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                                     Spacer()
                                     Text("\(String(format: "%.1f", settings.maxOutputDb)) dB")
-                                        .font(DesignTokens.SettingsTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.accent)
                                         .monospacedDigit()
                                 }
@@ -145,7 +145,7 @@ public struct AudioSettingsView: View {
                                 .tint(DesignTokens.SettingsColors.accent)
 
                                 Text("Limits the maximum output volume to protect your hearing. Default: -6.0 dB")
-                                    .font(DesignTokens.SettingsTypography.caption)
+                                    .dynamicFont(size: DesignTokens.SettingsTypography.captionSize, weight: DesignTokens.SettingsTypography.captionWeight)
                                     .foregroundColor(DesignTokens.SettingsColors.textQuaternary)
                             }
                             .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)

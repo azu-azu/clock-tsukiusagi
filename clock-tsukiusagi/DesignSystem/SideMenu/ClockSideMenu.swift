@@ -47,7 +47,7 @@ struct ClockSideMenu: View {
 
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("TsukiUsagi")
-                                            .font(DesignTokens.SideMenuTypography.headerTitle)
+                                            .dynamicFont(size: DesignTokens.SideMenuTypography.headerTitleSize, weight: DesignTokens.SideMenuTypography.headerTitleWeight)
                                             .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                                     }
 
@@ -118,11 +118,11 @@ struct ClockSideMenu: View {
                                 // フッター（アプリ情報）
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("TsukiUsagi Clock")
-                                        .font(DesignTokens.SideMenuTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SideMenuTypography.footerInfoSize, weight: DesignTokens.SideMenuTypography.footerInfoWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
 
                                     Text("Version 1.0.0")
-                                        .font(DesignTokens.SideMenuTypography.itemTitle)
+                                        .dynamicFont(size: DesignTokens.SideMenuTypography.footerInfoSize, weight: DesignTokens.SideMenuTypography.footerInfoWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
                                 }
                                 .padding(.top, DesignTokens.SideMenuLayout.itemSpacing)
@@ -161,18 +161,18 @@ struct ClockSideMenu: View {
         } label: {
             HStack(spacing: 16) {
                 Image(systemName: icon)
-                    .font(DesignTokens.SideMenuTypography.itemIcon)
+                    .font(.system(size: DesignTokens.SideMenuTypography.itemIconSize))
                     .foregroundColor(DesignTokens.SideMenuColors.iconColor)
                     .frame(width: 24, height: 24)
 
                 Text(title)
-                    .font(DesignTokens.SideMenuTypography.itemTitle)
+                    .dynamicFont(size: DesignTokens.SideMenuTypography.itemTitleSize, weight: DesignTokens.SideMenuTypography.itemTitleWeight)
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(DesignTokens.SideMenuTypography.chevron)
+                    .font(.system(size: DesignTokens.SideMenuTypography.chevronSize))
                     .foregroundColor(DesignTokens.SideMenuColors.chevronColor)
             }
             .padding(.vertical, DesignTokens.SideMenuLayout.itemVerticalPadding)

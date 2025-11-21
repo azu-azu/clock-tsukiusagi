@@ -248,7 +248,7 @@ struct AudioTestView: View {
                     Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
                     Text(audioService.isPlaying ? "停止" : "再生")
                 }
-                .font(DesignTokens.SettingsTypography.headline)
+                .dynamicFont(size: DesignTokens.SettingsTypography.headlineSize, weight: DesignTokens.SettingsTypography.headlineWeight)
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                 .frame(maxWidth: .infinity)
                 .padding(DesignTokens.SettingsLayout.buttonPadding)
