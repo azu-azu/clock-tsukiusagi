@@ -25,14 +25,29 @@ public struct NavigationBarTokens {
 
     // MARK: - Typography
 
-    /// モノスペースフォント（AudioTestView用）
+    /// 現在のフォントスタイルに基づいたタイトルフォント
+    public static var titleFont: Font {
+        let settings = AppSettings.load()
+        switch settings.fontStyle {
+        case .monospaced:
+            return Font.system(size: 17, weight: .semibold, design: .monospaced)
+        case .rounded:
+            return Font.system(size: 17, weight: .semibold, design: .rounded)
+        }
+    }
+
+    // MARK: - Legacy (Deprecated)
+
+    /// モノスペースフォント（後方互換性のために残す）
+    @available(*, deprecated, message: "Use titleFont instead")
     public static let monospacedTitleFont = Font.system(
         size: 17,
         weight: .semibold,
         design: .monospaced
     )
 
-    /// 丸ゴシックフォント（AudioSettingsView用）
+    /// 丸ゴシックフォント（後方互換性のために残す）
+    @available(*, deprecated, message: "Use titleFont instead")
     public static let roundedTitleFont = Font.system(
         size: 17,
         weight: .semibold,
