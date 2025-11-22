@@ -104,27 +104,34 @@ struct ClockScreenView: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
             }
             .animation(.easeInOut(duration: 0.6), value: snapshot.skyTone) // 時間帯フェード
-
-            // タップすると表示モードが変わる
-            .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    switch displayMode {
-                    case .normal:
-                        displayMode = .dotMatrix
-                    case .dotMatrix:
-                        displayMode = .sevenSeg
-                    case .sevenSeg:
-                        displayMode = .bunny
-                    case .bunny:
-                        displayMode = .normal
-                    }
+            // タップ範囲を画面中央部に限定（上部ナビバー領域を除外）
+            .overlay(
+                GeometryReader { geometry in
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .frame(height: geometry.size.height - 80)
+                        .offset(y: 80)
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                switch displayMode {
+                                case .normal:
+                                    displayMode = .dotMatrix
+                                case .dotMatrix:
+                                    displayMode = .sevenSeg
+                                case .sevenSeg:
+                                    displayMode = .bunny
+                                case .bunny:
+                                    displayMode = .normal
+                                }
+                            }
+                        }
+                        .onLongPressGesture {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                use24HourFormat.toggle()
+                            }
+                        }
                 }
-            }
-            .onLongPressGesture {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    use24HourFormat.toggle()
-                }
-            }
+            )
         }
     }
 }

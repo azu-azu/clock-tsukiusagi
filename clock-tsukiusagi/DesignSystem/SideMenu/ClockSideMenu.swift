@@ -77,7 +77,7 @@ struct ClockSideMenu: View {
 
                                 menuItem(
                                     icon: "clock",
-                                    title: "Front",
+                                    title: "Clock",
                                     action: {
                                         onBackToFront()
                                         close()
