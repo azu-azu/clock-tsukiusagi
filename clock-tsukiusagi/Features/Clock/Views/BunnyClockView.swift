@@ -3,10 +3,10 @@ import Foundation
 
 struct BunnyClockView: View {
     // MARK: - Constants
-    static let markerColor = Color(hex: "#fff").opacity(0.75)
-    static let handColor = Color(hex: "#fff").opacity(0.9)
-    static let centerCircleColor = Color(hex: "#fff").opacity(0.9)
-    static let trackColor = Color(hex: "#fff").opacity(0.75)
+    static let markerColor = DesignTokens.CommonTextColors.tertiary
+    static let handColor = DesignTokens.CommonTextColors.primary
+    static let centerCircleColor = DesignTokens.CommonTextColors.primary
+    static let trackColor = DesignTokens.CommonTextColors.tertiary
     static let trackSize: CGFloat = 12
     static let moonSize: CGFloat = 34
     static let starSize: CGFloat = 14
