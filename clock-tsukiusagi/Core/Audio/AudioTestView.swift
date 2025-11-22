@@ -209,11 +209,11 @@ struct AudioTestView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(DesignTokens.SettingsSpacing.cardPadding)
             .padding(.vertical, 4)
-            .background(Color.white.opacity(0.15)) // ✂️ Darker background
+            .background(DesignTokens.CommonBackgroundColors.cardHighlight)
             .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
             .overlay(
                 RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    .stroke(DesignTokens.CommonBackgroundColors.cardBorder, lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow
             .frame(maxWidth: UIScreen.main.bounds.width * 0.7) // ✂️ Card is 70% of screen width

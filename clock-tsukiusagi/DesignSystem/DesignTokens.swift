@@ -31,6 +31,29 @@ struct DesignTokens {
         static let quinary = Color.white.opacity(0.5)
     }
 
+    // MARK: - Common Background Colors (背景色)
+
+    /// 共通の背景色定義（全画面で共通の基礎）
+    ///
+    /// **使用ガイドライン**:
+    /// - card: 標準カード背景
+    /// - cardHighlight: ハイライトされたカード背景（通常より明るい）
+    /// - cardInteractive: インタラクティブなカード背景（選択・強調用、最も明るい）
+    /// - cardBorder: カードの枠線
+    enum CommonBackgroundColors {
+        /// カード背景色（全画面共通）
+        static let card = Color.white.opacity(0.1)
+
+        /// ハイライトされたカード背景色（通常より明るい）
+        static let cardHighlight = Color.white.opacity(0.15)
+
+        /// インタラクティブなカード背景色（選択・強調用、最も明るい）
+        static let cardInteractive = Color.white.opacity(0.25)
+
+        /// カードの枠線色
+        static let cardBorder = Color.white.opacity(0.3)
+    }
+
     // MARK: - Clock Colors
     enum ClockColors {
         /// メインのテキスト色（時刻表示など）
@@ -101,7 +124,7 @@ struct DesignTokens {
 
         /// カード背景色（代替・subtle用）
         /// 例: サイドメニューのブロック背景
-        static let cardBackgroundAlt = Color.white.opacity(0.10)
+        static let cardBackgroundAlt = CommonBackgroundColors.card
     }
 
     // MARK: - Settings Colors
@@ -114,7 +137,7 @@ struct DesignTokens {
         )
 
         /// カード背景色
-        static let cardBackground = Color.white.opacity(0.1)
+        static let cardBackground = CommonBackgroundColors.card
 
         /// アクセントカラー（システムのアクセントカラー）
         static let accent = Color.accentColor

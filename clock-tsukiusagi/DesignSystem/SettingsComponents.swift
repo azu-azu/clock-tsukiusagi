@@ -129,11 +129,11 @@ public struct InteractiveCardStyle: ViewModifier {
         content
             .padding(DesignTokens.SettingsSpacing.cardPadding)
             .padding(.vertical, 4) // 行間を少し広げる
-            .background(Color.white.opacity(0.25)) // 通常のカードより明るい
+            .background(DesignTokens.CommonBackgroundColors.cardInteractive)
             .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
             .overlay(
                 RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1) // カード全体に枠線
+                    .stroke(DesignTokens.CommonBackgroundColors.cardBorder, lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(0.3), radius: 4, y: 1) // 微妙な影で浮き上がる
     }
