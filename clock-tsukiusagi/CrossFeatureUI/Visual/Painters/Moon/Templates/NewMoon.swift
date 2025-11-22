@@ -12,34 +12,18 @@ enum NewMoonPainter {
         // 1) 円盤の幾何
         let disk = Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: 2*r, height: 2*r))
 
-        // 2) 影（背景をわずかに落とす：星空を隠す感じ）
+        // 2) ベース：ぼんやり見える程度の黒い円（色のグラデーション）
+        // blurを使わず、より滑らかなグラデーションで柔らかさを表現
         ctx.drawLayer { layer in
-            layer.clip(to: disk)
-            layer.blendMode = .multiply
-            // 中心が最も暗いラジアルグラデーション
-            let g = Gradient(colors: [
-                Color.black.opacity(0.20),  // 中心
-                Color.black.opacity(0.08)   // 外縁
+            layer.clip(to: disk)  // diskの範囲内に限定
+            layer.blendMode = .normal
+            // 色のグラデーション（中心から外側へ、差を小さく）
+            let gradient = Gradient(colors: [
+                Color(white: 0.03, opacity: 0.25),  // 中心（少し濃く）
+                Color(white: 0.02, opacity: 0.25)   // 外縁（少し濃く）
             ])
             layer.fill(disk, with: .radialGradient(
-                g,
-                center: c,
-                startRadius: 0,
-                endRadius: r
-            ))
-        }
-
-        // 3) 地球照（非常に弱い灰色の“見える気がする”円盤）
-        ctx.drawLayer { layer in
-            layer.clip(to: disk)
-            layer.blendMode = .screen
-            layer.addFilter(.blur(radius: r * 0.05))
-            let g = Gradient(colors: [
-                Color.white.opacity(0.035), // 外縁ほどやや明るく
-                Color.white.opacity(0.010)
-            ])
-            layer.fill(disk, with: .radialGradient(
-                g,
+                gradient,
                 center: c,
                 startRadius: 0,
                 endRadius: r
@@ -58,20 +42,13 @@ enum NewMoonPainter {
                     clockwise: false)
 
         ctx.drawLayer { layer in
-            layer.addFilter(.blur(radius: r * 0.18))
+            layer.addFilter(.blur(radius: r * 0.18))  // 元の実装通り
             layer.blendMode = .plusLighter
             layer.stroke(
                 rimArc,
                 with: .color(Color.cyan.opacity(0.10)),
                 style: StrokeStyle(lineWidth: r * 0.22, lineCap: .round)
             )
-        }
-
-        // 5) ぼかした外周の"気配"の線（視認性アップ・幾何学的な黒丸感の軽減）
-        ctx.drawLayer { layer in
-            layer.addFilter(.blur(radius: r * 0.06))  // 枠をぼかす
-            layer.blendMode = .normal
-            layer.stroke(disk, with: .color(Color.black.opacity(0.35)), lineWidth: max(2, r * 0.04))
         }
     }
 }
