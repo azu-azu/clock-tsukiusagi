@@ -119,11 +119,11 @@ struct ClockSideMenu: View {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("TsukiUsagi Clock")
                                         .dynamicFont(size: DesignTokens.SideMenuTypography.footerInfoSize, weight: DesignTokens.SideMenuTypography.footerInfoWeight)
-                                        .foregroundColor(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
+                                        .foregroundColor(DesignTokens.SideMenuColors.textMuted)
 
                                     Text("Version 1.0.0")
                                         .dynamicFont(size: DesignTokens.SideMenuTypography.footerInfoSize, weight: DesignTokens.SideMenuTypography.footerInfoWeight)
-                                        .foregroundColor(DesignTokens.SettingsColors.textSecondary.opacity(0.6))
+                                        .foregroundColor(DesignTokens.SideMenuColors.textMuted)
                                 }
                                 .padding(.top, DesignTokens.SideMenuLayout.itemSpacing)
 
@@ -173,7 +173,7 @@ struct ClockSideMenu: View {
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: DesignTokens.SideMenuTypography.chevronSize))
-                    .foregroundColor(DesignTokens.SideMenuColors.chevronColor)
+                    .foregroundColor(DesignTokens.SideMenuColors.textMuted)
             }
             .padding(.vertical, DesignTokens.SideMenuLayout.itemVerticalPadding)
             .contentShape(Rectangle())

@@ -58,6 +58,8 @@ public struct ContentView: View {
                             selectedTab = .audioTest
                         }
                     }
+
+                    // フロントのタブバーの位置決め
                     .frame(height: 60)
                     .padding(.horizontal, 62)  // 画面端より内側に配置
                     .padding(.top, 10)

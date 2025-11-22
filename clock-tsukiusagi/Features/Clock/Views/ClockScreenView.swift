@@ -108,7 +108,7 @@ struct ClockScreenView: View {
                                 design: .serif
                             )
                         )
-                        .foregroundStyle(DesignTokens.ClockColors.textSecondary)
+                        .foregroundStyle(DesignTokens.ClockColors.captionBlue)
                         .accessibilityLabel("Caption")
                 }
                 .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)

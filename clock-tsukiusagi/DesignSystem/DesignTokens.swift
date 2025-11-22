@@ -1,30 +1,46 @@
 import SwiftUI
 
-/// デザイントークン - アプリ全体で使用する色、フォント、スペーシングなどの統一された値
+/// デザイントークン - アプリ全体で使用する色、スペーシング、レイアウトなどの統一された値
 ///
-/// 📌 **新しい設計について**
+/// 📌 **設計方針**
 ///
-/// 将来的には、Static Tokens と Dynamic Theme に分離されます:
-/// - `StaticTokens`: 色、スペーシング、レイアウトなど環境に依存しない固定値
-/// - `DynamicTheme`: フォントなど環境・設定に依存する値
+/// - **DesignTokens**: 色、スペーシング、レイアウトなどの固定値を定義
+/// - **DynamicTheme**: フォントなど環境・設定に依存する値を定義
 ///
-/// **新規コードでの推奨**:
+/// **使用ガイドライン**:
 /// - フォント関連は `DynamicTheme.AudioTestTypography` + `.dynamicFont()` を使用
-/// - 色・spacing・layout は当面このまま `DesignTokens` を使用可能
-///
-/// **段階的移行方針**: 互換性維持のため、このファイルは当面残します。
+/// - 色・spacing・layout は `DesignTokens` を使用
+/// - 共通のテキスト色は `CommonTextColors` から参照
 struct DesignTokens {
+
+    // MARK: - Common Text Colors (基礎色)
+
+    /// 共通のテキスト色定義（全画面で共通の基礎）
+    ///
+    /// **使用ガイドライン**:
+    /// - primary: 最も重要なテキスト（タイトル、時刻など）
+    /// - secondary: 重要なテキスト（見出し、ラベルなど）
+    /// - tertiary: 補助的なテキスト（説明文、キャプションなど）
+    /// - quaternary: 控えめなテキスト（ヒント、プレースホルダーなど）
+    /// - quinary: さらに薄いテキスト（非アクティブなど）
+    enum CommonTextColors {
+        static let primary = Color.white.opacity(0.95)
+        static let secondary = Color.white.opacity(0.8)
+        static let tertiary = Color.white.opacity(0.7)
+        static let quaternary = Color.white.opacity(0.6)
+        static let quinary = Color.white.opacity(0.5)
+    }
 
     // MARK: - Clock Colors
     enum ClockColors {
         /// メインのテキスト色（時刻表示など）
-        static let textPrimary = Color.white.opacity(0.95)
+        static let textPrimary = CommonTextColors.primary
 
         /// グロー効果の色
         static let glow = Color.white.opacity(0.6)
 
-        /// セカンダリテキスト色（キャプションなど）
-        static let textSecondary = Color.white.opacity(0.8)
+        /// キャプション用の特殊色（濃い青色、背景色とは独立）
+        static let captionBlue = Color(hex: "#3d5a80")
 
         /// アクティブ状態の不透明度（7セグ表示など）
         static let activeOpacity: CGFloat = 1.0
@@ -48,10 +64,10 @@ struct DesignTokens {
     // MARK: - Clock Spacing
     enum ClockSpacing {
         /// 時刻とキャプションの間隔
-        static let timeCaptionSpacing: CGFloat = 8
+        static let timeCaptionSpacing: CGFloat = 6
 
-        /// 下部パディング（波との間隔を確保）
-        static let bottomPadding: CGFloat = 80
+        /// 下部パディング（波との間隔を確保） ※デジタル時計の位置
+        static let bottomPadding: CGFloat = 70
     }
 
     // MARK: - Moon Colors
@@ -104,16 +120,16 @@ struct DesignTokens {
         static let accent = Color.accentColor
 
         /// プライマリテキスト色
-        static let textPrimary = Color.white
+        static let textPrimary = CommonTextColors.primary
 
         /// セカンダリテキスト色（説明文など）
-        static let textSecondary = Color.white.opacity(0.7)
+        static let textSecondary = CommonTextColors.tertiary
 
         /// Tertiary テキスト色（キャプションなど）
-        static let textTertiary = Color.white.opacity(0.6)
+        static let textTertiary = CommonTextColors.quaternary
 
         /// 薄いテキスト色（ヒントなど）
-        static let textQuaternary = Color.white.opacity(0.5)
+        static let textQuaternary = CommonTextColors.quinary
 
         /// 強調テキスト色（時刻表示など）
         static let textHighlight = Color.white.opacity(0.9)
@@ -217,10 +233,10 @@ struct DesignTokens {
         static let divider = Color.white.opacity(0.2)
 
         /// アイコン色
-        static let iconColor = Color.white.opacity(0.8)
+        static let iconColor = CommonTextColors.secondary
 
-        /// シェブロン色
-        static let chevronColor = Color.white.opacity(0.5)
+        /// シェブロン色・説明文色
+        static let textMuted = CommonTextColors.quaternary
     }
 
     // MARK: - SideMenu Layout
