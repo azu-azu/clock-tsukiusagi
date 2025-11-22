@@ -52,17 +52,17 @@ struct ClockScreenView: View {
                     .accessibilityHidden(true)
                 }
 
-                // bunnyモードは中央配置
+                // bunnyモードの時計は中央配置
                 if displayMode == .bunny {
                     BunnyClockView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .accessibilityLabel("Current time")
                 }
 
-                // 時刻 + 一言（bunnyモード以外）
-                if displayMode != .bunny {
-                    VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
-                        // 時刻表示（表示モードに応じて切り替え）
+                // 時刻 + 一言（bunnyモード以外）または キャプションのみ（bunnyモード）
+                VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
+                    // 時刻表示（bunnyモード以外のみ）
+                    if displayMode != .bunny {
                         Group {
                             switch displayMode {
                             case .normal:
@@ -97,22 +97,22 @@ struct ClockScreenView: View {
                             }
                         }
                         .accessibilityLabel("Current time")
-
-                        // キャプション（共通）
-                        Text(snapshot.caption)
-                            .font(
-                                .system(
-                                    size: DesignTokens.ClockTypography.captionFontSize,
-                                    weight: .regular,
-                                    design: .serif
-                                )
-                            )
-                            .foregroundStyle(DesignTokens.ClockColors.textSecondary)
-                            .accessibilityLabel("Caption")
                     }
-                    .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
+
+                    // キャプション（全モード共通）
+                    Text(snapshot.caption)
+                        .font(
+                            .system(
+                                size: DesignTokens.ClockTypography.captionFontSize,
+                                weight: .regular,
+                                design: .serif
+                            )
+                        )
+                        .foregroundStyle(DesignTokens.ClockColors.textSecondary)
+                        .accessibilityLabel("Caption")
                 }
+                .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
+                .frame(maxHeight: .infinity, alignment: .bottom)
             }
             .animation(.easeInOut(duration: 0.6), value: snapshot.skyTone) // 時間帯フェード
             // タップ範囲を画面中央部に限定（上部ナビバー領域を除外）

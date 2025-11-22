@@ -50,8 +50,8 @@ struct DesignTokens {
         /// 時刻とキャプションの間隔
         static let timeCaptionSpacing: CGFloat = 8
 
-        /// 下部パディング
-        static let bottomPadding: CGFloat = 48
+        /// 下部パディング（波との間隔を確保）
+        static let bottomPadding: CGFloat = 80
     }
 
     // MARK: - Moon Colors
