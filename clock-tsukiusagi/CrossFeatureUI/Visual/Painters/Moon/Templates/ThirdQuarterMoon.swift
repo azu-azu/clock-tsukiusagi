@@ -45,10 +45,9 @@ enum ThirdQuarterMoon {
     static func terminatorPath(center: CGPoint, radius: CGFloat, circleDistance: CGFloat = 0) -> Path {
         let curvature: CGFloat = 0.12
         let jitter: CGFloat = 0.8
-        let isRightLit = false  // 下弦の月は常に左が明
 
-        // Waxing(右が明) / Waning(左が明) - 統一されたisRightLitを使用
-        let sign: CGFloat = isRightLit ? 1 : -1
+        // 下弦の月は常に左が明るい（Waning）
+        let sign: CGFloat = -1
 
         // 境界に重なるよう、中心位置を調整
         let steps = 96
