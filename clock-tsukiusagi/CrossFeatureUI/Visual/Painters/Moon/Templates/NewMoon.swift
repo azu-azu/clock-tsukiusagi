@@ -67,8 +67,12 @@ enum NewMoonPainter {
             )
         }
 
-        // 5) ごく細い外周の“気配”の線（視認性アップ・黒丸感の軽減）
-        ctx.stroke(disk, with: .color(Color.black.opacity(0.28)), lineWidth: max(1, r * 0.02))
+        // 5) ぼかした外周の"気配"の線（視認性アップ・幾何学的な黒丸感の軽減）
+        ctx.drawLayer { layer in
+            layer.addFilter(.blur(radius: r * 0.06))  // 枠をぼかす
+            layer.blendMode = .normal
+            layer.stroke(disk, with: .color(Color.black.opacity(0.35)), lineWidth: max(2, r * 0.04))
+        }
     }
 }
 
