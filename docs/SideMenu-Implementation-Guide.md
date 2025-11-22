@@ -338,6 +338,158 @@ struct ContentView: View {
 
 ---
 
+### 4.4 高度なスワイプジェスチャー実装
+
+実際の製品レベルの実装では、以下の点を考慮する必要があります。
+
+#### 左端検出の厳格化（iOS Timer同等）
+
+**推奨値**: 左端**20px以内**からのスワイプのみ検知
+
+iOSのTimerアプリと同様、誤操作を防ぐために左端の検出範囲を厳格にします。
+
+```swift
+private func sideMenuDragGesture() -> some Gesture {
+    DragGesture()
+        .onEnded { value in
+            let horizontalAmount = value.translation.width
+            let verticalAmount = abs(value.translation.height)
+            let openThreshold: CGFloat = 50
+            let closeThreshold = -openThreshold
+
+            // 水平移動が垂直移動より大きい場合のみ処理
+            if abs(horizontalAmount) > verticalAmount {
+                // 右スワイプ & 左端20px以内からのスワイプのみメニューを開く
+                if horizontalAmount > openThreshold && !isMenuPresented {
+                    if value.startLocation.x <= 20 {  // ← 厳格な左端検出
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isMenuPresented = true
+                        }
+                    }
+                }
+                // 左スワイプでメニューを閉じる
+                else if horizontalAmount < closeThreshold && isMenuPresented {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isMenuPresented = false
+                    }
+                }
+            }
+        }
+}
+```
+
+**ポイント**:
+- `value.startLocation.x <= 20`: 左端20px以内からのスワイプのみ
+- `abs(horizontalAmount) > verticalAmount`: 垂直スクロールとの競合を回避
+
+---
+
+#### 垂直スクロールとの競合回避
+
+**問題**: メニュー内にScrollViewがある場合、スワイプジェスチャーが垂直スクロールと競合します。
+
+**解決策**: 水平移動量が垂直移動量より大きい場合のみ処理
+
+```swift
+let horizontalAmount = value.translation.width
+let verticalAmount = abs(value.translation.height)
+
+if abs(horizontalAmount) > verticalAmount {
+    // スワイプジェスチャー処理
+}
+```
+
+**動作例**:
+
+| 水平移動 | 垂直移動 | 判定 | 結果 |
+|---------|---------|------|------|
+| 60pt → | 10pt ↓ | ✅ スワイプ | メニュー開閉 |
+| 60pt → | 50pt ↓ | ✅ スワイプ | メニュー開閉 |
+| 30pt → | 80pt ↓ | ❌ スクロール | 無視 |
+| 80pt → | 90pt ↓ | ❌ スクロール | 無視 |
+
+---
+
+#### 開く・閉じるを統合したジェスチャー
+
+別々のジェスチャーとして実装するのではなく、1つのハンドラーで統合的に処理します。
+
+```swift
+private func sideMenuDragGesture() -> some Gesture {
+    DragGesture()
+        .onEnded { value in
+            let horizontalAmount = value.translation.width
+            let verticalAmount = abs(value.translation.height)
+            let openThreshold: CGFloat = 50
+            let closeThreshold = -openThreshold
+
+            // 水平方向のスワイプのみ処理（垂直スクロールとの競合を避ける）
+            if abs(horizontalAmount) > verticalAmount {
+                // 右スワイプでメニューを開く
+                if horizontalAmount > openThreshold && !isMenuPresented {
+                    if value.startLocation.x <= 20 {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isMenuPresented = true
+                        }
+                    }
+                }
+                // 左スワイプでメニューを閉じる
+                else if horizontalAmount < closeThreshold && isMenuPresented {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isMenuPresented = false
+                    }
+                }
+            }
+        }
+}
+```
+
+---
+
+### 4.5 DesignTokensの使用
+
+ハードコード値の代わりにDesignTokensを使用することで、デザインの統一性を保ちます。
+
+#### ❌ 非推奨（ハードコード）
+
+```swift
+let menuWidth: CGFloat = 320
+.background(Color.white.opacity(0.1))
+.shadow(color: Color.black.opacity(0.3), radius: 8)
+```
+
+#### ✅ 推奨（DesignTokens）
+
+```swift
+let menuWidth = min(
+    size.width * DesignTokens.SideMenuLayout.menuWidthRatio,
+    DesignTokens.SideMenuLayout.menuMaxWidth
+)
+.background(DesignTokens.SideMenuColors.background)
+.shadow(color: Color.black.opacity(0.4), radius: 8, x: -4, y: 0)
+```
+
+#### 利用可能なDesignTokens
+
+**SideMenuLayout**:
+- `menuWidthRatio`: メニュー幅の画面比率（0.8）
+- `menuMaxWidth`: メニューの最大幅（300pt）
+- `menuHorizontalPadding`: 水平パディング（16pt）
+- `cornerRadius`: 角丸半径（10pt）
+- `itemVerticalPadding`: アイテムの垂直パディング（14pt）
+- `itemSpacing`: アイテム間のスペーシング（20pt）
+
+**SideMenuColors**:
+- `background`: メニュー背景色（宇宙空間の濃紺）
+- `overlay`: オーバーレイ背景色（黒の半透明）
+- `divider`: 区切り線色
+- `iconColor`: アイコン色
+- `textMuted`: 控えめなテキスト・シェブロン色
+
+詳細は [design-tokens-guide.md](../clock-tsukiusagi/Docs/implementation/design-tokens-guide.md) を参照してください。
+
+---
+
 ## 5. トラブルシューティング
 
 ### 5.1 上下に隙間ができる
@@ -473,4 +625,5 @@ ZStack {
 ---
 
 **更新履歴**:
+- 2025-11-22: セクション4.4, 4.5追加（高度なスワイプ実装、DesignTokens使用）
 - 2025-11-21: 初版作成（clock-tsukiusagi の SideMenu 実装経験をもとに）
