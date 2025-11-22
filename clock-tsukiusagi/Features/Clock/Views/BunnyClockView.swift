@@ -15,21 +15,9 @@ struct BunnyClockView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let date = context.date
-            ZStack {
-                // やわらかいミント系グラデ（TsukiUsagiっぽい淡色）
-                LinearGradient(
-                    colors: [
-                        SkyTone.dusk.gradStart,
-                        SkyTone.dusk.gradEnd
-                    ],
-                    startPoint: .top, endPoint: .bottom
-                )
-                .ignoresSafeArea()
-
-                // 文字盤 & 針
-                ClockFace(date: date)
-                    .padding(24)
-            }
+            // 文字盤 & 針（背景はClockScreenViewのものを使用）
+            ClockFace(date: date)
+                .padding(24)
         }
     }
 }

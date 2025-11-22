@@ -42,66 +42,77 @@ struct ClockScreenView: View {
                 )
                 .ignoresSafeArea()
 
-                // 月（UTC位相は内部で計算）
-                MoonGlyph(
-                    date: now,
-                    tone: snapshot.skyTone
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .accessibilityHidden(true)
-
-                // 時刻 + 一言
-                VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
-                    // /		 時刻表示（表示モードに応じて切り替え）
-                    Group {
-                        switch displayMode {
-                        case .normal:
-                            let timeText = Text(formatter.string(from: snapshot.time))
-                                .font(.system(size: Self.clockFontSize, weight: .semibold, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundStyle(DesignTokens.ClockColors.textPrimary)
-                            timeText
-
-                        case .dotMatrix:
-                            DotMatrixClockView(
-                                timeString: formatter.string(from: snapshot.time),
-                                fontSize: Self.clockFontSize,
-                                fontWeight: .semibold,
-                                fontDesign: .monospaced,
-                                dotSize: 2,
-                                dotSpacing: 2,
-                                color: DesignTokens.ClockColors.textPrimary,
-                                enableGlow: true
-                            )
-
-                        case .sevenSeg:
-                            SevenSegDotClockView(
-                                targetHeight: Self.sevenSegHeight,
-                                formatter: formatter,
-                                textColor: DesignTokens.ClockColors.textPrimary
-                            )
-                            .offset(y: -8)
-
-                        case .bunny:
-                            BunnyClockView()
-                        }
-                    }
-                    .accessibilityLabel("Current time")
-
-                    // キャプション（共通）
-                    Text(snapshot.caption)
-                        .font(
-                            .system(
-                                size: DesignTokens.ClockTypography.captionFontSize,
-                                weight: .regular,
-                                design: .serif
-                            )
-                        )
-                        .foregroundStyle(DesignTokens.ClockColors.textSecondary)
-                        .accessibilityLabel("Caption")
+                // 月（UTC位相は内部で計算）— bunnyモード時は非表示
+                if displayMode != .bunny {
+                    MoonGlyph(
+                        date: now,
+                        tone: snapshot.skyTone
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .accessibilityHidden(true)
                 }
-                .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
-                .frame(maxHeight: .infinity, alignment: .bottom)
+
+                // bunnyモードは中央配置
+                if displayMode == .bunny {
+                    BunnyClockView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .accessibilityLabel("Current time")
+                }
+
+                // 時刻 + 一言（bunnyモード以外）
+                if displayMode != .bunny {
+                    VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
+                        // 時刻表示（表示モードに応じて切り替え）
+                        Group {
+                            switch displayMode {
+                            case .normal:
+                                let timeText = Text(formatter.string(from: snapshot.time))
+                                    .font(.system(size: Self.clockFontSize, weight: .semibold, design: .rounded))
+                                    .monospacedDigit()
+                                    .foregroundStyle(DesignTokens.ClockColors.textPrimary)
+                                timeText
+
+                            case .dotMatrix:
+                                DotMatrixClockView(
+                                    timeString: formatter.string(from: snapshot.time),
+                                    fontSize: Self.clockFontSize,
+                                    fontWeight: .semibold,
+                                    fontDesign: .monospaced,
+                                    dotSize: 2,
+                                    dotSpacing: 2,
+                                    color: DesignTokens.ClockColors.textPrimary,
+                                    enableGlow: true
+                                )
+
+                            case .sevenSeg:
+                                SevenSegDotClockView(
+                                    targetHeight: Self.sevenSegHeight,
+                                    formatter: formatter,
+                                    textColor: DesignTokens.ClockColors.textPrimary
+                                )
+                                .offset(y: -8)
+
+                            case .bunny:
+                                EmptyView()
+                            }
+                        }
+                        .accessibilityLabel("Current time")
+
+                        // キャプション（共通）
+                        Text(snapshot.caption)
+                            .font(
+                                .system(
+                                    size: DesignTokens.ClockTypography.captionFontSize,
+                                    weight: .regular,
+                                    design: .serif
+                                )
+                            )
+                            .foregroundStyle(DesignTokens.ClockColors.textSecondary)
+                            .accessibilityLabel("Caption")
+                    }
+                    .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                }
             }
             .animation(.easeInOut(duration: 0.6), value: snapshot.skyTone) // 時間帯フェード
             // タップ範囲を画面中央部に限定（上部ナビバー領域を除外）
