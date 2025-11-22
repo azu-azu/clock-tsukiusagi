@@ -5,6 +5,7 @@ enum ClockDisplayMode {
     case dotMatrix
     case sevenSeg
     case bunny
+    case number
 }
 
 struct ClockScreenView: View {
@@ -42,8 +43,8 @@ struct ClockScreenView: View {
                 )
                 .ignoresSafeArea()
 
-                // 月（UTC位相は内部で計算）— bunnyモード時は非表示
-                if displayMode != .bunny {
+                // 月（UTC位相は内部で計算）— bunny/numberモード時は非表示
+                if displayMode != .bunny && displayMode != .number {
                     MoonGlyph(
                         date: now,
                         tone: snapshot.skyTone
@@ -59,10 +60,17 @@ struct ClockScreenView: View {
                         .accessibilityLabel("Current time")
                 }
 
-                // 時刻 + 一言（bunnyモード以外）または キャプションのみ（bunnyモード）
+                // numberモードの時計は中央配置
+                if displayMode == .number {
+                    NumberClockView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .accessibilityLabel("Current time")
+                }
+
+                // 時刻 + 一言（bunny/numberモード以外）または キャプションのみ（bunny/numberモード）
                 VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
-                    // 時刻表示（bunnyモード以外のみ）
-                    if displayMode != .bunny {
+                    // 時刻表示（bunny/numberモード以外のみ）
+                    if displayMode != .bunny && displayMode != .number {
                         Group {
                             switch displayMode {
                             case .normal:
@@ -93,6 +101,9 @@ struct ClockScreenView: View {
                                 .offset(y: -8)
 
                             case .bunny:
+                                EmptyView()
+
+                            case .number:
                                 EmptyView()
                             }
                         }
@@ -132,6 +143,8 @@ struct ClockScreenView: View {
                                 case .sevenSeg:
                                     displayMode = .bunny
                                 case .bunny:
+                                    displayMode = .number
+                                case .number:
                                     displayMode = .normal
                                 }
                             }
