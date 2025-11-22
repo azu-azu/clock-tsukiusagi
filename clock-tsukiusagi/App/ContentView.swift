@@ -47,6 +47,8 @@ public struct ContentView: View {
                             }
                         }
 
+                        Spacer()  // 左右を画面端に配置
+
                         // 右側：Audio
                         TabButton(
                             icon: "music.quarternote.3",
@@ -57,6 +59,7 @@ public struct ContentView: View {
                         }
                     }
                     .frame(height: 60)
+                    .padding(.horizontal, 62)  // 画面端より内側に配置
                     .padding(.top, 10)
 
                     Spacer()
@@ -152,7 +155,6 @@ private struct TabButton: View {
                     .font(.caption)
             }
             .foregroundColor(isSelected ? .accentColor : .white.opacity(0.6))
-            .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
     }

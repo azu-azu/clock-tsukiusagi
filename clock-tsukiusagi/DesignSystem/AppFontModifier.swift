@@ -58,7 +58,7 @@ struct DynamicFont: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        if let textStyle = relativeTo {
+		if relativeTo != nil {
             content.font(.system(size: size, weight: weight, design: fontStyle.design).width(.standard))
         } else {
             content.font(.system(size: size, weight: weight, design: fontStyle.design))
