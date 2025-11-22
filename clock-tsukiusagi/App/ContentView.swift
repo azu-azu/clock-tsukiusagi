@@ -2,11 +2,13 @@ import SwiftUI
 
 public struct ContentView: View {
     @State private var selectedTab: Tab = .clock
+    @State private var isMenuPresented = false
+    @StateObject private var fontStyleProvider = FontStyleProvider()
 
     public init() {}
 
     public var body: some View {
-        ZStack(alignment: .top) {
+        ZStack(alignment: .topLeading) {
             // 選択されたビューを全画面表示（背景）
             Group {
                 switch selectedTab {
@@ -24,6 +26,9 @@ public struct ContentView: View {
 
                 case .settings:
                     AudioSettingsView(selectedTab: $selectedTab)
+
+                case .appSettings:
+                    AppSettingsView(selectedTab: $selectedTab)
                 }
             }
 
@@ -31,16 +36,18 @@ public struct ContentView: View {
             if selectedTab == .clock {
                 VStack(spacing: 0) {
                     HStack(spacing: 0) {
-                        // Clock アイコンは非表示（現在のページなので）
-
+                        // 左側：ギアボタン（SideMenu トリガー）
                         TabButton(
-                            icon: "slider.horizontal.3",
-                            label: "Settings",
+                            icon: "gearshape.fill",
+                            label: "Menu",
                             isSelected: false
                         ) {
-                            selectedTab = .settings
+                            withAnimation {
+                                isMenuPresented = true
+                            }
                         }
 
+                        // 右側：Audio
                         TabButton(
                             icon: "music.quarternote.3",
                             label: "Audio",
@@ -55,8 +62,67 @@ public struct ContentView: View {
                     Spacer()
                 }
             }
+
+            // SideMenu関連（Clock画面のみ）
+            if selectedTab == .clock {
+
+                // オーバーレイ
+                SideMenuOverlay(isPresented: $isMenuPresented)
+
+                // メニュー本体
+                ClockSideMenu(
+                    isPresented: $isMenuPresented,
+                    onBackToFront: {
+                        selectedTab = .clock
+                    },
+                    onOpenAudio: {
+                        selectedTab = .audioTest
+                    },
+                    onOpenAudioSettings: {
+                        selectedTab = .settings
+                    },
+                    onOpenAppSettings: {
+                        selectedTab = .appSettings
+                    }
+                )
+            }
         }
+        .withFontStyleProvider(fontStyleProvider)
+        .gesture(sideMenuDragGesture())
         .statusBarHidden(true)
+    }
+
+    // MARK: - Swipe Gesture
+
+    /// ✂️ 左端からのスワイプでSideMenuを開くジェスチャー
+    /// ✂️ Timer app と同じロジック: 左端20px以内からのスワイプのみ検知
+    private func sideMenuDragGesture() -> some Gesture {
+        DragGesture()
+            .onEnded { value in
+                let horizontalAmount = value.translation.width
+                let verticalAmount = abs(value.translation.height)
+                // ✂️ 画面幅の10%を最小閾値として使用（最低50px）
+                let openThreshold: CGFloat = 50
+                let closeThreshold = -openThreshold
+
+                // ✂️ 水平方向のスワイプのみ処理（垂直スクロールとの競合を避ける）
+                if abs(horizontalAmount) > verticalAmount {
+                    // ✂️ 右スワイプ & 左端20px以内からのスワイプのみメニューを開く
+                    if horizontalAmount > openThreshold && !isMenuPresented {
+                        if value.startLocation.x <= 20 {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isMenuPresented = true
+                            }
+                        }
+                    }
+                    // ✂️ 左スワイプでメニューを閉じる
+                    else if horizontalAmount < closeThreshold && isMenuPresented {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isMenuPresented = false
+                        }
+                    }
+                }
+            }
     }
 }
 
@@ -66,6 +132,7 @@ public enum Tab {
     case clock
     case audioTest
     case settings
+    case appSettings
 }
 
 // MARK: - TabButton

@@ -23,7 +23,7 @@ public struct SettingsSection<Content: View>: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
             Text(title)
-                .font(DesignTokens.SettingsTypography.sectionTitle)
+                .dynamicFont(size: DesignTokens.SettingsTypography.sectionTitleSize, weight: DesignTokens.SettingsTypography.sectionTitleWeight)
                 .foregroundColor(DesignTokens.SettingsColors.textHighlight)
 
             VStack(spacing: DesignTokens.SettingsSpacing.itemSpacing) {
@@ -54,11 +54,11 @@ public struct SettingsToggle: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(DesignTokens.SettingsTypography.itemTitle)
+                    .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                 if let subtitle = subtitle {
                     Text(subtitle)
-                        .font(DesignTokens.SettingsTypography.caption)
+                        .dynamicFont(size: DesignTokens.SettingsTypography.captionSize, weight: DesignTokens.SettingsTypography.captionWeight)
                         .foregroundColor(DesignTokens.SettingsColors.textTertiary)
                 }
             }
@@ -97,11 +97,11 @@ public struct SettingsStepper: View {
     public var body: some View {
         HStack {
             Text(title)
-                .font(DesignTokens.SettingsTypography.itemTitle)
+                .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             Spacer()
             Text("\(value) \(unit)")
-                .font(DesignTokens.SettingsTypography.itemTitle)
+                .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                 .foregroundColor(DesignTokens.SettingsColors.accent)
                 .monospacedDigit()
                 .frame(width: DesignTokens.SettingsLayout.stepperValueWidth, alignment: .trailing)

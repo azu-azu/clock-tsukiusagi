@@ -114,20 +114,13 @@ struct AudioTestView: View {
             }
             .navigationTitle("Audio")
             .navigationBarTitleDisplayMode(.inline)
-            .font(NavigationBarTokens.monospacedTitleFont)
+            .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .navigationBackButton {
+                selectedTab = .clock
+            }
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        selectedTab = .clock
-                    }) {
-                        Image(systemName: "clock.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-                }
-
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         selectedTab = .settings
@@ -137,8 +130,6 @@ struct AudioTestView: View {
                             .foregroundColor(.white.opacity(0.6))
                     }
                 }
-
-                // Audio アイコンは非表示（現在のページ）
             }
             .alert("エラー", isPresented: $showError) {
                 Button("OK") { showError = false }
@@ -159,7 +150,7 @@ struct AudioTestView: View {
                 .font(.system(size: 20))
 
             Text(audioService.outputRoute.displayName)
-                .font(.system(size: 15, design: .monospaced))
+                .dynamicFont(size: DynamicTheme.AudioTestTypography.statusIndicatorSize, weight: DynamicTheme.AudioTestTypography.statusIndicatorWeight)
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
             Spacer()
@@ -175,7 +166,7 @@ struct AudioTestView: View {
             VStack(alignment: .leading, spacing: 16) { // ✂️ Uniform spacing of 16pt between all 3 rows
                 // ✂️ Title inside card for unified appearance
                 Text("音源選択")
-                    .font(.system(size: 17, weight: .semibold))
+                    .dynamicFont(size: DynamicTheme.AudioTestTypography.headlineSize, weight: DynamicTheme.AudioTestTypography.headlineWeight)
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
                 // ✂️ Picker with centered layout
@@ -194,7 +185,7 @@ struct AudioTestView: View {
                     } label: {
                         HStack {
                             Text(selectedSource.displayName)
-                                .font(.system(size: 17, design: .monospaced)) // ✂️ Larger font (15 -> 17)
+                                .dynamicFont(size: DynamicTheme.AudioTestTypography.soundMenuSize, weight: DynamicTheme.AudioTestTypography.soundMenuWeight)
                                 .foregroundColor(DesignTokens.SettingsColors.accent) // ✂️ Blue for standard iOS look
                             Spacer()
                             Image(systemName: "chevron.up.chevron.down")
@@ -211,7 +202,7 @@ struct AudioTestView: View {
                 HStack {
                     Spacer()
                     Text(selectedSource.englishTitle)
-                        .font(.system(size: 13, design: .monospaced))
+                        .dynamicFont(size: DynamicTheme.AudioTestTypography.englishTitleSize, weight: DynamicTheme.AudioTestTypography.englishTitleWeight)
                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                 }
             }
@@ -238,7 +229,7 @@ struct AudioTestView: View {
                     Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
                     Text(audioService.isPlaying ? "停止" : "再生")
                 }
-                .font(DesignTokens.SettingsTypography.headline)
+                .dynamicFont(size: DynamicTheme.AudioTestTypography.headlineSize, weight: DynamicTheme.AudioTestTypography.headlineWeight)
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                 .frame(maxWidth: .infinity)
                 .padding(DesignTokens.SettingsLayout.buttonPadding)
@@ -258,11 +249,11 @@ struct AudioTestView: View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
             HStack {
                 Text("音量（端末ボタンで制御）")
-                    .font(.system(size: 15, design: .monospaced))
+                    .dynamicFont(size: DynamicTheme.AudioTestTypography.volumeLabelSize, weight: DynamicTheme.AudioTestTypography.volumeLabelWeight)
                     .foregroundColor(Color.gray.opacity(0.7))
                 Spacer()
                 Text("\(Int(audioService.systemVolume * 100))%")
-                    .font(.system(size: 15, design: .monospaced))
+                    .dynamicFont(size: DynamicTheme.AudioTestTypography.volumeLabelSize, weight: DynamicTheme.AudioTestTypography.volumeLabelWeight)
                     .foregroundColor(Color.gray.opacity(0.7))
             }
 
@@ -297,7 +288,7 @@ struct AudioTestView: View {
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalSmall) {
             Text("ステータス")
-                .font(.system(size: 17, weight: .semibold))
+                .dynamicFont(size: DynamicTheme.AudioTestTypography.statusTitleSize, weight: DynamicTheme.AudioTestTypography.statusTitleWeight)
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
             HStack {
@@ -309,17 +300,17 @@ struct AudioTestView: View {
                     )
                     .frame(width: 10, height: 10)
                 Text(audioService.isPlaying ? "再生中" : "停止中")
-                    .font(.system(size: 15, design: .monospaced))
+                    .dynamicFont(size: DynamicTheme.AudioTestTypography.statusTextSize, weight: DynamicTheme.AudioTestTypography.statusTextWeight)
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
             }
 
             if let reason = audioService.pauseReason {
                 HStack {
                     Text("停止理由:")
-                        .font(.system(size: 13, design: .monospaced))
+                        .dynamicFont(size: DynamicTheme.AudioTestTypography.statusCaptionSize, weight: DynamicTheme.AudioTestTypography.statusCaptionWeight)
                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                     Text(reason.rawValue)
-                        .font(.system(size: 13, design: .monospaced))
+                        .dynamicFont(size: DynamicTheme.AudioTestTypography.statusCaptionSize, weight: DynamicTheme.AudioTestTypography.statusCaptionWeight)
                         .foregroundColor(DesignTokens.SettingsColors.warning)
                 }
             }
@@ -327,11 +318,11 @@ struct AudioTestView: View {
             // Selected source (inline)
             HStack(spacing: 4) {
                 Text("選択中:")
-                    .font(.system(size: 13, design: .monospaced))
+                    .dynamicFont(size: DynamicTheme.AudioTestTypography.statusCaptionSize, weight: DynamicTheme.AudioTestTypography.statusCaptionWeight)
                     .foregroundColor(DesignTokens.SettingsColors.textSecondary)
 
                 Text(selectedSource.englishTitle)
-                    .font(.system(size: 13, design: .monospaced))
+                    .dynamicFont(size: DynamicTheme.AudioTestTypography.statusCaptionSize, weight: DynamicTheme.AudioTestTypography.statusCaptionWeight)
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
             }
         }

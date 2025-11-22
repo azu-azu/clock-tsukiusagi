@@ -137,19 +137,42 @@ final class ClockScreenVM: ObservableObject {
         let caption: String
     }
 
+    #if DEBUG
+    // クラス内で変更可能にするため、変数として保持
+    private var lastLoggedDate: Date?
+    #endif
+
     func snapshot(at date: Date) -> Snapshot {
         let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
         let tone = SkyTone.forHour(comps.hour ?? 0)
         let mp = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
+
         #if DEBUG
-        print("=== ClockCaption Debug ===")
-        print("Date: \(date)")
-        print("Phase: \(String(format: "%.6f", mp.phase))")
-        print("Illumination: \(String(format: "%.2f%%", mp.illumination * 100))")
-        let captionResult = ClockCaption.forMoonPhase(phase: mp.phase, illumination: mp.illumination)
-        print("Caption Key: \(captionResult.captionKey)")
-        print("========================")
+        // 日付が変わったときだけログ出力（毎秒の出力を防ぐ）
+        let calendar = Calendar.current
+        let shouldLog: Bool
+        if let lastDate = lastLoggedDate {
+            // 日付が変わったかチェック
+            let lastDateComps = calendar.dateComponents([.year, .month, .day], from: lastDate)
+            let currentDateComps = calendar.dateComponents([.year, .month, .day], from: date)
+            shouldLog = lastDateComps != currentDateComps
+        } else {
+            // 初回は必ずログ出力
+            shouldLog = true
+        }
+
+        if shouldLog {
+            print("🐛 === ClockCaption Debug ===")
+            print("Date: \(date)")
+            print("Phase: \(String(format: "%.6f", mp.phase))")
+            print("Illumination: \(String(format: "%.2f%%", mp.illumination * 100))")
+            let captionResult = ClockCaption.forMoonPhase(phase: mp.phase, illumination: mp.illumination)
+            print("Caption Key: \(captionResult.captionKey)")
+            print("========================")
+            lastLoggedDate = date
+        }
         #endif
+
         let caption = ClockCaption.forMoonPhase(phase: mp.phase, illumination: mp.illumination).captionKey
         return Snapshot(time: date, skyTone: tone, caption: caption)
     }

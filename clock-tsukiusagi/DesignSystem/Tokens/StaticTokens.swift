@@ -1,19 +1,15 @@
+//
+//  StaticTokens.swift
+//  clock-tsukiusagi
+//
+//  Created by Claude Code on 2025-11-21.
+//  静的デザイントークン - 色、スペーシング、レイアウトなどの固定値
+//
+
 import SwiftUI
 
-/// デザイントークン - アプリ全体で使用する色、フォント、スペーシングなどの統一された値
-///
-/// 📌 **新しい設計について**
-///
-/// 将来的には、Static Tokens と Dynamic Theme に分離されます:
-/// - `StaticTokens`: 色、スペーシング、レイアウトなど環境に依存しない固定値
-/// - `DynamicTheme`: フォントなど環境・設定に依存する値
-///
-/// **新規コードでの推奨**:
-/// - フォント関連は `DynamicTheme.AudioTestTypography` + `.dynamicFont()` を使用
-/// - 色・spacing・layout は当面このまま `DesignTokens` を使用可能
-///
-/// **段階的移行方針**: 互換性維持のため、このファイルは当面残します。
-struct DesignTokens {
+/// 静的デザイントークン - 環境に依存しない固定値（色、スペーシング、レイアウト）
+struct StaticTokens {
 
     // MARK: - Clock Colors
     enum ClockColors {
@@ -33,18 +29,6 @@ struct DesignTokens {
         static let inactiveOpacity: CGFloat = 0.18
     }
 
-    // MARK: - Clock Typography
-    enum ClockTypography {
-        /// メインの時刻フォントサイズ
-        static let clockFontSize: CGFloat = 56
-
-        /// キャプションフォントサイズ
-        static let captionFontSize: CGFloat = 16
-
-        /// 7セグ表示の高さ
-        static let sevenSegHeight: CGFloat = 44
-    }
-
     // MARK: - Clock Spacing
     enum ClockSpacing {
         /// 時刻とキャプションの間隔
@@ -52,6 +36,12 @@ struct DesignTokens {
 
         /// 下部パディング
         static let bottomPadding: CGFloat = 48
+    }
+
+    // MARK: - Clock Layout
+    enum ClockLayout {
+        /// 7セグ表示の高さ
+        static let sevenSegHeight: CGFloat = 44
     }
 
     // MARK: - Moon Colors
@@ -129,29 +119,6 @@ struct DesignTokens {
 
         /// 非アクティブ色
         static let inactive = Color.white.opacity(0.25)
-    }
-
-    // MARK: - Settings Typography
-    enum SettingsTypography {
-        /// セクションタイトルのサイズ
-        static let sectionTitleSize: CGFloat = 18
-        static let sectionTitleWeight: Font.Weight = .semibold
-
-        /// 項目タイトルのサイズ
-        static let itemTitleSize: CGFloat = 17
-        static let itemTitleWeight: Font.Weight = .regular
-
-        /// キャプションのサイズ
-        static let captionSize: CGFloat = 12
-        static let captionWeight: Font.Weight = .regular
-
-        /// 見出しのサイズ
-        static let headlineSize: CGFloat = 17
-        static let headlineWeight: Font.Weight = .semibold
-
-        /// サブ見出しのサイズ
-        static let subheadlineSize: CGFloat = 15
-        static let subheadlineWeight: Font.Weight = .regular
     }
 
     // MARK: - Settings Spacing
@@ -251,26 +218,5 @@ struct DesignTokens {
 
         /// メニュー項目間のスペーシング
         static let itemSpacing: CGFloat = 20
-    }
-
-    // MARK: - SideMenu Typography
-    enum SideMenuTypography {
-        /// ヘッダータイトルのサイズ
-        static let headerTitleSize: CGFloat = 20
-        static let headerTitleWeight: Font.Weight = .bold
-
-        /// メニュー項目タイトルのサイズ
-        static let itemTitleSize: CGFloat = 17
-        static let itemTitleWeight: Font.Weight = .regular
-
-        /// アイコンのサイズ
-        static let itemIconSize: CGFloat = 18
-
-        /// シェブロンのサイズ
-        static let chevronSize: CGFloat = 13
-
-        /// フッター用のサイズ
-        static let footerInfoSize: CGFloat = 12
-        static let footerInfoWeight: Font.Weight = .regular
     }
 }
