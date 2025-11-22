@@ -32,8 +32,10 @@ struct SevenSegDotClockView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { ctx in
             let t = formatter.string(from: ctx.date)
+            let chars = Array(t)
             HStack(spacing: digitSpacing) {
-                ForEach(Array(t), id: \.self) { ch in
+                ForEach(chars.indices, id: \.self) { index in
+                    let ch = chars[index]
                     if ch == ":" {
                         ColonDotCell(digitHeight: digitHeight, inactiveOpacity: inactiveOpacity, dotSize: dotSize, spacing: spacing, textColor: textColor)
                     } else if let d = ch.wholeNumberValue {
