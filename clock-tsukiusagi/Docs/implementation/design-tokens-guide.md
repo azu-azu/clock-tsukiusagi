@@ -5,7 +5,7 @@
 
 ## 概要
 
-本ガイドでは、clock-tsukiusagiアプリで使用するデザイントークンの体系と使用方法を説明します。特に、CommonTextColorsを中心とした色体系の統一について詳しく解説します。
+本ガイドでは、clock-tsukiusagiアプリで使用するデザイントークンの体系と使用方法を説明します。特に、CommonTextColorsとCommonBackgroundColorsを中心とした色体系の統一について詳しく解説します。
 
 ---
 
@@ -34,6 +34,41 @@ enum CommonTextColors {
     static let tertiary = Color.white.opacity(0.7)
     static let quaternary = Color.white.opacity(0.6)
     static let quinary = Color.white.opacity(0.5)
+}
+```
+
+---
+
+## CommonBackgroundColors 階層システム
+
+### 概念
+
+`DesignTokens.CommonBackgroundColors`は、アプリ全体で統一された**4段階の背景色階層**を提供します。これにより、hardcodedなopacity値の散在や、同じ値を異なる表記（0.1 vs 0.10）で定義する問題を解決します。
+
+### 階層定義
+
+| 階層 | opacity値 | 用途 | 具体例 |
+|------|-----------|------|--------|
+| **card** | 0.1 | 標準カード背景 | Settings画面のカード、SideMenuのカード |
+| **cardHighlight** | 0.15 | ハイライト背景 | Audio画面の音源カード |
+| **cardInteractive** | 0.25 | 選択・強調背景 | 音源選択時の強調表示 |
+| **cardBorder** | 0.3 | カード枠線 | 全カードの枠線 |
+
+**定義場所**: `DesignSystem/DesignTokens.swift:43-55`
+
+```swift
+enum CommonBackgroundColors {
+    /// カード背景色（全画面共通）
+    static let card = Color.white.opacity(0.1)
+
+    /// ハイライトされたカード背景色（通常より明るい）
+    static let cardHighlight = Color.white.opacity(0.15)
+
+    /// インタラクティブなカード背景色（選択・強調用、最も明るい）
+    static let cardInteractive = Color.white.opacity(0.25)
+
+    /// カードの枠線色
+    static let cardBorder = Color.white.opacity(0.3)
 }
 ```
 
@@ -93,6 +128,20 @@ enum SideMenuColors {
 }
 ```
 
+### CommonBackgroundColorsの参照例
+
+```swift
+enum CosmosColors {
+    /// カード背景色（代替・subtle用）
+    static let cardBackgroundAlt = CommonBackgroundColors.card
+}
+
+enum SettingsColors {
+    /// カード背景色
+    static let cardBackground = CommonBackgroundColors.card
+}
+```
+
 ---
 
 ## 使用ガイドライン
@@ -109,14 +158,26 @@ Text("This is a description")
 // SideMenuでのシェブロン
 Image(systemName: "chevron.right")
     .foregroundColor(DesignTokens.SideMenuColors.textMuted)
+
+// カード背景
+VStack {
+    // Content
+}
+.background(DesignTokens.SettingsColors.cardBackground)
 ```
 
-#### パターンB: CommonTextColorsを直接参照
+#### パターンB: CommonColorsを直接参照
 
 ```swift
 // 新規コンポーネントで汎用的なテキスト色が必要な場合
 Text("Generic text")
     .foregroundColor(DesignTokens.CommonTextColors.tertiary)
+
+// 汎用的なカード背景
+VStack {
+    // Content
+}
+.background(DesignTokens.CommonBackgroundColors.card)
 ```
 
 ---
@@ -197,6 +258,7 @@ enum SettingsColors {
 | 用途 | 使用するトークン | 例 |
 |------|----------------|-----|
 | **テキスト色** | `CommonTextColors` | ラベル、説明文、ボタンテキスト |
+| **カード背景色** | `CommonBackgroundColors` | カード背景、カード枠線 |
 | **背景グラデーション** | `SkyTone` (dusk/night/day) | 画面全体の背景、時間帯による変化 |
 | **特殊なキャプション色** | `ClockColors.captionBlue` | 月相キャプション（背景と被らない独立色） |
 
@@ -215,6 +277,43 @@ SkyToneを背景に使う場合、キャプションテキストがSkyToneの色
 ---
 
 ## リファクタリング履歴
+
+### 2025-11-22: CommonBackgroundColors導入
+
+#### 問題
+
+背景色関連のopacity値が複数箇所で重複していた：
+
+1. `cardBackground`: `opacity(0.1)` vs `opacity(0.10)` の表記ゆれ
+2. `AudioTestView.swift`: hardcoded `opacity(0.15)`, `opacity(0.3)` with ✂️ comment
+3. `SettingsComponents.swift`: hardcoded `opacity(0.25)`, `opacity(0.3)`
+
+#### 解決策
+
+1. **CommonBackgroundColors導入**: 4段階の階層システムで背景色を定義
+   - card (0.1): 標準カード背景
+   - cardHighlight (0.15): ハイライト背景
+   - cardInteractive (0.25): 選択・強調背景
+   - cardBorder (0.3): カード枠線
+
+2. **各Colors enumは参照のみ**: CosmosColors, SettingsColorsからCommonBackgroundColorsを参照
+
+3. **hardcoded値を削除**: AudioTestView, SettingsComponentsのhardcoded値をトークン参照に置き換え
+
+#### 影響範囲
+
+- 3ファイル変更（29行追加、6行削除）
+- 色の実際の見た目は変更なし（参照先が変わっただけ）
+- 将来の背景色変更が一箇所で完結
+
+#### コミット
+
+```
+refactor: introduce CommonBackgroundColors for unified background system
+commit: 6b36ece
+```
+
+---
 
 ### 2025-11-22: textSecondary統一化
 
@@ -253,10 +352,10 @@ commit: 56d2032
 
 ## 新しい色を追加する場合
 
-### フローチャート
+### フローチャート（テキスト色）
 
 ```
-新しい色が必要になった
+新しいテキスト色が必要になった
     ↓
 CommonTextColorsの5階層で対応可能？
     ↓ YES
@@ -275,6 +374,26 @@ CommonTextColorsの5階層で対応可能？
 背景色（SkyTone）と被らないか確認
     ↓ 被る場合
     独立したhex値を使用（例: #3d5a80）
+```
+
+### フローチャート（背景色）
+
+```
+新しい背景色が必要になった
+    ↓
+CommonBackgroundColorsの4階層で対応可能？
+    ↓ YES
+    既存の階層を使用（card/cardHighlight/cardInteractive/cardBorder）
+    ↓ NO
+    ↓
+複数画面で共通利用する？
+    ↓ YES
+    CommonBackgroundColorsに新しい階層を追加
+    （要：チーム相談、影響範囲確認）
+    ↓ NO
+    ↓
+画面固有のColors enumに定義
+（例: ClockColors.glowColor）
 ```
 
 ### 例: 新しい警告テキスト色を追加
