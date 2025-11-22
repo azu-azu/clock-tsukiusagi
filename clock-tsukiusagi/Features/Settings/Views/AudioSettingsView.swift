@@ -180,17 +180,10 @@ public struct AudioSettingsView: View {
             .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .navigationBackButton {
+                selectedTab = .clock
+            }
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        selectedTab = .clock
-                    }) {
-                        Image(systemName: "clock.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.8))
-                    }
-                }
-
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         selectedTab = .audioTest
@@ -200,8 +193,6 @@ public struct AudioSettingsView: View {
                             .foregroundColor(.white.opacity(0.8))
                     }
                 }
-
-                // Settings アイコンは非表示（現在のページ）
             }
         }
     }

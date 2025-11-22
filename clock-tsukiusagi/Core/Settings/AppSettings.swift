@@ -51,13 +51,6 @@ public enum FontStyle: String, Codable, CaseIterable {
         }
     }
 
-    public var description: String {
-        switch self {
-        case .monospaced: return "Monospaced, sharp and modern"
-        case .rounded: return "Soft, friendly rounded edges"
-        }
-    }
-
     public var font: Font {
         switch self {
         case .monospaced:

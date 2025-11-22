@@ -37,17 +37,10 @@ public struct AppSettingsView: View {
             .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .navigationBackButton {
+                selectedTab = .clock
+            }
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        selectedTab = .clock
-                    }) {
-                        Image(systemName: "clock.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.8))
-                    }
-                }
-
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         selectedTab = .audioTest
@@ -102,15 +95,9 @@ public struct AppSettingsView: View {
                     .font(.system(size: 20))
                     .foregroundColor(fontStyle == style ? DesignTokens.SettingsColors.accent : DesignTokens.SettingsColors.textSecondary)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(style.displayName)
-                        .font(fontForStyle(style))
-                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-
-                    Text(style.description)
-                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                }
+                Text(style.displayName)
+                    .font(fontForStyle(style))
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
                 Spacer()
             }
