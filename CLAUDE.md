@@ -1,6 +1,6 @@
 # Claude Code Guidance for clock-tsukiusagi
 
-**Version**: 3.1 (Updated for 3-Layer Audio Architecture)
+**Version**: 3.2 (Simplified structure guidance)
 **Last Updated**: 2025-11-23
 
 This file provides guidance to Claude Code (`claude.ai/code`) when working with code in this repository.
@@ -92,90 +92,16 @@ See: `clock-tsukiusagi/Docs/implementation/navigation-design.md` for full specif
 
 ---
 
-## File Structure
-
-```
-clock-tsukiusagi/
-├── App/                          # App entry point and main views
-│   ├── clock_tsukiusagiApp.swift
-│   └── ContentView.swift         # Tab navigation controller
-├── Core/                         # Core systems and services
-│   ├── Audio/                    # Audio system
-│   │   ├── AudioService.swift    # Singleton service (main interface)
-│   │   ├── AudioTestView.swift   # Test UI
-│   │   ├── Engine/               # AVAudioEngine wrapper
-│   │   ├── PureTone/             # Pure tone module (sine-based sounds)
-│   │   │   ├── PureTonePreset.swift   # Pure tone preset enum
-│   │   │   ├── PureToneParams.swift   # Parameter structure
-│   │   │   ├── PureToneBuilder.swift  # Builder pattern
-│   │   │   ├── LunarPulse.swift       # Solfeggio tone source
-│   │   │   └── TreeChime.swift        # Grain synthesis chime
-│   │   ├── Signal/               # SignalEngine (noise-based synthesis)
-│   │   │   ├── SignalPresetBuilder.swift  # NaturalSound builder
-│   │   │   └── Presets/          # NaturalSound signal implementations
-│   │   ├── Sources/              # Other sound generators
-│   │   ├── Players/              # File players
-│   │   ├── Effects/              # Audio effects (ADSR, LFO)
-│   │   ├── Modulation/           # Modulation sources
-│   │   ├── Presets/              # UI and Natural sound presets
-│   │   │   ├── UISoundPreset.swift         # UI layer (display only)
-│   │   │   └── NaturalSoundPresets.swift   # Technical layer (parameters)
-│   │   └── Session/              # AVAudioSession management
-│   ├── Services/                 # System services
-│   │   ├── Route/                # Audio route monitoring
-│   │   ├── Volume/               # Volume limiting
-│   │   ├── Scheduler/            # Quiet break scheduling
-│   │   └── NowPlaying/           # Now Playing info
-│   ├── Settings/                 # Settings models
-│   ├── Astronomy/                # Moon phase calculations
-│   ├── Activity/                 # Live Activity support
-│   └── Extensions/               # Swift extensions
-├── Features/                     # Feature modules
-│   ├── Clock/                    # Clock screen
-│   │   ├── Views/                # Clock UI
-│   │   └── Components/           # Reusable clock components
-│   └── Settings/                 # Settings screen
-│       └── Views/                # Settings UI
-├── DesignSystem/                 # Unified design system
-│   ├── DesignTokens.swift        # Color, typography, spacing tokens
-│   ├── SettingsComponents.swift # Reusable settings UI
-│   └── Color/                    # Sky tones and color system
-├── Resources/                    # Assets
-│   ├── Audio/                    # Audio files (.caf format)
-│   └── Localization/             # i18n resources
-└── Docs/                         # Documentation
-    ├── architecture/             # Architecture specs
-    ├── implementation/           # Implementation guides
-    ├── runbook/                  # Operational procedures
-    ├── changelog/                # Change logs
-    ├── reference-audio/          # Reference audio (dev only)
-    └── trouble-*.md              # Troubleshooting guides
-```
-
----
-
 ## Development Guidelines
 
 ### Audio System
 
-**3-Layer Architecture** (as of 2025-11-23):
-The audio system uses a clean 3-layer separation:
-1. **UISoundPreset** (UI Layer) - Display names, icons, ordering (UI-only concerns)
-2. **NaturalSoundPreset** (Technical Layer) - Natural sound parameters (noise-based, robust)
-3. **PureTonePreset** (Technical Layer) - Pure tone parameters (sine-based, sensitive)
+**3-Layer Architecture Principle**:
+- **UISoundPreset**: UI display layer (names, icons, ordering)
+- **NaturalSoundPreset / PureTonePreset**: Technical implementation layer (parameters, routing)
+- AudioService maps UI presets to appropriate technical implementation
 
-**Mapping Flow**:
-```
-UI selects UISoundPreset
-    ↓
-AudioService.play(preset: UISoundPreset)
-    ↓
-mapToPureTone() or mapToNaturalSound()
-    ↓
-PureToneBuilder.build() or SignalPresetBuilder.makeMixerOutput()
-    ↓
-AudioSource instances registered
-```
+**Key Rule**: UI changes never affect sound parameters. Technical changes never affect UI presentation.
 
 **When implementing audio features:**
 1. **Never create audio instances in Views** — Always use `AudioService.shared`
@@ -382,6 +308,7 @@ python3 scripts/generate_test_tone.py
 
 ## Version History
 
+* **v3.2** (2025-11-23): Simplified structure guidance - removed detailed file tree, focus on principles
 * **v3.1** (2025-11-23): Updated for 3-layer audio architecture (UISoundPreset, PureTonePreset, NaturalSoundPreset)
 * **v3.0** (2025-11-16): Updated for navigation integration, design system unification
 * **v2.0** (2025-11-10): Added audio system architecture
