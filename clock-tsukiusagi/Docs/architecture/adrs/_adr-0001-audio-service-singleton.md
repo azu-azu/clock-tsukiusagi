@@ -33,7 +33,7 @@ public final class AudioService: ObservableObject {
     public static let shared = AudioService()
 
     @Published public private(set) var isPlaying: Bool
-    @Published public private(set) var currentPreset: NaturalSoundPreset?
+    @Published public private(set) var currentPreset: UISoundPreset?  // UI layer preset
     @Published public private(set) var outputRoute: AudioOutputRoute
 
     private let engine: LocalAudioEngine
@@ -69,7 +69,7 @@ struct AudioTestView: View {
 
     var body: some View {
         Button("Play") {
-            try? audioService.play(preset: .comfortRelax)
+            try? audioService.play(preset: .lunarPulse)  // UISoundPreset
         }
         .disabled(audioService.isPlaying)
     }
@@ -245,6 +245,7 @@ struct AudioTestView: View {
 |------|--------|
 | 2025-11-10 | Initial decision: Singleton pattern adopted |
 | 2025-11-10 | Phase 1 implementation complete, validation passed |
+| 2025-11-23 | Updated code examples to reflect 3-layer architecture (UISoundPreset) |
 
 ---
 

@@ -1,5 +1,16 @@
 # 自然音プリセット復活実装ガイド
 
+> **⚠️ 注意**: このドキュメントは2025-11-14時点の実装を記録したものです。
+>
+> **2025-11-23更新**: 音源アーキテクチャが3層構造に変更されました:
+> - **UISoundPreset** (UI層): 表示専用
+> - **NaturalSoundPreset** (技術層): 自然音パラメータ
+> - **PureTonePreset** (技術層): 純音パラメータ
+>
+> このドキュメント内の `NaturalSoundPreset` への直接参照は、現在は `UISoundPreset` → マッピング → `NaturalSoundPreset/PureTonePreset` の流れに変更されています。
+>
+> 最新の実装については [`audio-parameter-safety-rules.md`](./audio-parameter-safety-rules.md) を参照してください。
+
 ## 概要
 
 欠落していた4つの自然音プリセット（癒しチャイム、チベタンボウル、波の音、焚き火の音）をgit履歴から復活させ、統合した実装記録。

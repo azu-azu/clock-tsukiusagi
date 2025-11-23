@@ -336,14 +336,14 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
 ### 4.1 How to Implement Playback Flow
 
 ```swift
-public func play(preset: NaturalSoundPreset) throws {
+public func play(preset: UISoundPreset) throws {
     // 1. Activate session (once per launch)
     if !sessionActivated {
         try activateAudioSession()
         sessionActivated = true
     }
 
-    // 2. Register audio source
+    // 2. Register audio source (UI preset is mapped to technical preset internally)
     try registerSource(for: preset)
 
     // 3. Set initial volume
@@ -364,6 +364,24 @@ public func play(preset: NaturalSoundPreset) throws {
     currentPreset = preset
     pauseReason = nil
     outputRoute = routeMonitor.currentRoute
+}
+
+// Internal: Map UI preset to technical preset
+private func registerSource(for uiPreset: UISoundPreset) throws {
+    // Try PureTone first
+    if let pureTonePreset = mapToPureTone(uiPreset) {
+        let sources = PureToneBuilder.build(pureTonePreset)
+        sources.forEach { engine.register($0) }
+        return
+    }
+
+    // Try NaturalSound
+    guard let naturalPreset = mapToNaturalSound(uiPreset) else {
+        return
+    }
+
+    let mixerOutput = signalBuilder.makeMixerOutput(for: naturalPreset)
+    engine.register(mixerOutput)
 }
 ```
 

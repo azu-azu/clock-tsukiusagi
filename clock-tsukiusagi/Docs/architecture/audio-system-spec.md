@@ -150,7 +150,7 @@ public final class AudioService: ObservableObject {
 
     // Published State
     @Published public private(set) var isPlaying: Bool
-    @Published public private(set) var currentPreset: NaturalSoundPreset?
+    @Published public private(set) var currentPreset: UISoundPreset?
     @Published public private(set) var outputRoute: AudioOutputRoute
     @Published public private(set) var pauseReason: PauseReason?
 
@@ -158,7 +158,7 @@ public final class AudioService: ObservableObject {
     public let breakScheduler: QuietBreakScheduler
 
     // Commands
-    public func play(preset: NaturalSoundPreset) throws
+    public func play(preset: UISoundPreset) throws
     public func stop(fadeOut: TimeInterval = 0.5)
     public func pause(reason: PauseReason)
     public func resume() throws
