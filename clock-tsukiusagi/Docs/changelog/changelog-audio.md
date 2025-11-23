@@ -1,8 +1,97 @@
 # Audio System Changelog
 
 **Module**: Audio System (Core/Audio, Core/Services, Features/Settings)
-**Current Version**: Phase 2 Complete + Enhancements
-**Last Updated**: 2025-11-17
+**Current Version**: Phase 2 Complete + 3-Layer Architecture
+**Last Updated**: 2025-11-23
+
+---
+
+## Architecture: 3-Layer Audio Preset System (2025-11-23)
+
+**Status**: ✅ Complete
+**Focus**: Clean separation of UI and technical concerns for audio presets
+**Commits**: `b7ff4e4`, `2e29215`, `1799b8f`
+
+### Added
+
+#### UISoundPreset (UI Layer)
+- **File**: `Core/Audio/Presets/UISoundPreset.swift` (new)
+- **Purpose**: Display-only preset enum for UI selection
+- **Features**:
+  - All audio presets (PureTone + NaturalSound) unified in single enum
+  - Display names (Japanese + emoji)
+  - English titles
+  - Test/production flags
+  - No technical audio parameters
+
+#### PureTone Module (Technical Layer)
+- **Directory**: `Core/Audio/PureTone/` (new)
+- **Files**:
+  - `PureTonePreset.swift` - Preset definitions for pure tones
+  - `PureToneParams.swift` - Parameter structure
+  - `PureToneBuilder.swift` - Builder pattern for creating audio sources
+  - `LunarPulse.swift` - Moved from Sources/
+  - `TreeChime.swift` - Moved from Sources/
+- **Purpose**: Isolated pure tone/instrument sound implementation
+
+### Changed
+
+#### AudioService API
+- **File**: `Core/Audio/AudioService.swift`
+- **Changes**:
+  - `currentPreset` type: `NaturalSoundPreset?` → `UISoundPreset?`
+  - `play(preset:)` signature: `NaturalSoundPreset` → `UISoundPreset`
+  - Added `mapToPureTone()` - Maps UI preset to PureTonePreset
+  - Added `mapToNaturalSound()` - Maps UI preset to NaturalSoundPreset
+  - Updated `registerSource(for:)` to handle mapping logic
+
+#### NaturalSoundPresets
+- **File**: `Core/Audio/Presets/NaturalSoundPresets.swift`
+- **Changes**:
+  - Removed `.lunarPulse` case (moved to PureTonePreset)
+  - Removed obsolete `LunarPulse` parameter struct
+  - Added deprecation notes to `displayName`/`englishTitle` (UI now uses UISoundPreset)
+  - Clean separation: natural/environmental sounds only
+
+#### SignalPresetBuilder
+- **File**: `Core/Audio/Signal/SignalPresetBuilder.swift`
+- **Changes**:
+  - Removed `.lunarPulse` handling from `createRawSignal()`
+  - Removed PureTone effects from `applyEffectsForPreset()`
+
+#### AudioTestView
+- **File**: `Core/Audio/AudioTestView.swift`
+- **Changes**:
+  - `AudioSourcePreset` now uses `UISoundPreset`
+  - `allSources` iterates `UISoundPreset.allCases`
+
+### Architecture Benefits
+
+1. **Clear Separation of Concerns**:
+   - UI layer has zero audio parameters
+   - Technical layers have zero display logic
+   - No mixing of responsibilities
+
+2. **Maintainability**:
+   - UI changes don't affect audio implementation
+   - Audio parameter changes don't affect UI
+   - Easy to add new presets without touching multiple layers
+
+3. **Type Safety**:
+   - Automatic mapping prevents incorrect preset usage
+   - Compile-time verification of mappings
+
+4. **Extensibility**:
+   - PureTone module can grow independently
+   - NaturalSound presets remain isolated
+   - UI can reorganize without code changes
+
+### Documentation Updates
+- Updated `audio-parameter-safety-rules.md` to v2.0 with 3-layer architecture
+- Updated `audio-system-spec.md` API examples
+- Updated `_guide-audio-system-impl.md` with mapping flow
+- Updated `CLAUDE.md` with architecture explanation
+- Updated all ADRs to reflect new preset types
 
 ---
 
