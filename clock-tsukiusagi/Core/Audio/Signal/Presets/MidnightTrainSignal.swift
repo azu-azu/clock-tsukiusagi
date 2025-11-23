@@ -9,23 +9,23 @@
 
 import Foundation
 
-/// Midnight Train — cute steam train with "shupotsu" sound
+/// Midnight Train — toy train with light "shu, shu, shu" sound
 ///
-/// This preset creates the sound of a small steam locomotive:
+/// This preset creates the sound of a cute toy steam train:
 /// Components:
-/// - 3-layer sound structure (Attack/Pop/Steam)
+/// - 3-layer sound structure optimized for lightness
 /// - 4-beat pattern with gentle rhythm (strong, strong, weak, strong)
 /// - Random intervals (3-8 seconds) between pattern bursts
 ///
-/// Sound layers:
-/// 1. Attack ("shu"): White noise burst 10-30ms, HPF 300Hz
-/// 2. Pop ("potsu"): Sine 180Hz with ±2% wobble, warm and round
-/// 3. Steam: Pink noise -24dB, LPF 800Hz, gentle lingering
+/// Sound layers (optimized for toy train):
+/// 1. Attack ("shu"): White noise burst 80ms, HPF, BOOSTED for emphasis
+/// 2. Pop: Sine 180Hz, MINIMIZED (40ms decay) to reduce heavy "boyo~n"
+/// 3. Steam: Pink noise, SHORTENED (80ms decay) for quick, light feel
 ///
 /// Rhythm structure:
 /// - Random wait 3-8s → 4-beat pattern (0.55s interval) → repeat
 /// - Beat 3 has 80% velocity for natural feel
-/// - Creates "rabbit carriage" atmosphere suitable for Azu world
+/// - Light, playful "shu, shu, shu" like a toy train
 public struct MidnightTrainSignal {
 
     /// Create raw Signal (for FinalMixer usage)
@@ -37,22 +37,22 @@ public struct MidnightTrainSignal {
         let minWaitTime: Float = 3.0        // 最短待機時間
         let maxWaitTime: Float = 8.0        // 最長待機時間
 
-        // Layer 1: Attack ("shu") parameters
-        let attackDuration: Float = 0.03    // 30ms
-        let attackAttack: Float = 0.005     // 5ms
-        let attackDecay: Float = 0.025      // 25ms
+        // Layer 1: Attack ("shu") parameters - ENHANCED for toy train
+        let attackDuration: Float = 0.08    // 80ms（longer for clear "shu" sound）
+        let attackAttack: Float = 0.003     // 3ms（sharper attack）
+        let attackDecay: Float = 0.077      // 77ms（quick fade）
 
-        // Layer 2: Pop ("potsu") parameters
+        // Layer 2: Pop ("potsu") parameters - MINIMIZED to reduce "boyo~n"
         let popFreq: Float = 180.0          // 180Hz
         let popWobbleFreq: Float = 3.0      // 3Hz LFO
         let popWobbleDepth: Float = 0.02    // ±2%
         let popAttack: Float = 0.010        // 10ms
-        let popDecay: Float = 0.120         // 120ms
+        let popDecay: Float = 0.040         // 40ms（much shorter - was 120ms）
 
-        // Layer 3: Steam parameters
-        let steamAttack: Float = 0.050      // 50ms
-        let steamDecay: Float = 0.200       // 200ms
-        let steamLevel: Float = 0.15        // -24dB相当
+        // Layer 3: Steam parameters - SHORTENED for lighter feel
+        let steamAttack: Float = 0.020      // 20ms（faster - was 50ms）
+        let steamDecay: Float = 0.080       // 80ms（much shorter - was 200ms）
+        let steamLevel: Float = 0.10        // reduced volume for lightness
 
         // Generate noise sources
         let whiteNoise = Noise.white
@@ -104,8 +104,8 @@ public struct MidnightTrainSignal {
                 }
                 // White noise with simple HPF simulation (subtract low component)
                 let rawNoise = whiteNoise(t)
-                let hpfNoise = rawNoise * 0.7  // High-pass simulation
-                attackValue = hpfNoise * envelope * 0.35
+                let hpfNoise = rawNoise * 0.8  // High-pass simulation（stronger）
+                attackValue = hpfNoise * envelope * 0.55  // BOOSTED for "shu" emphasis
             }
 
             // === Layer 2: Pop ("potsu") ===
@@ -125,7 +125,7 @@ public struct MidnightTrainSignal {
                 let wobble = sin(2.0 * Float.pi * popWobbleFreq * t) * popWobbleDepth
                 let freq = popFreq * (1.0 + wobble)
                 let phase = 2.0 * Float.pi * freq * t
-                popValue = sin(phase) * envelope * 0.6
+                popValue = sin(phase) * envelope * 0.20  // REDUCED to minimize "boyo~n"（was 0.6）
             }
 
             // === Layer 3: Steam (gentle lingering) ===
@@ -147,8 +147,8 @@ public struct MidnightTrainSignal {
                 steamValue = lpfSteam * envelope * steamLevel
             }
 
-            // Mix all layers with velocity
-            return (attackValue + popValue + steamValue) * velocity * 0.8
+            // Mix all layers with velocity（lighter overall）
+            return (attackValue + popValue + steamValue) * velocity * 0.7
         }
     }
 }
