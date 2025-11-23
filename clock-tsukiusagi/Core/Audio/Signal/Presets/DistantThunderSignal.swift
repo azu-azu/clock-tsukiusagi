@@ -3,28 +3,28 @@
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-23.
-//  SignalEngine: Distant Thunder — powerful "DON!" rumble
-//  Extracted from Midnight Train's impactful first beat
+//  SignalEngine: Distant Thunder — single strikes using Midnight Train's beat
+//  Identical sound to train's first beat, just different timing
 //
 
 import Foundation
 
-/// Distant Thunder — powerful thunder rumble
+/// Distant Thunder — single "shupotsu" strikes at random intervals
 ///
-/// This preset creates the sound of distant thunder:
+/// This preset uses EXACTLY the same 3-layer sound as Midnight Train:
 /// Components:
-/// - 3-layer impact sound (same as Midnight Train's "DON!" beat)
-/// - Random intervals (5-12 seconds) for unpredictable thunder
-/// - No repeating pattern, just single powerful strikes
+/// - 3-layer impact sound (IDENTICAL to Midnight Train's beat)
+/// - Random intervals (5-12 seconds) instead of regular pattern
+/// - No 4-beat pattern, just single strikes
 ///
-/// Sound layers (from Midnight Train):
-/// 1. Attack: White noise burst for initial crack
-/// 2. Rumble: Low sine 120Hz with wobble for deep bass
-/// 3. Resonance: Brown noise for atmospheric lingering
+/// Sound layers (same as Midnight Train):
+/// 1. Attack ("shu"): White noise burst 30ms, HPF 300Hz
+/// 2. Pop ("potsu"): Sine 180Hz with ±2% wobble, warm and round
+/// 3. Steam: Pink noise -24dB, LPF 800Hz, gentle lingering
 ///
-/// Timing:
-/// - Random wait 5-12s → single "DON!" → repeat
-/// - Creates realistic distant thunder atmosphere
+/// Timing difference:
+/// - Random wait 5-12s → single strike → repeat
+/// - Train: 3-8s wait → 4-beat pattern → repeat
 public struct DistantThunderSignal {
 
     /// Create raw Signal (for FinalMixer usage)
@@ -34,30 +34,30 @@ public struct DistantThunderSignal {
         let minWaitTime: Float = 5.0        // 最短待機時間
         let maxWaitTime: Float = 12.0       // 最長待機時間
 
-        // Layer 1: Attack (crack) parameters
-        let attackDuration: Float = 0.05    // 50ms（雷は少し長め）
-        let attackAttack: Float = 0.003     // 3ms（鋭い立ち上がり）
-        let attackDecay: Float = 0.047      // 47ms
+        // Layer 1: Attack ("shu") parameters - SAME AS TRAIN
+        let attackDuration: Float = 0.03    // 30ms
+        let attackAttack: Float = 0.005     // 5ms
+        let attackDecay: Float = 0.025      // 25ms
 
-        // Layer 2: Rumble (deep bass) parameters
-        let rumbleFreq: Float = 120.0       // 120Hz（より低く）
-        let rumbleWobbleFreq: Float = 2.5   // 2.5Hz LFO
-        let rumbleWobbleDepth: Float = 0.03 // ±3%（少し大きめ）
-        let rumbleAttack: Float = 0.015     // 15ms
-        let rumbleDecay: Float = 0.35       // 350ms（長い余韻）
+        // Layer 2: Pop ("potsu") parameters - SAME AS TRAIN
+        let popFreq: Float = 180.0          // 180Hz
+        let popWobbleFreq: Float = 3.0      // 3Hz LFO
+        let popWobbleDepth: Float = 0.02    // ±2%
+        let popAttack: Float = 0.010        // 10ms
+        let popDecay: Float = 0.120         // 120ms
 
-        // Layer 3: Resonance (atmospheric) parameters
-        let resonanceAttack: Float = 0.080  // 80ms
-        let resonanceDecay: Float = 0.45    // 450ms（長い余韻）
-        let resonanceLevel: Float = 0.25    // 雷は蒸気より強め
+        // Layer 3: Steam parameters - SAME AS TRAIN
+        let steamAttack: Float = 0.050      // 50ms
+        let steamDecay: Float = 0.200       // 200ms
+        let steamLevel: Float = 0.15        // -24dB相当
 
-        // Generate noise sources
+        // Generate noise sources - SAME AS TRAIN
         let whiteNoise = Noise.white
-        let brownNoise = Noise.brown(smoothing: 0.15)  // 雷は低域重視
+        let pinkNoise = Noise.pink()
 
         return Signal { t in
             // Calculate maximum thunder duration
-            let maxDuration = max(attackDuration, rumbleAttack + rumbleDecay, resonanceAttack + resonanceDecay)
+            let maxDuration = max(attackDuration, popAttack + popDecay, steamAttack + steamDecay)
 
             // Calculate cycle duration (must fit longest wait + thunder duration)
             let cycleDuration = maxWaitTime + maxDuration  // 最長待機時間 + 雷の音の長さ
@@ -79,7 +79,7 @@ public struct DistantThunderSignal {
                 return 0.0
             }
 
-            // === Layer 1: Attack (crack) ===
+            // === Layer 1: Attack ("shu") ===
             var attackValue: Float = 0.0
             if timeSinceThunder < attackDuration {
                 let envelope: Float
@@ -91,51 +91,53 @@ public struct DistantThunderSignal {
                     let decayTime = timeSinceThunder - attackAttack
                     envelope = exp(-decayTime / attackDecay)
                 }
-                // White noise for sharp crack
+                // White noise with simple HPF simulation (subtract low component)
                 let rawNoise = whiteNoise(t)
-                attackValue = rawNoise * envelope * 0.5  // 雷は強め
+                let hpfNoise = rawNoise * 0.7  // High-pass simulation
+                attackValue = hpfNoise * envelope * 0.35
             }
 
-            // === Layer 2: Rumble (deep bass) ===
-            var rumbleValue: Float = 0.0
-            let rumbleDuration = rumbleAttack + rumbleDecay
-            if timeSinceThunder < rumbleDuration {
+            // === Layer 2: Pop ("potsu") ===
+            var popValue: Float = 0.0
+            let popDuration = popAttack + popDecay
+            if timeSinceThunder < popDuration {
                 let envelope: Float
-                if timeSinceThunder < rumbleAttack {
+                if timeSinceThunder < popAttack {
                     // Attack phase
-                    envelope = timeSinceThunder / rumbleAttack
+                    envelope = timeSinceThunder / popAttack
                 } else {
                     // Decay phase
-                    let decayTime = timeSinceThunder - rumbleAttack
-                    envelope = exp(-decayTime / rumbleDecay)
+                    let decayTime = timeSinceThunder - popAttack
+                    envelope = exp(-decayTime / popDecay)
                 }
-                // Low sine with pitch wobble for rumble
-                let wobble = sin(2.0 * Float.pi * rumbleWobbleFreq * t) * rumbleWobbleDepth
-                let freq = rumbleFreq * (1.0 + wobble)
+                // Sine with pitch wobble
+                let wobble = sin(2.0 * Float.pi * popWobbleFreq * t) * popWobbleDepth
+                let freq = popFreq * (1.0 + wobble)
                 let phase = 2.0 * Float.pi * freq * t
-                rumbleValue = sin(phase) * envelope * 0.7  // 低音を強調
+                popValue = sin(phase) * envelope * 0.6
             }
 
-            // === Layer 3: Resonance (atmospheric lingering) ===
-            var resonanceValue: Float = 0.0
-            let resonanceDuration = resonanceAttack + resonanceDecay
-            if timeSinceThunder < resonanceDuration {
+            // === Layer 3: Steam (gentle lingering) ===
+            var steamValue: Float = 0.0
+            let steamDuration = steamAttack + steamDecay
+            if timeSinceThunder < steamDuration {
                 let envelope: Float
-                if timeSinceThunder < resonanceAttack {
+                if timeSinceThunder < steamAttack {
                     // Attack phase
-                    envelope = timeSinceThunder / resonanceAttack
+                    envelope = timeSinceThunder / steamAttack
                 } else {
                     // Decay phase
-                    let decayTime = timeSinceThunder - resonanceAttack
-                    envelope = exp(-decayTime / resonanceDecay)
+                    let decayTime = timeSinceThunder - steamAttack
+                    envelope = exp(-decayTime / steamDecay)
                 }
-                // Brown noise for deep atmospheric resonance
-                let rawResonance = brownNoise(t)
-                resonanceValue = rawResonance * envelope * resonanceLevel
+                // Pink noise with simple LPF simulation
+                let rawSteam = pinkNoise(t)
+                let lpfSteam = rawSteam * 0.5  // Low-pass simulation
+                steamValue = lpfSteam * envelope * steamLevel
             }
 
-            // Mix all layers for powerful thunder
-            return (attackValue + rumbleValue + resonanceValue) * 1.0
+            // Mix all layers (no velocity variation for single strikes)
+            return (attackValue + popValue + steamValue) * 0.8
         }
     }
 }
