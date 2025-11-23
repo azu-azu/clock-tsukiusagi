@@ -57,6 +57,8 @@ public struct SignalPresetBuilder {
             return LunarTideSignal.makeSignal()
         case .abyssalBreath:
             return AbyssalBreathSignal.makeSignal()
+        case .lunarPulse:
+            return PentatonicChimeSignal.makeSignal()
         case .darkShark:
             return DarkSharkSignal.makeSignal()
         case .midnightTrain:
@@ -130,6 +132,18 @@ public struct SignalPresetBuilder {
                 decay: 0.82,
                 mix: 0.42,
                 predelay: 0.028,
+                sampleRate: sampleRate
+            )
+            mixer.addEffect(reverb)
+
+        // Tonal/Musical: Minimal filtering + Natural reverb (pentatonic chimes)
+        case .lunarPulse:
+            let reverb = SchroederReverb(
+                roomSize: 1.4,
+                damping: 0.45,
+                decay: 0.7,
+                mix: 0.25,
+                predelay: 0.02,
                 sampleRate: sampleRate
             )
             mixer.addEffect(reverb)

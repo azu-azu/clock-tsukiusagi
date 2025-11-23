@@ -843,7 +843,6 @@ private final class PresetGenerator {
 | MoonlitSeaSignal.swift | Unified inline LFO calculation, documented split amplitudes |
 | LunarTideSignal.swift | Converted depth 0.35 → range 0.825...1.0 |
 | AbyssalBreathSignal.swift | Converted depth 0.25 → range 0.875...1.0 |
-| LunarPulseSignal.swift | Already used range formula, unified structure |
 | LunarDustStormSignal.swift | Converted depth 0.05 → range 0.975...1.0 |
 | SilentLibrarySignal.swift | Converted depth 0.03 → range 0.985...1.0 |
 | SinkingMoonSignal.swift | Converted depth 0.25 → range 0.875...1.0 |

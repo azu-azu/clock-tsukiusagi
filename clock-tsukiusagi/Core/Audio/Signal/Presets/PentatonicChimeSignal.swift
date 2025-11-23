@@ -1,14 +1,14 @@
 //
-//  LunarPulseSignal.swift
+//  PentatonicChimeSignal.swift
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-20.
-//  SignalEngine: Lunar Pulse — pentatonic random bells (healing chimes)
+//  SignalEngine: Pentatonic Chime — random pentatonic bells (healing chimes)
 //
 
 import Foundation
 
-/// Lunar Pulse — healing pentatonic tones
+/// Pentatonic Chime — healing pentatonic tones
 ///
 /// This preset creates gentle chime sounds:
 /// Components:
@@ -16,7 +16,7 @@ import Foundation
 /// - Random trigger intervals (2-8 seconds, first chime immediate)
 /// - ADSR envelope (fast attack 0.01s, exponential decay 3.0s)
 ///
-/// Original parameters from WindChime preset:
+/// Parameters:
 /// - frequencies: Pentatonic scale array (C4-E5)
 /// - amplitude: 0.3
 /// - minInterval: 2.0 seconds
@@ -24,24 +24,20 @@ import Foundation
 /// - attackTime: 0.01, decayTime: 3.0
 /// - sustainLevel: 0.0, releaseTime: 1.0
 ///
-/// Modifications:
-/// - Renamed from WindChime to LunarPulse
-/// - Structure unified to standard pattern with stateful generator
-/// - Parameter naming standardized (baseAmplitude, minInterval, maxInterval, etc.)
-/// - Documentation follows standard format
+/// Features:
 /// - Stateful generator with reset() method
 /// - First chime triggers immediately (nextTriggerTime = 0)
-public struct LunarPulseSignal {
+public struct PentatonicChimeSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
-        let generator = LunarPulseGenerator()
+        let generator = PentatonicChimeGenerator()
         return Signal { t in generator.sample(at: t) }
     }
 }
 
-/// Stateful generator for lunar pulse chime with random pentatonic bells
-private final class LunarPulseGenerator {
+/// Stateful generator for pentatonic chime with random pentatonic bells
+private final class PentatonicChimeGenerator {
 
     // Constants
     private let baseAmplitude: Float = 0.3

@@ -16,16 +16,18 @@ public struct PureToneBuilder {
     public static func build(_ preset: PureTonePreset) -> [AudioSource] {
         var sources: [AudioSource] = []
 
-        // Main pure tone source (LunarPulse)
-        let p = preset.params
-        let pulse = LunarPulse(
-            frequency: p.frequency,
-            amplitude: p.amplitude,
-            lfoFrequency: p.lfoFrequency,
-            lfoMinimum: p.lfoMinimum,
-            lfoMaximum: p.lfoMaximum
-        )
-        sources.append(pulse)
+        // Main pure tone source (LunarPulse) - only if preset includes it
+        if preset.includesLunarPulse {
+            let p = preset.params
+            let pulse = LunarPulse(
+                frequency: p.frequency,
+                amplitude: p.amplitude,
+                lfoFrequency: p.lfoFrequency,
+                lfoMinimum: p.lfoMinimum,
+                lfoMaximum: p.lfoMaximum
+            )
+            sources.append(pulse)
+        }
 
         // TreeChime overlay if needed
         if preset.includesChime {

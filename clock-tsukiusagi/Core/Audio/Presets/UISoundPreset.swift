@@ -23,6 +23,7 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case distantThunder     // 遠雷
     case sinkingMoon        // 沈む月
     case dawnHint           // 朝の気配
+    case treeChimeOnly      // TreeChimeのみ（テスト用）
 
     public var id: String { rawValue }
 
@@ -35,7 +36,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             .silentLibrary,
             .distantThunder,
             .sinkingMoon,
-            .dawnHint
+            .dawnHint,
+            .treeChimeOnly
         ].contains(self)
     }
 
@@ -68,6 +70,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🌘💫 沈む月"
         case .dawnHint:
             return "🌅✨ 朝の気配"
+        case .treeChimeOnly:
+            return "♟️ 🎐 TreeChime単体"
         }
     }
 
@@ -100,6 +104,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Sinking Moon Fade"
         case .dawnHint:
             return "Dawn Hint Glow"
+        case .treeChimeOnly:
+            return "TreeChime Only (Test)"
         }
     }
 }

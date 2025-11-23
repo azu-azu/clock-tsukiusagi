@@ -11,6 +11,7 @@ import Foundation
 public enum PureTonePreset {
     case lunarPulse         // 528Hz pure tone only
     case lunarPulseChime    // 528Hz pure tone + TreeChime overlay
+    case treeChimeOnly      // TreeChime only (for testing)
 
     /// Get parameters for this preset
     public var params: PureToneParams {
@@ -24,15 +25,34 @@ public enum PureTonePreset {
                 lfoMinimum: 0.02,      // Amplitude modulation minimum
                 lfoMaximum: 0.12       // Amplitude modulation maximum
             )
+        case .treeChimeOnly:
+            // No LunarPulse for this preset (chime only)
+            return PureToneParams(
+                frequency: 0.0,        // Not used
+                amplitude: 0.0,        // Not used
+                lfoFrequency: 0.0,     // Not used
+                lfoMinimum: 0.0,       // Not used
+                lfoMaximum: 0.0        // Not used
+            )
         }
     }
 
     /// Whether this preset includes TreeChime overlay
     public var includesChime: Bool {
         switch self {
-        case .lunarPulseChime:
+        case .lunarPulseChime, .treeChimeOnly:
             return true
         case .lunarPulse:
+            return false
+        }
+    }
+
+    /// Whether this preset includes LunarPulse
+    public var includesLunarPulse: Bool {
+        switch self {
+        case .lunarPulse, .lunarPulseChime:
+            return true
+        case .treeChimeOnly:
             return false
         }
     }
