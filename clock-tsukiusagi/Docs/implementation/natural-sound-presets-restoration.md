@@ -753,3 +753,12 @@ let _ = lfoDepth  // Note: depth is controlled by other parameters
 5. ✅ PleasantDrone の設定を正しい値に修正
 
 現在、合計14種類の自然音プリセットがすべて正常に動作している。
+
+---
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2025-11-14 | 初版作成（4つの自然音プリセット復活実装記録） |
+| 2025-11-23 | 3層アーキテクチャ変更の注記を追加（冒頭に警告セクション追加） |

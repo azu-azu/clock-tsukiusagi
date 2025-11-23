@@ -1,7 +1,7 @@
 # Audio System Implementation Guide
 
-**Version**: 2.0 (Phase 2)
-**Last Updated**: 2025-11-10
+**Version**: 2.1 (Phase 2 + 3-Layer Architecture)
+**Last Updated**: 2025-11-23
 **Target Audience**: Developers implementing or maintaining audio features
 **Prerequisites**: Read `../architecture/audio-system-spec.md` first
 
@@ -878,6 +878,15 @@ Expected log sequence on successful playback:
 
 ---
 
-**Document Status**: ✅ Phase 2 Complete
-**Last Updated**: 2025-11-10
+## Changelog
+
+| Date | Version | Change |
+|------|---------|--------|
+| 2025-11-10 | 2.0 | Phase 2 implementation guide complete |
+| 2025-11-23 | 2.1 | Updated playback flow to use UISoundPreset and mapping logic |
+
+---
+
+**Document Status**: ✅ Phase 2 Complete + 3-Layer Architecture
+**Last Updated**: 2025-11-23
 **Next Review**: Before Phase 3 implementation

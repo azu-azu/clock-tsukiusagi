@@ -1,7 +1,7 @@
 # Claude Code Guidance for clock-tsukiusagi
 
-**Version**: 3.0 (Updated for Audio System & Navigation Integration)
-**Last Updated**: 2025-11-16
+**Version**: 3.1 (Updated for 3-Layer Audio Architecture)
+**Last Updated**: 2025-11-23
 
 This file provides guidance to Claude Code (`claude.ai/code`) when working with code in this repository.
 
@@ -382,6 +382,7 @@ python3 scripts/generate_test_tone.py
 
 ## Version History
 
+* **v3.1** (2025-11-23): Updated for 3-layer audio architecture (UISoundPreset, PureTonePreset, NaturalSoundPreset)
 * **v3.0** (2025-11-16): Updated for navigation integration, design system unification
 * **v2.0** (2025-11-10): Added audio system architecture
 * **v1.0**: Initial version

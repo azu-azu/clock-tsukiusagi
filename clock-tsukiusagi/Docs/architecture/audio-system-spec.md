@@ -1,9 +1,9 @@
 # Audio System Architecture Specification
 
-**Version**: 2.0
-**Status**: Phase 2 Complete
-**Last Updated**: 2025-11-10
-**Related Tags**: `audio-architecture-phase1-complete`, `audio-architecture-phase2-complete`
+**Version**: 2.1
+**Status**: Phase 2 Complete + 3-Layer Architecture
+**Last Updated**: 2025-11-23
+**Related Tags**: `audio-architecture-phase1-complete`, `audio-architecture-phase2-complete`, `3-layer-architecture`
 
 ---
 
@@ -364,6 +364,15 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
 
 ---
 
-**Document Status**: ✅ Phase 2 Specification Complete
+## 11. Changelog
+
+| Date | Version | Change |
+|------|---------|--------|
+| 2025-11-10 | 2.0 | Phase 2 specification complete (safety features) |
+| 2025-11-23 | 2.1 | Updated AudioService API to use UISoundPreset (3-layer architecture) |
+
+---
+
+**Document Status**: ✅ Phase 2 Specification Complete + 3-Layer Architecture
 **Next Review**: Before Phase 3 implementation
 **Owner**: Audio Architecture Team
