@@ -28,7 +28,7 @@ public enum PureTonePreset {
         case .treeChimeOnly:
             return true
         case .pentatonicChime:
-            return false
+            return true  // TreeChime overlay included
         }
     }
 }
