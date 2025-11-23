@@ -3,7 +3,8 @@
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-09.
-//  自然音プリセット（波/焚き火/ボウル/チャイム/心地よい音）
+//  自然音プリセット（環境音・ノイズ系のみ）
+//  Active: darkShark, midnightTrain, distantThunder
 //
 
 import Foundation
@@ -49,63 +50,8 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     }
 }
 
-/// 自然音プリセットの設定
+/// 自然音プリセットの設定（アクティブなプリセットのみ）
 public struct NaturalSoundPresets {
-    // MARK: - Ocean Waves + Seagulls（波 + 海鳥）
-
-    /// 波 + 海鳥プリセット設定
-    public struct OceanWavesSeagulls {
-        /// 波ノイズ音量
-        public static let noiseAmplitude: Float = 0.3
-
-        /// 波の周期（穏やかに）
-        public static let lfoFrequency: Double = 0.18
-
-        /// LFO最小値
-        public static let lfoMinimum: Double = 0.1
-
-        /// LFO最大値
-        public static let lfoMaximum: Double = 0.6
-
-        /// 海鳥チャープ音量
-        public static let birdAmplitude: Double = 0.22
-
-        /// チャープ間隔（最小）
-        public static let birdMinInterval: Double = 4.0
-
-        /// チャープ間隔（最大）
-        public static let birdMaxInterval: Double = 11.0
-
-        /// チャープ持続時間（最小）
-        public static let birdMinDuration: Double = 0.25
-
-        /// チャープ持続時間（最大）
-        public static let birdMaxDuration: Double = 0.55
-
-        /// チャープの周波数帯（カモメ風）
-        public static let birdFrequencyRange: ClosedRange<Double> = 1700.0...3200.0
-
-        /// 同時発音数
-        public static let maxConcurrentChirps: Int = 3
-    }
-
-    // MARK: - Moonlit Sea（深夜の海）
-
-    /// 深夜の海プリセット設定
-    /// ピンクノイズ + ゆっくりうねるLFOで深海の呼吸を表現
-    public struct MoonlitSea {
-        /// ノイズ音量
-        public static let noiseAmplitude: Float = 0.4
-
-        /// LFO周波数（深海の呼吸周期）
-        public static let lfoFrequency: Double = 0.25
-
-        /// LFO最小値
-        public static let lfoMinimum: Double = 0.03
-
-        /// LFO最大値
-        public static let lfoMaximum: Double = 0.10
-    }
 
     // MARK: - Dark Shark（黒いサメの影）
 
@@ -143,104 +89,6 @@ public struct NaturalSoundPresets {
         public static let lfoMaximum: Double = 0.12
     }
 
-    // MARK: - Lunar Tide（月光の潮流）
-
-    /// 月光の潮流プリセット設定
-    /// ピンクノイズ + きらめき帯域 + LFOで月光の海面を表現
-    public struct LunarTide {
-        /// ノイズタイプ（ベースはピンク）
-        public static let noiseType: NoiseType = .pink
-
-        /// ノイズ音量
-        public static let noiseAmplitude: Double = 0.12
-
-        /// 月光の"きらめき"を作る薄いShimmer帯域
-        public static let shimmerFrequency: ClosedRange<Double> = 2500.0...4500.0
-
-        /// LFO（海面の微細な揺れ）
-        public static let lfoFrequency: Double = 0.18
-        public static let lfoDepth: Double = 0.35
-
-        /// ほんの少しの残響
-        public static let reverbWetDryMix: Float = 10.0
-    }
-
-    // MARK: - Abyssal Breath（深海の呼吸）
-
-    /// 深海の呼吸プリセット設定
-    /// ブラウンノイズ + 超低域サイン + LFOで深海生物の気配を表現
-    public struct AbyssalBreath {
-        /// 深海の暗い層：ブラウンノイズ
-        public static let noiseType: NoiseType = .brown
-
-        /// ノイズ音量
-        public static let noiseAmplitude: Double = 0.10
-
-        /// 深海生物の"気配"となる超低域サイン
-        public static let subSineFrequency: Double = 48.0
-        public static let subSineAmplitude: Double = 0.03
-
-        /// 呼吸より遅い振幅LFO
-        public static let lfoFrequency: Double = 0.05
-        public static let lfoDepth: Double = 0.25
-    }
-
-    // MARK: - Stardust Noise（星屑ノイズ）
-
-    /// 星屑ノイズプリセット設定
-    /// ホワイトノイズ + 高域帯域抽出 + 微細パルスで星のきらめきを表現
-    public struct StardustNoise {
-        /// ベースはホワイトノイズ
-        public static let noiseType: NoiseType = .white
-
-        /// 星のきらめき帯域を抜き出すBandpass
-        public static let sparkleBand: ClosedRange<Double> = 8000.0...12000.0
-
-        /// 星屑の微細パルス
-        public static let microBurstMinInterval: Double = 0.4
-        public static let microBurstMaxInterval: Double = 1.2
-        public static let microBurstAmplitude: Double = 0.12
-    }
-
-    // MARK: - Lunar Dust Storm（月面の砂嵐）
-
-    /// 月面の砂嵐プリセット設定
-    /// ピンクノイズ + Notch Filter + 静止LFOで虚空の風を表現
-    public struct LunarDustStorm {
-        /// ピンクノイズ（空気の無い"虚空の風"）
-        public static let noiseType: NoiseType = .pink
-
-        /// 音量
-        public static let noiseAmplitude: Double = 0.10
-
-        /// 月面のざらつきを作るNotch Filter
-        public static let notchFrequency: Double = 750.0
-        public static let notchDepth: Double = -12.0  // -12dBカット
-
-        /// ほぼ揺れない静止風
-        public static let lfoFrequency: Double = 0.02
-        public static let lfoDepth: Double = 0.05
-    }
-
-    // MARK: - Silent Library（夜の図書館）
-
-    /// 夜の図書館プリセット設定
-    /// ブラウンノイズ + 温かい帯域強調 + 静止LFOで静かな空間を表現
-    public struct SilentLibrary {
-        /// 静かな空間の空気：ブラウンノイズ
-        public static let noiseType: NoiseType = .brown
-
-        /// ノイズ音量
-        public static let noiseAmplitude: Double = 0.10
-
-        /// 木の棚の響き帯域を強める
-        public static let warmthBand: ClosedRange<Double> = 150.0...300.0
-        public static let warmthGain: Double = 1.4  // +40%
-
-        /// 静止感（ほぼLFOなし）
-        public static let lfoFrequency: Double = 0.01
-        public static let lfoDepth: Double = 0.03
-    }
 
     // MARK: - Distant Thunder Pulse（遠雷）
 
@@ -260,37 +108,4 @@ public struct NaturalSoundPresets {
         public static let pulseMaxInterval: Double = 7.0
     }
 
-    // MARK: - Sinking Moon（沈む月）
-
-    /// 沈む月プリセット設定
-    /// 柔らかいサイン波 + 超低速フェード + 高域減衰で静けさの消失を表現
-    public struct SinkingMoon {
-        /// 柔らかいサイン波（432Hz）
-        public static let sineFrequency: Double = 432.0
-        public static let sineAmplitude: Double = 0.06
-
-        /// 月が沈むような超低速フェード
-        public static let lfoFrequency: Double = 0.04
-        public static let lfoDepth: Double = 0.25
-
-        /// 高域減衰（静けさの消失）
-        public static let highFrequencyRollOff: Double = -9.0  // -9dB
-    }
-
-    // MARK: - Dawn Hint（朝の気配）
-
-    /// 朝の気配プリセット設定
-    /// ピンクノイズ + Shimmer帯域 + 明るく変化するLFOで夜明けの空気を表現
-    public struct DawnHint {
-        /// 夜の終わりを示す低めのピンクノイズ
-        public static let noiseType: NoiseType = .pink
-        public static let noiseAmplitude: Double = 0.10
-
-        /// "空気の張り"を作るShimmer帯域
-        public static let shimmerFrequency: ClosedRange<Double> = 2000.0...4000.0
-
-        /// 明るく変化していくLFO
-        public static let lfoFrequency: Double = 0.10
-        public static let lfoDepth: Double = 0.40
-    }
 }
