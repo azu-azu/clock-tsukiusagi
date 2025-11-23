@@ -56,10 +56,13 @@ public struct DistantThunderSignal {
         let brownNoise = Noise.brown(smoothing: 0.15)  // 雷は低域重視
 
         return Signal { t in
-            // Calculate current thunder index
-            let cycleDuration = minWaitTime  // 最小サイクル
+            // Calculate maximum thunder duration
+            let maxDuration = max(attackDuration, rumbleAttack + rumbleDecay, resonanceAttack + resonanceDecay)
 
-            // Determine wait time for this cycle using deterministic random
+            // Calculate cycle duration (must fit longest wait + thunder duration)
+            let cycleDuration = maxWaitTime + maxDuration  // 最長待機時間 + 雷の音の長さ
+
+            // Calculate current thunder index
             let thunderIndex = Int(t / cycleDuration)
             var randomState = UInt64(thunderIndex * 8831)  // 素数でシード
             randomState = randomState &* 6364136223846793005 &+ 1442695040888963407
@@ -72,7 +75,6 @@ public struct DistantThunderSignal {
             let timeSinceThunder = t - thunderTime
 
             // If before strike or too long after, return silence
-            let maxDuration = max(attackDuration, rumbleAttack + rumbleDecay, resonanceAttack + resonanceDecay)
             guard timeSinceThunder >= 0.0 && timeSinceThunder < maxDuration else {
                 return 0.0
             }
