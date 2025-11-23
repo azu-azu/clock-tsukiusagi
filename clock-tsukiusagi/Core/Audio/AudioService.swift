@@ -576,6 +576,8 @@ public final class AudioService: ObservableObject {
     /// Map UISoundPreset to PureTonePreset (if applicable)
     private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
         switch uiPreset {
+        case .lunarPulse:
+            return .pentatonicChime
         case .treeChimeOnly:
             return .treeChimeOnly
         default:
@@ -590,8 +592,6 @@ public final class AudioService: ObservableObject {
             return .oceanWavesSeagulls
         case .moonlitSea:
             return .moonlitSea
-        case .lunarPulse:
-            return .lunarPulse  // Pentatonic chime via SignalEngine
         case .darkShark:
             return .darkShark
         case .midnightTrain:
@@ -612,7 +612,7 @@ public final class AudioService: ObservableObject {
             return .sinkingMoon
         case .dawnHint:
             return .dawnHint
-        case .treeChimeOnly:
+        case .lunarPulse, .treeChimeOnly:
             return nil  // Handled by PureTone
         }
     }
@@ -797,10 +797,6 @@ public final class AudioService: ObservableObject {
             // Removed: Legacy AudioSource implementation deleted
             // This preset now uses SignalEngine-based FinalMixer output
             print("⚠️ [AudioService] oceanWavesSeagulls should use FinalMixer path")
-
-        case .lunarPulse:
-            // Uses SignalEngine-based FinalMixer output (pentatonic chime)
-            print("⚠️ [AudioService] lunarPulse should use FinalMixer path")
 
         case .moonlitSea:
             let source = MoonlitSea(
