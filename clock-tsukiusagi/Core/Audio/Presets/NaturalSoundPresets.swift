@@ -159,44 +159,6 @@ public struct NaturalSoundPresets {
         public static let lfoMaximum: Double = 0.10
     }
 
-    // MARK: - Lunar Pulse（月の脈動 - チャイム風）
-
-    /// 月の脈動プリセット設定（癒しチャイム）
-    public struct LunarPulse {
-        /// ペンタトニックスケールの周波数（Hz）
-        public static let frequencies: [Double] = [
-            261.63,  // C4
-            293.66,  // D4
-            329.63,  // E4
-            392.00,  // G4
-            440.00,  // A4
-            523.25,  // C5
-            587.33,  // D5
-            659.25   // E5
-        ]
-
-        /// 音量
-        public static let amplitude: Double = 0.3
-
-        /// ランダムトリガー最小間隔
-        public static let minInterval: Double = 2.0
-
-        /// ランダムトリガー最大間隔
-        public static let maxInterval: Double = 8.0
-
-        /// エンベロープ - アタック時間
-        public static let attackTime: Double = 0.01
-
-        /// エンベロープ - ディケイ時間
-        public static let decayTime: Double = 3.0
-
-        /// エンベロープ - サステインレベル
-        public static let sustainLevel: Double = 0.0
-
-        /// エンベロープ - リリース時間
-        public static let releaseTime: Double = 1.0
-    }
-
     // MARK: - Dark Shark（黒いサメの影）
 
     /// 黒いサメの影プリセット設定
