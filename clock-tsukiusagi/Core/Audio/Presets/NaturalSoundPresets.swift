@@ -13,6 +13,7 @@ import Foundation
 public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     case darkShark          // 黒いサメの影
     case midnightTrain      // 夜汽車
+    case distantThunder     // 遠雷
 
     public var id: String { rawValue }
 
@@ -29,6 +30,8 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
             return "🦈 黒いサメの影"
         case .midnightTrain:
             return "🚂 夜汽車"
+        case .distantThunder:
+            return "⚡ 遠雷"
         }
     }
 
@@ -40,6 +43,8 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
             return "Dark Shape Underwater"
         case .midnightTrain:
             return "Midnight Train in the Distance"
+        case .distantThunder:
+            return "Distant Thunder Rumble"
         }
     }
 }

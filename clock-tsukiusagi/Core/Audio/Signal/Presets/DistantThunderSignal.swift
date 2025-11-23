@@ -2,88 +2,138 @@
 //  DistantThunderSignal.swift
 //  clock-tsukiusagi
 //
-//  Created by Claude Code on 2025-11-18.
-//  SignalEngine: Distant Thunder — random rumble pulses
+//  Created by Claude Code on 2025-11-23.
+//  SignalEngine: Distant Thunder — powerful "DON!" rumble
+//  Extracted from Midnight Train's impactful first beat
 //
 
 import Foundation
 
-/// Distant Thunder — far-off storm rumbling
+/// Distant Thunder — powerful thunder rumble
 ///
-/// This preset creates distant thunder sounds:
+/// This preset creates the sound of distant thunder:
 /// Components:
-/// - Brown noise for rumble base
-/// - Random pulses (2-7 second intervals)
-/// - Slow decay for realistic thunder fade
+/// - 3-layer impact sound (same as Midnight Train's "DON!" beat)
+/// - Random intervals (5-12 seconds) for unpredictable thunder
+/// - No repeating pattern, just single powerful strikes
 ///
-/// Original parameters from legacy AudioSource (DistantThunder.swift):
-/// - noiseAmplitude: 0.15
-/// - pulseAmplitude: 0.08
-/// - pulseMinInterval: 2.0 seconds
-/// - pulseMaxInterval: 7.0 seconds
-/// - Pulse decay: 0.9999 per sample
+/// Sound layers (from Midnight Train):
+/// 1. Attack: White noise burst for initial crack
+/// 2. Rumble: Low sine 120Hz with wobble for deep bass
+/// 3. Resonance: Brown noise for atmospheric lingering
 ///
-/// Modifications:
-/// - Structure unified to standard pattern with stateful generator
-/// - Parameter naming standardized (baseAmplitude, pulseAmplitude, etc.)
-/// - Documentation follows standard format
-/// - Stateful generator with reset() method
+/// Timing:
+/// - Random wait 5-12s → single "DON!" → repeat
+/// - Creates realistic distant thunder atmosphere
 public struct DistantThunderSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
-        let generator = DistantThunderGenerator()
-        return Signal { t in generator.sample(at: t) }
-    }
-}
 
-/// Stateful generator for distant thunder with random pulses
-private final class DistantThunderGenerator {
+        // Timing parameters
+        let minWaitTime: Float = 5.0        // 最短待機時間
+        let maxWaitTime: Float = 12.0       // 最長待機時間
 
-    // Constants
-    private let baseAmplitude: Float = 0.15
-    private let pulseAmplitude: Float = 0.08
-    private let pulseMinInterval: Float = 2.0
-    private let pulseMaxInterval: Float = 7.0
-    private let pulseDecayRate: Float = 0.9999
+        // Layer 1: Attack (crack) parameters
+        let attackDuration: Float = 0.05    // 50ms（雷は少し長め）
+        let attackAttack: Float = 0.003     // 3ms（鋭い立ち上がり）
+        let attackDecay: Float = 0.047      // 47ms
 
-    // Brown noise (rumble base)
-    private let noise = Noise.brown()
+        // Layer 2: Rumble (deep bass) parameters
+        let rumbleFreq: Float = 120.0       // 120Hz（より低く）
+        let rumbleWobbleFreq: Float = 2.5   // 2.5Hz LFO
+        let rumbleWobbleDepth: Float = 0.03 // ±3%（少し大きめ）
+        let rumbleAttack: Float = 0.015     // 15ms
+        let rumbleDecay: Float = 0.35       // 350ms（長い余韻）
 
-    // Pulse state (preserved across calls)
-    private var lastPulseTime: Float = 0
-    private var nextPulseTime: Float = Float.random(in: 2.0...7.0)
-    private var pulseDecay: Float = 0.0
-    private var pulseActive = false
+        // Layer 3: Resonance (atmospheric) parameters
+        let resonanceAttack: Float = 0.080  // 80ms
+        let resonanceDecay: Float = 0.45    // 450ms（長い余韻）
+        let resonanceLevel: Float = 0.25    // 雷は蒸気より強め
 
-    /// Reset generator state to initial values
-    func reset() {
-        lastPulseTime = 0
-        nextPulseTime = Float.random(in: pulseMinInterval...pulseMaxInterval)
-        pulseDecay = 0.0
-        pulseActive = false
-    }
+        // Generate noise sources
+        let whiteNoise = Noise.white
+        let brownNoise = Noise.brown(smoothing: 0.15)  // 雷は低域重視
 
-    func sample(at t: Float) -> Float {
-        // Check if it's time for a new pulse
-        if t - lastPulseTime >= nextPulseTime {
-            pulseActive = true
-            pulseDecay = 1.0
-            lastPulseTime = t
-            nextPulseTime = Float.random(in: pulseMinInterval...pulseMaxInterval)
-        }
+        return Signal { t in
+            // Calculate current thunder index
+            let cycleDuration = minWaitTime  // 最小サイクル
 
-        // Update pulse decay
-        if pulseActive {
-            pulseDecay *= pulseDecayRate
-            if pulseDecay < 0.01 {
-                pulseActive = false
+            // Determine wait time for this cycle using deterministic random
+            let thunderIndex = Int(t / cycleDuration)
+            var randomState = UInt64(thunderIndex * 8831)  // 素数でシード
+            randomState = randomState &* 6364136223846793005 &+ 1442695040888963407
+            let waitTime = minWaitTime + Float(randomState % 10000) / 10000.0 * (maxWaitTime - minWaitTime)
+
+            // Calculate thunder strike time
+            let thunderTime = Float(thunderIndex) * cycleDuration + waitTime
+
+            // Time since thunder strike
+            let timeSinceThunder = t - thunderTime
+
+            // If before strike or too long after, return silence
+            let maxDuration = max(attackDuration, rumbleAttack + rumbleDecay, resonanceAttack + resonanceDecay)
+            guard timeSinceThunder >= 0.0 && timeSinceThunder < maxDuration else {
+                return 0.0
             }
+
+            // === Layer 1: Attack (crack) ===
+            var attackValue: Float = 0.0
+            if timeSinceThunder < attackDuration {
+                let envelope: Float
+                if timeSinceThunder < attackAttack {
+                    // Attack phase
+                    envelope = timeSinceThunder / attackAttack
+                } else {
+                    // Decay phase
+                    let decayTime = timeSinceThunder - attackAttack
+                    envelope = exp(-decayTime / attackDecay)
+                }
+                // White noise for sharp crack
+                let rawNoise = whiteNoise(t)
+                attackValue = rawNoise * envelope * 0.5  // 雷は強め
+            }
+
+            // === Layer 2: Rumble (deep bass) ===
+            var rumbleValue: Float = 0.0
+            let rumbleDuration = rumbleAttack + rumbleDecay
+            if timeSinceThunder < rumbleDuration {
+                let envelope: Float
+                if timeSinceThunder < rumbleAttack {
+                    // Attack phase
+                    envelope = timeSinceThunder / rumbleAttack
+                } else {
+                    // Decay phase
+                    let decayTime = timeSinceThunder - rumbleAttack
+                    envelope = exp(-decayTime / rumbleDecay)
+                }
+                // Low sine with pitch wobble for rumble
+                let wobble = sin(2.0 * Float.pi * rumbleWobbleFreq * t) * rumbleWobbleDepth
+                let freq = rumbleFreq * (1.0 + wobble)
+                let phase = 2.0 * Float.pi * freq * t
+                rumbleValue = sin(phase) * envelope * 0.7  // 低音を強調
+            }
+
+            // === Layer 3: Resonance (atmospheric lingering) ===
+            var resonanceValue: Float = 0.0
+            let resonanceDuration = resonanceAttack + resonanceDecay
+            if timeSinceThunder < resonanceDuration {
+                let envelope: Float
+                if timeSinceThunder < resonanceAttack {
+                    // Attack phase
+                    envelope = timeSinceThunder / resonanceAttack
+                } else {
+                    // Decay phase
+                    let decayTime = timeSinceThunder - resonanceAttack
+                    envelope = exp(-decayTime / resonanceDecay)
+                }
+                // Brown noise for deep atmospheric resonance
+                let rawResonance = brownNoise(t)
+                resonanceValue = rawResonance * envelope * resonanceLevel
+            }
+
+            // Mix all layers for powerful thunder
+            return (attackValue + rumbleValue + resonanceValue) * 1.0
         }
-
-        let pulseAmp: Float = pulseActive ? pulseAmplitude * pulseDecay : 0.0
-        let totalAmplitude = baseAmplitude + pulseAmp
-
-        return noise(t) * totalAmplitude
     }
 }

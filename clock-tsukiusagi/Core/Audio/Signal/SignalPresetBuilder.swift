@@ -55,6 +55,8 @@ public struct SignalPresetBuilder {
             return DarkSharkSignal.makeSignal()
         case .midnightTrain:
             return MidnightTrainSignal.makeSignal()
+        case .distantThunder:
+            return DistantThunderSignal.makeSignal()
         }
     }
 
@@ -79,6 +81,18 @@ public struct SignalPresetBuilder {
                 decay: 0.82,
                 mix: 0.42,
                 predelay: 0.028,
+                sampleRate: sampleRate
+            )
+            mixer.addEffect(reverb)
+
+        case .distantThunder:
+            // Thunder: Deep reverb for atmospheric rumble
+            let reverb = SchroederReverb(
+                roomSize: 2.5,
+                damping: 0.5,
+                decay: 0.90,
+                mix: 0.55,
+                predelay: 0.050,
                 sampleRate: sampleRate
             )
             mixer.addEffect(reverb)

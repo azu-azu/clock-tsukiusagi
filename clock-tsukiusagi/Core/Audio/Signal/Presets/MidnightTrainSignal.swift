@@ -3,83 +3,152 @@
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-18.
-//  SignalEngine: Midnight Train — rhythmic brown noise
+//  SignalEngine: Midnight Train — cute "shupotsu" steam train
+//  Based on Fujiko's proposal for warm, rabbit-carriage atmosphere
 //
 
 import Foundation
 
-/// Midnight Train — rhythmic rumbling with steam puffs
+/// Midnight Train — cute steam train with "shupotsu" sound
 ///
-/// This preset creates the sound of a train moving through the night:
+/// This preset creates the sound of a small steam locomotive:
 /// Components:
-/// - Brown noise for deep mechanical rumble
-/// - Fast sine LFO (1.0 Hz) for rhythmic "clack-clack" pattern
-/// - Random steam puffs (シュポォツ, シュポッ, シュポッ) every 3-8 seconds
-/// - Amplitude range 0.10 to 0.40 (expanded for better presence)
+/// - 3-layer sound structure (Attack/Pop/Steam)
+/// - 4-beat pattern with gentle rhythm (strong, strong, weak, strong)
+/// - Random intervals (3-8 seconds) between pattern bursts
 ///
-/// Original parameters from legacy AudioSource (MidnightTrain.swift):
-/// - noiseAmplitude: 0.3
-/// - lfoFrequency: 1.0 Hz (rhythmic pattern)
-/// - lfoRange: 0.03 to 0.12 (original)
+/// Sound layers:
+/// 1. Attack ("shu"): White noise burst 10-30ms, HPF 300Hz
+/// 2. Pop ("potsu"): Sine 180Hz with ±2% wobble, warm and round
+/// 3. Steam: Pink noise -24dB, LPF 800Hz, gentle lingering
 ///
-/// Modifications:
-/// - Structure unified to standard 6-step Signal pattern
-/// - Parameter naming standardized (baseAmplitude, lfoMin, lfoMax)
-/// - LFO mapping uses canonical formula
-/// - Expanded LFO range to 0.10...0.40 to match other presets' max volume (~0.12)
-/// - Added steam puff bursts for characteristic train sound
+/// Rhythm structure:
+/// - Random wait 3-8s → 4-beat pattern (0.55s interval) → repeat
+/// - Beat 3 has 80% velocity for natural feel
+/// - Creates "rabbit carriage" atmosphere suitable for Azu world
 public struct MidnightTrainSignal {
 
     /// Create raw Signal (for FinalMixer usage)
     public static func makeSignal() -> Signal {
 
-        // 1. Define constants
-        let lfoMin = 0.08
-        let lfoMax = 0.25
-        let lfoFrequency = 1.0
+        // Timing parameters
+        let beatInterval: Float = 0.55      // 間隔（BPM 109相当）
+        let patternBeats: Int = 4           // 4拍パターン
+        let minWaitTime: Float = 3.0        // 最短待機時間
+        let maxWaitTime: Float = 8.0        // 最長待機時間
 
-        // Steam puff parameters
-        let puffMinInterval: Float = 3.0
-        let puffMaxInterval: Float = 8.0
-        let puffDuration: Float = 0.4      // シュポォツの長さ
-        let puffAmplitude: Float = 0.35    // 蒸気の音量
+        // Layer 1: Attack ("shu") parameters
+        let attackDuration: Float = 0.03    // 30ms
+        let attackAttack: Float = 0.005     // 5ms
+        let attackDecay: Float = 0.025      // 25ms
 
-        // 2. Define LFO (simple sine)
-        let lfo = SignalLFO.sine(frequency: lfoFrequency)
+        // Layer 2: Pop ("potsu") parameters
+        let popFreq: Float = 180.0          // 180Hz
+        let popWobbleFreq: Float = 3.0      // 3Hz LFO
+        let popWobbleDepth: Float = 0.02    // ±2%
+        let popAttack: Float = 0.010        // 10ms
+        let popDecay: Float = 0.120         // 120ms
 
-        // 3. Normalize LFO (0...1)
-        // 4. Map amplitude (lfoMin...lfoMax)
-        let modulatedAmplitude = Signal { t in
-            let lfoValue = lfo(t)
-            let normalized = (lfoValue + 1) * 0.5  // 0...1
-            return Float(lfoMin + (lfoMax - lfoMin) * Double(normalized))
-        }
+        // Layer 3: Steam parameters
+        let steamAttack: Float = 0.050      // 50ms
+        let steamDecay: Float = 0.200       // 200ms
+        let steamLevel: Float = 0.15        // -24dB相当
 
-        // 5. Generate base noise
-        let noise = Noise.brown(smoothing: 0.1)
-        let steamNoise = Noise.white  // 蒸気用ホワイトノイズ
+        // Generate noise sources
+        let whiteNoise = Noise.white
+        let pinkNoise = Noise.pink()
 
-        // 6. Return final signal with steam puffs
         return Signal { t in
-            let baseSound = noise(t) * modulatedAmplitude(t)
+            // Calculate current pattern index
+            let patternDuration = Float(patternBeats) * beatInterval
+            let cycleDuration = minWaitTime + patternDuration  // 最小サイクル
 
-            // Steam puff calculation (random intervals)
-            let puffIndex = Int(t / puffMinInterval)
-            var randomState = UInt64(puffIndex * 9973)  // 素数でシード
+            // Determine wait time for this cycle using deterministic random
+            let cycleIndex = Int(t / cycleDuration)
+            var randomState = UInt64(cycleIndex * 7919)
             randomState = randomState &* 6364136223846793005 &+ 1442695040888963407
-            let randomOffset = Float(randomState % 10000) / 10000.0 * (puffMaxInterval - puffMinInterval)
-            let puffStartTime = Float(puffIndex) * puffMinInterval + randomOffset
+            let waitTime = minWaitTime + Float(randomState % 10000) / 10000.0 * (maxWaitTime - minWaitTime)
 
-            // Check if we're in a puff
-            let timeSincePuff = t - puffStartTime
-            if timeSincePuff >= 0.0 && timeSincePuff < puffDuration {
-                // Envelope: quick attack, exponential decay
-                let envelope = exp(-timeSincePuff / (puffDuration * 0.3))
-                let puffValue = steamNoise(t)  // ホワイトノイズでシュッという音
-                return baseSound + puffValue * envelope * puffAmplitude
+            // Calculate pattern start time
+            let patternStartTime = Float(cycleIndex) * cycleDuration + waitTime
+
+            // Check if we're in pattern
+            let timeSincePatternStart = t - patternStartTime
+            guard timeSincePatternStart >= 0.0 && timeSincePatternStart < patternDuration else {
+                return 0.0  // Silent during wait period
             }
 
-            return baseSound
+            // Determine which beat we're in (0-3)
+            let beatIndex = Int(timeSincePatternStart / beatInterval)
+            guard beatIndex < patternBeats else {
+                return 0.0
+            }
+
+            // Time since this beat started
+            let timeSinceBeat = timeSincePatternStart - Float(beatIndex) * beatInterval
+
+            // Velocity (beat 2 is weak, 80%)
+            let velocity: Float = (beatIndex == 2) ? 0.8 : 1.0
+
+            // === Layer 1: Attack ("shu") ===
+            var attackValue: Float = 0.0
+            if timeSinceBeat < attackDuration {
+                let envelope: Float
+                if timeSinceBeat < attackAttack {
+                    // Attack phase
+                    envelope = timeSinceBeat / attackAttack
+                } else {
+                    // Decay phase
+                    let decayTime = timeSinceBeat - attackAttack
+                    envelope = exp(-decayTime / attackDecay)
+                }
+                // White noise with simple HPF simulation (subtract low component)
+                let rawNoise = whiteNoise(t)
+                let hpfNoise = rawNoise * 0.7  // High-pass simulation
+                attackValue = hpfNoise * envelope * 0.35
+            }
+
+            // === Layer 2: Pop ("potsu") ===
+            var popValue: Float = 0.0
+            let popDuration = popAttack + popDecay
+            if timeSinceBeat < popDuration {
+                let envelope: Float
+                if timeSinceBeat < popAttack {
+                    // Attack phase
+                    envelope = timeSinceBeat / popAttack
+                } else {
+                    // Decay phase
+                    let decayTime = timeSinceBeat - popAttack
+                    envelope = exp(-decayTime / popDecay)
+                }
+                // Sine with pitch wobble
+                let wobble = sin(2.0 * Float.pi * popWobbleFreq * t) * popWobbleDepth
+                let freq = popFreq * (1.0 + wobble)
+                let phase = 2.0 * Float.pi * freq * t
+                popValue = sin(phase) * envelope * 0.6
+            }
+
+            // === Layer 3: Steam (gentle lingering) ===
+            var steamValue: Float = 0.0
+            let steamDuration = steamAttack + steamDecay
+            if timeSinceBeat < steamDuration {
+                let envelope: Float
+                if timeSinceBeat < steamAttack {
+                    // Attack phase
+                    envelope = timeSinceBeat / steamAttack
+                } else {
+                    // Decay phase
+                    let decayTime = timeSinceBeat - steamAttack
+                    envelope = exp(-decayTime / steamDecay)
+                }
+                // Pink noise with simple LPF simulation
+                let rawSteam = pinkNoise(t)
+                let lpfSteam = rawSteam * 0.5  // Low-pass simulation
+                steamValue = lpfSteam * envelope * steamLevel
+            }
+
+            // Mix all layers with velocity
+            return (attackValue + popValue + steamValue) * velocity * 0.8
         }
     }
 }

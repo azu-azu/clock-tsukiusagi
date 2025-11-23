@@ -593,7 +593,7 @@ public final class AudioService: ObservableObject {
             return .pentatonicChime
         case .softOrgan:
             return .cathedralStillness
-        case .darkShark, .midnightTrain:
+        case .darkShark, .midnightTrain, .distantThunder:
             return nil  // Handled by NaturalSound
         }
     }
@@ -605,6 +605,8 @@ public final class AudioService: ObservableObject {
             return .darkShark
         case .midnightTrain:
             return .midnightTrain
+        case .distantThunder:
+            return .distantThunder
         case .pentatonic, .softOrgan:
             return nil  // Handled by PureTone
         }
@@ -803,6 +805,11 @@ public final class AudioService: ObservableObject {
                 lfoMaximum: NaturalSoundPresets.MidnightTrain.lfoMaximum
             )
             engine.register(source)
+
+        case .distantThunder:
+            // distantThunder should use SignalEngine version
+            // This fallback should never be reached
+            print("⚠️ [AudioService] distantThunder fallback - should use SignalEngine")
         }
     }
 
