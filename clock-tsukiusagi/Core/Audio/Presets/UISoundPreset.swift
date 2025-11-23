@@ -26,7 +26,7 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     public var displayName: String {
         switch self {
         case .pentatonic:
-            return "🎵 ペンタトニックチャイム"
+            return "🔔 チャイム"
         case .softOrgan:
             return "🎹 大聖堂の静寂"
         case .darkShark:

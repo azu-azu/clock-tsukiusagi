@@ -125,6 +125,9 @@ public final class AudioService: ObservableObject {
     // SignalEngine fade control
     private var currentSignalSource: SignalEngineSource?
 
+    // Preset switching protection: prevent multiple concurrent stop requests
+    private var isStopping = false
+
     // MARK: - Initialization
 
     private init() {
@@ -291,6 +294,13 @@ public final class AudioService: ObservableObject {
     ///   - completion: 停止完了後のコールバック
     public func stopAndWait(fadeOut fadeOutDuration: TimeInterval = 0.5, completion: @escaping () -> Void) {
 
+        // Prevent concurrent stop requests (preset switching protection)
+        guard !isStopping else {
+            print("⚠️ [AudioService] stopAndWait() ignored (already stopping)")
+            completion()  // Still call completion to unblock caller
+            return
+        }
+
         // Prevent duplicate stop() calls (ghost fade-out protection)
         guard isPlaying else {
             print("⚠️ [AudioService] stopAndWait() ignored (not playing)")
@@ -298,6 +308,7 @@ public final class AudioService: ObservableObject {
             return
         }
         isPlaying = false  // Immediately set to prevent re-entrance
+        isStopping = true  // Mark as stopping to prevent concurrent requests
 
         // Apply fade out to SignalAudioSource
         currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
@@ -346,6 +357,8 @@ public final class AudioService: ObservableObject {
             // Phase 3: Now Playingをクリア
             self.nowPlayingController?.clearNowPlaying()
 
+            // Reset stopping flag
+            self.isStopping = false
 
             // Call completion handler
             completion()

@@ -136,6 +136,18 @@ struct AudioTestView: View {
             } message: {
                 Text(errorMessage ?? "不明なエラー")
             }
+            .onChange(of: selectedSource) { oldValue, newValue in
+                // Automatic preset switching when playing
+                guard oldValue != newValue else { return }
+
+                if audioService.isPlaying {
+                    // Stop current playback and switch to new preset
+                    audioService.stopAndWait(fadeOut: 0.5) {
+                        playAudio()
+                    }
+                }
+                // If not playing, just update the selection (no automatic playback)
+            }
         }
     }
 
@@ -180,7 +192,6 @@ struct AudioTestView: View {
                             }) {
                                 Text(source.displayName)
                             }
-                            .disabled(audioService.isPlaying)
                         }
                     } label: {
                         HStack {
