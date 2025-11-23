@@ -38,11 +38,12 @@ public struct PureToneBuilder {
             sources.append(outputNode)
 
         case .treeChimeOnly:
-            // AudioSource-based implementation
+            // AudioSource-based implementation (直接使用、リバーブなし)
+            // TODO: Signal-basedに書き直してリバーブを追加する
             let chime = TreeChime(
-                grainRate: 25.0,       // Sparse grains (not too dense)
-                grainDuration: 0.12,   // Longer decay for ethereal feel
-                brightness: 7000.0     // High frequency shimmer
+                grainRate: 1.5,        // シャラララの発生頻度（1秒に1.5回）
+                grainDuration: 1.2,    // 各粒の余韻（1.2秒）
+                brightness: 8000.0     // 基音周波数
             )
             sources.append(chime)
         }
