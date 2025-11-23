@@ -46,10 +46,13 @@ public struct PureToneBuilder {
             sources.append(treeChime)
 
         case .cathedralStillness:
-            // Signal-based organ drone with large reverb
-            let signal = CathedralStillnessSignal.makeSignal()
+            // Signal-based organ drone + harp arpeggios with large reverb
+            let organSignal = CathedralStillnessSignal.makeSignal()
+            let harpSignal = MidnightDropletsSignal.makeSignal()
+
             let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)
+            mixer.add(organSignal, gain: 1.0)     // オルガンドローン
+            mixer.add(harpSignal, gain: 0.8)      // ハープアルペジオ（少し控えめ）
 
             // Large reverb for cathedral atmosphere (3s decay)
             let reverb = SchroederReverb(
@@ -66,18 +69,18 @@ public struct PureToneBuilder {
             sources.append(outputNode)
 
         case .midnightDroplets:
-            // Signal-based arpeggio harp with medium reverb
+            // Signal-based arpeggio harp with rich, long reverb
             let signal = MidnightDropletsSignal.makeSignal()
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
 
-            // Medium reverb for harp resonance
+            // Rich reverb for harp resonance with long tail
             let reverb = SchroederReverb(
-                roomSize: 1.6,
-                damping: 0.5,
-                decay: 0.75,
-                mix: 0.35,
-                predelay: 0.025,
+                roomSize: 2.0,      // より大きな空間（1.6 → 2.0）
+                damping: 0.35,      // 減衰を抑えて響きを残す（0.5 → 0.35）
+                decay: 0.85,        // より長い残響（0.75 → 0.85）
+                mix: 0.50,          // リバーブ成分を増やす（0.35 → 0.50）
+                predelay: 0.030,    // わずかに遅延を増やす
                 sampleRate: 48000.0
             )
             mixer.addEffect(reverb)

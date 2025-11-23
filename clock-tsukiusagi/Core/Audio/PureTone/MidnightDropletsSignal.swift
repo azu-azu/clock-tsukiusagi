@@ -35,7 +35,8 @@ public struct MidnightDropletsSignal {
         let maxInterval: Float = 15.0   // 最長15秒
 
         // 各音の減衰時間
-        let noteDecay: Float = 2.5      // 2.5秒で減衰
+        let noteDecay: Float = 5.0      // 5.0秒で減衰（長い余韻）
+        let fadeOutStart: Float = 4.2   // 4.2秒からさらにフェードアウト開始
 
         // アルペジオ内の音の間隔
         let noteSpacing: Float = 0.12   // 120ms
@@ -94,12 +95,21 @@ public struct MidnightDropletsSignal {
                 // 音の周波数（上昇アルペジオ）
                 let freq = scale[startIndex + noteOffset]
 
-                // 倍音合成（ハープらしい倍音構造）
-                let harmonics: [Float] = [1.0, 2.0, 3.0]
-                let amps: [Float] = [1.0, 0.4, 0.25]
+                // 倍音合成（ハープらしい倍音構造、豊かな響き）
+                let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0]
+                let amps: [Float] = [1.0, 0.5, 0.3, 0.15]
 
                 // エンベロープ（exponential decay）
                 let envelope = exp(-timeSinceNote / noteDecay)
+
+                // 最後の部分でさらにフェードアウト（プツッと切れないように）
+                let finalFade: Float
+                if timeSinceNote > fadeOutStart {
+                    let fadeProgress = (timeSinceNote - fadeOutStart) / (noteDecay - fadeOutStart)
+                    finalFade = 1.0 - fadeProgress  // 線形フェードアウト
+                } else {
+                    finalFade = 1.0
+                }
 
                 var noteValue: Float = 0.0
                 for i in 0..<harmonics.count {
@@ -108,11 +118,11 @@ public struct MidnightDropletsSignal {
                     noteValue += amps[i] * sin(phase)
                 }
 
-                value += noteValue * envelope
+                value += noteValue * envelope * finalFade
             }
 
-            // 全体音量は控えめ
-            return value * 0.18
+            // 全体音量（リバーブで響くため少し控えめ）
+            return value * 0.22
         }
     }
 }

@@ -580,8 +580,6 @@ public final class AudioService: ObservableObject {
             return .pentatonicChime
         case .softOrgan:
             return .cathedralStillness
-        case .pluckedHarp:
-            return .midnightDroplets
         case .darkShark, .midnightTrain:
             return nil  // Handled by NaturalSound
         }
@@ -594,7 +592,7 @@ public final class AudioService: ObservableObject {
             return .darkShark
         case .midnightTrain:
             return .midnightTrain
-        case .pentatonic, .softOrgan, .pluckedHarp:
+        case .pentatonic, .softOrgan:
             return nil  // Handled by PureTone
         }
     }
