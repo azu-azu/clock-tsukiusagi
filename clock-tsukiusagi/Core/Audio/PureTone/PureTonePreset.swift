@@ -13,6 +13,8 @@ public enum PureTonePreset {
     case cathedralStillness // Cathedral organ drone (Signal-based)
     case midnightDroplets   // Sparse arpeggio harp (Signal-based)
     case treeChimeOnly      // TreeChime only (for testing)
+    case toyPiano           // Toy piano chord progression (Signal-based)
+    case gentleFlute        // Gentle flute melody (Signal-based)
 
     /// Whether this preset uses Signal-based implementation
     public var usesSignalEngine: Bool {
@@ -25,6 +27,10 @@ public enum PureTonePreset {
             return true
         case .treeChimeOnly:
             return false
+        case .toyPiano:
+            return true
+        case .gentleFlute:
+            return true
         }
     }
 
@@ -38,6 +44,10 @@ public enum PureTonePreset {
         case .cathedralStillness:
             return false
         case .midnightDroplets:
+            return false
+        case .toyPiano:
+            return false
+        case .gentleFlute:
             return false
         }
     }

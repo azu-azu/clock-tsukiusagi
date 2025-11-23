@@ -97,6 +97,52 @@ public struct PureToneBuilder {
                 brightness: 8000.0     // 基音周波数
             )
             sources.append(chime)
+
+        case .toyPiano:
+            // Toy piano chord progression with deep, dreamy reverb
+            let signal = PianoSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Deep reverb for dreamy atmosphere
+            let reverb = SchroederReverb(
+                roomSize: 1.8,      // Medium-large space
+                damping: 0.65,      // Warm tone
+                decay: 0.85,        // Long tail for dreamy feel
+                mix: 0.45,          // Rich reverb
+                predelay: 0.020,    // 20ms initial reflection
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            // Soft limiter for safety
+            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
+
+        case .gentleFlute:
+            // Gentle flute melody with spacious, bright reverb
+            let signal = FluteSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Spacious reverb for concert hall feel
+            let reverb = SchroederReverb(
+                roomSize: 2.0,      // Large space
+                damping: 0.50,      // Brighter tone
+                decay: 0.88,        // Long, airy tail
+                mix: 0.50,          // Very spacious
+                predelay: 0.030,    // 30ms initial reflection
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            // Soft limiter for safety
+            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
         }
 
         return sources
