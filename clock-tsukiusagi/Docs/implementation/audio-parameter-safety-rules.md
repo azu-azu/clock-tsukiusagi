@@ -42,10 +42,10 @@ Core/Audio/Presets/UISoundPreset.swift
 
 ```swift
 public enum UISoundPreset: String, CaseIterable, Identifiable {
-    case oceanWavesSeagulls
-    case moonlitSea
-    case lunarPulse  // PureToneだがUI上は他と並列
-    case darkShark
+    case naturalSoundA
+    case naturalSoundB
+    case pureToneA  // PureToneだがUI上は他と並列
+    case naturalSoundC
     // ...
 
     public var displayName: String { ... }
@@ -75,14 +75,13 @@ Core/Audio/PureTone/
     PureTonePreset.swift     # プリセット定義
     PureToneParams.swift     # パラメータ構造体
     PureToneBuilder.swift    # ビルダー
-    LunarPulse.swift         # 音源実装
-    TreeChime.swift          # 音源実装
+    (各音源実装ファイル)      # Sine wave, grain synthesis等
 ```
 
 ### 代表例
 
-* LunarPulse（528Hz Sine）
-* TreeChime（高周波粒状合成）
+* Sine wave系（単一周波数、倍音合成等）
+* Grain synthesis系（粒状合成）
 * Harmonic系（将来）
 * Binaural系（将来）
 
@@ -105,11 +104,11 @@ Core/Audio/PureTone/
 
 ```swift
 public enum PureTonePreset {
-    case lunarPulse
-    case lunarPulseChime
+    case sineWaveA
+    case sineWaveWithOverlay
 
     public var params: PureToneParams { ... }
-    public var includesChime: Bool { ... }
+    public var includesOverlay: Bool { ... }
 }
 ```
 
@@ -131,10 +130,9 @@ Core/Audio/Signal/Presets/*.swift
 
 ### 代表例
 
-* MoonlitSea（深夜の海）
-* DarkShark（黒いサメの影）
-* LunarTide（月光の潮流）
-* AbyssalBreath（深海の呼吸）
+* 海・水系の環境音（波、深海、潮流等）
+* 暗闇・陰影系（存在の圧、影等）
+* 天候・自然系（風、雷、雨等）
 * その他の環境ノイズ源
 
 ### 特徴
@@ -184,8 +182,8 @@ private func registerSource(for uiPreset: UISoundPreset) throws {
 ```swift
 private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
     switch uiPreset {
-    case .lunarPulse:
-        return .lunarPulseChime
+    case .pureToneA:
+        return .sineWaveWithOverlay
     default:
         return nil
     }
@@ -193,12 +191,12 @@ private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
 
 private func mapToNaturalSound(_ uiPreset: UISoundPreset) -> NaturalSoundPreset? {
     switch uiPreset {
-    case .moonlitSea:
-        return .moonlitSea
-    case .darkShark:
-        return .darkShark
+    case .naturalSoundA:
+        return .oceanTypeA
+    case .naturalSoundB:
+        return .atmosphericTypeA
     // ...
-    case .lunarPulse:
+    case .pureToneA:
         return nil  // PureToneが処理
     }
 }
@@ -233,24 +231,24 @@ private func mapToNaturalSound(_ uiPreset: UISoundPreset) -> NaturalSoundPreset?
 ```swift
 // PureTonePreset.swift
 public enum PureTonePreset {
-    case lunarPulse
-    case lunarPulse_v2  // ✅ 新バージョンとして追加
+    case sineWaveA
+    case sineWaveA_v2  // ✅ 新バージョンとして追加
 
     public var params: PureToneParams {
         switch self {
-        case .lunarPulse:
+        case .sineWaveA:
             // 既存の音をそのまま維持
             return PureToneParams(
-                frequency: 528.0,
+                frequency: 440.0,
                 amplitude: 0.2,
-                lfoFrequency: 0.06,
+                lfoFrequency: 0.05,
                 lfoMinimum: 0.02,
-                lfoMaximum: 0.12
+                lfoMaximum: 0.10
             )
-        case .lunarPulse_v2:
+        case .sineWaveA_v2:
             // 改良版
             return PureToneParams(
-                frequency: 528.0,
+                frequency: 440.0,
                 amplitude: 0.25,   // 改良版
                 lfoFrequency: 0.08,
                 lfoMinimum: 0.03,
@@ -266,13 +264,13 @@ public enum PureTonePreset {
 ```swift
 // PureTonePreset.swift
 public enum PureTonePreset {
-    case lunarPulse         // 純音のみ
-    case lunarPulseChime    // チャイム付き
+    case sineWaveA          // 基本音のみ
+    case sineWaveWithOverlay // オーバーレイ付き
 
-    public var includesChime: Bool {
+    public var includesOverlay: Bool {
         switch self {
-        case .lunarPulseChime: return true
-        case .lunarPulse: return false
+        case .sineWaveWithOverlay: return true
+        case .sineWaveA: return false
         }
     }
 }
@@ -281,12 +279,14 @@ public enum PureTonePreset {
 public static func build(_ preset: PureTonePreset) -> [AudioSource] {
     var sources: [AudioSource] = []
 
-    let pulse = LunarPulse(...)
-    sources.append(pulse)
+    // 主音源を追加
+    let mainSource = SomeAudioSource(...)
+    sources.append(mainSource)
 
-    if preset.includesChime {
-        let chime = TreeChime(...)
-        sources.append(chime)
+    // 条件付きで追加音源
+    if preset.includesOverlay {
+        let overlay = AnotherAudioSource(...)
+        sources.append(overlay)
     }
 
     return sources
@@ -298,17 +298,17 @@ public static func build(_ preset: PureTonePreset) -> [AudioSource] {
 ```swift
 // PureTonePreset.swift
 public enum PureTonePreset {
-    case lunarPulse
+    case sineWaveA
 
     public var params: PureToneParams {
         switch self {
-        case .lunarPulse:
+        case .sineWaveA:
             return PureToneParams(
-                frequency: 528.0,
+                frequency: 440.0,
                 amplitude: 0.21,   // ❌ 0.2 → 0.21 に変更（音が変わる）
-                lfoFrequency: 0.06,
+                lfoFrequency: 0.05,
                 lfoMinimum: 0.02,
-                lfoMaximum: 0.12
+                lfoMaximum: 0.10
             )
         }
     }
@@ -323,54 +323,14 @@ public enum PureTonePreset {
 
 ---
 
-## 🔍 7. 現在のPureTone音源パラメータ（参考）
-
-### LunarPulse (月の脈動)
-
-**場所**: `Core/Audio/PureTone/PureTonePreset.swift` (case .lunarPulse)
-
-```swift
-// PureTonePreset.swift
-public var params: PureToneParams {
-    switch self {
-    case .lunarPulse, .lunarPulseChime:
-        return PureToneParams(
-            frequency: 528.0,      // ソルフェジオ周波数
-            amplitude: 0.2,        // 基本音量
-            lfoFrequency: 0.06,    // 超低速LFO（約16.7秒周期）
-            lfoMinimum: 0.02,      // 振幅変調の最小値
-            lfoMaximum: 0.12       // 振幅変調の最大値
-        )
-    }
-}
-```
-
-### TreeChime (高周波チャイム)
-
-**場所**: `Core/Audio/PureTone/PureToneBuilder.swift`
-
-```swift
-// PureToneBuilder.swift (lunarPulseChimeの場合のみ追加)
-if preset.includesChime {
-    let chime = TreeChime(
-        grainRate: 25.0,       // 25粒/秒（連続的だが密集しすぎない）
-        grainDuration: 0.12,   // 余韻長め（幻想的な質感）
-        brightness: 7000.0     // 高周波帯域の中心
-    )
-    sources.append(chime)
-}
-```
-
----
-
-## 📐 8. 音源を追加する際のガイドライン
+## 📐 7. 音源を追加する際のガイドライン
 
 ### PureTone系を追加する場合
 
 1. **UISoundPreset.swiftに新しいcaseを追加**（UI層）
    ```swift
    public enum UISoundPreset: String, CaseIterable, Identifiable {
-       case harmonicTone  // ✅ 新しい音源
+       case newPureTone  // ✅ 新しい音源
        // ...
    }
    ```
@@ -378,7 +338,7 @@ if preset.includesChime {
 2. **PureTonePreset.swiftに新しいcaseを追加**（技術層）
    ```swift
    public enum PureTonePreset {
-       case harmonicTone  // ✅ 新しいプリセット
+       case newPureTone  // ✅ 新しいプリセット
 
        public var params: PureToneParams { ... }
    }
@@ -388,7 +348,7 @@ if preset.includesChime {
    ```swift
    private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
        switch uiPreset {
-       case .harmonicTone: return .harmonicTone  // ✅ マッピング追加
+       case .newPureTone: return .newPureTone  // ✅ マッピング追加
        // ...
        }
    }
@@ -402,7 +362,7 @@ if preset.includesChime {
 1. **UISoundPreset.swiftに新しいcaseを追加**（UI層）
    ```swift
    public enum UISoundPreset: String, CaseIterable, Identifiable {
-       case forestRain  // ✅ 新しい音源
+       case newNaturalSound  // ✅ 新しい音源
        // ...
    }
    ```
@@ -410,14 +370,14 @@ if preset.includesChime {
 2. **NaturalSoundPreset.swiftに新しいcaseを追加**（技術層）
    ```swift
    public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
-       case forestRain  // ✅ 新しいプリセット
+       case newNaturalSound  // ✅ 新しいプリセット
        // ...
    }
    ```
 
 3. **NaturalSoundPresets.swiftに構造体を追加**
    ```swift
-   public struct ForestRain {
+   public struct NewNaturalSound {
        public static let noiseAmplitude: Float = 0.3
        // ...
    }
@@ -427,7 +387,7 @@ if preset.includesChime {
    ```swift
    private func createRawSignal(for preset: NaturalSoundPreset) -> Signal? {
        switch preset {
-       case .forestRain: return ForestRainSignal.makeSignal()
+       case .newNaturalSound: return NewNaturalSoundSignal.makeSignal()
        // ...
        }
    }
@@ -437,7 +397,7 @@ if preset.includesChime {
    ```swift
    private func mapToNaturalSound(_ uiPreset: UISoundPreset) -> NaturalSoundPreset? {
        switch uiPreset {
-       case .forestRain: return .forestRain  // ✅ マッピング追加
+       case .newNaturalSound: return .newNaturalSound  // ✅ マッピング追加
        // ...
        }
    }
@@ -447,7 +407,7 @@ if preset.includesChime {
 
 ---
 
-## 🚀 9. PureToneModule分離（実装済み）
+## 🚀 8. PureToneModule分離（実装済み）
 
 **ステータス**: ✅ **完了** (2025-11-23)
 
@@ -460,8 +420,7 @@ Core/Audio/PureTone/
     PureTonePreset.swift       # 純音系プリセット定義
     PureToneParams.swift       # パラメータ構造体
     PureToneBuilder.swift      # ビルダー
-    LunarPulse.swift           # 音源実装
-    TreeChime.swift            # 音源実装
+    (各音源実装ファイル)        # Sine wave, grain synthesis等
 ```
 
 ### 実現されたメリット
