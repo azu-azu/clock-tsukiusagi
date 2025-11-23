@@ -45,6 +45,46 @@ public struct PureToneBuilder {
             )
             sources.append(treeChime)
 
+        case .cathedralStillness:
+            // Signal-based organ drone with large reverb
+            let signal = CathedralStillnessSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Large reverb for cathedral atmosphere (3s decay)
+            let reverb = SchroederReverb(
+                roomSize: 2.2,
+                damping: 0.35,
+                decay: 0.88,
+                mix: 0.55,
+                predelay: 0.04,
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
+
+        case .midnightDroplets:
+            // Signal-based arpeggio harp with medium reverb
+            let signal = MidnightDropletsSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Medium reverb for harp resonance
+            let reverb = SchroederReverb(
+                roomSize: 1.6,
+                damping: 0.5,
+                decay: 0.75,
+                mix: 0.35,
+                predelay: 0.025,
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
+
         case .treeChimeOnly:
             // AudioSource-based implementation (直接使用、リバーブなし)
             // TODO: Signal-basedに書き直してリバーブを追加する
