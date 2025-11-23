@@ -11,61 +11,24 @@ import Foundation
 /// 自然音プリセット（環境音・ノイズ系のみ）
 /// Note: 純音系（PentatonicChime等）は PureTone module で実装（Core/Audio/PureTone/）
 public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
-    case oceanWavesSeagulls // 波 + 海鳥
-    case moonlitSea         // 深夜の海
     case darkShark          // 黒いサメの影
     case midnightTrain      // 夜汽車
-    case lunarTide          // 月光の潮流
-    case abyssalBreath      // 深海の呼吸
-    case stardustNoise      // 星屑ノイズ
-    case lunarDustStorm     // 月面の砂嵐
-    case silentLibrary      // 夜の図書館
-    case distantThunder     // 遠雷
-    case sinkingMoon        // 沈む月
-    case dawnHint           // 朝の気配
 
     public var id: String { rawValue }
 
     /// Indicates if this is a test/development preset
     public var isTest: Bool {
-        [
-            .stardustNoise,
-            .lunarDustStorm,
-            .silentLibrary,
-            .distantThunder,
-            .sinkingMoon,
-            .dawnHint
-        ].contains(self)
+        false  // Both are production presets
     }
 
     /// Display name for UI (Japanese with emoji)
     /// Note: This is deprecated - use UISoundPreset.displayName instead
     public var displayName: String {
         switch self {
-        case .oceanWavesSeagulls:
-            return "波 + 海鳥"
-        case .moonlitSea:
-            return "🌊 深夜の海"
         case .darkShark:
             return "🦈 黒いサメの影"
         case .midnightTrain:
             return "🚂 夜汽車"
-        case .lunarTide:
-            return "🌙🌊 月光の潮流"
-        case .abyssalBreath:
-            return "🫧💙 深海の呼吸"
-        case .stardustNoise:
-            return "✨🌌 星屑ノイズ"
-        case .lunarDustStorm:
-            return "🌑🌪️ 月面の砂嵐"
-        case .silentLibrary:
-            return "📚🌙 夜の図書館"
-        case .distantThunder:
-            return "⚡🌩️ 遠雷"
-        case .sinkingMoon:
-            return "🌘💫 沈む月"
-        case .dawnHint:
-            return "🌅✨ 朝の気配"
         }
     }
 
@@ -73,30 +36,10 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     /// Note: This is deprecated - use UISoundPreset.englishTitle instead
     public var englishTitle: String {
         switch self {
-        case .oceanWavesSeagulls:
-            return "Ocean Waves + Seagulls"
-        case .moonlitSea:
-            return "Moonlit Silent Sea"
         case .darkShark:
             return "Dark Shape Underwater"
         case .midnightTrain:
             return "Midnight Train in the Distance"
-        case .lunarTide:
-            return "Lunar Tide Drift"
-        case .abyssalBreath:
-            return "Abyssal Breath"
-        case .stardustNoise:
-            return "Stardust Shimmer"
-        case .lunarDustStorm:
-            return "Lunar Dust Storm"
-        case .silentLibrary:
-            return "Midnight Library Stillness"
-        case .distantThunder:
-            return "Distant Thunder Pulse"
-        case .sinkingMoon:
-            return "Sinking Moon Fade"
-        case .dawnHint:
-            return "Dawn Hint Glow"
         }
     }
 }

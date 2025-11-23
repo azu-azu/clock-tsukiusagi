@@ -38,7 +38,7 @@ private struct NumberClockFace: View {
 
                     // 数字を描画（Text → resolve → context.draw）
                     let numText = Text("\(i)")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.custom("AmericanTypewriter-CondensedBold", size: 22))
 
                     let resolved = context.resolve(
                         numText.foregroundStyle(markerColor)

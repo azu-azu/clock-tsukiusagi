@@ -30,6 +30,24 @@ struct ClockScreenView: View {
         return f
     }
 
+    // MARK: - Analog Clock View (bunny/number mode)
+    @ViewBuilder
+    private var analogClockView: some View {
+        Group {
+            switch displayMode {
+            case .bunny:
+                BunnyClockView()
+            case .number:
+                NumberClockView()
+            default:
+                EmptyView()
+            }
+        }
+        .padding(.top, 140)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .accessibilityLabel("Current time")
+    }
+
     var body: some View {
 		TimelineView(.periodic(from: .now, by: 1)) { context in
             let now = fixedDate ?? context.date
@@ -53,18 +71,9 @@ struct ClockScreenView: View {
                     .accessibilityHidden(true)
                 }
 
-                // bunnyモードの時計は中央配置
-                if displayMode == .bunny {
-                    BunnyClockView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .accessibilityLabel("Current time")
-                }
-
-                // numberモードの時計は中央配置
-                if displayMode == .number {
-                    NumberClockView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .accessibilityLabel("Current time")
+                // bunny/numberモードのアナログ時計（共通化）
+                if displayMode == .bunny || displayMode == .number {
+                    analogClockView
                 }
 
                 // 時刻 + 一言（bunny/numberモード以外）または キャプションのみ（bunny/numberモード）
