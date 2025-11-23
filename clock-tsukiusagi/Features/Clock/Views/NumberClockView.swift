@@ -40,8 +40,12 @@ private struct NumberClockFace: View {
                     let numText = Text("\(i)")
                         .font(.custom("AmericanTypewriter-CondensedBold", size: 22))
 
+                    // 3,6,9,12は濃く（1.0）、その他は薄く（0.5）
+                    let isCardinal = (i % 3 == 0)
+                    let opacity = isCardinal ? 1.0 : 0.5
+
                     let resolved = context.resolve(
-                        numText.foregroundStyle(markerColor)
+                        numText.foregroundStyle(markerColor.opacity(opacity))
                     )
 
                     context.draw(resolved, at: p, anchor: .center)
