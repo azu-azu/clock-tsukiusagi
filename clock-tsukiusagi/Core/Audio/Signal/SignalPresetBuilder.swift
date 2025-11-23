@@ -57,9 +57,6 @@ public struct SignalPresetBuilder {
             return LunarTideSignal.makeSignal()
         case .abyssalBreath:
             return AbyssalBreathSignal.makeSignal()
-        case .lunarPulse:
-            // PureTone module handles this (uses legacy AudioSource path)
-            return nil
         case .darkShark:
             return DarkSharkSignal.makeSignal()
         case .midnightTrain:
@@ -116,11 +113,6 @@ public struct SignalPresetBuilder {
                 sampleRate: sampleRate
             )
             mixer.addEffect(reverb)
-
-        // Tonal/Musical: Minimal filtering + Natural reverb (same as windChime)
-        // Note: .lunarPulse is handled by PureTone module (not SignalEngine)
-        case .lunarPulse:
-            break  // No effects applied (PureTone module handles this)
 
         // Dark/Atmospheric: Low-pass filter + Dark reverb
         case .darkShark, .midnightTrain:

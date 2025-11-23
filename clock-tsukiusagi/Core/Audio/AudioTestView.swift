@@ -11,7 +11,7 @@ import AVFoundation
 
 /// 音源プリセット（SignalEngine による合成音源）
 enum AudioSourcePreset: Identifiable {
-    case synthesis(NaturalSoundPreset)
+    case synthesis(UISoundPreset)
 
     var id: String {
         switch self {
@@ -59,7 +59,7 @@ extension AudioSourcePreset: Hashable, Equatable {
         var test: [AudioSourcePreset] = []
 
         // Collect synthesis presets
-        for preset in NaturalSoundPreset.allCases {
+        for preset in UISoundPreset.allCases {
             let source = AudioSourcePreset.synthesis(preset)
             if source.isTest {
                 #if DEBUG

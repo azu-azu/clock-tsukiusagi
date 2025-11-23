@@ -8,12 +8,11 @@
 
 import Foundation
 
-/// 自然音プリセット
-/// Note: lunarPulse は PureTone module で実装（Core/Audio/PureTone/）
+/// 自然音プリセット（環境音・ノイズ系のみ）
+/// Note: 純音系（LunarPulse等）は PureTone module で実装（Core/Audio/PureTone/）
 public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     case oceanWavesSeagulls // 波 + 海鳥
     case moonlitSea         // 深夜の海
-    case lunarPulse         // 月の脈動（PureTone module使用）
     case darkShark          // 黒いサメの影
     case midnightTrain      // 夜汽車
     case lunarTide          // 月光の潮流
@@ -30,7 +29,6 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     /// Indicates if this is a test/development preset
     public var isTest: Bool {
         [
-            .lunarPulse,
             .stardustNoise,
             .lunarDustStorm,
             .silentLibrary,
@@ -41,14 +39,13 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     }
 
     /// Display name for UI (Japanese with emoji)
+    /// Note: This is deprecated - use UISoundPreset.displayName instead
     public var displayName: String {
         switch self {
         case .oceanWavesSeagulls:
             return "波 + 海鳥"
         case .moonlitSea:
             return "🌊 深夜の海"
-        case .lunarPulse:
-            return "🌕 月の脈動"
         case .darkShark:
             return "🦈 黒いサメの影"
         case .midnightTrain:
@@ -73,14 +70,13 @@ public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     }
 
     /// English title for selected display
+    /// Note: This is deprecated - use UISoundPreset.englishTitle instead
     public var englishTitle: String {
         switch self {
         case .oceanWavesSeagulls:
             return "Ocean Waves + Seagulls"
         case .moonlitSea:
             return "Moonlit Silent Sea"
-        case .lunarPulse:
-            return "Lunar Pulse (Healing Chime)"
         case .darkShark:
             return "Dark Shape Underwater"
         case .midnightTrain:

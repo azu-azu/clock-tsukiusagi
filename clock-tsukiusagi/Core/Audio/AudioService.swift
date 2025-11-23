@@ -91,7 +91,7 @@ public final class AudioService: ObservableObject {
     // MARK: - Published Properties
 
     @Published public private(set) var isPlaying = false
-    @Published public private(set) var currentPreset: NaturalSoundPreset?
+    @Published public private(set) var currentPreset: UISoundPreset?
     @Published public private(set) var outputRoute: AudioOutputRoute = .unknown
     @Published public private(set) var pauseReason: PauseReason?
 
@@ -201,7 +201,7 @@ public final class AudioService: ObservableObject {
 
     /// 音声再生を開始
     /// - Parameter preset: 再生するプリセット
-    public func play(preset: NaturalSoundPreset) throws {
+    public func play(preset: UISoundPreset) throws {
 
         // Wrap entire method in do-catch to ensure state cleanup on error
         do {
@@ -215,7 +215,7 @@ public final class AudioService: ObservableObject {
     }
 
     /// Internal play implementation (allows proper error handling)
-    private func _playInternal(preset: NaturalSoundPreset) throws {
+    private func _playInternal(preset: UISoundPreset) throws {
         // Cancel any pending stop/fade tasks from previous session
         engineStopWorkItem?.cancel()
         fadeTimer?.invalidate()
@@ -571,6 +571,50 @@ public final class AudioService: ObservableObject {
         currentSignalSource = nil
     }
 
+    // MARK: - Preset Mapping
+
+    /// Map UISoundPreset to PureTonePreset (if applicable)
+    private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
+        switch uiPreset {
+        case .lunarPulse:
+            return .lunarPulseChime
+        default:
+            return nil
+        }
+    }
+
+    /// Map UISoundPreset to NaturalSoundPreset (if applicable)
+    private func mapToNaturalSound(_ uiPreset: UISoundPreset) -> NaturalSoundPreset? {
+        switch uiPreset {
+        case .oceanWavesSeagulls:
+            return .oceanWavesSeagulls
+        case .moonlitSea:
+            return .moonlitSea
+        case .darkShark:
+            return .darkShark
+        case .midnightTrain:
+            return .midnightTrain
+        case .lunarTide:
+            return .lunarTide
+        case .abyssalBreath:
+            return .abyssalBreath
+        case .stardustNoise:
+            return .stardustNoise
+        case .lunarDustStorm:
+            return .lunarDustStorm
+        case .silentLibrary:
+            return .silentLibrary
+        case .distantThunder:
+            return .distantThunder
+        case .sinkingMoon:
+            return .sinkingMoon
+        case .dawnHint:
+            return .dawnHint
+        case .lunarPulse:
+            return nil  // Handled by PureTone
+        }
+    }
+
     private func setupCallbacks() {
         // 経路変更時のコールバック
         routeMonitor.onRouteChanged = { [weak self] route in
@@ -702,19 +746,33 @@ public final class AudioService: ObservableObject {
 
     }
 
-    private func registerSource(for preset: NaturalSoundPreset) throws {
+    private func registerSource(for uiPreset: UISoundPreset) throws {
 
         // Reset any existing SignalEngine state before switching presets
         resetCurrentSignalEffectsState()
         clearCurrentSignalSource()
+
+        // Handle PureTone presets separately
+        if let pureTonePreset = mapToPureTone(uiPreset) {
+            print("🎵 [AudioService] Using PureTone module for: \(uiPreset.rawValue)")
+            let sources = PureToneBuilder.build(pureTonePreset)
+            sources.forEach { engine.register($0) }
+            return
+        }
+
+        // Map to NaturalSoundPreset for natural sound sources
+        guard let naturalPreset = mapToNaturalSound(uiPreset) else {
+            print("⚠️ [AudioService] No mapping found for: \(uiPreset.rawValue)")
+            return
+        }
 
         // Try SignalEngine version (FinalMixer with effects)
         let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
         let signalBuilder = SignalPresetBuilder(sampleRate: outputFormat.sampleRate)
 
         // Use FinalMixer-based pipeline (with effects)
-        if let mixerOutput = signalBuilder.makeMixerOutput(for: preset) {
-            print("🎵 [AudioService] Using FinalMixer for preset: \(preset.rawValue)")
+        if let mixerOutput = signalBuilder.makeMixerOutput(for: naturalPreset) {
+            print("🎵 [AudioService] Using FinalMixer for preset: \(naturalPreset.rawValue)")
 
             // Store reference for fade/effect control
             currentSignalSource = .mixer(mixerOutput)
@@ -729,10 +787,10 @@ public final class AudioService: ObservableObject {
         }
 
         // If FinalMixer not available, fallback to original implementation
-        print("🔄 [AudioService] Using legacy AudioSource for preset: \(preset.rawValue)")
+        print("🔄 [AudioService] Using legacy AudioSource for preset: \(naturalPreset.rawValue)")
         clearCurrentSignalSource()
 
-        switch preset {
+        switch naturalPreset {
         case .oceanWavesSeagulls:
             // Removed: Legacy AudioSource implementation deleted
             // This preset now uses SignalEngine-based FinalMixer output
@@ -746,11 +804,6 @@ public final class AudioService: ObservableObject {
                 lfoMaximum: NaturalSoundPresets.MoonlitSea.lfoMaximum
             )
             engine.register(source)
-
-        case .lunarPulse:
-            // PureTone module: LunarPulse with TreeChime overlay
-            let sources = PureToneBuilder.build(.lunarPulseChime)
-            sources.forEach { engine.register($0) }
 
         case .darkShark:
             let source = DarkShark(
