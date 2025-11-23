@@ -748,23 +748,9 @@ public final class AudioService: ObservableObject {
             engine.register(source)
 
         case .lunarPulse:
-            // LunarPulse (528Hz healing tone) + TreeChime (high-frequency shimmer)
-            let pulse = LunarPulse(
-                frequency: 528.0,
-                amplitude: 0.2,
-                lfoFrequency: 0.06,
-                lfoMinimum: 0.02,
-                lfoMaximum: 0.12
-            )
-            engine.register(pulse)
-
-            // Add TreeChime overlay for subtle sparkle
-            let chime = TreeChime(
-                grainRate: 25.0,      // Sparse grains (not too dense)
-                grainDuration: 0.12,   // Longer decay for ethereal feel
-                brightness: 7000.0     // High frequency shimmer
-            )
-            engine.register(chime)
+            // PureTone module: LunarPulse with TreeChime overlay
+            let sources = PureToneBuilder.build(.lunarPulseChime)
+            sources.forEach { engine.register($0) }
 
         case .darkShark:
             let source = DarkShark(

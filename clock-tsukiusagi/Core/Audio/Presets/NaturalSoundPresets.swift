@@ -9,10 +9,11 @@
 import Foundation
 
 /// 自然音プリセット
+/// Note: lunarPulse は PureTone module で実装（Core/Audio/PureTone/）
 public enum NaturalSoundPreset: String, CaseIterable, Identifiable {
     case oceanWavesSeagulls // 波 + 海鳥
     case moonlitSea         // 深夜の海
-    case lunarPulse         // 月の脈動（チャイム風）
+    case lunarPulse         // 月の脈動（PureTone module使用）
     case darkShark          // 黒いサメの影
     case midnightTrain      // 夜汽車
     case lunarTide          // 月光の潮流
