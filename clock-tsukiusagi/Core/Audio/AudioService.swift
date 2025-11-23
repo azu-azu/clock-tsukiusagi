@@ -576,7 +576,7 @@ public final class AudioService: ObservableObject {
     /// Map UISoundPreset to PureTonePreset (if applicable)
     private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
         switch uiPreset {
-        case .lunarPulse:
+        case .pentatonic:
             return .pentatonicChime
         case .treeChimeOnly:
             return .treeChimeOnly
@@ -612,7 +612,7 @@ public final class AudioService: ObservableObject {
             return .sinkingMoon
         case .dawnHint:
             return .dawnHint
-        case .lunarPulse, .treeChimeOnly:
+        case .pentatonic, .treeChimeOnly:
             return nil  // Handled by PureTone
         }
     }

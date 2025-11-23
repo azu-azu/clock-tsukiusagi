@@ -80,7 +80,7 @@ struct AudioTestView: View {
     @EnvironmentObject var audioService: AudioService
     @Binding var selectedTab: Tab
 
-    @State private var selectedSource: AudioSourcePreset = .synthesis(.lunarPulse)
+    @State private var selectedSource: AudioSourcePreset = .synthesis(.pentatonic)
 
     @State private var errorMessage: String?
     @State private var showError = false

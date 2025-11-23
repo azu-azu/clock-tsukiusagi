@@ -12,7 +12,7 @@ import Foundation
 public enum UISoundPreset: String, CaseIterable, Identifiable {
     case oceanWavesSeagulls // 波 + 海鳥
     case moonlitSea         // 深夜の海
-    case lunarPulse         // 月の脈動（PureTone module）
+    case pentatonic         // ペンタトニックチャイム（PureTone module）
     case darkShark          // 黒いサメの影
     case midnightTrain      // 夜汽車
     case lunarTide          // 月光の潮流
@@ -30,7 +30,7 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     /// Indicates if this is a test/development preset
     public var isTest: Bool {
         [
-            .lunarPulse,
+            .pentatonic,
             .stardustNoise,
             .lunarDustStorm,
             .silentLibrary,
@@ -48,8 +48,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "波 + 海鳥"
         case .moonlitSea:
             return "🌊 深夜の海"
-        case .lunarPulse:
-            return "🌕 月の脈動"
+        case .pentatonic:
+            return "🎵 ペンタトニックチャイム"
         case .darkShark:
             return "🦈 黒いサメの影"
         case .midnightTrain:
@@ -82,8 +82,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Ocean Waves + Seagulls"
         case .moonlitSea:
             return "Moonlit Silent Sea"
-        case .lunarPulse:
-            return "Lunar Pulse (Healing Chime)"
+        case .pentatonic:
+            return "Pentatonic Chime"
         case .darkShark:
             return "Dark Shape Underwater"
         case .midnightTrain:
