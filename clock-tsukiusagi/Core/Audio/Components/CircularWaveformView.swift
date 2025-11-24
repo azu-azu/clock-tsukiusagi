@@ -25,15 +25,11 @@ struct CircularWaveformView: View {
     private let baseBarLength: CGFloat = 5.0 // Base length (shorter for emphasis on movement)
     private let maxAmplitude: CGFloat = 6.0   // Maximum variation from base (larger for more dramatic motion)
     private let animationSpeed: Double = 1.0  // Wave cycles per second (slower for calmer motion)
-    private let baseRotationSpeed: Double = -0.02  // Base rotation speed (negative = counter-clockwise)
+    private let rotationSpeed: Double = -0.02  // Rotation speed (negative = counter-clockwise)
 
     // Synchronization parameters
     private let syncFrequency: Double = 0.05  // Sync moment every 20 seconds
     private let syncStrength: Double = 0.4    // How much bars align (0.0-1.0)
-
-    // Rotation variation parameters
-    private let rotationVariationSpeed: Double = 0.08  // Speed of rotation changes (12.5s cycle)
-    private let rotationVariationAmount: Double = 0.6  // Amount of speed variation (±60%)
 
     // Independent phase offsets for each bar (generated once, never changes)
     private let phaseOffsets: [Double] = {
@@ -61,9 +57,9 @@ struct CircularWaveformView: View {
                 // Calculate fade multiplier for smooth start/stop
                 let fadeFactor = calculateFadeFactor(currentTime: context.date)
 
-                // Calculate rotation angle with dynamic speed variation
+                // Calculate rotation angle (counter-clockwise when playing)
                 let t = context.date.timeIntervalSinceReferenceDate
-                let rotationAngle = audioService.isPlaying ? calculateRotationAngle(time: t) : 0
+                let rotationAngle = audioService.isPlaying ? t * rotationSpeed * .pi * 2 : 0
 
                 // Calculate synchronization factor (0.0 = random, 1.0 = all synchronized)
                 let syncFactor = calculateSyncFactor(time: t)
@@ -136,23 +132,6 @@ struct CircularWaveformView: View {
     }
 
     // MARK: - Animation Calculation
-
-    /// Calculate rotation angle with dynamic speed variation
-    /// Rotation speed changes organically - sometimes faster, sometimes slower
-    private func calculateRotationAngle(time: Double) -> Double {
-        // Base rotation
-        let baseAngle = time * baseRotationSpeed * .pi * 2
-
-        // Speed variation: oscillates between -60% and +60% of base speed
-        let speedVariation = sin(time * rotationVariationSpeed * .pi * 2) * rotationVariationAmount
-        let variableSpeed = baseRotationSpeed * (1.0 + speedVariation)
-
-        // Integrate variable speed to get angle offset
-        // Using approximation: small variations around base rotation
-        let angleOffset = variableSpeed * time * .pi * 2 - baseAngle
-
-        return baseAngle + angleOffset * 0.3  // Dampen the offset for subtlety
-    }
 
     /// Calculate synchronization factor - creates moments where bars align briefly
     /// Returns 0.0 (completely random) to 1.0 (all bars synchronized)
