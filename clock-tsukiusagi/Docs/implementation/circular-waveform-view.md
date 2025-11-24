@@ -57,26 +57,28 @@ CircularWaveformView (View)
 
 ### レイアウトパラメータ
 
-| パラメータ | 値 | 説明 |
-|---------|---|------|
-| `segmentCount` | 30 | バーの数（12°間隔） |
-| `barWidth` | 2pt | バーの太さ |
-| `baseBarLength` | 5.0pt | バーの基本長（円の半径） |
-| `maxAmplitude` | 6.0pt | 最大振れ幅 |
+| パラメータ | 役割 | 調整の指針 |
+|---------|------|----------|
+| `segmentCount` | バーの本数 | 30前後。多すぎると密集、少なすぎると粗い印象 |
+| `barWidth` | バーの太さ | 2pt程度。サイズに応じて調整 |
+| `baseBarLength` | バーの基本長 | 円の中心半径を決定。5pt前後 |
+| `maxAmplitude` | 最大振れ幅 | baseBarLengthより少し大きめで動きを強調 |
 
 ### アニメーションパラメータ
 
-| パラメータ | 値 | 説明 |
-|---------|---|------|
-| `animationSpeed` | 1.0 cycles/sec | バーの伸縮速度 |
-| `rotationSpeed` | -0.02 cycles/sec | 回転速度（負＝反時計回り、50秒/周） |
-| `amplitudeModulationSpeed` | 0.1 cycles/sec | 振幅変調速度（10秒周期） |
-| `radiusBreathingSpeed` | 0.08 cycles/sec | 半径呼吸速度（12.5秒周期） |
-| `radiusBreathingAmount` | 1.2pt | 半径変化量（±1.2pt） |
-| `syncFrequency` | 0.05 cycles/sec | 同期周波数（20秒に1回） |
-| `syncStrength` | 0.4 | 同期強度（40%） |
-| `fadeInDuration` | 1.5 sec | フェードイン時間 |
-| `fadeOutDuration` | 1.5 sec | フェードアウト時間 |
+| パラメータ | 役割 | 調整の指針 |
+|---------|------|----------|
+| `animationSpeed` | バーの伸縮速度 | 1.0 cycles/sec前後。速いと落ち着きがない |
+| `rotationSpeed` | 回転速度 | 負値=反時計回り。絶対値0.01-0.02程度でゆっくり |
+| `amplitudeModulationSpeed` | 振幅変調速度 | 0.1前後。バーごとの動き変化の周期 |
+| `radiusBreathingSpeed` | 半径呼吸速度 | 0.08前後。「じわーっと」感じる程度 |
+| `radiusBreathingAmount` | 半径変化量 | 1-2pt程度。大きすぎると不安定に見える |
+| `syncFrequency` | 同期周波数 | 0.05前後。20秒に1回程度の頻度 |
+| `syncStrength` | 同期強度 | 0.3-0.4。高すぎると人工的 |
+| `fadeInDuration` | フェードイン時間 | 1-2秒。急すぎず緩やかに |
+| `fadeOutDuration` | フェードアウト時間 | 1-2秒。停止時の余韻 |
+
+**注意**: 上記の値は目安です。実装時は `CircularWaveformView.swift` 内の定数定義を参照してください。
 
 ### 色定義（DesignTokens使用）
 
@@ -99,20 +101,22 @@ CircularWaveformView (View)
 
 ```swift
 // 円の半径自体が呼吸する
-let radiusModulation = sin(t * 0.08 * π * 2) * 1.2  // ±1.2pt
+let radiusModulation = sin(t * radiusBreathingSpeed * π * 2) * radiusBreathingAmount
 let centerRadius = baseCenterRadius + radiusModulation
 ```
 
 **効果**:
-- 12.5秒かけて「じわーっと」膨らんで縮む
+- ゆっくりとした周期で「じわーっと」膨らんで縮む
 - バーの長さ変化と組み合わさり、複合的な有機的動きを生む
 - サンプル動画のコア技術：「線の長さ」+「円の半径揺れ」
+
+**パラメータの目安**: `radiusBreathingSpeed` は 0.05-0.1 cycles/sec、`radiusBreathingAmount` は 1-2pt 程度
 
 ### 2. Synchronization Moments（一瞬の同期）
 
 **問題**: 完全にランダムだと単調。全て同期すると人工的
 
-**解決策**: 20秒に1回、短時間だけバーが揃う瞬間を作る
+**解決策**: 周期的に短時間だけバーが揃う瞬間を作る
 
 ```swift
 // 同期波と個別波をブレンド
@@ -121,14 +125,16 @@ let syncWave = sin(t * animationSpeed * π * 2)
 let wave = individualWave * (1.0 - syncFactor) + syncWave * syncFactor
 
 // 同期係数（二次関数で柔らかいピーク）
-let sharpSync = pow(max(rawSync, 0.0), 2.0)  // 柔らかい
-let syncFactor = sharpSync * 0.4  // 40%の同期強度
+let sharpSync = pow(max(rawSync, 0.0), 2.0)  // 柔らかいピーク
+let syncFactor = sharpSync * syncStrength
 ```
 
 **効果**:
 - 「一瞬揃って、すぐバラバラに散る」美しい瞬間
 - 二次関数（`pow 2.0`）で「壁効果」を防ぐ
 - 予測不可能性と秩序のバランス
+
+**パラメータの目安**: `syncFrequency` は 0.03-0.07 cycles/sec（15-30秒に1回）、`syncStrength` は 0.3-0.5（30-50%）
 
 ### 3. Dynamic Glow（光の膨張）
 
@@ -139,18 +145,20 @@ let syncFactor = sharpSync * 0.4  // 40%の同期強度
 ```swift
 // バーの伸び率を計算
 let extensionRatio = (length - baseBarLength) / maxAmplitude
-let glowMultiplier = 1.0 + extensionRatio * 0.5  // 1.0〜1.5倍
+let glowMultiplier = 1.0 + extensionRatio * glowExpansionFactor
 
 // シャドウ半径を動的に変化
-.shadow(radius: 3 * glowMultiplier)
-.shadow(radius: 6 * glowMultiplier)
-.shadow(radius: 10 * glowMultiplier)
+.shadow(radius: shadowRadiusInner * glowMultiplier)
+.shadow(radius: shadowRadiusMiddle * glowMultiplier)
+.shadow(radius: shadowRadiusOuter * glowMultiplier)
 ```
 
 **効果**:
 - バーが伸びた時に「ふわっと膨らむ」
 - 視覚的なドラマ性を強化
 - エネルギーの波動感を演出
+
+**パラメータの目安**: `glowExpansionFactor` は 0.3-0.7（グロー拡大率30-70%）、シャドウ半径は内側から外側へ段階的に（例: 3, 6, 10）
 
 ### 4. Position-based Circular Layout（位置ベース円形レイアウト）
 
@@ -412,18 +420,25 @@ xcodebuild -project clock-tsukiusagi.xcodeproj \
 
 ### パラメータ調整履歴
 
-| パラメータ | 初期値 | 最終値 | 理由 |
-|---------|-------|-------|------|
-| segmentCount | 120 → 90 → 45 | 30 | 視認性向上、余白確保 |
-| rotationSpeed | 0.1 | -0.02 | 反時計回り、よりゆっくり |
-| maxAmplitude | 2.5 → 4.0 | 6.0 | より大きな動きの強調 |
-| animationSpeed | 1.5 | 1.0 | よりゆっくりとした呼吸 |
-| baseBarLength | 8.5 | 5.0 | 動きの幅を強調 |
-| barColor opacity | 0.95 → 0.7 | 0.5 | より繊細な印象 |
-| syncStrength | - | 0.4 | 40%同期で自然なバランス |
-| syncPower | 3.0 | 2.0 | 柔らかいピーク、壁効果防止 |
-| radiusBreathingSpeed | - → 0.3 | 0.08 | じわーっとした呼吸感 |
-| glowMultiplier | 1.0（固定） | 1.0-1.5（動的） | バー伸長時の光の膨張 |
+**調整の方向性と理由を記録。具体的な数値は実装コードを参照してください。**
+
+| パラメータ | 調整の変遷 | 理由・学び |
+|---------|---------|---------|
+| segmentCount | 120 → 90 → 45 → 30程度 | 段階的に削減。視認性向上、余白確保 |
+| rotationSpeed | 0.1 → -0.02程度 | 反時計回りへ変更、大幅に減速 |
+| maxAmplitude | 2.5 → 4.0 → 6.0程度 | 段階的に増加。より大きな動きを強調 |
+| animationSpeed | 1.5 → 1.0程度 | 減速。よりゆっくりとした呼吸感 |
+| baseBarLength | 8.5 → 5.0程度 | 短縮。動きの幅（振れ幅）を強調 |
+| barColor opacity | 0.95 → 0.7 → 0.5程度 | 段階的に透明化。より繊細な印象 |
+| syncStrength | - → 0.4程度 | 新規追加。40%同期で自然なバランス |
+| syncPower | 3.0 → 2.0 | 立方から二次へ。柔らかいピーク、壁効果防止 |
+| radiusBreathingSpeed | - → 0.3 → 0.08程度 | 新規追加後、大幅減速。じわーっとした呼吸感 |
+| glowMultiplier | 1.0（固定） → 1.0-1.5（動的） | 動的変化を追加。バー伸長時の光の膨張 |
+
+**重要な学び:**
+- 体感的な「ちょうど良さ」は、最初の想定値の1/3〜1/4程度になることが多い
+- 速度パラメータは特に大幅な調整が必要（0.3 → 0.08など）
+- 段階的な調整により、最適値を見つける
 
 ---
 
@@ -479,9 +494,9 @@ xcodebuild -project clock-tsukiusagi.xcodeproj \
 - べき乗関数の選択が重要: 立方（`pow 3.0`）は鋭すぎ、二次（`pow 2.0`）が自然
 
 **速度感の微調整**:
-- 呼吸速度: 0.3 cycles/sec → 「動きすぎ」
-- 0.08 cycles/sec → 「じわーっと」の絶妙なバランス
-- 体感的な「ちょうど良さ」は数値の1/4程度
+- 最初の想定より大幅に遅くする必要がある（例: 0.3 → 0.08）
+- 「じわーっと」感じる程度まで減速することが重要
+- 体感的な「ちょうど良さ」は数値の1/3〜1/4程度になることが多い
 
 ### 2. SwiftUI のジオメトリ操作
 
