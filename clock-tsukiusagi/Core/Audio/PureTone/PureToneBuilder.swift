@@ -104,8 +104,8 @@ public struct PureToneBuilder {
                 triggerRate: 0.33,     // Test: every ~3 seconds
                 minInterval: 3.0,      // Minimum 3s between booms
                 duration: 3.0,         // 3s boom with falling pitch
-                fundamental: 55.0,     // 55Hz (A1) - deep sub-bass
-                pitchDropAmount: 0.15  // 15% pitch drop
+                fundamental: 110.0,    // 110Hz (A2) - iPhone/イヤホンで再生可能
+                pitchDropAmount: 0.25  // 25% pitch drop（ズゥーン感強化）
             )
             sources.append(boom)
 

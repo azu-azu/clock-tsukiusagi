@@ -21,6 +21,7 @@ public final class AutoTriggerBoomHit: AudioSource {
     private var time: Double = 0.0
     private let triggerRate: Double
     private let minInterval: Double
+    private var timer: Timer?  // Timer保持してstopで停止できるように
 
     public var sourceNode: AVAudioNode {
         boomHit.sourceNode
@@ -37,15 +38,15 @@ public final class AutoTriggerBoomHit: AudioSource {
         triggerRate: Double = 0.33,     // ~3秒に1回
         minInterval: Double = 3.0,      // 最低3秒間隔
         duration: Double = 3.0,
-        fundamental: Double = 55.0,
-        pitchDropAmount: Double = 0.15
+        fundamental: Double = 110.0,    // 55Hz → 110Hz（再生可能な周波数）
+        pitchDropAmount: Double = 0.25  // BoomHitのデフォルトに合わせる
     ) {
         self.triggerRate = triggerRate
         self.minInterval = minInterval
         self.boomHit = BoomHit(
             duration: duration,
             fundamental: fundamental,
-            pitchDropAmount: pitchDropAmount
+            pitchDropAmount: pitchDropAmount  // デフォルト 0.25 を使用
         )
 
         // Start auto-trigger timer
@@ -54,7 +55,7 @@ public final class AutoTriggerBoomHit: AudioSource {
 
     private func startAutoTrigger() {
         // Run timer on main queue to call trigger() periodically
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             guard let self = self else { return }
 
             self.time += 0.1
@@ -71,10 +72,14 @@ public final class AutoTriggerBoomHit: AudioSource {
     }
 
     public func suspend() {
+        timer?.invalidate()
         boomHit.suspend()
     }
 
     public func resume() {
+        if timer == nil {
+            startAutoTrigger()
+        }
         boomHit.resume()
     }
 
@@ -83,6 +88,10 @@ public final class AutoTriggerBoomHit: AudioSource {
     }
 
     public func stop() {
+        timer?.invalidate()
+        timer = nil
+        time = 0.0
+        lastTriggerTime = -10.0
         boomHit.stop()
     }
 

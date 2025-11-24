@@ -55,8 +55,8 @@ public final class BoomHit: AudioSource {
     ///   - pitchDropAmount: How much pitch drops over duration (0.1 = 10% drop)
     public init(
         duration: Double = 3.0,
-        fundamental: Double = 55.0,
-        pitchDropAmount: Double = 0.15
+        fundamental: Double = 110.0,  // 55Hz → 110Hz（iPhone/イヤホンで再生可能に）
+        pitchDropAmount: Double = 0.25  // ズゥーン感のため 0.15 → 0.25
     ) {
         let sampleRate: Double = 48_000.0
         let twoPi = 2.0 * Double.pi
@@ -64,8 +64,8 @@ public final class BoomHit: AudioSource {
         // ============================================================
         // HARMONIC STRUCTURE: Simple, fundamental-dominant
         // ============================================================
-        let harmonics: [Double] = [1.0, 2.0, 3.0]
-        let harmonicAmps: [Double] = [1.0, 0.4, 0.2]  // Fundamental dominant
+        let harmonics: [Double] = [1.0, 2.0]
+        let harmonicAmps: [Double] = [1.0, 0.25]  // 基音主役、2倍音控えめ
 
         var phases: [Double] = Array(repeating: 0, count: harmonics.count)
 
@@ -73,7 +73,7 @@ public final class BoomHit: AudioSource {
         // ENVELOPE TIMING
         // ============================================================
         let attack: Double = 0.03      // 30ms: fast but smooth attack
-        let noiseDuration: Double = 0.015  // 15ms: very short noise burst
+        // ✂️ let noiseDuration: Double = 0.008  // ノイズオフ中は不要
 
         let state = self.state
 
@@ -106,11 +106,12 @@ public final class BoomHit: AudioSource {
                 // --------------------------------------------------------
                 // LAYER 1: Noise attack (initial impact "D")
                 // --------------------------------------------------------
-                if state.currentTime < noiseDuration {
-                    let noise = Double.random(in: -1.0 ... 1.0)
-                    let noiseEnv = exp(-state.currentTime * 300.0)  // Fast exponential decay
-                    value += noise * 0.3 * noiseEnv
-                }
+                // ✂️ 一旦オフ：チチチチの原因確認のため
+                // if state.currentTime < noiseDuration {
+                //     let noise = Double.random(in: -1.0 ... 1.0)
+                //     let noiseEnv = exp(-state.currentTime * 600.0)
+                //     value += noise * 0.2 * noiseEnv
+                // }
 
                 // --------------------------------------------------------
                 // LAYER 2: Sub-bass body envelope
@@ -127,7 +128,7 @@ public final class BoomHit: AudioSource {
                     let decayDuration = duration - attack
                     let decayProgress = decayTime / decayDuration  // 0.0 → 1.0
                     let remaining = max(0.0, 1.0 - decayProgress)
-                    envelope = pow(remaining, 2.5)  // Power curve decay
+                    envelope = pow(remaining, 1.6)  // ズーンを残すため緩いカーブ（2.5 → 1.6）
                 }
 
                 // --------------------------------------------------------
@@ -161,7 +162,7 @@ public final class BoomHit: AudioSource {
                 // ============================================================
                 // Normalize by harmonic count and apply safe output level
                 let normalized = value / Double(harmonics.count)
-                samples?[frame] = Float(normalized * 0.2)  // Conservative gain
+                samples?[frame] = Float(normalized * 1.0)  // ガッと上げる（0.70 → 1.0）
 
                 // ============================================================
                 // TIME ADVANCEMENT & DEACTIVATION
