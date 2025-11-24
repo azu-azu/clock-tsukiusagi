@@ -12,8 +12,8 @@
 > **現在の仕様：**
 > - ロック画面の操作は **Now Playing controls（MPRemoteCommandCenter）** を使用
 > - Dynamic Island 表示は必要性が下がったため廃止
-> - 参照: `/clock-tsukiusagi/Core/Services/NowPlaying/NowPlayingController.swift`
-> - 参照: `/clock-tsukiusagi/Core/Audio/AudioService.swift` (setupNowPlayingCommands)
+> - 参照: [NowPlayingController.swift](../clock-tsukiusagi/Core/Services/NowPlaying/NowPlayingController.swift)
+> - 参照: [AudioService.swift](../clock-tsukiusagi/Core/Audio/AudioService.swift) (setupNowPlayingCommands)
 >
 > **再び Live Activity を使うなら：**
 > - Now Playing（操作）と Live Activity（状態表示）の役割を完全に分離して設計すること
