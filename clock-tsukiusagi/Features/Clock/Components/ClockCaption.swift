@@ -5,77 +5,48 @@ struct ClockCaption {
     let captionKey: String
 
     static func forMoonPhase(phase: Double, illumination: Double? = nil) -> ClockCaption {
-        // phase から月相判定
-        // 0.0 = 新月, 0.25 = 上弦, 0.5 = 満月, 0.75 = 下弦
+        // 8-phase range-based classification
+        // 0.0 = New Moon, 0.25 = First Quarter, 0.5 = Full Moon, 0.75 = Third Quarter
 
-        // 円形のphase範囲を考慮して、境界を跨いだ判定も含める
-        func isInPhaseRange(_ p: Double, _ target: Double, _ threshold: Double) -> Bool {
-            let diff = abs(p - target)
-            // phaseは円形（0.0と1.0は隣接）なので、反対側もチェック
-            return diff < threshold || diff > (1.0 - threshold)
+        // Special case: Force new moon if illumination is nearly zero
+        if let illum = illumination, illum < 0.05 {
+            return .newMoon
         }
 
-        let phaseThreshold = 0.08  // ±0.08（約±2.5日）
+        // Normalize phase to 0.0-1.0 range
+        let p = phase.truncatingRemainder(dividingBy: 1.0)
 
-        // 主要月相の範囲内かチェック
-        if isInPhaseRange(phase, 0.0, phaseThreshold) {
+        switch p {
+        case 0.97..<1.0, 0.0..<0.03:
             return .newMoon
-        } else if isInPhaseRange(phase, 0.5, phaseThreshold) {
-            return .fullMoon
-        } else if isInPhaseRange(phase, 0.25, phaseThreshold) {
+        case 0.03..<0.22:
+            return .waxingCrescent
+        case 0.22..<0.28:
             return .firstQuarter
-        } else if isInPhaseRange(phase, 0.75, phaseThreshold) {
+        case 0.28..<0.47:
+            return .waxingGibbous
+        case 0.47..<0.53:
+            return .fullMoon
+        case 0.53..<0.72:
+            return .waningGibbous
+        case 0.72..<0.78:
             return .thirdQuarter
-        } else {
-            // 中間の月相の場合、各主要月相からの距離を計算して最も近いものを返す
-            let normalizedPhase = phase - floor(phase)
-
-            // 円形距離を計算する関数（0.0と1.0が隣接していることを考慮）
-            func circularDistance(_ a: Double, _ b: Double) -> Double {
-                let diff = abs(a - b)
-                return min(diff, 1.0 - diff)
-            }
-
-            let distances: [(Double, ClockCaption)] = [
-                (circularDistance(normalizedPhase, 0.0), .newMoon),
-                (circularDistance(normalizedPhase, 0.25), .firstQuarter),
-                (circularDistance(normalizedPhase, 0.5), .fullMoon),
-                (circularDistance(normalizedPhase, 0.75), .thirdQuarter)
-            ]
-
-            // 照度を考慮した判定
-            // 照度が高い（>80%）場合は満月寄り、低い（<20%）場合は新月寄りと判定
-            if let illum = illumination {
-                // 照度が非常に高い（>85%）場合、満月寄りと判定
-                if illum > 0.85 {
-                    // 満月と下弦の間で、照度が高い場合は満月を優先
-                    let fullMoonDist = circularDistance(normalizedPhase, 0.5)
-                    let thirdQuarterDist = circularDistance(normalizedPhase, 0.75)
-                    // 距離が近い場合（0.15以内）は照度を優先
-                    if abs(fullMoonDist - thirdQuarterDist) < 0.15 {
-                        return .fullMoon
-                    }
-                }
-                // 照度が非常に低い（<15%）場合、新月寄りと判定
-                else if illum < 0.15 {
-                    let newMoonDist = circularDistance(normalizedPhase, 0.0)
-                    let firstQuarterDist = circularDistance(normalizedPhase, 0.25)
-                    if abs(newMoonDist - firstQuarterDist) < 0.15 {
-                        return .newMoon
-                    }
-                }
-            }
-
-            // 最も近い月相を返す
-            let result = distances.min(by: { $0.0 < $1.0 })?.1 ?? .fullMoon
-            return result
+        case 0.78..<0.97:
+            return .waningCrescent
+        default:
+            return .newMoon
         }
     }
 
+    // 8 moon phases
     static let newMoon = ClockCaption(captionKey: "NewMoon")
+    static let waxingCrescent = ClockCaption(captionKey: "WaxingCrescent")
     static let firstQuarter = ClockCaption(captionKey: "FirstQuarter")
+    static let waxingGibbous = ClockCaption(captionKey: "WaxingGibbous")
     static let fullMoon = ClockCaption(captionKey: "FullMoon")
+    static let waningGibbous = ClockCaption(captionKey: "WaningGibbous")
     static let thirdQuarter = ClockCaption(captionKey: "ThirdQuarter")
+    static let waningCrescent = ClockCaption(captionKey: "WaningCrescent")
 
     static func forHour(_ h: Int) -> ClockCaption {
         switch h {
