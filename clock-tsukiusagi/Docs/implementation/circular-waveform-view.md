@@ -1,7 +1,7 @@
 # CircularWaveformView 実装ガイド
 
 **作成日**: 2025-11-24
-**最終更新**: 2025-11-24
+**最終更新**: 2025-11-24 (有機的アニメーション実装完了)
 
 ## 📋 概要
 
@@ -12,9 +12,11 @@
 - **円形レイアウト**: 30本のバーが円形に配置され、中心から放射状に伸縮
 - **独立したアニメーション**: 各バーが独自の位相とタイミングで動作
 - **動的振幅変調**: 時間経過とともに各バーの振幅が変化（呼吸するような動き）
+- **円の呼吸（Radius Breathing）**: 円の半径自体が±1.2ptでゆっくり変化（12.5秒周期）
+- **同期モーメント**: 20秒に1回、バーが一瞬揃って動く瞬間を作る
+- **動的グロー**: バーが伸びた時にシャドウが1.0〜1.5倍に膨張（ふわっと膨らむ）
 - **スムーズなフェード**: 再生開始・停止時に1.5秒かけてフェードイン・アウト
 - **ゆっくりした回転**: 反時計回りに50秒で1周（-0.02 cycles/second）
-- **グロー効果**: 3層のシャドウによるキラキラした輝き
 
 ---
 
@@ -69,6 +71,10 @@ CircularWaveformView (View)
 | `animationSpeed` | 1.0 cycles/sec | バーの伸縮速度 |
 | `rotationSpeed` | -0.02 cycles/sec | 回転速度（負＝反時計回り、50秒/周） |
 | `amplitudeModulationSpeed` | 0.1 cycles/sec | 振幅変調速度（10秒周期） |
+| `radiusBreathingSpeed` | 0.08 cycles/sec | 半径呼吸速度（12.5秒周期） |
+| `radiusBreathingAmount` | 1.2pt | 半径変化量（±1.2pt） |
+| `syncFrequency` | 0.05 cycles/sec | 同期周波数（20秒に1回） |
+| `syncStrength` | 0.4 | 同期強度（40%） |
 | `fadeInDuration` | 1.5 sec | フェードイン時間 |
 | `fadeOutDuration` | 1.5 sec | フェードアウト時間 |
 
@@ -85,7 +91,68 @@ CircularWaveformView (View)
 
 ## 🔧 実装の核心技術
 
-### 1. Position-based Circular Layout（位置ベース円形レイアウト）
+### 1. Radius Breathing（円の呼吸）
+
+**重要**: バーの長さ変化だけでなく、円の半径自体を変化させることで「有機的な丸」を実現
+
+**解決策**: 円の中心半径をsin波で変調
+
+```swift
+// 円の半径自体が呼吸する
+let radiusModulation = sin(t * 0.08 * π * 2) * 1.2  // ±1.2pt
+let centerRadius = baseCenterRadius + radiusModulation
+```
+
+**効果**:
+- 12.5秒かけて「じわーっと」膨らんで縮む
+- バーの長さ変化と組み合わさり、複合的な有機的動きを生む
+- サンプル動画のコア技術：「線の長さ」+「円の半径揺れ」
+
+### 2. Synchronization Moments（一瞬の同期）
+
+**問題**: 完全にランダムだと単調。全て同期すると人工的
+
+**解決策**: 20秒に1回、短時間だけバーが揃う瞬間を作る
+
+```swift
+// 同期波と個別波をブレンド
+let individualWave = sin((t * animationSpeed + phaseOffset) * π * 2)
+let syncWave = sin(t * animationSpeed * π * 2)
+let wave = individualWave * (1.0 - syncFactor) + syncWave * syncFactor
+
+// 同期係数（二次関数で柔らかいピーク）
+let sharpSync = pow(max(rawSync, 0.0), 2.0)  // 柔らかい
+let syncFactor = sharpSync * 0.4  // 40%の同期強度
+```
+
+**効果**:
+- 「一瞬揃って、すぐバラバラに散る」美しい瞬間
+- 二次関数（`pow 2.0`）で「壁効果」を防ぐ
+- 予測不可能性と秩序のバランス
+
+### 3. Dynamic Glow（光の膨張）
+
+**問題**: 静的なシャドウでは動きが平板
+
+**解決策**: バーの伸び具合に応じてグローを拡大
+
+```swift
+// バーの伸び率を計算
+let extensionRatio = (length - baseBarLength) / maxAmplitude
+let glowMultiplier = 1.0 + extensionRatio * 0.5  // 1.0〜1.5倍
+
+// シャドウ半径を動的に変化
+.shadow(radius: 3 * glowMultiplier)
+.shadow(radius: 6 * glowMultiplier)
+.shadow(radius: 10 * glowMultiplier)
+```
+
+**効果**:
+- バーが伸びた時に「ふわっと膨らむ」
+- 視覚的なドラマ性を強化
+- エネルギーの波動感を演出
+
+### 4. Position-based Circular Layout（位置ベース円形レイアウト）
 
 **問題**: `.offset()` + `.rotationEffect()` の組み合わせでは、12時方向で「カクッ」となる歪みが発生
 
@@ -101,7 +168,7 @@ Capsule()
     .position(x: x, y: y)
 ```
 
-### 2. Independent Phase Offsets（独立位相オフセット）
+### 5. Independent Phase Offsets（独立位相オフセット）
 
 **問題**: 全バーが同じ波を共有すると、「C字型の隙間」や「板を丸めたような」同期した動きになる
 
@@ -115,7 +182,7 @@ private let phaseOffsets: [Double] = {
 let wave = sin((t * animationSpeed + phaseOffset) * .pi * 2)
 ```
 
-### 3. Dynamic Amplitude Modulation（動的振幅変調）
+### 6. Dynamic Amplitude Modulation（動的振幅変調）
 
 **問題**: 固定振幅だと単調で「毛虫のような」動きになる
 
@@ -128,7 +195,7 @@ let amplitudeModulation = sin(amplitudePhase * .pi * 2)
 let dynamicMultiplier = 0.05 + (amplitudeModulation + 1.0) / 2.0 * 0.95
 ```
 
-### 4. Power-weighted Amplitude Distribution（べき乗重み振幅分布）
+### 7. Power-weighted Amplitude Distribution（べき乗重み振幅分布）
 
 **問題**: 一様ランダムだと全体が動きすぎる
 
@@ -143,7 +210,7 @@ private let amplitudeMultipliers: [Double] = {
 }()
 ```
 
-### 5. Smooth Fade In/Out（スムーズフェード）
+### 8. Smooth Fade In/Out（スムーズフェード）
 
 **問題**: 再生開始・停止時に「ヒュッと」いきなり動き出す
 
@@ -337,6 +404,11 @@ xcodebuild -project clock-tsukiusagi.xcodeproj \
 9. **回転方向** → 反時計回りに修正（-0.05 → -0.02）
 10. **色の調整** → opacity 調整、グロー強化
 11. **デザイントークン違反** → 全ての色を DesignTokens 化
+12. **有機的な動き追加** → 同期モーメント、動的グロー実装
+13. **回転速度の揺らぎ削除** → 不自然だったため除去
+14. **円の呼吸実装** → 半径自体を±1.2ptで変調（超重要）
+15. **同期ピーク調整** → 立方関数から二次関数へ（柔らかく）
+16. **呼吸速度調整** → 0.3 → 0.08 cycles/sec（じわーっと）
 
 ### パラメータ調整履歴
 
@@ -348,6 +420,10 @@ xcodebuild -project clock-tsukiusagi.xcodeproj \
 | animationSpeed | 1.5 | 1.0 | よりゆっくりとした呼吸 |
 | baseBarLength | 8.5 | 5.0 | 動きの幅を強調 |
 | barColor opacity | 0.95 → 0.7 | 0.5 | より繊細な印象 |
+| syncStrength | - | 0.4 | 40%同期で自然なバランス |
+| syncPower | 3.0 | 2.0 | 柔らかいピーク、壁効果防止 |
+| radiusBreathingSpeed | - → 0.3 | 0.08 | じわーっとした呼吸感 |
+| glowMultiplier | 1.0（固定） | 1.0-1.5（動的） | バー伸長時の光の膨張 |
 
 ---
 
@@ -355,13 +431,32 @@ xcodebuild -project clock-tsukiusagi.xcodeproj \
 
 主要なコミット（feature/circular-waveform-view ブランチ）：
 
+**基本実装・レイアウト修正:**
+- `84e0d48` - "feat: reverse rotation direction and reduce bar count in CircularWaveformView"
+- `0e77dff` - "feat: slow down CircularWaveformView rotation speed"
+- `61e323f` - "fix: prevent negative frame dimensions in CircularWaveformView"
+
+**アニメーション強化:**
+- `263d6c0` - "feat: add dynamic amplitude modulation to CircularWaveformView"
+- `bc487a2` - "feat: add smooth fade in/out transitions to CircularWaveformView"
+
+**視覚調整:**
+- `a6dd200` - "feat: adjust CircularWaveformView color and animation parameters"
+- `7e3157d` - "feat: add subtle opacity and glow effect to CircularWaveformView"
+- `905bdd3` - "feat: strengthen glow effect on CircularWaveformView bars"
+
+**デザイントークン準拠:**
 - `62d3756` - "refactor: use DesignTokens for bar color in CircularWaveformView"
 - `787f065` - "refactor: use DesignTokens for all shadow colors in CircularWaveformView"
-- `61e323f` - "fix: prevent negative frame dimensions in CircularWaveformView"
-- `bc487a2` - "feat: add smooth fade in/out transitions to CircularWaveformView"
-- `263d6c0` - "feat: add dynamic amplitude modulation to CircularWaveformView"
-- `0e77dff` - "feat: slow down CircularWaveformView rotation speed"
-- `84e0d48` - "feat: reverse rotation direction and reduce bar count in CircularWaveformView"
+
+**有機的アニメーション実装:**
+- `22f04ee` - "feat: add organic animation features to CircularWaveformView"
+- `4c5545c` - "refactor: remove dynamic rotation speed variation"
+- `fb6e15f` - "feat: add radius breathing and soften sync peaks"
+- `b319fdd` - "feat: slow down radius breathing for subtle organic motion"
+
+**ドキュメント:**
+- `0955670` - "docs: add CircularWaveformView implementation guide"
 
 **ブランチ**: `feature/circular-waveform-view`
 **ベース**: `main`
@@ -370,28 +465,54 @@ xcodebuild -project clock-tsukiusagi.xcodeproj \
 
 ## 🎓 学んだ教訓
 
-### 1. SwiftUI のジオメトリ操作
+### 1. 有機的アニメーションの設計原則
+
+**「線の長さ」+「円の半径揺れ」の複合が鍵**:
+- バーの長さ変化だけでは平板
+- 円の半径自体を呼吸させることで「生きてる感じ」を実現
+- ふじこの提案: 「サンプル動画のコアは複合的な動き」→ 的確
+
+**同期のバランス**:
+- 完全ランダム = 単調
+- 完全同期 = 人工的
+- **解決策**: 20秒に1回、短時間だけ揃う瞬間を作る
+- べき乗関数の選択が重要: 立方（`pow 3.0`）は鋭すぎ、二次（`pow 2.0`）が自然
+
+**速度感の微調整**:
+- 呼吸速度: 0.3 cycles/sec → 「動きすぎ」
+- 0.08 cycles/sec → 「じわーっと」の絶妙なバランス
+- 体感的な「ちょうど良さ」は数値の1/4程度
+
+### 2. SwiftUI のジオメトリ操作
 
 - `.offset()` + `.rotationEffect()` は直感的だが、円形配置では歪みが発生しやすい
 - `cos/sin` による直接配置の方が制御しやすく、歪みが少ない
 
-### 2. アニメーションの自然さ
+### 3. アニメーションの自然さ
 
 - 同期した動きは「人工的」に見える → 独立位相が重要
 - 一様分布より、べき乗分布の方が「静かな中に動きがある」自然な印象
 - 時間による変調（ゆっくりとした変化）が有機的な印象を生む
+- **動的グロー**: バー伸長時の光の膨張が視覚的ドラマを強化
 
-### 3. デザイントークンの重要性
+### 4. デザイントークンの重要性
 
 - ハードコードされた色は保守性を下げる
 - プロジェクト全体の一貫性のため、必ず DesignTokens を使用
 - レビュー時に必ず色のハードコードをチェック
 
-### 4. パフォーマンスとの両立
+### 5. パフォーマンスとの両立
 
 - 30バー × 3層シャドウ = 90個の描画オブジェクト
 - `.drawingGroup()` による Metal アクセラレーションが必須
 - TimelineView の更新間隔（0.05s = 20fps）も重要
+- 動的グロー（glowMultiplier）はパフォーマンスへの影響が小さい
+
+### 6. 試行錯誤の価値
+
+- **失敗例**: 回転速度の揺らぎ → 不自然で削除
+- **成功例**: 円の呼吸 → 「超重要」な有機的動きの核心
+- ユーザーフィードバック（ふじこの提案）が決定的に重要
 
 ---
 
