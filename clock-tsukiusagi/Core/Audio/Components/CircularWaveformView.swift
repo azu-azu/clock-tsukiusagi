@@ -23,9 +23,9 @@ struct CircularWaveformView: View {
     private let segmentCount = 30         // Number of bars around the circle (reduced for more spacing)
     private let barWidth: CGFloat = 2     // Width of each bar (thinner for smaller size)
     private let baseBarLength: CGFloat = 5.0 // Base length (shorter for emphasis on movement)
-    private let maxAmplitude: CGFloat = 4.0   // Maximum variation from base (larger for noticeable motion)
-    private let animationSpeed: Double = 1.5  // Wave cycles per second (slower for calmer motion)
-    private let rotationSpeed: Double = -0.05  // Rotation cycles per second (negative = counter-clockwise, 20s per rotation)
+    private let maxAmplitude: CGFloat = 6.0   // Maximum variation from base (larger for more dramatic motion)
+    private let animationSpeed: Double = 1.0  // Wave cycles per second (slower for calmer motion)
+    private let rotationSpeed: Double = -0.02  // Rotation cycles per second (negative = counter-clockwise, 20s per rotation)
 
     // Independent phase offsets for each bar (generated once, never changes)
     private let phaseOffsets: [Double] = {
@@ -94,7 +94,7 @@ struct CircularWaveformView: View {
     // MARK: - Computed Properties
 
     private var barColor: Color {
-        DesignTokens.SettingsColors.accent
+        DesignTokens.CommonTextColors.primary
     }
 
     private var barOpacity: Double {
