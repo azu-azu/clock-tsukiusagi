@@ -126,6 +126,14 @@ public struct PureToneBuilder {
             let outputNode = FinalMixerOutputNode(mixer: mixer)
             sources.append(outputNode)
 
+            // Add TreeChime overlay (ランダム間隔でシャラララ)
+            let treeChime = TreeChime(
+                grainRate: 0.15,       // 平均6〜7秒に1回のシャラララ
+                grainDuration: 1.2,    // 各粒の余韻（1.2秒）
+                brightness: 9000.0     // ペンタトニックより少し高め
+            )
+            sources.append(treeChime)
+
         case .gentleFlute:
             // Gentle flute melody with spacious, bright reverb
             let signal = FluteSignal.makeSignal()
