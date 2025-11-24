@@ -43,16 +43,6 @@ struct ClockCaption {
                 (circularDistance(normalizedPhase, 0.75), .thirdQuarter)
             ]
 
-            #if DEBUG
-            print("ClockCaption: normalizedPhase=\(String(format: "%.6f", normalizedPhase))")
-            if let illum = illumination {
-                print("ClockCaption: illumination=\(String(format: "%.2f%%", illum * 100))")
-            }
-            for (dist, caption) in distances {
-                print("  Distance to \(caption.captionKey): \(String(format: "%.6f", dist))")
-            }
-            #endif
-
             // 照度を考慮した判定
             // 照度が高い（>80%）場合は満月寄り、低い（<20%）場合は新月寄りと判定
             if let illum = illumination {
@@ -63,9 +53,6 @@ struct ClockCaption {
                     let thirdQuarterDist = circularDistance(normalizedPhase, 0.75)
                     // 距離が近い場合（0.15以内）は照度を優先
                     if abs(fullMoonDist - thirdQuarterDist) < 0.15 {
-                        #if DEBUG
-                        print("ClockCaption: High illumination, preferring FullMoon")
-                        #endif
                         return .fullMoon
                     }
                 }
@@ -74,9 +61,6 @@ struct ClockCaption {
                     let newMoonDist = circularDistance(normalizedPhase, 0.0)
                     let firstQuarterDist = circularDistance(normalizedPhase, 0.25)
                     if abs(newMoonDist - firstQuarterDist) < 0.15 {
-                        #if DEBUG
-                        print("ClockCaption: Low illumination, preferring NewMoon")
-                        #endif
                         return .newMoon
                     }
                 }
@@ -84,9 +68,6 @@ struct ClockCaption {
 
             // 最も近い月相を返す
             let result = distances.min(by: { $0.0 < $1.0 })?.1 ?? .fullMoon
-            #if DEBUG
-            print("ClockCaption: Selected \(result.captionKey)")
-            #endif
             return result
         }
     }
