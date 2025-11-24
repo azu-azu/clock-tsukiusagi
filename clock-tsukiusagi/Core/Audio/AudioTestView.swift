@@ -104,6 +104,7 @@ struct AudioTestView: View {
                         controlSection
                         statusSection
                         volumeSection
+                        waveformSection
 
                         Spacer(minLength: DesignTokens.SettingsSpacing.bottomSpacer)
                     }
@@ -293,6 +294,17 @@ struct AudioTestView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .settingsCardStyle()
+    }
+
+    private var waveformSection: some View {
+        HStack {
+            Spacer()
+            SimpleWaveformView()
+                .frame(height: 60)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
         .settingsCardStyle()
     }
 
