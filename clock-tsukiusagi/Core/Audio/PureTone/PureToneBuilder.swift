@@ -98,6 +98,15 @@ public struct PureToneBuilder {
             )
             sources.append(chime)
 
+        case .bassoonDroneOnly:
+            // AudioSource-based implementation (テスト用、リバーブなし)
+            let drone = BassoonDrone(
+                droneRate: 0.5,        // テスト用: 2秒に1回
+                droneDuration: 3.0,    // 3秒の余韻
+                fundamental: 100.0     // 100Hz (G)
+            )
+            sources.append(drone)
+
         case .toyPiano:
             // Toy piano chord progression with deep, dreamy reverb
             let signal = PianoSignal.makeSignal()
