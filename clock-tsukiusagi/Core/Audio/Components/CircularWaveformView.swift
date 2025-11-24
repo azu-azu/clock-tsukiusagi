@@ -19,6 +19,7 @@ struct CircularWaveformView: View {
     private let baseBarLength: CGFloat = 5.0 // Base length (shorter for emphasis on movement)
     private let maxAmplitude: CGFloat = 4.0   // Maximum variation from base (larger for noticeable motion)
     private let animationSpeed: Double = 1.5  // Wave cycles per second (slower for calmer motion)
+    private let rotationSpeed: Double = 0.1   // Rotation cycles per second (slow counter-clockwise)
 
     // Independent phase offsets for each bar (generated once, never changes)
     private let phaseOffsets: [Double] = {
@@ -43,9 +44,13 @@ struct CircularWaveformView: View {
                 let centerX = geo.size.width / 2
                 let centerY = geo.size.height / 2
 
+                // Calculate rotation angle (counter-clockwise when playing)
+                let t = context.date.timeIntervalSinceReferenceDate
+                let rotationAngle = audioService.isPlaying ? t * rotationSpeed * .pi * 2 : 0
+
                 ZStack {
                     ForEach(0..<segmentCount, id: \.self) { index in
-                        let angleRad = angle(for: index)
+                        let angleRad = angle(for: index) + rotationAngle  // Add rotation
                         let length = barLength(for: index, time: context.date)
 
                         // Calculate position on the circle
