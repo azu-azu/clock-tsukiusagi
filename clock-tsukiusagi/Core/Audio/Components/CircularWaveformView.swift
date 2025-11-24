@@ -19,7 +19,7 @@ struct CircularWaveformView: View {
     private let baseBarLength: CGFloat = 5.0 // Base length (shorter for emphasis on movement)
     private let maxAmplitude: CGFloat = 4.0   // Maximum variation from base (larger for noticeable motion)
     private let animationSpeed: Double = 1.5  // Wave cycles per second (slower for calmer motion)
-    private let rotationSpeed: Double = -0.1  // Rotation cycles per second (negative = counter-clockwise)
+    private let rotationSpeed: Double = -0.05  // Rotation cycles per second (negative = counter-clockwise, 20s per rotation)
 
     // Independent phase offsets for each bar (generated once, never changes)
     private let phaseOffsets: [Double] = {
