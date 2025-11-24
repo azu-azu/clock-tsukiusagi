@@ -32,7 +32,7 @@ struct CircularWaveformView: View {
     private let syncStrength: Double = 0.4    // How much bars align (0.0-1.0)
 
     // Radius breathing parameters
-    private let radiusBreathingSpeed: Double = 0.3  // Breathing cycle speed
+    private let radiusBreathingSpeed: Double = 0.08  // Breathing cycle speed (12.5s per cycle, very slow)
     private let radiusBreathingAmount: CGFloat = 1.2  // Amplitude of radius variation (±1.2pt)
 
     // Independent phase offsets for each bar (generated once, never changes)
