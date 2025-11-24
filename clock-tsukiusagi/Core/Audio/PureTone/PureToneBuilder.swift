@@ -99,11 +99,11 @@ public struct PureToneBuilder {
             sources.append(chime)
 
         case .bassoonDroneOnly:
-            // AudioSource-based implementation (テスト用、リバーブなし)
+            // Orchestral boom test (no reverb)
             let drone = BassoonDrone(
-                droneRate: 0.5,        // テスト用: 2秒に1回
-                droneDuration: 3.0,    // 3秒の余韻
-                fundamental: 100.0     // 100Hz (G)
+                droneRate: 0.5,        // Test: every ~2 seconds
+                droneDuration: 5.0,    // 5s boom with falling pitch
+                fundamental: 55.0      // 55Hz (A1) - deep sub-bass
             )
             sources.append(drone)
 
@@ -143,11 +143,11 @@ public struct PureToneBuilder {
             )
             sources.append(treeChime)
 
-            // Add BassoonDrone overlay (低音の響き)
+            // Add orchestral boom overlay (深い低音の響き)
             let bassoonDrone = BassoonDrone(
-                droneRate: 0.5,        // ✂️ テスト用: 2秒に1回（元: 0.08）
-                droneDuration: 3.0,    // ✂️ テスト用: 3秒（元: 4.0）
-                fundamental: 100.0     // ✂️ テスト用: 少し高めのG（元: 80Hz）
+                droneRate: 0.08,       // ~12秒に1回の深いブーム
+                droneDuration: 5.0,    // 5秒の長い余韻（ピッチ降下付き）
+                fundamental: 55.0      // 55Hz (A1) - 深いサブベース
             )
             sources.append(bassoonDrone)
 
