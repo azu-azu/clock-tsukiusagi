@@ -19,7 +19,11 @@ struct CircularWaveformView: View {
     private let minBarLength: CGFloat = 4  // Minimum bar length (when stopped)
     private let maxBarLength: CGFloat = 13 // Maximum bar length (peak height, half of original)
     private let animationSpeed: Double = 2.0  // Wave cycles per second
-    private let waveFrequency: Double = 1.5   // Number of waves around the circle (lower for calmer motion)
+
+    // Independent phase offsets for each bar (generated once, never changes)
+    private let phaseOffsets: [Double] = {
+        (0..<90).map { _ in Double.random(in: 0...1000) }
+    }()
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 0.05)) { context in
@@ -74,33 +78,22 @@ struct CircularWaveformView: View {
     // MARK: - Animation Calculation
 
     /// Calculate animated length for a bar based on time and index
-    /// Uses multiple sine waves for organic, non-repetitive motion
+    /// Uses independent phase offsets for each bar to create organic, living motion
     private func barLength(for index: Int, time: Date) -> CGFloat {
         guard audioService.isPlaying else {
-            // When stopped, show minimal static bars
-            return minBarLength
+            // When stopped, all bars show base length (perfect circle)
+            return (minBarLength + maxBarLength) / 2
         }
 
         let t = time.timeIntervalSinceReferenceDate
-        let angle = angle(for: index)
+        let phaseOffset = phaseOffsets[index]
 
-        // Primary wave: smooth circular motion
-        let primaryPhase = t * animationSpeed * .pi * 2 + angle * waveFrequency
-        let primaryWave = sin(primaryPhase)
-
-        // Secondary wave: adds subtle complexity and variation (reduced amplitude)
-        let secondaryPhase = t * animationSpeed * 1.3 * .pi * 2 + angle * (waveFrequency * 1.2)
-        let secondaryWave = sin(secondaryPhase) * 0.2
-
-        // Tertiary wave: slow modulation for overall "breathing" effect
-        let tertiaryPhase = t * animationSpeed * 0.5 * .pi * 2
-        let tertiaryWave = sin(tertiaryPhase) * 0.15
-
-        // Combine waves: primary dominates, secondary adds subtle detail, tertiary adds slow modulation
-        let combinedWave = (primaryWave + secondaryWave + tertiaryWave) / 1.35
+        // Independent wave for each bar - no angle dependency
+        // Each bar breathes at its own rhythm
+        let wave = sin((t * animationSpeed + phaseOffset) * .pi * 2)
 
         // Normalize to 0.0-1.0 range
-        let normalized = (combinedWave + 1.0) / 2.0
+        let normalized = (wave + 1.0) / 2.0
 
         // Map to length range
         let length = minBarLength + (maxBarLength - minBarLength) * CGFloat(normalized)
