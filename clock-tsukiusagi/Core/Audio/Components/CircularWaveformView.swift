@@ -40,9 +40,9 @@ struct CircularWaveformView: View {
 
                         Capsule()
                             .fill(barColor)
-                            .frame(width: barWidth, height: length)
+                            .frame(width: length, height: barWidth) // Draw horizontally first (width=length)
+                            .rotationEffect(.radians(angleRad)) // Rotate to radial direction
                             .position(x: x, y: y) // Place bar center on the circle
-                            .rotationEffect(.radians(angleRad + .pi / 2)) // Rotate to point radially (perpendicular to tangent)
                     }
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
