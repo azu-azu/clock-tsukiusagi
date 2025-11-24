@@ -169,6 +169,17 @@ public final class AudioService: ObservableObject {
         // Set masterBusMixer as destination for all audio sources
         engine.setDestination(volumeLimiter.masterBusMixer)
 
+        // Activate audio session before setting up remote commands
+        // This ensures MPRemoteCommandCenter can properly register lock screen controls
+        do {
+            try activateAudioSession()
+            sessionActivated = true
+            print("✅ [AudioService] Audio session activated in init for remote commands")
+        } catch {
+            print("⚠️ [AudioService] Failed to activate session in init: \(error)")
+            // Continue anyway - will retry on first play()
+        }
+
         // コールバック設定
         setupCallbacks()
         setupInterruptionHandling()
@@ -280,7 +291,8 @@ public final class AudioService: ObservableObject {
         outputRoute = routeMonitor.currentRoute
 
         // Phase 3: Live Activityを更新
-        updateLiveActivity()
+        // Disabled: Now Playing provides sufficient lock screen integration
+        // updateLiveActivity()
 
         // Phase 3: Now Playingを更新
         updateNowPlaying()
@@ -352,7 +364,8 @@ public final class AudioService: ObservableObject {
             self.pauseReason = nil
 
             // Phase 3: Live Activityを終了
-            self.endLiveActivity()
+            // Disabled: Now Playing provides sufficient lock screen integration
+            // self.endLiveActivity()
 
             // Phase 3: Now Playingをクリア
             self.nowPlayingController?.clearNowPlaying()
@@ -426,7 +439,8 @@ public final class AudioService: ObservableObject {
         pauseReason = nil
 
         // Phase 3: Live Activityを終了
-        endLiveActivity()
+        // Disabled: Now Playing provides sufficient lock screen integration
+        // endLiveActivity()
 
         // Phase 3: Now Playingをクリア
         nowPlayingController?.clearNowPlaying()
@@ -436,8 +450,6 @@ public final class AudioService: ObservableObject {
     /// 音声再生を一時停止
     /// - Parameter reason: 停止理由
     public func pause(reason: PauseReason) {
-        print("⚠️ [AudioService] pause() called, reason: \(reason)")
-
         // Apply per-source fade to match master fade timing
         currentSignalSource?.applyFadeOut(durationMs: 500)
 
@@ -454,13 +466,11 @@ public final class AudioService: ObservableObject {
 
             // Ghost task protection
             guard pauseSessionId == self.playbackSessionId else {
-                print("🛑 [AudioService] Stale pause-stop ignored (session changed)")
                 return
             }
 
             self.engine.stop()
             self.currentSignalSource?.resetEffectsState()
-            print("⚠️ [AudioService] Engine stopped after fade")
         }
 
         engineStopWorkItem = workItem
@@ -470,12 +480,11 @@ public final class AudioService: ObservableObject {
         isPlaying = false
 
         // Phase 3: Live Activityを更新
-        updateLiveActivity()
+        // Disabled: Now Playing provides sufficient lock screen integration
+        // updateLiveActivity()
 
         // Phase 3: Now Playing状態を更新
         updateNowPlayingState()
-
-        print("⚠️ [AudioService] Paused with reason: \(reason)")
     }
 
     /// 音声再生を再開
@@ -515,7 +524,8 @@ public final class AudioService: ObservableObject {
         pauseReason = nil
 
         // Phase 3: Live Activityを更新
-        updateLiveActivity()
+        // Disabled: Now Playing provides sufficient lock screen integration
+        // updateLiveActivity()
 
         // Phase 3: Now Playing状態を更新
         updateNowPlayingState()
@@ -565,7 +575,8 @@ public final class AudioService: ObservableObject {
         volumeLimiter.reset()
 
         // Clear Live Activity
-        endLiveActivity()
+        // Disabled: Now Playing provides sufficient lock screen integration
+        // endLiveActivity()
 
         // Clear Now Playing
         nowPlayingController?.clearNowPlaying()
@@ -659,19 +670,22 @@ public final class AudioService: ObservableObject {
     private func setupNowPlayingCommands() {
         nowPlayingController?.setupRemoteCommands(
             onPlay: { [weak self] in
-                Task { @MainActor [weak self] in
-                    guard let self = self, let preset = self.currentPreset else { return }
+                guard let self = self else { return }
+                Task { @MainActor in
+                    guard let preset = self.currentPreset else { return }
                     try? self.play(preset: preset)
                 }
             },
             onPause: { [weak self] in
-                Task { @MainActor [weak self] in
-                    self?.pause(reason: .user)
+                guard let self = self else { return }
+                Task { @MainActor in
+                    self.pause(reason: .user)
                 }
             },
             onStop: { [weak self] in
-                Task { @MainActor [weak self] in
-                    self?.stop()
+                guard let self = self else { return }
+                Task { @MainActor in
+                    self.stop()
                 }
             }
         )
@@ -726,9 +740,11 @@ public final class AudioService: ObservableObject {
         print("     Is other audio playing: \(isActive)")
 
         // まずカテゴリだけ設定（アクティブ化前）
+        // Note: .mixWithOthers removed to enable lock screen controls
+        // Lock screen controls require exclusive audio session
         do {
-            print("   Setting category to .playback...")
-            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            print("   Setting category to .playback (exclusive for lock screen controls)...")
+            try session.setCategory(.playback, mode: .default, options: [])
             print("   ✅ Category set")
         } catch {
             print("   ❌ setCategory failed: \(error)")

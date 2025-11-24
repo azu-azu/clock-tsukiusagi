@@ -15,7 +15,15 @@ import MediaPlayer
 public final class NowPlayingController {
     // MARK: - Properties
 
-    private let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
+    // nonisolated(unsafe) because accessed from background thread handlers
+    nonisolated(unsafe) private let nowPlayingInfoCenter = MPNowPlayingInfoCenter.default()
+
+    // Retain command targets to prevent deallocation
+    // nonisolated(unsafe) because these are accessed from background thread handlers
+    nonisolated(unsafe) private var playTarget: Any?
+    nonisolated(unsafe) private var pauseTarget: Any?
+    nonisolated(unsafe) private var stopTarget: Any?
+    nonisolated(unsafe) private var togglePlayPauseTarget: Any?
 
     // MARK: - Public Methods
 
@@ -68,13 +76,14 @@ public final class NowPlayingController {
     /// 再生状態を更新（再生/一時停止）
     /// - Parameter isPlaying: 再生中かどうか
     public func updatePlaybackState(isPlaying: Bool) {
-        guard var nowPlayingInfo = nowPlayingInfoCenter.nowPlayingInfo else { return }
+        guard var nowPlayingInfo = nowPlayingInfoCenter.nowPlayingInfo else {
+            return
+        }
 
         // 再生レート: 1.0 = 再生中, 0.0 = 一時停止
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
 
         nowPlayingInfoCenter.nowPlayingInfo = nowPlayingInfo
-
     }
 
     /// Now Playing情報をクリア
@@ -89,7 +98,8 @@ public final class NowPlayingController {
     ///   - onPlay: 再生ボタン押下時のハンドラ
     ///   - onPause: 一時停止ボタン押下時のハンドラ
     ///   - onStop: 停止ボタン押下時のハンドラ
-    public func setupRemoteCommands(
+    /// - Note: nonisolated because MPRemoteCommandCenter handlers run on background threads
+    nonisolated public func setupRemoteCommands(
         onPlay: @escaping () -> Void,
         onPause: @escaping () -> Void,
         onStop: @escaping () -> Void
@@ -98,22 +108,43 @@ public final class NowPlayingController {
 
         // Play コマンド
         commandCenter.playCommand.isEnabled = true
-        commandCenter.playCommand.addTarget { _ in
+        playTarget = commandCenter.playCommand.addTarget { _ in
             onPlay()
             return .success
         }
 
         // Pause コマンド
         commandCenter.pauseCommand.isEnabled = true
-        commandCenter.pauseCommand.addTarget { _ in
+        pauseTarget = commandCenter.pauseCommand.addTarget { _ in
             onPause()
             return .success
         }
 
         // Stop コマンド
         commandCenter.stopCommand.isEnabled = true
-        commandCenter.stopCommand.addTarget { _ in
+        stopTarget = commandCenter.stopCommand.addTarget { _ in
             onStop()
+            return .success
+        }
+
+        // Toggle play/pause command (this is what iOS uses for lock screen single button)
+        commandCenter.togglePlayPauseCommand.isEnabled = true
+        togglePlayPauseTarget = commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
+            guard let strongSelf = self else {
+                return .commandFailed
+            }
+
+            // Get current playback rate from nowPlayingInfo
+            let currentRate = strongSelf.nowPlayingInfoCenter.nowPlayingInfo?[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? 0.0
+
+            if currentRate > 0.0 {
+                // Currently playing -> pause
+                onPause()
+            } else {
+                // Currently paused -> play
+                onPlay()
+            }
+
             return .success
         }
 
@@ -122,7 +153,6 @@ public final class NowPlayingController {
         commandCenter.previousTrackCommand.isEnabled = false
         commandCenter.skipForwardCommand.isEnabled = false
         commandCenter.skipBackwardCommand.isEnabled = false
-
     }
 
     /// リモートコントロールコマンドを無効化
