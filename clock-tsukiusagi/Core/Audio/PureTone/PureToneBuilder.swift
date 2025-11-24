@@ -134,6 +134,14 @@ public struct PureToneBuilder {
             )
             sources.append(treeChime)
 
+            // Add BassoonDrone overlay (低音の響き)
+            let bassoonDrone = BassoonDrone(
+                droneRate: 0.08,       // 約12秒に1回のブォーン
+                droneDuration: 4.0,    // 4秒の長い余韻
+                fundamental: 80.0      // 低いE（80Hz）
+            )
+            sources.append(bassoonDrone)
+
         case .gentleFlute:
             // Gentle flute melody with spacious, bright reverb
             let signal = FluteSignal.makeSignal()
