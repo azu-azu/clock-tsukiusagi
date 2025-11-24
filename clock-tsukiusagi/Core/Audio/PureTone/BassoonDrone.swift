@@ -72,7 +72,7 @@ public final class BassoonDrone: AudioSource {
         // ENVELOPE TIMING
         // ============================================================
         // Fast attack for "boom" onset, long decay for sub-bass tail
-        let attack: Double = 0.08      // 80ms: quick but not clicky
+        let attack: Double = 0.15      // 150ms: smoother onset (was 0.08)
         let decay: Double = droneDuration - attack  // Rest is smooth decay
 
         // ============================================================
@@ -106,7 +106,7 @@ public final class BassoonDrone: AudioSource {
 
                 if shouldTriggerDrone && (currentTime - state.lastTriggerTime) > droneDuration {
                     // 新しいブームを開始
-                    print("💥 Orchestral boom triggered at t=\(currentTime)")
+                    print("💥 Orchestral boom triggered at t=\(currentTime), fundamental=\(fundamental)Hz, duration=\(droneDuration)s")
                     state.lastTriggerTime = currentTime
                     state.currentDroneTime = 0.0
                 }
@@ -127,6 +127,11 @@ public final class BassoonDrone: AudioSource {
                         let attackProgress = state.currentDroneTime / attack
                         let sinValue = sin(attackProgress * Double.pi / 2.0)  // 0 → π/2
                         envelope = sinValue * sinValue  // sin^2 for smooth curve
+
+                        // ✂️ Debug: Log peak envelope
+                        if attackProgress > 0.95 && attackProgress < 1.0 {
+                            print("💥 Peak envelope reached: \(envelope), time: \(state.currentDroneTime)s")
+                        }
                     } else {
                         // Decay phase: power curve for long, smooth tail
                         // Uses (1-t)^2.5 instead of pure exponential
@@ -179,9 +184,9 @@ public final class BassoonDrone: AudioSource {
                 // ============================================================
                 // OUTPUT GAIN
                 // ============================================================
-                // Normalize by harmonic count and apply safe output level
-                // 0.20 = moderate level, leaving headroom for external limiter
-                samples?[frame] = Float(value / Double(harmonics.count) * 0.20)
+                // Normalize by harmonic count and apply output level
+                // 0.50 = higher level for audibility (was 0.20)
+                samples?[frame] = Float(value / Double(harmonics.count) * 0.50)
             }
 
             return noErr
