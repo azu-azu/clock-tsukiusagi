@@ -20,29 +20,29 @@ struct CircularWaveformView: View {
     private let fadeOutDuration: Double = 1.5 // Fade out duration in seconds
 
     // MARK: - Configuration
-    private let segmentCount = 30         // Number of bars around the circle (reduced for more spacing)
+    private static let segmentCount = 32         // Number of bars around the circle (reduced for more spacing)
     private let barWidth: CGFloat = 2     // Width of each bar (thinner for smaller size)
     private let baseBarLength: CGFloat = 5.0 // Base length (shorter for emphasis on movement)
     private let maxAmplitude: CGFloat = 6.0   // Maximum variation from base (larger for more dramatic motion)
     private let animationSpeed: Double = 1.0  // Wave cycles per second (slower for calmer motion)
-    private let rotationSpeed: Double = -0.02  // Rotation speed (negative = counter-clockwise)
+    private let rotationSpeed: Double = -0.013  // Rotation speed (negative = counter-clockwise)
 
     // Synchronization parameters
     private let syncFrequency: Double = 0.05  // Sync moment every 20 seconds
-    private let syncStrength: Double = 0.4    // How much bars align (0.0-1.0)
+    private let syncStrength: Double = 0.28    // How much bars align (0.0-1.0)
 
     // Radius breathing parameters
     private let radiusBreathingSpeed: Double = 0.08  // Breathing cycle speed (12.5s per cycle, very slow)
     private let radiusBreathingAmount: CGFloat = 1.2  // Amplitude of radius variation (±1.2pt)
 
-    // Independent phase offsets for each bar (generated once, never changes)
+    // Independent phase offsets for each bar (generated once based on segmentCount)
     private let phaseOffsets: [Double] = {
-        (0..<30).map { _ in Double.random(in: 0...1000) }
+        (0..<CircularWaveformView.segmentCount).map { _ in Double.random(in: 0...1000) }
     }()
 
     // Random amplitude multiplier for each bar (0.05 to 1.0) - heavily weighted toward subtle motion
     private let amplitudeMultipliers: [Double] = {
-        (0..<30).map { _ in
+        (0..<CircularWaveformView.segmentCount).map { _ in
             // Use power function to weight toward smaller values
             // Most bars will have multiplier < 0.3 (subtle motion)
             let random = Double.random(in: 0...1)
@@ -69,13 +69,21 @@ struct CircularWaveformView: View {
                 let syncFactor = calculateSyncFactor(time: t)
 
                 // Calculate breathing radius modulation (circle itself breathes)
-                let radiusModulation = audioService.isPlaying ? sin(t * radiusBreathingSpeed * .pi * 2) * radiusBreathingAmount : 0
+                let radiusModulation =
+                    audioService.isPlaying
+                    ? sin(t * radiusBreathingSpeed * .pi * 2) * radiusBreathingAmount
+                    : 0
                 let centerRadius = baseCenterRadius + radiusModulation
 
                 ZStack {
-                    ForEach(0..<segmentCount, id: \.self) { index in
+                    ForEach(0..<Self.segmentCount, id: \.self) { index in
                         let angleRad = angle(for: index) + rotationAngle  // Add rotation
-                        let lengthAndGlow = barLengthAndGlow(for: index, time: context.date, fadeFactor: fadeFactor, syncFactor: syncFactor)
+                        let lengthAndGlow = barLengthAndGlow(
+                            for: index,
+                            time: context.date,
+                            fadeFactor: fadeFactor,
+                            syncFactor: syncFactor
+                        )
 
                         // Calculate position on the circle
                         let x = centerX + cos(angleRad) * centerRadius
@@ -135,7 +143,7 @@ struct CircularWaveformView: View {
 
     /// Calculate angle for a bar at given index
     private func angle(for index: Int) -> Double {
-        let progress = Double(index) / Double(segmentCount)
+        let progress = Double(index) / Double(Self.segmentCount)
         return progress * 2.0 * .pi
     }
 
@@ -192,7 +200,12 @@ struct CircularWaveformView: View {
 
     /// Calculate animated length and glow multiplier for a bar
     /// Uses independent phase offsets, time-varying amplitudes, and synchronization
-    private func barLengthAndGlow(for index: Int, time: Date, fadeFactor: Double, syncFactor: Double) -> (length: CGFloat, glowMultiplier: CGFloat) {
+    private func barLengthAndGlow(
+        for index: Int,
+        time: Date,
+        fadeFactor: Double,
+        syncFactor: Double
+    ) -> (length: CGFloat, glowMultiplier: CGFloat) {
         let t = time.timeIntervalSinceReferenceDate
         let phaseOffset = phaseOffsets[index]
         let baseAmplitudeMultiplier = amplitudeMultipliers[index]
