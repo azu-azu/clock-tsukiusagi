@@ -98,15 +98,6 @@ public struct PureToneBuilder {
             )
             sources.append(chime)
 
-        case .bassoonDroneOnly:
-            // Orchestral boom test (no reverb)
-            let drone = BassoonDrone(
-                droneRate: 0.5,        // Test: every ~2 seconds
-                droneDuration: 4.0,    // 4s boom with falling pitch
-                fundamental: 110.0     // 110Hz (A2) - audible on most devices
-            )
-            sources.append(drone)
-
         case .toyPiano:
             // Toy piano chord progression with deep, dreamy reverb
             let signal = PianoSignal.makeSignal()
@@ -142,14 +133,6 @@ public struct PureToneBuilder {
                 brightness: 9000.0     // ペンタトニックより少し高め
             )
             sources.append(treeChime)
-
-            // Add orchestral boom overlay (深い低音の響き)
-            let bassoonDrone = BassoonDrone(
-                droneRate: 0.1,        // ~10秒に1回の深いブーム
-                droneDuration: 4.0,    // 4秒の長い余韻（ピッチ降下付き）
-                fundamental: 80.0      // 80Hz (E2) - 低音ながら聞こえやすい
-            )
-            sources.append(bassoonDrone)
 
         case .gentleFlute:
             // Gentle flute melody with spacious, bright reverb

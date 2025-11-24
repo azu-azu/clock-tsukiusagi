@@ -18,19 +18,11 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case midnightTrain      // 夜汽車
     case distantThunder     // 遠雷
 
-    // Test presets
-    case bassoonDroneTest   // バスーンドローン（テスト用）
-
     public var id: String { rawValue }
 
     /// Indicates if this is a test/development preset
     public var isTest: Bool {
-        switch self {
-        case .bassoonDroneTest:
-            return true
-        default:
-            return false
-        }
+        false  // All are production presets
     }
 
     /// Display name for UI (Japanese with emoji)
@@ -50,8 +42,6 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🚂 夜汽車"
         case .distantThunder:
             return "⚡ 遠雷"
-        case .bassoonDroneTest:
-            return "🎺 バスーンドローン"
         }
     }
 
@@ -72,8 +62,6 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Midnight Train in the Distance"
         case .distantThunder:
             return "Distant Thunder Rumble"
-        case .bassoonDroneTest:
-            return "Bassoon Drone (Test)"
         }
     }
 }
