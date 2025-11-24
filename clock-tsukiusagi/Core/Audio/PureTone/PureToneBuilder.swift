@@ -98,6 +98,17 @@ public struct PureToneBuilder {
             )
             sources.append(chime)
 
+        case .boomHitOnly:
+            // Auto-triggering BoomHit test (no reverb)
+            let boom = AutoTriggerBoomHit(
+                triggerRate: 0.33,     // Test: every ~3 seconds
+                minInterval: 3.0,      // Minimum 3s between booms
+                duration: 3.0,         // 3s boom with falling pitch
+                fundamental: 55.0,     // 55Hz (A1) - deep sub-bass
+                pitchDropAmount: 0.15  // 15% pitch drop
+            )
+            sources.append(boom)
+
         case .toyPiano:
             // Toy piano chord progression with deep, dreamy reverb
             let signal = PianoSignal.makeSignal()
