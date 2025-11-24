@@ -26,20 +26,26 @@ struct CircularWaveformView: View {
             GeometryReader { geo in
                 let size = min(geo.size.width, geo.size.height)
                 let centerRadius = size / 2 - maxBarLength / 2 // Fixed center circle radius (anchor point)
+                let centerX = geo.size.width / 2
+                let centerY = geo.size.height / 2
 
                 ZStack {
                     ForEach(0..<segmentCount, id: \.self) { index in
+                        let angleRad = angle(for: index)
                         let length = barLength(for: index, time: context.date)
+
+                        // Calculate position on the circle
+                        let x = centerX + cos(angleRad) * centerRadius
+                        let y = centerY + sin(angleRad) * centerRadius
 
                         Capsule()
                             .fill(barColor)
                             .frame(width: barWidth, height: length)
-                            .offset(y: -centerRadius) // Anchor at center circle, bars extend equally inward/outward
-                            .rotationEffect(.radians(angle(for: index)))
+                            .position(x: x, y: y) // Place bar center on the circle
+                            .rotationEffect(.radians(angleRad + .pi / 2)) // Rotate to point radially (perpendicular to tangent)
                     }
                 }
-                .frame(width: size, height: size)
-                .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                .frame(width: geo.size.width, height: geo.size.height)
             }
             .opacity(barOpacity)
             .animation(.easeInOut(duration: 0.3), value: audioService.isPlaying)
