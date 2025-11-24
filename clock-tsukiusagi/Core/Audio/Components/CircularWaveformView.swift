@@ -31,6 +31,10 @@ struct CircularWaveformView: View {
     private let syncFrequency: Double = 0.05  // Sync moment every 20 seconds
     private let syncStrength: Double = 0.4    // How much bars align (0.0-1.0)
 
+    // Radius breathing parameters
+    private let radiusBreathingSpeed: Double = 0.3  // Breathing cycle speed
+    private let radiusBreathingAmount: CGFloat = 1.2  // Amplitude of radius variation (±1.2pt)
+
     // Independent phase offsets for each bar (generated once, never changes)
     private let phaseOffsets: [Double] = {
         (0..<30).map { _ in Double.random(in: 0...1000) }
@@ -50,7 +54,7 @@ struct CircularWaveformView: View {
         TimelineView(.animation(minimumInterval: 0.05)) { context in
             GeometryReader { geo in
                 let size = min(geo.size.width, geo.size.height)
-                let centerRadius = size / 2 - baseBarLength // Fixed center circle radius (anchor point)
+                let baseCenterRadius = size / 2 - baseBarLength // Base center circle radius
                 let centerX = geo.size.width / 2
                 let centerY = geo.size.height / 2
 
@@ -63,6 +67,10 @@ struct CircularWaveformView: View {
 
                 // Calculate synchronization factor (0.0 = random, 1.0 = all synchronized)
                 let syncFactor = calculateSyncFactor(time: t)
+
+                // Calculate breathing radius modulation (circle itself breathes)
+                let radiusModulation = audioService.isPlaying ? sin(t * radiusBreathingSpeed * .pi * 2) * radiusBreathingAmount : 0
+                let centerRadius = baseCenterRadius + radiusModulation
 
                 ZStack {
                     ForEach(0..<segmentCount, id: \.self) { index in
@@ -140,9 +148,9 @@ struct CircularWaveformView: View {
         let syncPhase = time * syncFrequency * .pi * 2
         let rawSync = sin(syncPhase)
 
-        // Sharpen the pulse - only brief moments of high sync
-        // Using power function to create sharp peaks
-        let sharpSync = pow(max(rawSync, 0.0), 3.0)  // Cubic for sharper peaks
+        // Softer pulse - quadratic instead of cubic for natural transition
+        // Prevents "wall effect" from overly sharp peaks
+        let sharpSync = pow(max(rawSync, 0.0), 2.0)  // Quadratic for smoother peaks
 
         return sharpSync * syncStrength
     }
