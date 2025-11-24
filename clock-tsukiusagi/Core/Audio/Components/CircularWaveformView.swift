@@ -176,9 +176,11 @@ struct CircularWaveformView: View {
         let amplitude = maxAmplitude * CGFloat(finalMultiplier) * CGFloat(fadeFactor)
 
         // Calculate length: base ± amplitude
+        // Ensure length never goes below a minimum value (1.0pt) to avoid negative or zero frames
         let length = baseBarLength + amplitude * CGFloat(wave)
+        let minLength: CGFloat = 1.0
 
-        return length
+        return max(length, minLength)
     }
 }
 
