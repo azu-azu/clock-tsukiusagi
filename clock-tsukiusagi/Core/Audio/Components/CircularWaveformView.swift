@@ -25,7 +25,7 @@ struct CircularWaveformView: View {
         TimelineView(.animation(minimumInterval: 0.05)) { context in
             GeometryReader { geo in
                 let size = min(geo.size.width, geo.size.height)
-                let outerRadius = size / 2 // Fixed outer circle radius
+                let centerRadius = size / 2 - maxBarLength / 2 // Fixed center circle radius (anchor point)
 
                 ZStack {
                     ForEach(0..<segmentCount, id: \.self) { index in
@@ -34,7 +34,7 @@ struct CircularWaveformView: View {
                         Capsule()
                             .fill(barColor)
                             .frame(width: barWidth, height: length)
-                            .offset(y: -(outerRadius - length / 2)) // Keep outer edge fixed, vary inner edge
+                            .offset(y: -centerRadius) // Anchor at center circle, bars extend equally inward/outward
                             .rotationEffect(.radians(angle(for: index)))
                     }
                 }
