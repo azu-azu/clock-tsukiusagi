@@ -13,6 +13,12 @@ import SwiftUI
 struct CircularWaveformView: View {
     @EnvironmentObject var audioService: AudioService
 
+    // MARK: - Animation State
+    @State private var animationStartTime: Date?
+    @State private var animationStopTime: Date?
+    private let fadeInDuration: Double = 1.5  // Fade in duration in seconds
+    private let fadeOutDuration: Double = 1.5 // Fade out duration in seconds
+
     // MARK: - Configuration
     private let segmentCount = 30         // Number of bars around the circle (reduced for more spacing)
     private let barWidth: CGFloat = 2     // Width of each bar (thinner for smaller size)
@@ -44,6 +50,9 @@ struct CircularWaveformView: View {
                 let centerX = geo.size.width / 2
                 let centerY = geo.size.height / 2
 
+                // Calculate fade multiplier for smooth start/stop
+                let fadeFactor = calculateFadeFactor(currentTime: context.date)
+
                 // Calculate rotation angle (counter-clockwise when playing)
                 let t = context.date.timeIntervalSinceReferenceDate
                 let rotationAngle = audioService.isPlaying ? t * rotationSpeed * .pi * 2 : 0
@@ -51,7 +60,7 @@ struct CircularWaveformView: View {
                 ZStack {
                     ForEach(0..<segmentCount, id: \.self) { index in
                         let angleRad = angle(for: index) + rotationAngle  // Add rotation
-                        let length = barLength(for: index, time: context.date)
+                        let length = barLength(for: index, time: context.date, fadeFactor: fadeFactor)
 
                         // Calculate position on the circle
                         let x = centerX + cos(angleRad) * centerRadius
@@ -70,6 +79,16 @@ struct CircularWaveformView: View {
             .animation(.easeInOut(duration: 0.3), value: audioService.isPlaying)
         }
         .drawingGroup() // Metal acceleration for better performance
+        .onChange(of: audioService.isPlaying) { oldValue, newValue in
+            if newValue {
+                // Started playing
+                animationStartTime = Date()
+                animationStopTime = nil
+            } else {
+                // Stopped playing
+                animationStopTime = Date()
+            }
+        }
     }
 
     // MARK: - Computed Properties
@@ -92,14 +111,44 @@ struct CircularWaveformView: View {
 
     // MARK: - Animation Calculation
 
+    /// Calculate fade factor for smooth start/stop transitions
+    /// Returns 0.0 (no animation) to 1.0 (full animation)
+    private func calculateFadeFactor(currentTime: Date) -> Double {
+        if audioService.isPlaying {
+            // Fade in
+            guard let startTime = animationStartTime else { return 1.0 }
+            let elapsed = currentTime.timeIntervalSince(startTime)
+            if elapsed >= fadeInDuration {
+                return 1.0
+            }
+            // Ease-in curve for smooth start
+            let progress = elapsed / fadeInDuration
+            return easeInOut(progress)
+        } else {
+            // Fade out
+            guard let stopTime = animationStopTime else { return 0.0 }
+            let elapsed = currentTime.timeIntervalSince(stopTime)
+            if elapsed >= fadeOutDuration {
+                return 0.0
+            }
+            // Ease-out curve for smooth stop
+            let progress = elapsed / fadeOutDuration
+            return 1.0 - easeInOut(progress)
+        }
+    }
+
+    /// Ease-in-out curve for smooth transitions
+    private func easeInOut(_ t: Double) -> Double {
+        if t < 0.5 {
+            return 2 * t * t
+        } else {
+            return 1 - pow(-2 * t + 2, 2) / 2
+        }
+    }
+
     /// Calculate animated length for a bar based on time and index
     /// Uses independent phase offsets and time-varying amplitudes for organic motion
-    private func barLength(for index: Int, time: Date) -> CGFloat {
-        guard audioService.isPlaying else {
-            // When stopped, all bars show base length (perfect circle)
-            return baseBarLength
-        }
-
+    private func barLength(for index: Int, time: Date, fadeFactor: Double) -> CGFloat {
         let t = time.timeIntervalSinceReferenceDate
         let phaseOffset = phaseOffsets[index]
         let baseAmplitudeMultiplier = amplitudeMultipliers[index]
@@ -123,8 +172,8 @@ struct CircularWaveformView: View {
         // This creates variation while maintaining each bar's character
         let finalMultiplier = baseAmplitudeMultiplier * dynamicMultiplier
 
-        // Apply time-varying amplitude
-        let amplitude = maxAmplitude * CGFloat(finalMultiplier)
+        // Apply time-varying amplitude with fade factor
+        let amplitude = maxAmplitude * CGFloat(finalMultiplier) * CGFloat(fadeFactor)
 
         // Calculate length: base ± amplitude
         let length = baseBarLength + amplitude * CGFloat(wave)
