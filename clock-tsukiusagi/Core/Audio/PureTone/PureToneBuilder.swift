@@ -136,9 +136,9 @@ public struct PureToneBuilder {
 
             // Add BassoonDrone overlay (低音の響き)
             let bassoonDrone = BassoonDrone(
-                droneRate: 0.08,       // 約12秒に1回のブォーン
-                droneDuration: 4.0,    // 4秒の長い余韻
-                fundamental: 80.0      // 低いE（80Hz）
+                droneRate: 0.5,        // ✂️ テスト用: 2秒に1回（元: 0.08）
+                droneDuration: 3.0,    // ✂️ テスト用: 3秒（元: 4.0）
+                fundamental: 100.0     // ✂️ テスト用: 少し高めのG（元: 80Hz）
             )
             sources.append(bassoonDrone)
 

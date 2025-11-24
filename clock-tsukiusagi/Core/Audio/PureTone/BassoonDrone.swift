@@ -40,6 +40,7 @@ public final class BassoonDrone: AudioSource {
         droneDuration: Double = 4.0,   // 4秒の長い余韻
         fundamental: Double = 80.0     // 基音80Hz（低いE）
     ) {
+        print("🎺 BassoonDrone initialized: rate=\(droneRate), duration=\(droneDuration), fundamental=\(fundamental)")  // ✂️ デバッグ用
         let sampleRate: Double = 48_000.0
         let twoPi = 2.0 * Double.pi
 
@@ -74,6 +75,7 @@ public final class BassoonDrone: AudioSource {
 
                 if shouldTriggerDrone && (currentTime - state.lastTriggerTime) > droneDuration {
                     // 新しいドローンを開始
+                    print("🎺 Bassoon triggered at t=\(currentTime)")  // ✂️ デバッグ用
                     state.lastTriggerTime = currentTime
                     state.currentDroneTime = 0.0
                 }
@@ -114,7 +116,7 @@ public final class BassoonDrone: AudioSource {
                 }
 
                 // 倍音数で正規化し、適度な音量に調整
-                samples?[frame] = Float(value / Double(harmonics.count) * 0.15)
+                samples?[frame] = Float(value / Double(harmonics.count) * 0.35)  // ✂️ テスト用: 0.35（元: 0.15）
             }
 
             return noErr
