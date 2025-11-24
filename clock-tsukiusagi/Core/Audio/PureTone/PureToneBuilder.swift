@@ -101,8 +101,13 @@ public struct PureToneBuilder {
         case .toyPiano:
             // Toy piano chord progression with deep, dreamy reverb
             let signal = PianoSignal.makeSignal()
+
+            // Sub piano (octave-up shimmer layer)
+            let subSignal = SubPianoSignal.makeSignal()
+
             let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)
+            mixer.add(signal, gain: 1.0)        // Main piano
+            mixer.add(subSignal, gain: 1.0)     // Sub piano (volume 0.20 internally)
 
             // Deep reverb for dreamy atmosphere
             let reverb = SchroederReverb(
