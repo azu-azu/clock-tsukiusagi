@@ -35,6 +35,11 @@ struct CircularWaveformView: View {
     private let radiusBreathingSpeed: Double = 0.08  // Breathing cycle speed (12.5s per cycle, very slow)
     private let radiusBreathingAmount: CGFloat = 1.2  // Amplitude of radius variation (±1.2pt)
 
+    // Shadow/Glow parameters
+    private let shadowRadiusInner: CGFloat = 3   // Inner glow radius
+    private let shadowRadiusMiddle: CGFloat = 6  // Middle glow radius
+    private let shadowRadiusOuter: CGFloat = 10  // Outer glow radius
+
     // Independent phase offsets for each bar (generated once based on segmentCount)
     private let phaseOffsets: [Double] = {
         (0..<CircularWaveformView.segmentCount).map { _ in Double.random(in: 0...1000) }
@@ -92,9 +97,9 @@ struct CircularWaveformView: View {
                         Capsule()
                             .fill(barColor)
                             .frame(width: lengthAndGlow.length, height: barWidth) // Draw horizontally first (width=length)
-                            .shadow(color: shadowColorInner, radius: 3 * lengthAndGlow.glowMultiplier, x: 0, y: 0)
-                            .shadow(color: shadowColorMiddle, radius: 6 * lengthAndGlow.glowMultiplier, x: 0, y: 0)
-                            .shadow(color: shadowColorOuter, radius: 10 * lengthAndGlow.glowMultiplier, x: 0, y: 0)
+                            .shadow(color: shadowColorInner, radius: shadowRadiusInner * lengthAndGlow.glowMultiplier, x: 0, y: 0)
+                            .shadow(color: shadowColorMiddle, radius: shadowRadiusMiddle * lengthAndGlow.glowMultiplier, x: 0, y: 0)
+                            .shadow(color: shadowColorOuter, radius: shadowRadiusOuter * lengthAndGlow.glowMultiplier, x: 0, y: 0)
                             .rotationEffect(.radians(angleRad)) // Rotate to radial direction
                             .position(x: x, y: y) // Place bar center on the circle
                     }
