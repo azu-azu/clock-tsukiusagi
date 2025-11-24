@@ -69,8 +69,9 @@ struct CircularWaveformView: View {
                         Capsule()
                             .fill(barColor)
                             .frame(width: length, height: barWidth) // Draw horizontally first (width=length)
-                            .shadow(color: barColor.opacity(0.8), radius: 2, x: 0, y: 0)
-                            .shadow(color: barColor.opacity(0.4), radius: 4, x: 0, y: 0)
+                            .shadow(color: Color.white.opacity(0.9), radius: 3, x: 0, y: 0)
+                            .shadow(color: Color.white.opacity(0.6), radius: 6, x: 0, y: 0)
+                            .shadow(color: Color.white.opacity(0.3), radius: 10, x: 0, y: 0)
                             .rotationEffect(.radians(angleRad)) // Rotate to radial direction
                             .position(x: x, y: y) // Place bar center on the circle
                     }
@@ -96,7 +97,7 @@ struct CircularWaveformView: View {
     // MARK: - Computed Properties
 
     private var barColor: Color {
-        Color.white.opacity(0.7)
+        Color.white.opacity(0.5)
     }
 
     private var barOpacity: Double {
