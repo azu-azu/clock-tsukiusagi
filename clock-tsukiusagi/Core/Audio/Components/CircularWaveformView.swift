@@ -14,21 +14,21 @@ struct CircularWaveformView: View {
     @EnvironmentObject var audioService: AudioService
 
     // MARK: - Configuration
-    private let segmentCount = 45         // Number of bars around the circle (reduced for spacing)
+    private let segmentCount = 30         // Number of bars around the circle (reduced for more spacing)
     private let barWidth: CGFloat = 2     // Width of each bar (thinner for smaller size)
     private let baseBarLength: CGFloat = 5.0 // Base length (shorter for emphasis on movement)
     private let maxAmplitude: CGFloat = 4.0   // Maximum variation from base (larger for noticeable motion)
     private let animationSpeed: Double = 1.5  // Wave cycles per second (slower for calmer motion)
-    private let rotationSpeed: Double = 0.1   // Rotation cycles per second (slow counter-clockwise)
+    private let rotationSpeed: Double = -0.1  // Rotation cycles per second (negative = counter-clockwise)
 
     // Independent phase offsets for each bar (generated once, never changes)
     private let phaseOffsets: [Double] = {
-        (0..<45).map { _ in Double.random(in: 0...1000) }
+        (0..<30).map { _ in Double.random(in: 0...1000) }
     }()
 
     // Random amplitude multiplier for each bar (0.05 to 1.0) - heavily weighted toward subtle motion
     private let amplitudeMultipliers: [Double] = {
-        (0..<45).map { _ in
+        (0..<30).map { _ in
             // Use power function to weight toward smaller values
             // Most bars will have multiplier < 0.3 (subtle motion)
             let random = Double.random(in: 0...1)
