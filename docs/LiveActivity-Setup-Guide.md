@@ -1,5 +1,26 @@
 # Live Activity 設定ガイド
 
+## ⚠️ このガイドは廃止されました（2025-11-24）
+
+> **Live Activity 実装は現在、無効化されています。**
+>
+> **廃止した理由：**
+> - ロック画面で Live Activity と Now Playing UI が同時に表示され、ユーザーが混乱した
+> - Live Activity には再生 / 一時停止ボタンがなく、"情報ビュー"に過ぎない
+> - ロック画面での直接操作（再生/一時停止）は Now Playing の方が圧倒的に重要
+>
+> **現在の仕様：**
+> - ロック画面の操作は **Now Playing controls（MPRemoteCommandCenter）** を使用
+> - Dynamic Island 表示は必要性が下がったため廃止
+> - 参照: `/clock-tsukiusagi/Core/Services/NowPlaying/NowPlayingController.swift`
+> - 参照: `/clock-tsukiusagi/Core/Audio/AudioService.swift` (setupNowPlayingCommands)
+>
+> **再び Live Activity を使うなら：**
+> - Now Playing（操作）と Live Activity（状態表示）の役割を完全に分離して設計すること
+> - このガイドは参考資料として活用できます
+
+---
+
 iOS 16.1以降で利用可能なLive Activityをアプリに実装する手順書です。ロック画面とDynamic Island（iPhone 14 Pro以降）に動的な情報を表示できます。
 
 ## 目次
