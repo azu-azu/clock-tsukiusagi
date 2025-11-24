@@ -16,20 +16,25 @@ struct CircularWaveformView: View {
     // MARK: - Configuration
     private let segmentCount = 90         // Number of bars around the circle (more segments for smoother appearance)
     private let barWidth: CGFloat = 2     // Width of each bar (thinner for smaller size)
-    private let minBarLength: CGFloat = 4  // Minimum bar length (when stopped)
-    private let maxBarLength: CGFloat = 13 // Maximum bar length (peak height, half of original)
-    private let animationSpeed: Double = 2.0  // Wave cycles per second
+    private let baseBarLength: CGFloat = 8.5 // Base length (center point between min/max)
+    private let maxAmplitude: CGFloat = 2.5   // Maximum variation from base (reduced for calmer motion)
+    private let animationSpeed: Double = 1.5  // Wave cycles per second (slower for calmer motion)
 
     // Independent phase offsets for each bar (generated once, never changes)
     private let phaseOffsets: [Double] = {
         (0..<90).map { _ in Double.random(in: 0...1000) }
     }()
 
+    // Random amplitude multiplier for each bar (0.1 to 1.0) - most bars move subtly
+    private let amplitudeMultipliers: [Double] = {
+        (0..<90).map { _ in Double.random(in: 0.1...1.0) }
+    }()
+
     var body: some View {
         TimelineView(.animation(minimumInterval: 0.05)) { context in
             GeometryReader { geo in
                 let size = min(geo.size.width, geo.size.height)
-                let centerRadius = size / 2 - maxBarLength / 2 // Fixed center circle radius (anchor point)
+                let centerRadius = size / 2 - baseBarLength // Fixed center circle radius (anchor point)
                 let centerX = geo.size.width / 2
                 let centerY = geo.size.height / 2
 
@@ -78,25 +83,26 @@ struct CircularWaveformView: View {
     // MARK: - Animation Calculation
 
     /// Calculate animated length for a bar based on time and index
-    /// Uses independent phase offsets for each bar to create organic, living motion
+    /// Uses independent phase offsets and random amplitudes for calm, organic motion
     private func barLength(for index: Int, time: Date) -> CGFloat {
         guard audioService.isPlaying else {
             // When stopped, all bars show base length (perfect circle)
-            return (minBarLength + maxBarLength) / 2
+            return baseBarLength
         }
 
         let t = time.timeIntervalSinceReferenceDate
         let phaseOffset = phaseOffsets[index]
+        let amplitudeMultiplier = amplitudeMultipliers[index]
 
         // Independent wave for each bar - no angle dependency
-        // Each bar breathes at its own rhythm
+        // Each bar breathes at its own rhythm with its own amplitude
         let wave = sin((t * animationSpeed + phaseOffset) * .pi * 2)
 
-        // Normalize to 0.0-1.0 range
-        let normalized = (wave + 1.0) / 2.0
+        // Apply random amplitude multiplier (most bars have subtle motion, few have larger motion)
+        let amplitude = maxAmplitude * CGFloat(amplitudeMultiplier)
 
-        // Map to length range
-        let length = minBarLength + (maxBarLength - minBarLength) * CGFloat(normalized)
+        // Calculate length: base ± amplitude
+        let length = baseBarLength + amplitude * CGFloat(wave)
 
         return length
     }
