@@ -93,7 +93,7 @@ struct CircularWaveformView: View {
     // MARK: - Animation Calculation
 
     /// Calculate animated length for a bar based on time and index
-    /// Uses independent phase offsets and random amplitudes for calm, organic motion
+    /// Uses independent phase offsets and time-varying amplitudes for organic motion
     private func barLength(for index: Int, time: Date) -> CGFloat {
         guard audioService.isPlaying else {
             // When stopped, all bars show base length (perfect circle)
@@ -102,14 +102,29 @@ struct CircularWaveformView: View {
 
         let t = time.timeIntervalSinceReferenceDate
         let phaseOffset = phaseOffsets[index]
-        let amplitudeMultiplier = amplitudeMultipliers[index]
+        let baseAmplitudeMultiplier = amplitudeMultipliers[index]
 
         // Independent wave for each bar - no angle dependency
-        // Each bar breathes at its own rhythm with its own amplitude
+        // Each bar breathes at its own rhythm
         let wave = sin((t * animationSpeed + phaseOffset) * .pi * 2)
 
-        // Apply random amplitude multiplier (most bars have subtle motion, few have larger motion)
-        let amplitude = maxAmplitude * CGFloat(amplitudeMultiplier)
+        // Slow amplitude modulation - each bar's amplitude changes over time
+        // Uses a different phase for amplitude modulation (very slow cycle)
+        let amplitudeModulationSpeed = 0.1  // 10 second cycle for amplitude change
+        let amplitudePhase = t * amplitudeModulationSpeed + phaseOffset * 0.01
+        let amplitudeModulation = sin(amplitudePhase * .pi * 2)
+
+        // Map modulation to 0.05-1.0 range (same as original distribution)
+        // When modulation is -1: multiplier is near 0.05 (minimal motion)
+        // When modulation is +1: multiplier is near 1.0 (maximum motion)
+        let dynamicMultiplier = 0.05 + (amplitudeModulation + 1.0) / 2.0 * 0.95
+
+        // Combine base multiplier with dynamic modulation
+        // This creates variation while maintaining each bar's character
+        let finalMultiplier = baseAmplitudeMultiplier * dynamicMultiplier
+
+        // Apply time-varying amplitude
+        let amplitude = maxAmplitude * CGFloat(finalMultiplier)
 
         // Calculate length: base ± amplitude
         let length = baseBarLength + amplitude * CGFloat(wave)
