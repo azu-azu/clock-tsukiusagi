@@ -16,8 +16,8 @@ struct CircularWaveformView: View {
     // MARK: - Configuration
     private let segmentCount = 45         // Number of bars around the circle (reduced for spacing)
     private let barWidth: CGFloat = 2     // Width of each bar (thinner for smaller size)
-    private let baseBarLength: CGFloat = 8.5 // Base length (center point between min/max)
-    private let maxAmplitude: CGFloat = 2.5   // Maximum variation from base (reduced for calmer motion)
+    private let baseBarLength: CGFloat = 5.0 // Base length (shorter for emphasis on movement)
+    private let maxAmplitude: CGFloat = 4.0   // Maximum variation from base (larger for noticeable motion)
     private let animationSpeed: Double = 1.5  // Wave cycles per second (slower for calmer motion)
 
     // Independent phase offsets for each bar (generated once, never changes)
@@ -25,9 +25,14 @@ struct CircularWaveformView: View {
         (0..<45).map { _ in Double.random(in: 0...1000) }
     }()
 
-    // Random amplitude multiplier for each bar (0.1 to 1.0) - most bars move subtly
+    // Random amplitude multiplier for each bar (0.05 to 1.0) - heavily weighted toward subtle motion
     private let amplitudeMultipliers: [Double] = {
-        (0..<45).map { _ in Double.random(in: 0.1...1.0) }
+        (0..<45).map { _ in
+            // Use power function to weight toward smaller values
+            // Most bars will have multiplier < 0.3 (subtle motion)
+            let random = Double.random(in: 0...1)
+            return pow(random, 2.0) * 0.95 + 0.05  // Range: 0.05-1.0, weighted low
+        }
     }()
 
     var body: some View {
