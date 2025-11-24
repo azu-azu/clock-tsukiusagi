@@ -11,9 +11,11 @@ import Foundation
 public struct PureToneBuilder {
 
     /// Build audio sources for a given pure tone preset
-    /// - Parameter preset: The preset to build
+    /// - Parameters:
+    ///   - preset: The preset to build
+    ///   - outputRoute: Current audio output route for frequency optimization
     /// - Returns: Array of AudioSource instances (may include multiple sources for layered presets)
-    public static func build(_ preset: PureTonePreset) -> [AudioSource] {
+    public static func build(_ preset: PureTonePreset, outputRoute: AudioOutputRoute = .unknown) -> [AudioSource] {
         var sources: [AudioSource] = []
 
         switch preset {
@@ -99,13 +101,27 @@ public struct PureToneBuilder {
             sources.append(chime)
 
         case .boomHitOnly:
-            // Auto-triggering BoomHit test (no reverb)
+            // Auto-triggering BoomHit test with route-optimized frequency
+            // Output route determines optimal fundamental frequency:
+            // - Speaker: 220Hz (iPhone speaker audible range)
+            // - Headphones/Bluetooth: 80Hz (true low bass)
+            // - Unknown: 150Hz (safe middle ground)
+            let fundamental: Double
+            switch outputRoute {
+            case .speaker:
+                fundamental = 220.0  // iPhone スピーカー最適（可聴域で「ズズーン」近似）
+            case .headphones, .bluetooth:
+                fundamental = 80.0   // 本物の低音「ドゥーン」
+            case .unknown:
+                fundamental = 150.0  // 安全な中間値
+            }
+
             let boom = AutoTriggerBoomHit(
                 triggerRate: 0.33,     // Test: every ~3 seconds
                 minInterval: 3.0,      // Minimum 3s between booms
                 duration: 3.0,         // 3s boom with falling pitch
-                fundamental: 110.0,    // 110Hz (A2) - iPhone/イヤホンで再生可能
-                pitchDropAmount: 0.25  // 25% pitch drop（ズゥーン感強化）
+                fundamental: fundamental,  // Route-optimized frequency
+                pitchDropAmount: 0.25  // 25% pitch drop
             )
             sources.append(boom)
 

@@ -774,7 +774,8 @@ public final class AudioService: ObservableObject {
         // Handle PureTone presets separately
         if let pureTonePreset = mapToPureTone(uiPreset) {
             print("🎵 [AudioService] Using PureTone module for: \(uiPreset.rawValue)")
-            let sources = PureToneBuilder.build(pureTonePreset)
+            print("🎧 [AudioService] Output route: \(outputRoute.displayName) → optimizing frequency")
+            let sources = PureToneBuilder.build(pureTonePreset, outputRoute: outputRoute)
             sources.forEach { engine.register($0) }
             return
         }
