@@ -97,7 +97,7 @@ struct CircularWaveformView: View {
     // MARK: - Computed Properties
 
     private var barColor: Color {
-        Color.white.opacity(0.5)
+        DesignTokens.CommonTextColors.quinary
     }
 
     private var barOpacity: Double {
