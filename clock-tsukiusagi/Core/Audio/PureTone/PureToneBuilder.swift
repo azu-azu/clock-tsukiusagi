@@ -192,13 +192,13 @@ public struct PureToneBuilder {
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
 
-            // Large, dreamy reverb for moonlight atmosphere
+            // Deep, majestic reverb for rich moonlight atmosphere
             let reverb = SchroederReverb(
-                roomSize: 2.0,      // Large space (moonlight atmosphere)
-                damping: 0.40,      // Bright tone (transparent)
-                decay: 0.90,        // Very long tail (shimmer)
-                mix: 0.55,          // Rich reverb presence
-                predelay: 0.030,    // 30ms - balanced mist effect
+                roomSize: 2.4,      // Larger space (cathedral-like depth)
+                damping: 0.35,      // Less damping for richer resonance
+                decay: 0.92,        // Longer tail for weight
+                mix: 0.60,          // More reverb for depth
+                predelay: 0.035,    // Slightly longer for spatial depth
                 sampleRate: 48000.0
             )
             mixer.addEffect(reverb)
@@ -215,13 +215,13 @@ public struct PureToneBuilder {
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
 
-            // Close, foggy reverb for midnight atmosphere
+            // Deep, close reverb for rich midnight atmosphere
             let reverb = SchroederReverb(
-                roomSize: 2.0,      // Large space (midnight stillness)
-                damping: 0.40,      // Bright tone (transparent)
-                decay: 0.90,        // Very long tail (deep night)
-                mix: 0.55,          // Rich reverb presence
-                predelay: 0.010,    // 10ms - dense fog, close feeling
+                roomSize: 2.4,      // Large space (deep night stillness)
+                damping: 0.32,      // Less damping for richer, darker resonance
+                decay: 0.93,        // Very long tail for heavy presence
+                mix: 0.62,          // More reverb for weight and depth
+                predelay: 0.012,    // 12ms - dense fog, intimate feeling
                 sampleRate: 48000.0
             )
             mixer.addEffect(reverb)

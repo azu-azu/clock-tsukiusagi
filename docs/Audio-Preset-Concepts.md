@@ -51,35 +51,36 @@ Db3 → F4 → Ab4 → Ab3 → Eb4 → Gb4 → Db5 → C5
 低音         低音          低音    低音
 ```
 
-- **15音のフレーズ**、サイクル時間 ~9.8秒
-- **可変音長**: 0.6秒と0.8秒の組み合わせで自然なフレージング
+- **15音のフレーズ**、サイクル時間 ~**19.6秒** (2倍ゆっくり)
+- **可変音長**: 1.2秒と1.6秒の組み合わせで荘厳なフレージング
 - **低音追加**: Db3 (138Hz), Ab3 (207Hz) を4箇所に配置 — 空間の深みを演出
 - **ランダム変化**: サイクルごとに微妙に異なるメロディ（月の雲の揺らぎ）
 - **オクターブ範囲**: Db3 (138Hz) ～ Db5 (554Hz) — 低音はイヤホン推奨
 
 #### Sound Design
 
-**Harmonic Structure**:
+**Harmonic Structure** (v3 - 豊かで重みのある音):
 ```
 Fundamental:    1.0  (100%)
-2nd harmonic:   0.30 (30%)  ← Toy Piano (35%) より控えめ
-3rd harmonic:   0.12 (12%)  ← Toy Piano (15%) より控えめ
+2nd harmonic:   0.55 (55%)  ← より強く、深く
+3rd harmonic:   0.35 (35%)  ← より豊かに
+4th harmonic:   0.20 (20%)  ← 追加（重みと荘厳さ）
 ```
-→ ソフトで透明感のある音色（印象派の "ぼかし" に相当）
+→ 豊かで深く、重みのある音色（軽くない、存在感がある）
 
 **Envelope**:
-- **Attack**: 30ms — 滑らかな sin² カーブで立ち上がり、クリック音なし
-- **Decay**: 2.0秒 — 非常に長い減衰で月明かりのシマー感を表現
+- **Attack**: 70ms — ゆっくりとした荘厳な立ち上がり
+- **Decay**: 4.0秒 — 大聖堂のような長い余韻
 
-**Reverb** (Cathedral風の大空間):
-- roomSize: 2.0 (広い空間)
-- damping: 0.40 (明るめのトーン、透明感)
-- decay: 0.90 (非常に長いテール、余韻)
-- mix: 0.55 (リバーブ成分多め、浮遊感)
-- predelay: 0.030 (30ms) — バランスの取れた霧感
+**Reverb** (深く荘厳な大空間):
+- roomSize: 2.4 (より広大な空間)
+- damping: 0.35 (より豊かな響き)
+- decay: 0.92 (より長いテール、重み)
+- mix: 0.60 (より深いリバーブ)
+- predelay: 0.035 (35ms) — 空間の深さ
 
-**Volume**: 0.30
-→ アンビエント、瞑想的な音量レベル
+**Volume**: 0.38
+→ より存在感のある音量レベル
 
 #### Implementation Notes
 
@@ -171,34 +172,35 @@ Bb3 → Db4 → F3 → Ab3 → C4 → F4 → Eb4 → Bb3
 ```
 
 - **12音のフレーズ** (通常版15音 → より間が多い)
-- **サイクル時間**: ~10.8秒
-- **可変音長**: 0.6秒、0.8秒、1.0秒
+- **サイクル時間**: ~**21.6秒** (2倍ゆっくり)
+- **可変音長**: 1.2秒、1.6秒、2.0秒の組み合わせで深い静寂
 - **オクターブ範囲**: Bb2 (116Hz) ～ F4 (349Hz) — より低く、重心が下
 - **下降傾向**: 沈静化していく動きで深夜の感覚を演出
 
 #### Sound Design
 
-**Harmonic Structure** (darker than normal version):
+**Harmonic Structure** (v3 - 豊かだが暗い):
 ```
 Fundamental:    1.0  (100%)
-2nd harmonic:   0.20 (20%)  ← 通常版 (30%) より暗い
-3rd harmonic:   0.08 (8%)   ← 通常版 (12%) より暗い
+2nd harmonic:   0.50 (50%)  ← 豊かで深い
+3rd harmonic:   0.30 (30%)  ← 豊かだが暗め
+4th harmonic:   0.15 (15%)  ← 追加（重みと深さ）
 ```
-→ より暗く、深く、ミステリアスな音色
+→ 豊かで深く、暗く、重みのある音色
 
-**Envelope** (longer than normal version):
-- **Attack**: 40ms — より長く、深夜のゆっくりとした立ち上がり
-- **Decay**: 2.4秒 — 通常版 (2.0秒) より長い残響
+**Envelope** (longer, more majestic):
+- **Attack**: 80ms — ゆっくりとした深夜の荘厳な立ち上がり
+- **Decay**: 4.5秒 — 通常版 (4.0秒) より長い、深い残響
 
-**Reverb** (close, foggy):
-- roomSize: 2.0 (広い空間)
-- damping: 0.40 (明るめのトーン)
-- decay: 0.90 (非常に長いテール)
-- mix: 0.55 (リバーブ成分多め)
-- predelay: 0.010 (10ms) — **通常版 (30ms) より短く、濃い霧、近い音**
+**Reverb** (deep, close, foggy):
+- roomSize: 2.4 (より広大な空間)
+- damping: 0.32 (より豊かで暗い響き)
+- decay: 0.93 (非常に長いテール、重い)
+- mix: 0.62 (より深いリバーブ)
+- predelay: 0.012 (12ms) — **濃い霧、親密で重い音**
 
-**Volume**: 0.28
-→ 深夜の静けさに合わせた控えめな音量
+**Volume**: 0.36
+→ より存在感のある深夜の音量
 
 #### Random Variation System
 
@@ -208,8 +210,8 @@ Fundamental:    1.0  (100%)
 **Octave Shift**: Down only (10%)
 → 上には飛ばず、下に沈む動きのみ（深夜の重力）
 
-**Duration Wobble**: ±0.08秒
-→ 通常版と同じ微妙な揺らぎ
+**Duration Wobble**: ±0.16秒 (2倍テンポに合わせてスケール)
+→ 微妙な揺らぎ、より長い音符に対応
 
 #### Implementation Notes
 
@@ -221,14 +223,17 @@ Fundamental:    1.0  (100%)
 |--------|---------------|----------|
 | Key | D♭ Major | B♭ Minor |
 | Notes | 15 | 12 |
+| Cycle Time | **19.6s** | **21.6s** |
 | Range | Db3~Db5 | Bb2~F4 |
 | Omission | 10% | 15% |
 | Octave Shift | Bidirectional | Down only |
-| Predelay | 30ms | 10ms |
-| Attack | 30ms | 40ms |
-| Decay | 2.0s | 2.4s |
-| Harmonics | [1.0, 0.30, 0.12] | [1.0, 0.20, 0.08] |
-| Feeling | Gentle moonlight | Dark moon shadow |
+| Predelay | 35ms | 12ms |
+| Attack | 70ms | 80ms |
+| Decay | 4.0s | 4.5s |
+| Harmonics | [1.0, 0.55, 0.35, 0.20] | [1.0, 0.50, 0.30, 0.15] |
+| Volume | 0.38 | 0.36 |
+| Reverb Mix | 0.60 | 0.62 |
+| Feeling | Rich, majestic moonlight | Deep, rich moon shadow |
 
 #### Design Philosophy
 

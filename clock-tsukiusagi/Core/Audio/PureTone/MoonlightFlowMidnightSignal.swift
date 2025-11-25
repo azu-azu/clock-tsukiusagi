@@ -68,21 +68,21 @@ private final class MidnightGenerator {
     // MARK: - Melody Definition
 
     /// Midnight melody in B♭ Minor
-    /// Total duration: ~10.8 seconds
+    /// Total duration: ~21.6 seconds (2x slower tempo)
     /// Descending motion for deep night feeling
     let melody: [Note] = [
-        Note(freq: 233.08, duration: 0.8), // Bb3
-        Note(freq: 277.18, duration: 0.6), // Db4
-        Note(freq: 174.61, duration: 0.8), // F3
-        Note(freq: 207.65, duration: 0.6), // Ab3
-        Note(freq: 261.63, duration: 0.8), // C4
-        Note(freq: 349.23, duration: 0.6), // F4
-        Note(freq: 311.13, duration: 0.8), // Eb4
-        Note(freq: 233.08, duration: 0.6), // Bb3
-        Note(freq: 277.18, duration: 0.8), // Db4
-        Note(freq: 261.63, duration: 0.6), // C4
-        Note(freq: 207.65, duration: 0.8), // Ab3
-        Note(freq: 116.54, duration: 1.0)  // Bb2 (deep ending)
+        Note(freq: 233.08, duration: 1.6), // Bb3
+        Note(freq: 277.18, duration: 1.2), // Db4
+        Note(freq: 174.61, duration: 1.6), // F3
+        Note(freq: 207.65, duration: 1.2), // Ab3
+        Note(freq: 261.63, duration: 1.6), // C4
+        Note(freq: 349.23, duration: 1.2), // F4
+        Note(freq: 311.13, duration: 1.6), // Eb4
+        Note(freq: 233.08, duration: 1.2), // Bb3
+        Note(freq: 277.18, duration: 1.6), // Db4
+        Note(freq: 261.63, duration: 1.2), // C4
+        Note(freq: 207.65, duration: 1.6), // Ab3
+        Note(freq: 116.54, duration: 2.0)  // Bb2 (deep ending)
     ]
 
     // MARK: - Timing Calculations
@@ -101,16 +101,16 @@ private final class MidnightGenerator {
 
     // MARK: - Envelope Parameters
 
-    let attack: Float = 0.040      // 40ms: slightly longer for smoother dark tone
-    let decay: Float = 2.4         // 2.4s: longer decay for deeper resonance
+    let attack: Float = 0.080      // 80ms: slow, deep midnight attack
+    let decay: Float = 4.5         // 4.5s: very long decay for deep night resonance
 
     // MARK: - Harmonic Structure
 
-    /// Harmonics: fundamental + 2 overtones
-    let harmonics: [Float] = [1.0, 2.0, 3.0]
+    /// Harmonics: fundamental + 3 overtones for richer, deeper sound
+    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0]
 
-    /// Darker harmonic amplitudes than normal version
-    let harmonicAmps: [Float] = [1.0, 0.20, 0.08]  // Darker than [1.0, 0.30, 0.12]
+    /// Rich but dark harmonic amplitudes - deeper than normal version
+    let harmonicAmps: [Float] = [1.0, 0.50, 0.30, 0.15]  // Rich yet dark
 
     // MARK: - Sample Generation
 
@@ -136,7 +136,7 @@ private final class MidnightGenerator {
         }
 
         // Duration wobble
-        let wobble = (rng.nextFloat() - 0.5) * 0.16  // ±0.08s
+        let wobble = (rng.nextFloat() - 0.5) * 0.32  // ±0.16s (scaled for 2x tempo)
         let envelope = calculateEnvelope(dt + wobble)
 
         // Harmonic synthesis
@@ -147,9 +147,9 @@ private final class MidnightGenerator {
             value += sin(phase) * harmonicAmps[h]
         }
 
-        // Normalize and apply envelope with midnight volume (0.28)
+        // Normalize and apply envelope with deeper midnight volume (0.36)
         let normalized = value / Float(harmonics.count)
-        return normalized * envelope * 0.28
+        return normalized * envelope * 0.36
     }
 
     // MARK: - Helper Methods

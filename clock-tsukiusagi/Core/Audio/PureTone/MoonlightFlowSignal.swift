@@ -67,24 +67,24 @@ private final class MoonlightFlowGenerator {
     // MARK: - Melody Definition
 
     /// Original melody in D♭ Major with added low notes for depth
-    /// Total duration: ~9.8 seconds
+    /// Total duration: ~19.6 seconds (2x slower tempo)
     /// Low notes (Db3, Ab3) added at positions 0, 3, 9, 13 for spatial depth
     let melody: [Note] = [
-        Note(freq: 138.59, duration: 0.6),  // Db3 (low root - spatial depth)
-        Note(freq: 349.23, duration: 0.6),  // F4
-        Note(freq: 415.30, duration: 0.6),  // Ab4
-        Note(freq: 207.65, duration: 0.6),  // Ab3 (low fifth - stability)
-        Note(freq: 311.13, duration: 0.6),  // Eb4
-        Note(freq: 369.99, duration: 0.6),  // Gb4
-        Note(freq: 554.37, duration: 0.8),  // Db5 (longer)
-        Note(freq: 523.25, duration: 0.6),  // C5
-        Note(freq: 349.23, duration: 0.6),  // F4
-        Note(freq: 207.65, duration: 0.6),  // Ab3 (low fifth - mid-phrase depth)
-        Note(freq: 554.37, duration: 0.8),  // Db5 (longer)
-        Note(freq: 415.30, duration: 0.6),  // Ab4
-        Note(freq: 369.99, duration: 0.6),  // Gb4
-        Note(freq: 138.59, duration: 0.6),  // Db3 (low root - pre-ending emphasis)
-        Note(freq: 277.18, duration: 0.8)   // Db4 (final, longer)
+        Note(freq: 138.59, duration: 1.2),  // Db3 (low root - spatial depth)
+        Note(freq: 349.23, duration: 1.2),  // F4
+        Note(freq: 415.30, duration: 1.2),  // Ab4
+        Note(freq: 207.65, duration: 1.2),  // Ab3 (low fifth - stability)
+        Note(freq: 311.13, duration: 1.2),  // Eb4
+        Note(freq: 369.99, duration: 1.2),  // Gb4
+        Note(freq: 554.37, duration: 1.6),  // Db5 (longer)
+        Note(freq: 523.25, duration: 1.2),  // C5
+        Note(freq: 349.23, duration: 1.2),  // F4
+        Note(freq: 207.65, duration: 1.2),  // Ab3 (low fifth - mid-phrase depth)
+        Note(freq: 554.37, duration: 1.6),  // Db5 (longer)
+        Note(freq: 415.30, duration: 1.2),  // Ab4
+        Note(freq: 369.99, duration: 1.2),  // Gb4
+        Note(freq: 138.59, duration: 1.2),  // Db3 (low root - pre-ending emphasis)
+        Note(freq: 277.18, duration: 1.6)   // Db4 (final, longer)
     ]
 
     // MARK: - Timing Calculations
@@ -106,16 +106,16 @@ private final class MoonlightFlowGenerator {
 
     // MARK: - Envelope Parameters
 
-    let attack: Float = 0.030      // 30ms: gentle, smooth attack
-    let decay: Float = 2.0         // 2.0s: long decay for moonlight shimmer
+    let attack: Float = 0.070      // 70ms: slow, majestic attack
+    let decay: Float = 4.0         // 4.0s: cathedral-like long decay
 
     // MARK: - Harmonic Structure
 
-    /// Harmonics: fundamental + 2 overtones
-    let harmonics: [Float] = [1.0, 2.0, 3.0]
+    /// Harmonics: fundamental + 3 overtones for richer sound
+    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0]
 
-    /// Harmonic amplitudes: softer than toy piano for transparent quality
-    let harmonicAmps: [Float] = [1.0, 0.30, 0.12]  // Fundamental dominant, soft overtones
+    /// Harmonic amplitudes: richer, deeper, heavier sound
+    let harmonicAmps: [Float] = [1.0, 0.55, 0.35, 0.20]  // Stronger harmonics for weight
 
     // MARK: - Random Variation State
 
@@ -164,8 +164,8 @@ private final class MoonlightFlowGenerator {
         // Normalize by harmonic count and apply envelope
         let normalized = value / Float(harmonics.count)
 
-        // Return with soft, moonlight-like volume (0.30)
-        return normalized * envelope * 0.30
+        // Return with deeper, richer volume (0.38)
+        return normalized * envelope * 0.38
     }
 
     // MARK: - Helper Methods
@@ -193,8 +193,8 @@ private final class MoonlightFlowGenerator {
 
             // 3. Duration micro-adjustment (30% probability)
             if rng.nextFloat() < 0.3 {
-                let adjustment = (rng.nextFloat() - 0.5) * 0.2  // ±0.1s
-                note.duration = max(0.4, note.duration + adjustment)
+                let adjustment = (rng.nextFloat() - 0.5) * 0.4  // ±0.2s (scaled for 2x tempo)
+                note.duration = max(0.8, note.duration + adjustment)
             }
 
             varied.append(note)
