@@ -45,20 +45,23 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Melody Definition
 
-    /// Jupiter chorale melody in C major (Holst "Thaxted" opening 2 measures)
+    /// Jupiter chorale melody in C major (Holst "Thaxted" opening 3 measures)
     ///
     /// Based on Holst's own C-major setting of the Jupiter chorale
-    /// ("Thaxted" / "I Vow to Thee, My Country" first 2 measures),
+    /// ("Thaxted" / "I Vow to Thee, My Country" first 3 measures),
     /// arranged to sit over CathedralStillness (C/G drone).
     ///
-    /// Extended to 2-measure phrase to reduce loop perception.
-    /// Measure 1 + Measure 2 = complete opening phrase (~18-20 seconds)
+    /// Extended to full 3-measure phrase for complete musical statement.
+    /// Measure 1: Introduction (ascent)
+    /// Measure 2: First response (gentle descent)
+    /// Measure 3: Climax (secondary ascent — the emotional peak)
     ///
     /// Notation (in C major, 3/4):
     /// Measure 1: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4
-    /// Measure 2: c8 d e4 d8 c b a g (with slight extension on final G)
+    /// Measure 2: c8 d e4 d8 c b a g
+    /// Measure 3: e8 g a4 c8 d8 c b a g (with extended final G for loop smoothing)
     ///
-    /// Total duration: ~36 seconds (2x slower for majestic, meditative character)
+    /// Total duration: ~52-54 seconds (2x slower, 3-measure complete phrase)
     let melody: [Note] = [
         // === Measure 1 ===
         Note(freq: 329.63, duration: 0.80), // E4 - eighth (2x)
@@ -84,7 +87,18 @@ private final class JupiterMelodyGenerator {
         Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
         Note(freq: 493.88, duration: 0.80), // B4 - eighth (2x)
         Note(freq: 440.00, duration: 0.80), // A4 - eighth (2x)
-        Note(freq: 392.00, duration: 1.20)  // G4 - extended for smooth loop (2x)
+        Note(freq: 392.00, duration: 0.80), // G4 - eighth (2x)
+
+        // === Measure 3 (Climax — the emotional peak) ===
+        Note(freq: 329.63, duration: 0.80), // E4 - eighth (2x)
+        Note(freq: 392.00, duration: 0.80), // G4 - eighth (2x)
+        Note(freq: 440.00, duration: 1.60), // A4 - quarter (2x)
+        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
+        Note(freq: 587.33, duration: 0.80), // D5 - eighth (2x)
+        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
+        Note(freq: 493.88, duration: 0.80), // B4 - eighth (2x)
+        Note(freq: 440.00, duration: 0.80), // A4 - eighth (2x)
+        Note(freq: 392.00, duration: 1.80)  // G4 - extended for smooth loop transition (2x + extra)
     ]
 
     // MARK: - Timing Calculations
@@ -195,12 +209,16 @@ private final class JupiterMelodyGenerator {
 //
 // DESIGN PHILOSOPHY:
 //
-// Extended from 1 measure to 2 measures, and slowed 2x to:
-// - Reduce loop perception (36s cycle vs 9s original)
-// - Create complete musical phrase (Measure 1: ascent, Measure 2: descent)
+// Extended from 1 measure to 3 measures, and slowed 2x to:
+// - Reduce loop perception (52-54s cycle vs 9s original)
+// - Create complete musical phrase with emotional arc:
+//   * Measure 1: Ascending introduction
+//   * Measure 2: Gentle descent (first response)
+//   * Measure 3: Secondary ascent (emotional climax — the "big tune" moment)
 // - Match Calm Technology philosophy (very slow, breathing, cosmic rhythm)
 // - Better fit CathedralStillness atmosphere (long, deeply meditative cycles)
 // - Enhance majestic, solemn character through slower tempo
+// - Provide satisfying musical completeness and resolution
 //
 // REFERENCE:
 //
@@ -221,8 +239,8 @@ private final class JupiterMelodyGenerator {
 // - Uses Signal protocol (pure time-based function)
 // - Cumulative time array for efficient note lookup
 // - Per-note envelope (independent attack/decay)
-// - 22-note cycle, ~36 second loop (2 measures, 2x slower)
-// - Final note (G4) extended (1.2s) to smooth loop transition
+// - 31-note cycle, ~52-54 second loop (3 measures, 2x slower)
+// - Final note (G4) extended (1.8s) to smooth loop transition
 //
 // INTEGRATION WITH CATHEDRALSTILLNESS:
 //
@@ -235,11 +253,12 @@ private final class JupiterMelodyGenerator {
 //
 // LOOP HIDING TECHNIQUE:
 //
-// - 2-measure phrase creates natural musical closure
-// - Final G4 extended to 1.2s (vs standard 0.8s eighth note)
-// - Very long cycle (36s) makes loop nearly imperceptible
+// - 3-measure phrase creates complete musical arc with climax
+// - Final G4 extended to 1.8s (vs standard 0.8s eighth note)
+// - Extremely long cycle (52-54s) makes loop virtually imperceptible
 // - Reverb tail (4s decay) smooths transition between cycles
 // - Slow tempo creates timeless, meditative quality
+// - Measure 3 provides emotional resolution before loop restart
 //
 // COPYRIGHT:
 //

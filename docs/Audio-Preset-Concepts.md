@@ -330,20 +330,23 @@ See: [Midnight Droplets](#midnight-droplets-深夜の雫) for detailed specifica
 
 **Reference**: Same melody as Ayaka Hirahara's "Jupiter" (everyday I listen to my heart~)
 
-**Melody Structure** (3/4 time, 2 measures):
+**Melody Structure** (3/4 time, 3 measures — complete phrase):
 ```
 Measure 1: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4
-Measure 2: c8 d e4 d8 c b a g (with slight extension on final G)
+Measure 2: c8 d e4 d8 c b a g
+Measure 3: e8 g a4 c8 d8 c b a g (with extended final G)
 
 Notes:
-Measure 1: E4  G4  A4   C5   B4  G4   C5  D5  C5  B4  A4 B4  A4  G4
-Measure 2: C5  D5  E5   D5   C5  B4   A4  G4
+Measure 1 (Introduction):  E4  G4  A4   C5   B4  G4   C5  D5  C5  B4  A4 B4  A4  G4
+Measure 2 (First response): C5  D5  E5   D5   C5  B4   A4  G4
+Measure 3 (Climax):        E4  G4  A4   C5   D5   C5   B4  A4  G4
 ```
 
-- **22音のフレーズ**（2小節の完全なフレーズ）、サイクル時間 ~**36秒**（2倍ゆっくり）
+- **31音のフレーズ**（3小節の完全な音楽的アーク）、サイクル時間 ~**52-54秒**（2倍ゆっくり）
 - **可変音長**: 0.4秒～2.4秒（3/4拍子のリズムを2倍にスローダウン）
 - **オクターブ範囲**: E4 (329.63Hz) ～ E5 (659.25Hz)
-- **ループ感軽減**: 2小節フレーズで自然な音楽的終止、最後の G4 を延長
+- **感情的構造**: 導入（上昇）→ 応答（下降）→ クライマックス（再上昇）
+- **ループ感軽減**: 3小節フレーズで完全な音楽的終止、最後の G4 を 1.8秒に延長
 - **荘厳さ強化**: Attack 80ms（ゆっくりした立ち上がり）、Decay 4.0s（長い余韻）
 
 #### Sound Design
@@ -393,9 +396,10 @@ All layers share the same large Cathedral reverb for cohesive atmosphere.
 - Variable duration notes (0.4s to 2.4s, 2x slower tempo)
 - Cumulative time array for efficient note lookup
 - Per-note independent envelope (attack/decay)
-- 22-note cycle, ~36 second loop (2 measures, very slow)
-- Loop hiding: Extended final note (1.2s) + long reverb tail (4s)
+- 31-note cycle, ~52-54 second loop (3 measures, complete phrase)
+- Loop hiding: Extended final note (1.8s) + long reverb tail (4s)
 - Volume: 0.30 (softer, meditative)
+- Complete emotional arc: Introduction → Response → Climax
 
 #### Design Philosophy
 
