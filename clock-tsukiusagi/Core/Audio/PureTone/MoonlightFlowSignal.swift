@@ -4,9 +4,32 @@
 //
 //  Moonlight Flow - Impressionist-inspired original melody in Db Major
 //  Single-note sequential melody with soft, dreamy character
+//  Features subtle random variations like clouds moving across the moon
 //
 
 import Foundation
+
+// MARK: - Seeded Random Number Generator
+
+/// Simple Linear Congruential Generator for reproducible randomness
+private struct SeededRandomNumberGenerator: RandomNumberGenerator {
+    private var state: UInt64
+
+    init(seed: UInt64) {
+        self.state = seed
+    }
+
+    mutating func next() -> UInt64 {
+        // LCG parameters (from Numerical Recipes)
+        state = state &* 1664525 &+ 1013904223
+        return state
+    }
+
+    /// Generate random Float in 0.0...1.0
+    mutating func nextFloat() -> Float {
+        Float(next() & 0xFFFFFF) / Float(0x1000000)
+    }
+}
 
 /// MoonlightFlowSignal - Impressionist-style melody generator
 ///
@@ -37,29 +60,30 @@ private final class MoonlightFlowGenerator {
 
     /// Single note with frequency and duration
     struct Note {
-        let freq: Float
-        let duration: Float
+        var freq: Float
+        var duration: Float
     }
 
     // MARK: - Melody Definition
 
-    /// Original melody in D♭ Major (from todo.md specification)
+    /// Original melody in D♭ Major with added low notes for depth
     /// Total duration: ~9.8 seconds
+    /// Low notes (Db3, Ab3) added at positions 0, 3, 9, 13 for spatial depth
     let melody: [Note] = [
-        Note(freq: 277.18, duration: 0.6),  // Db4
+        Note(freq: 138.59, duration: 0.6),  // Db3 (low root - spatial depth)
         Note(freq: 349.23, duration: 0.6),  // F4
         Note(freq: 415.30, duration: 0.6),  // Ab4
-        Note(freq: 349.23, duration: 0.6),  // F4
+        Note(freq: 207.65, duration: 0.6),  // Ab3 (low fifth - stability)
         Note(freq: 311.13, duration: 0.6),  // Eb4
         Note(freq: 369.99, duration: 0.6),  // Gb4
         Note(freq: 554.37, duration: 0.8),  // Db5 (longer)
         Note(freq: 523.25, duration: 0.6),  // C5
         Note(freq: 349.23, duration: 0.6),  // F4
-        Note(freq: 415.30, duration: 0.6),  // Ab4
+        Note(freq: 207.65, duration: 0.6),  // Ab3 (low fifth - mid-phrase depth)
         Note(freq: 554.37, duration: 0.8),  // Db5 (longer)
         Note(freq: 415.30, duration: 0.6),  // Ab4
         Note(freq: 369.99, duration: 0.6),  // Gb4
-        Note(freq: 311.13, duration: 0.6),  // Eb4
+        Note(freq: 138.59, duration: 0.6),  // Db3 (low root - pre-ending emphasis)
         Note(freq: 277.18, duration: 0.8)   // Db4 (final, longer)
     ]
 
@@ -93,20 +117,38 @@ private final class MoonlightFlowGenerator {
     /// Harmonic amplitudes: softer than toy piano for transparent quality
     let harmonicAmps: [Float] = [1.0, 0.30, 0.12]  // Fundamental dominant, soft overtones
 
+    // MARK: - Random Variation State
+
+    /// Cache for varied melody per cycle
+    private var currentCycle: Int = -1
+    private var variedMelody: [Note] = []
+
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
         // Get time within current cycle
         let cycleTime = t.truncatingRemainder(dividingBy: cycleDuration)
+        let cycleIndex = Int(t / cycleDuration)
 
-        // Find which note is currently playing
+        // Generate varied melody for this cycle if needed
+        if cycleIndex != currentCycle {
+            variedMelody = generateVariedMelody(forCycle: cycleIndex)
+            currentCycle = cycleIndex
+        }
+
+        // Find which note is currently playing (use varied melody)
         guard let noteIndex = findNoteIndex(at: cycleTime) else {
             return 0.0
         }
 
-        let note = melody[noteIndex]
+        let note = variedMelody[noteIndex]
         let noteStartTime = cumulativeTimes[noteIndex]
         let timeSinceNoteStart = cycleTime - noteStartTime
+
+        // Handle silence (cloud covering moon)
+        if note.freq == 0.0 {
+            return 0.0
+        }
 
         // Calculate envelope for this note
         let envelope = calculateEnvelope(timeSinceNoteStart)
@@ -127,6 +169,39 @@ private final class MoonlightFlowGenerator {
     }
 
     // MARK: - Helper Methods
+
+    /// Generate varied melody for a specific cycle with subtle random changes
+    /// - Parameter cycle: Cycle index for seeding randomness
+    /// - Returns: Melody with subtle variations (like clouds moving across moon)
+    private func generateVariedMelody(forCycle cycle: Int) -> [Note] {
+        var rng = SeededRandomNumberGenerator(seed: UInt64(cycle + 1000))
+        var varied: [Note] = []
+
+        for baseNote in melody {
+            var note = baseNote
+
+            // 1. Octave shift (20% probability)
+            if rng.nextFloat() < 0.2 {
+                let shiftUp = rng.nextFloat() < 0.5
+                note.freq *= shiftUp ? 2.0 : 0.5  // 1 octave up or down
+            }
+
+            // 2. Note omission (10% probability) - cloud covering moon
+            if rng.nextFloat() < 0.1 {
+                note.freq = 0.0  // Silence
+            }
+
+            // 3. Duration micro-adjustment (30% probability)
+            if rng.nextFloat() < 0.3 {
+                let adjustment = (rng.nextFloat() - 0.5) * 0.2  // ±0.1s
+                note.duration = max(0.4, note.duration + adjustment)
+            }
+
+            varied.append(note)
+        }
+
+        return varied
+    }
 
     /// Find index of note playing at given time
     /// - Parameter time: Time within cycle

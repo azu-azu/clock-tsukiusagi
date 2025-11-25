@@ -196,7 +196,7 @@ public struct PureToneBuilder {
                 damping: 0.40,      // Bright tone (transparent)
                 decay: 0.90,        // Very long tail (shimmer)
                 mix: 0.55,          // Rich reverb presence
-                predelay: 0.035,    // 35ms initial reflection
+                predelay: 0.030,    // 30ms - balanced mist effect
                 sampleRate: 48000.0
             )
             mixer.addEffect(reverb)
