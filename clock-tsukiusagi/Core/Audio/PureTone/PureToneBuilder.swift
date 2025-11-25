@@ -92,41 +92,6 @@ public struct PureToneBuilder {
             let outputNode = FinalMixerOutputNode(mixer: mixer)
             sources.append(outputNode)
 
-        case .treeChimeOnly:
-            // AudioSource-based implementation (直接使用、リバーブなし)
-            // TODO: Signal-basedに書き直してリバーブを追加する
-            let chime = TreeChime(
-                grainRate: 1.5,        // シャラララの発生頻度（1秒に1.5回）
-                grainDuration: 1.2,    // 各粒の余韻（1.2秒）
-                brightness: 8000.0     // 基音周波数
-            )
-            sources.append(chime)
-
-        case .boomHitOnly:
-            // Auto-triggering BoomHit test with route-optimized frequency
-            // Output route determines optimal fundamental frequency:
-            // - Speaker: 220Hz (iPhone speaker audible range)
-            // - Headphones/Bluetooth: 80Hz (true low bass)
-            // - Unknown: 150Hz (safe middle ground)
-            let fundamental: Double
-            switch outputRoute {
-            case .speaker:
-                fundamental = 220.0  // iPhone スピーカー最適（可聴域で「ズズーン」近似）
-            case .headphones, .bluetooth:
-                fundamental = 80.0   // 本物の低音「ドゥーン」
-            case .unknown:
-                fundamental = 150.0  // 安全な中間値
-            }
-
-            let boom = AutoTriggerBoomHit(
-                triggerRate: 0.33,     // Test: every ~3 seconds
-                minInterval: 3.0,      // Minimum 3s between booms
-                duration: 3.0,         // 3s boom with falling pitch
-                fundamental: fundamental,  // Route-optimized frequency
-                pitchDropAmount: 0.25  // 25% pitch drop
-            )
-            sources.append(boom)
-
         case .toyPiano:
             // Toy piano chord progression with deep, dreamy reverb
             let signal = PianoSignal.makeSignal()
@@ -162,29 +127,6 @@ public struct PureToneBuilder {
                 brightness: 9000.0     // ペンタトニックより少し高め
             )
             sources.append(treeChime)
-
-        case .gentleFlute:
-            // Gentle flute melody with spacious, bright reverb
-            let signal = FluteSignal.makeSignal()
-            let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)
-
-            // Spacious reverb for concert hall feel
-            let reverb = SchroederReverb(
-                roomSize: 2.0,      // Large space
-                damping: 0.50,      // Brighter tone
-                decay: 0.88,        // Long, airy tail
-                mix: 0.50,          // Very spacious
-                predelay: 0.030,    // 30ms initial reflection
-                sampleRate: 48000.0
-            )
-            mixer.addEffect(reverb)
-
-            // Soft limiter for safety
-            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
-
-            let outputNode = FinalMixerOutputNode(mixer: mixer)
-            sources.append(outputNode)
 
         case .moonlightFlow:
             // Moonlight flow melody with spacious, dreamy reverb

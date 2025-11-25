@@ -15,11 +15,6 @@ This document describes the artistic concept, design philosophy, and implementat
   - [Pentatonic Chime (チャイム)](#pentatonic-chime-チャイム)
   - [Cathedral Stillness (大聖堂の静寂)](#cathedral-stillness-大聖堂の静寂)
   - [Toy Piano Dream (トイピアノ)](#toy-piano-dream-トイピアノ)
-  - [Gentle Flute Melody (やさしいフルート)](#gentle-flute-melody-やさしいフルート)
-- [Natural Sound Presets](#natural-sound-presets)
-  - [Dark Shape Underwater (黒いサメの影)](#dark-shape-underwater-黒いサメの影)
-  - [Midnight Train (夜汽車)](#midnight-train-夜汽車)
-  - [Distant Thunder (遠雷)](#distant-thunder-遠雷)
 - [Design Philosophy](#design-philosophy)
 
 ---
@@ -443,56 +438,6 @@ All layers share the same large Cathedral reverb for cohesive atmosphere.
 #### Concept
 
 トイピアノの和音進行。夢のような、懐かしい音色。
-
-（※ 今後追記予定）
-
----
-
-### Gentle Flute Melody (やさしいフルート)
-
-**File**: `FluteSignal.swift`
-
-#### Concept
-
-やさしく響くフルートのメロディ。
-
-（※ 今後追記予定）
-
----
-
-## Natural Sound Presets
-
-### Dark Shape Underwater (黒いサメの影)
-
-**File**: `DarkShark.swift`
-
-#### Concept
-
-深海を漂う黒いサメの影。不気味さと神秘性。
-
-（※ 今後追記予定）
-
----
-
-### Midnight Train (夜汽車)
-
-**File**: `MidnightTrain.swift`
-
-#### Concept
-
-夜の闇を走る汽車の音。
-
-（※ 今後追記予定）
-
----
-
-### Distant Thunder (遠雷)
-
-**File**: `DistantThunder.swift`
-
-#### Concept
-
-遠くで鳴る雷鳴。不穏さと自然の力。
 
 （※ 今後追記予定）
 

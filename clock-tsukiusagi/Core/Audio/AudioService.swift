@@ -606,30 +606,10 @@ public final class AudioService: ObservableObject {
             return .cathedralStillness
         case .toyPiano:
             return .toyPiano
-        case .gentleFlute:
-            return .gentleFlute
         case .moonlightFlow:
             return .moonlightFlow
         case .moonlightFlowMidnight:
             return .moonlightFlowMidnight
-        case .boomHitTest:
-            return .boomHitOnly
-        case .darkShark, .midnightTrain, .distantThunder:
-            return nil  // Handled by NaturalSound
-        }
-    }
-
-    /// Map UISoundPreset to NaturalSoundPreset (if applicable)
-    private func mapToNaturalSound(_ uiPreset: UISoundPreset) -> NaturalSoundPreset? {
-        switch uiPreset {
-        case .darkShark:
-            return .darkShark
-        case .midnightTrain:
-            return .midnightTrain
-        case .distantThunder:
-            return .distantThunder
-        case .pentatonic, .softOrgan, .toyPiano, .gentleFlute, .moonlightFlow, .moonlightFlowMidnight, .boomHitTest:
-            return nil  // Handled by PureTone
         }
     }
 
@@ -775,69 +755,16 @@ public final class AudioService: ObservableObject {
         resetCurrentSignalEffectsState()
         clearCurrentSignalSource()
 
-        // Handle PureTone presets separately
+        // Handle PureTone presets
         if let pureTonePreset = mapToPureTone(uiPreset) {
             print("🎵 [AudioService] Using PureTone module for: \(uiPreset.rawValue)")
-            print("🎧 [AudioService] Output route: \(outputRoute.displayName) → optimizing frequency")
-            let sources = PureToneBuilder.build(pureTonePreset, outputRoute: outputRoute)
+            print("🎧 [AudioService] Output route: \(outputRoute.displayName)")
+            let sources = PureToneBuilder.build(pureTonePreset)
             sources.forEach { engine.register($0) }
             return
         }
 
-        // Map to NaturalSoundPreset for natural sound sources
-        guard let naturalPreset = mapToNaturalSound(uiPreset) else {
-            print("⚠️ [AudioService] No mapping found for: \(uiPreset.rawValue)")
-            return
-        }
-
-        // Try SignalEngine version (FinalMixer with effects)
-        let outputFormat = engine.engine.outputNode.inputFormat(forBus: 0)
-        let signalBuilder = SignalPresetBuilder(sampleRate: outputFormat.sampleRate)
-
-        // Use FinalMixer-based pipeline (with effects)
-        if let mixerOutput = signalBuilder.makeMixerOutput(for: naturalPreset) {
-            print("🎵 [AudioService] Using FinalMixer for preset: \(naturalPreset.rawValue)")
-
-            // Store reference for fade/effect control
-            currentSignalSource = .mixer(mixerOutput)
-
-            // Register source with engine
-            engine.register(mixerOutput)
-
-            // Apply fade in (300ms)
-            mixerOutput.applyFadeIn(durationMs: 300)
-
-            return
-        }
-
-        // If FinalMixer not available, fallback to original implementation
-        print("🔄 [AudioService] Using legacy AudioSource for preset: \(naturalPreset.rawValue)")
-        clearCurrentSignalSource()
-
-        switch naturalPreset {
-        case .darkShark:
-            let source = DarkShark(
-                noiseAmplitude: NaturalSoundPresets.DarkShark.noiseAmplitude,
-                lfoFrequency: NaturalSoundPresets.DarkShark.lfoFrequency,
-                lfoMinimum: NaturalSoundPresets.DarkShark.lfoMinimum,
-                lfoMaximum: NaturalSoundPresets.DarkShark.lfoMaximum
-            )
-            engine.register(source)
-
-        case .midnightTrain:
-            let source = MidnightTrain(
-                noiseAmplitude: NaturalSoundPresets.MidnightTrain.noiseAmplitude,
-                lfoFrequency: NaturalSoundPresets.MidnightTrain.lfoFrequency,
-                lfoMinimum: NaturalSoundPresets.MidnightTrain.lfoMinimum,
-                lfoMaximum: NaturalSoundPresets.MidnightTrain.lfoMaximum
-            )
-            engine.register(source)
-
-        case .distantThunder:
-            // distantThunder should use SignalEngine version
-            // This fallback should never be reached
-            print("⚠️ [AudioService] distantThunder fallback - should use SignalEngine")
-        }
+        print("⚠️ [AudioService] No mapping found for: \(uiPreset.rawValue)")
     }
 
     // MARK: - Fade Effects (Phase 2)

@@ -12,10 +12,7 @@ public enum PureTonePreset {
     case pentatonicChime    // Pentatonic chime bells (Signal-based)
     case cathedralStillness // Cathedral organ drone (Signal-based)
     case midnightDroplets   // Sparse arpeggio harp (Signal-based)
-    case treeChimeOnly      // TreeChime only (for testing)
-    case boomHitOnly        // BoomHit only (for testing)
     case toyPiano           // Toy piano chord progression (Signal-based)
-    case gentleFlute        // Gentle flute melody (Signal-based)
     case moonlightFlow      // Moonlight flow melody in Db Major (Signal-based)
     case moonlightFlowMidnight  // Midnight version in Bb Minor (Signal-based)
 
@@ -28,13 +25,7 @@ public enum PureTonePreset {
             return true
         case .midnightDroplets:
             return true
-        case .treeChimeOnly:
-            return false
-        case .boomHitOnly:
-            return false
         case .toyPiano:
-            return true
-        case .gentleFlute:
             return true
         case .moonlightFlow:
             return true
@@ -46,19 +37,13 @@ public enum PureTonePreset {
     /// Whether this preset includes TreeChime
     public var includesTreeChime: Bool {
         switch self {
-        case .treeChimeOnly:
-            return true
         case .pentatonicChime:
             return true  // TreeChime overlay included
         case .cathedralStillness:
             return false
         case .midnightDroplets:
             return false
-        case .boomHitOnly:
-            return false
         case .toyPiano:
-            return false
-        case .gentleFlute:
             return false
         case .moonlightFlow:
             return false
