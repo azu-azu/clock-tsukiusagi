@@ -45,35 +45,40 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Melody Definition
 
-    /// Jupiter melody in C Major (transposed from E Major, -4 semitones)
+    /// Jupiter chorale melody in C major (Holst "Thaxted" opening phrase)
     ///
-    /// Original (E Major):
-    /// E4  B3  G#4  C#5  B4  A4  G#4
-    /// F#4 A3  A4   C#5  B4  A4  F#4
+    /// Based on Holst's own C-major setting of the Jupiter chorale
+    /// ("Thaxted" / "I Vow to Thee, My Country" first phrase),
+    /// arranged to sit over CathedralStillness (C/G drone).
     ///
-    /// Transposed to C Major:
-    /// C4  G3  E4   A4   G4  F4  E4
-    /// D4  F3  F4   A4   G4  F4  D4
+    /// Notation (in C major, 3/4):
+    /// e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4  e2
     ///
-    /// Total duration: ~9.6 seconds
+    /// Total duration: ~9.2 seconds
     let melody: [Note] = [
-        // First phrase (荘厳な上昇)
-        Note(freq: 261.63, duration: 0.8),  // C4 (long)
-        Note(freq: 196.00, duration: 0.6),  // G3
-        Note(freq: 329.63, duration: 0.6),  // E4
-        Note(freq: 440.00, duration: 0.8),  // A4 (long)
-        Note(freq: 392.00, duration: 0.6),  // G4
-        Note(freq: 349.23, duration: 0.6),  // F4
-        Note(freq: 329.63, duration: 0.8),  // E4 (long)
+        Note(freq: 329.63, duration: 0.4),  // E4  - eighth
+        Note(freq: 392.00, duration: 0.4),  // G4  - eighth
 
-        // Second phrase (呼応する下降)
-        Note(freq: 293.66, duration: 0.8),  // D4 (long)
-        Note(freq: 174.61, duration: 0.6),  // F3
-        Note(freq: 349.23, duration: 0.6),  // F4
-        Note(freq: 440.00, duration: 0.8),  // A4 (long)
-        Note(freq: 392.00, duration: 0.6),  // G4
-        Note(freq: 349.23, duration: 0.6),  // F4
-        Note(freq: 293.66, duration: 0.8)   // D4 (final, long)
+        Note(freq: 440.00, duration: 1.2),  // A4  - dotted quarter
+
+        Note(freq: 523.25, duration: 0.4),  // C5  - eighth
+
+        Note(freq: 493.88, duration: 0.6),  // B4  - dotted eighth
+        Note(freq: 392.00, duration: 0.2),  // G4  - sixteenth
+
+        Note(freq: 523.25, duration: 0.4),  // C5  - eighth
+        Note(freq: 587.33, duration: 0.4),  // D5  - eighth
+
+        Note(freq: 523.25, duration: 0.8),  // C5  - quarter
+        Note(freq: 493.88, duration: 0.8),  // B4  - quarter
+
+        Note(freq: 440.00, duration: 0.4),  // A4  - eighth
+        Note(freq: 493.88, duration: 0.4),  // B4  - eighth
+
+        Note(freq: 440.00, duration: 0.8),  // A4  - quarter
+        Note(freq: 392.00, duration: 0.8),  // G4  - quarter
+
+        Note(freq: 329.63, duration: 1.6)   // E4  - half (long resolve)
     ]
 
     // MARK: - Timing Calculations
@@ -175,11 +180,19 @@ private final class JupiterMelodyGenerator {
 //
 // MELODY DESIGN:
 //
-// Source: Holst's "The Planets" - Jupiter (1918, public domain)
-// Original Key: E Major
-// Transposed: C Major (to match CathedralStillness C/G drone)
-// Phrasing: Two phrases - ascending majesty, responding descent
-// Duration: Variable (0.6s and 0.8s) for expressive, natural flow
+// Source: Holst's "Thaxted" chorale from Jupiter (1918, public domain)
+// Also known as: "I Vow to Thee, My Country" hymn tune
+// Key: C Major (Holst's own C-major setting, fits CathedralStillness C/G drone)
+// Time Signature: 3/4 (mapped to seconds: 0.4s = eighth note)
+// Phrasing: Single opening phrase from the famous Jupiter chorale
+// Duration: Variable note lengths (0.2s to 1.6s) for expressive, natural flow
+//
+// REFERENCE:
+//
+// This is the same melody used in:
+// - Ayaka Hirahara's "Jupiter" (everyday I listen to my heart~)
+// - Traditional hymn "I Vow to Thee, My Country"
+// - The famous "big tune" from Holst's Jupiter movement
 //
 // SOUND CHARACTER:
 //
@@ -193,14 +206,14 @@ private final class JupiterMelodyGenerator {
 // - Uses Signal protocol (pure time-based function)
 // - Cumulative time array for efficient note lookup
 // - Per-note envelope (independent attack/decay)
-// - 14-note cycle, ~9.6 second loop
+// - 15-note cycle, ~9.2 second loop
 //
 // INTEGRATION WITH CATHEDRALSTILLNESS:
 //
 // Layer architecture:
 // 1. Organ drone (C3 + G3, 0.02Hz LFO) - foundation
 // 2. Harp arpeggios (MidnightDroplets) - sparse decoration
-// 3. Jupiter melody (this) - majestic centerpiece
+// 3. Jupiter chorale (this) - majestic centerpiece
 //
 // All layers share the same large reverb (Cathedral atmosphere, 3s decay).
 //

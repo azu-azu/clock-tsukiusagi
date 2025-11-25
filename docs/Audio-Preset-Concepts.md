@@ -316,27 +316,29 @@ See: [Midnight Droplets](#midnight-droplets-深夜の雫) for detailed specifica
 
 ---
 
-**Layer 3: Jupiter Melody (Majestic Centerpiece)**
+**Layer 3: Jupiter Chorale (Majestic Centerpiece)**
 
-**Source**: Gustav Holst — "The Planets: Jupiter" (1918, **public domain**)
+**Source**: Gustav Holst — "Thaxted" chorale from Jupiter (1918, **public domain**)
+- Also known as: "I Vow to Thee, My Country" hymn tune
+- The famous "big tune" from Jupiter movement
 - Composer died 1934 → Copyright expired 2004 (Japan: 70 years after death)
 - Using the melody is completely legal
 
-**Original Key**: E Major
+**Key**: C Major (Holst's own C-major setting)
+- Harmonizes perfectly with C/G drone foundation
+- No transposition needed
 
-**Transposed to**: C Major (-4 semitones)
-- Harmonizes with C/G drone foundation
-- Maintains majesty while fitting the tonal landscape
+**Reference**: Same melody as Ayaka Hirahara's "Jupiter" (everyday I listen to my heart~)
 
-**Melody Structure**:
+**Melody Structure** (3/4 time):
 ```
-C4  G3  E4   A4  G4  F4  E4   (First phrase: ascending majesty)
-D4  F3  F4   A4  G4  F4  D4   (Second phrase: responding descent)
+Notation: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4  e2
+Notes:    E4  G4  A4   C5   B4  G4   C5  D5  C5  B4  A4 B4  A4  G4  E4
 ```
 
-- **14音のフレーズ**、サイクル時間 ~9.6秒
-- **可変音長**: 0.6秒と0.8秒の組み合わせで自然なフレージング
-- **オクターブ範囲**: F3 (174.61Hz) ～ A4 (440Hz)
+- **15音のフレーズ**、サイクル時間 ~9.2秒
+- **可変音長**: 0.2秒～1.6秒（3/4拍子のリズムを反映）
+- **オクターブ範囲**: E4 (329.63Hz) ～ D5 (587.33Hz)
 
 #### Sound Design
 
@@ -381,11 +383,11 @@ mixer.add(jupiterSignal, gain: 0.7)   // Melody
 
 All layers share the same large Cathedral reverb for cohesive atmosphere.
 
-**Jupiter Melody Technical**:
-- Variable duration notes ([0.6s, 0.8s] pattern)
+**Jupiter Chorale Technical**:
+- Variable duration notes (0.2s to 1.6s, reflecting 3/4 time signature)
 - Cumulative time array for efficient note lookup
 - Per-note independent envelope (attack/decay)
-- 14-note cycle, ~9.6 second loop
+- 15-note cycle, ~9.2 second loop
 
 #### Design Philosophy
 
