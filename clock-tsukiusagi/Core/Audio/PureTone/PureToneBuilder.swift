@@ -208,6 +208,29 @@ public struct PureToneBuilder {
 
             let outputNode = FinalMixerOutputNode(mixer: mixer)
             sources.append(outputNode)
+
+        case .moonlightFlowMidnight:
+            // Midnight version with darker, closer atmosphere
+            let signal = MoonlightFlowMidnightSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Close, foggy reverb for midnight atmosphere
+            let reverb = SchroederReverb(
+                roomSize: 2.0,      // Large space (midnight stillness)
+                damping: 0.40,      // Bright tone (transparent)
+                decay: 0.90,        // Very long tail (deep night)
+                mix: 0.55,          // Rich reverb presence
+                predelay: 0.010,    // 10ms - dense fog, close feeling
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            // Soft limiter for safety
+            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
         }
 
         return sources

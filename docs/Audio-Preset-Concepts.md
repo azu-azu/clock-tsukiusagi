@@ -11,6 +11,7 @@ This document describes the artistic concept, design philosophy, and implementat
 
 - [Pure Tone Presets](#pure-tone-presets)
   - [Moonlight Flow (月の流れ)](#moonlight-flow-月の流れ)
+  - [Moonlight Flow — Midnight (深夜の月影)](#moonlight-flow--midnight-深夜の月影)
   - [Pentatonic Chime (チャイム)](#pentatonic-chime-チャイム)
   - [Cathedral Stillness (大聖堂の静寂)](#cathedral-stillness-大聖堂の静寂)
   - [Toy Piano Dream (トイピアノ)](#toy-piano-dream-トイピアノ)
@@ -141,6 +142,119 @@ var rng = SeededRandomNumberGenerator(seed: UInt64(cycleIndex + 1000))
 - **睡眠導入**: アンビエントな音量と透明感のある音色
 - **作業用BGM**: 主張しすぎない、背景に溶け込む音楽
 - **時間感覚の演出**: 時計アプリとして「時の流れ」を音で表現
+
+---
+
+### Moonlight Flow — Midnight (深夜の月影)
+
+**Added**: 2025-11-25
+**File**: `MoonlightFlowMidnightSignal.swift`
+
+#### Concept
+
+"月明かり"ではなく"月の影"を描く — Moonlight shadow, not moonlight.
+
+深夜2時の静寂と孤独を音にした、Moonlight Flow の深夜版。通常版が「優しい月明かり」なら、Midnight は「静かな路地裏の月影」。
+
+#### Musical Characteristics
+
+**Key Signature**: B♭ Minor (darker than D♭ Major)
+- Moonlight Flow (D♭ Major) の平行短調
+- 暗さと孤独を追加しながらも、調性的に親和性を保つ
+
+**Melody Structure**:
+```
+Bb3 → Db4 → F3 → Ab3 → C4 → F4 → Eb4 → Bb3
+→ Db4 → C4 → Ab3 → Bb2
+                     ^
+                  深い終わり
+```
+
+- **12音のフレーズ** (通常版15音 → より間が多い)
+- **サイクル時間**: ~10.8秒
+- **可変音長**: 0.6秒、0.8秒、1.0秒
+- **オクターブ範囲**: Bb2 (116Hz) ～ F4 (349Hz) — より低く、重心が下
+- **下降傾向**: 沈静化していく動きで深夜の感覚を演出
+
+#### Sound Design
+
+**Harmonic Structure** (darker than normal version):
+```
+Fundamental:    1.0  (100%)
+2nd harmonic:   0.20 (20%)  ← 通常版 (30%) より暗い
+3rd harmonic:   0.08 (8%)   ← 通常版 (12%) より暗い
+```
+→ より暗く、深く、ミステリアスな音色
+
+**Envelope** (longer than normal version):
+- **Attack**: 40ms — より長く、深夜のゆっくりとした立ち上がり
+- **Decay**: 2.4秒 — 通常版 (2.0秒) より長い残響
+
+**Reverb** (close, foggy):
+- roomSize: 2.0 (広い空間)
+- damping: 0.40 (明るめのトーン)
+- decay: 0.90 (非常に長いテール)
+- mix: 0.55 (リバーブ成分多め)
+- predelay: 0.010 (10ms) — **通常版 (30ms) より短く、濃い霧、近い音**
+
+**Volume**: 0.28
+→ 深夜の静けさに合わせた控えめな音量
+
+#### Random Variation System
+
+**Omission Rate**: 15% (通常版 10% → より多くの無音)
+→ 深夜の孤独、時折訪れる沈黙
+
+**Octave Shift**: Down only (10%)
+→ 上には飛ばず、下に沈む動きのみ（深夜の重力）
+
+**Duration Wobble**: ±0.08秒
+→ 通常版と同じ微妙な揺らぎ
+
+#### Implementation Notes
+
+**Architecture**: Signal-based (same as normal version)
+
+**Key Differences from Normal Version**:
+
+| Aspect | Normal (Flow) | Midnight |
+|--------|---------------|----------|
+| Key | D♭ Major | B♭ Minor |
+| Notes | 15 | 12 |
+| Range | Db3~Db5 | Bb2~F4 |
+| Omission | 10% | 15% |
+| Octave Shift | Bidirectional | Down only |
+| Predelay | 30ms | 10ms |
+| Attack | 30ms | 40ms |
+| Decay | 2.0s | 2.4s |
+| Harmonics | [1.0, 0.30, 0.12] | [1.0, 0.20, 0.08] |
+| Feeling | Gentle moonlight | Dark moon shadow |
+
+#### Design Philosophy
+
+> "月明かりの下でひとり歩いてる感じ。
+> 夜が優しくて少し寂しい。
+> 時間がゆっくり止まってる感覚。
+> さっきまでの Moonlight Flow が夕方だとしたら、今はもう深夜の静寂。"
+
+**Listening Experience**:
+- 静かで、深い、少し孤独、少しミステリアス
+- "月明かり"ではなく "月の影" を描く
+- ノイズなし・硬い音なし
+- **深夜2時の心の空白をそのまま音にした感じ**
+
+**Inspirations**:
+- 深夜2時の静寂と孤独
+- 路地裏の月影
+- 時間が止まったような感覚
+- 濃い霧の中の近い音
+
+#### Use Cases
+
+- **深夜の瞑想**: より深く、孤独で、内省的な時間
+- **深夜作業**: 2AM の集中、世界が止まったような感覚
+- **睡眠前**: 通常版より暗く、静かで、眠りに落ちやすい
+- **孤独を感じたい時**: ひとりの時間を大切にする音楽
 
 ---
 
