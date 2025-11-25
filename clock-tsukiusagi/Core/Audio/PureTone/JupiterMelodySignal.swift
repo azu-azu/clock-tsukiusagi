@@ -58,33 +58,33 @@ private final class JupiterMelodyGenerator {
     /// Measure 1: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4
     /// Measure 2: c8 d e4 d8 c b a g (with slight extension on final G)
     ///
-    /// Total duration: ~18 seconds
+    /// Total duration: ~36 seconds (2x slower for majestic, meditative character)
     let melody: [Note] = [
         // === Measure 1 ===
-        Note(freq: 329.63, duration: 0.40), // E4 - eighth
-        Note(freq: 392.00, duration: 0.40), // G4 - eighth
-        Note(freq: 440.00, duration: 1.20), // A4 - dotted quarter
-        Note(freq: 523.25, duration: 0.40), // C5 - eighth
-        Note(freq: 493.88, duration: 0.60), // B4 - dotted eighth
-        Note(freq: 392.00, duration: 0.20), // G4 - sixteenth
-        Note(freq: 523.25, duration: 0.40), // C5 - eighth
-        Note(freq: 587.33, duration: 0.40), // D5 - eighth
-        Note(freq: 523.25, duration: 0.80), // C5 - quarter
-        Note(freq: 493.88, duration: 0.80), // B4 - quarter
-        Note(freq: 440.00, duration: 0.40), // A4 - eighth
-        Note(freq: 493.88, duration: 0.40), // B4 - eighth
-        Note(freq: 440.00, duration: 0.80), // A4 - quarter
-        Note(freq: 392.00, duration: 0.80), // G4 - quarter
+        Note(freq: 329.63, duration: 0.80), // E4 - eighth (2x)
+        Note(freq: 392.00, duration: 0.80), // G4 - eighth (2x)
+        Note(freq: 440.00, duration: 2.40), // A4 - dotted quarter (2x)
+        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
+        Note(freq: 493.88, duration: 1.20), // B4 - dotted eighth (2x)
+        Note(freq: 392.00, duration: 0.40), // G4 - sixteenth (2x)
+        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
+        Note(freq: 587.33, duration: 0.80), // D5 - eighth (2x)
+        Note(freq: 523.25, duration: 1.60), // C5 - quarter (2x)
+        Note(freq: 493.88, duration: 1.60), // B4 - quarter (2x)
+        Note(freq: 440.00, duration: 0.80), // A4 - eighth (2x)
+        Note(freq: 493.88, duration: 0.80), // B4 - eighth (2x)
+        Note(freq: 440.00, duration: 1.60), // A4 - quarter (2x)
+        Note(freq: 392.00, duration: 1.60), // G4 - quarter (2x)
 
         // === Measure 2 ===
-        Note(freq: 523.25, duration: 0.40), // C5 - eighth
-        Note(freq: 587.33, duration: 0.40), // D5 - eighth
-        Note(freq: 659.25, duration: 0.80), // E5 - quarter
-        Note(freq: 587.33, duration: 0.40), // D5 - eighth
-        Note(freq: 523.25, duration: 0.40), // C5 - eighth
-        Note(freq: 493.88, duration: 0.40), // B4 - eighth
-        Note(freq: 440.00, duration: 0.40), // A4 - eighth
-        Note(freq: 392.00, duration: 0.60)  // G4 - slightly longer to hide loop
+        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
+        Note(freq: 587.33, duration: 0.80), // D5 - eighth (2x)
+        Note(freq: 659.25, duration: 1.60), // E5 - quarter (2x)
+        Note(freq: 587.33, duration: 0.80), // D5 - eighth (2x)
+        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
+        Note(freq: 493.88, duration: 0.80), // B4 - eighth (2x)
+        Note(freq: 440.00, duration: 0.80), // A4 - eighth (2x)
+        Note(freq: 392.00, duration: 1.20)  // G4 - extended for smooth loop (2x)
     ]
 
     // MARK: - Timing Calculations
@@ -106,8 +106,8 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Envelope Parameters
 
-    let attack: Float = 0.050      // 50ms: organ-like soft attack
-    let decay: Float = 3.0         // 3.0s: long decay for cathedral space
+    let attack: Float = 0.080      // 80ms: slower, more majestic organ attack
+    let decay: Float = 4.0         // 4.0s: extended decay for cathedral grandeur
 
     // MARK: - Harmonic Structure
 
@@ -147,8 +147,8 @@ private final class JupiterMelodyGenerator {
         // Normalize by harmonic count and apply envelope
         let normalized = value / Float(harmonics.count)
 
-        // Return with moderate volume (0.35) for melody prominence
-        return normalized * envelope * 0.35
+        // Return with softer volume (0.30) for meditative, majestic character
+        return normalized * envelope * 0.30
     }
 
     // MARK: - Helper Methods
@@ -195,11 +195,12 @@ private final class JupiterMelodyGenerator {
 //
 // DESIGN PHILOSOPHY:
 //
-// Extended from 1 measure to 2 measures to:
-// - Reduce loop perception (18s cycle vs 9s cycle)
+// Extended from 1 measure to 2 measures, and slowed 2x to:
+// - Reduce loop perception (36s cycle vs 9s original)
 // - Create complete musical phrase (Measure 1: ascent, Measure 2: descent)
-// - Match Calm Technology philosophy (slow, breathing, cosmic rhythm)
-// - Better fit CathedralStillness atmosphere (long, meditative cycles)
+// - Match Calm Technology philosophy (very slow, breathing, cosmic rhythm)
+// - Better fit CathedralStillness atmosphere (long, deeply meditative cycles)
+// - Enhance majestic, solemn character through slower tempo
 //
 // REFERENCE:
 //
@@ -211,17 +212,17 @@ private final class JupiterMelodyGenerator {
 // SOUND CHARACTER:
 //
 // - Organ-style harmonics (45%, 30%, 18%) for rich, majestic tone
-// - Long decay (3.0s) for cathedral reverb compatibility
-// - Moderate attack (50ms) for organ-like articulation
-// - Moderate volume (0.35) for melody prominence in the mix
+// - Extended decay (4.0s) for cathedral grandeur and spaciousness
+// - Slower attack (80ms) for majestic, solemn organ articulation
+// - Softer volume (0.30) for meditative, reverent atmosphere
 //
 // TECHNICAL IMPLEMENTATION:
 //
 // - Uses Signal protocol (pure time-based function)
 // - Cumulative time array for efficient note lookup
 // - Per-note envelope (independent attack/decay)
-// - 22-note cycle, ~18 second loop (2 measures)
-// - Final note (G4) slightly extended (0.6s) to smooth loop transition
+// - 22-note cycle, ~36 second loop (2 measures, 2x slower)
+// - Final note (G4) extended (1.2s) to smooth loop transition
 //
 // INTEGRATION WITH CATHEDRALSTILLNESS:
 //
@@ -235,9 +236,10 @@ private final class JupiterMelodyGenerator {
 // LOOP HIDING TECHNIQUE:
 //
 // - 2-measure phrase creates natural musical closure
-// - Final G4 extended to 0.6s (vs standard 0.4s eighth note)
-// - Long cycle (18s) reduces loop perception
-// - Reverb tail (3s) smooths transition between cycles
+// - Final G4 extended to 1.2s (vs standard 0.8s eighth note)
+// - Very long cycle (36s) makes loop nearly imperceptible
+// - Reverb tail (4s decay) smooths transition between cycles
+// - Slow tempo creates timeless, meditative quality
 //
 // COPYRIGHT:
 //

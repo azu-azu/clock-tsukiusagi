@@ -340,10 +340,11 @@ Measure 1: E4  G4  A4   C5   B4  G4   C5  D5  C5  B4  A4 B4  A4  G4
 Measure 2: C5  D5  E5   D5   C5  B4   A4  G4
 ```
 
-- **22音のフレーズ**（2小節の完全なフレーズ）、サイクル時間 ~18秒
-- **可変音長**: 0.2秒～1.2秒（3/4拍子のリズムを反映）
+- **22音のフレーズ**（2小節の完全なフレーズ）、サイクル時間 ~**36秒**（2倍ゆっくり）
+- **可変音長**: 0.4秒～2.4秒（3/4拍子のリズムを2倍にスローダウン）
 - **オクターブ範囲**: E4 (329.63Hz) ～ E5 (659.25Hz)
-- **ループ感軽減**: 2小節フレーズで自然な音楽的終止、最後の G4 を微妙に延長
+- **ループ感軽減**: 2小節フレーズで自然な音楽的終止、最後の G4 を延長
+- **荘厳さ強化**: Attack 80ms（ゆっくりした立ち上がり）、Decay 4.0s（長い余韻）
 
 #### Sound Design
 
@@ -359,9 +360,9 @@ Measure 2: C5  D5  E5   D5   C5  B4   A4  G4
 - Harmonics: [1.0, 2.0, 3.0, 4.0]
 - Amps: [1.0, 0.45, 0.30, 0.18] (荘厳なオルガン倍音)
 
-**Envelope (Jupiter)**:
-- **Attack**: 50ms — オルガンらしいソフトな立ち上がり
-- **Decay**: 3.0秒 — 大聖堂の長い余韻
+**Envelope (Jupiter Chorale)**:
+- **Attack**: 80ms — 荘厳でゆっくりとした立ち上がり
+- **Decay**: 4.0秒 — 大聖堂の壮大な余韻
 
 **Reverb** (Cathedral atmosphere — shared by all layers):
 - roomSize: 2.2 (広大な空間)
@@ -389,11 +390,12 @@ mixer.add(jupiterSignal, gain: 0.7)   // Melody
 All layers share the same large Cathedral reverb for cohesive atmosphere.
 
 **Jupiter Chorale Technical**:
-- Variable duration notes (0.2s to 1.2s, reflecting 3/4 time signature)
+- Variable duration notes (0.4s to 2.4s, 2x slower tempo)
 - Cumulative time array for efficient note lookup
 - Per-note independent envelope (attack/decay)
-- 22-note cycle, ~18 second loop (2 measures)
-- Loop hiding: Extended final note + long reverb tail
+- 22-note cycle, ~36 second loop (2 measures, very slow)
+- Loop hiding: Extended final note (1.2s) + long reverb tail (4s)
+- Volume: 0.30 (softer, meditative)
 
 #### Design Philosophy
 
