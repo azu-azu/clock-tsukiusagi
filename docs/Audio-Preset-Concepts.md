@@ -42,16 +42,19 @@ This document describes the artistic concept, design philosophy, and implementat
 - ドビュッシーの「月の光」と同じ調性を採用
 - 透明感と浮遊感のある響き
 
-**Melody Structure**:
+**Melody Structure** (v2 - with low notes & random variations):
 ```
-Db4 → F4 → Ab4 → F4 → Eb4 → Gb4 → Db5 → C5
-→ F4 → Ab4 → Db5 → Ab4 → Gb4 → Eb4 → Db4
+Db3 → F4 → Ab4 → Ab3 → Eb4 → Gb4 → Db5 → C5
+→ F4 → Ab3 → Db5 → Ab4 → Gb4 → Db3 → Db4
+ ^             ^             ^      ^
+低音         低音          低音    低音
 ```
 
 - **15音のフレーズ**、サイクル時間 ~9.8秒
 - **可変音長**: 0.6秒と0.8秒の組み合わせで自然なフレージング
-- **跳躍を避ける**: なめらかな上昇と下降で、月の光の揺らぎを表現
-- **オクターブ範囲**: Db4 (277Hz) ～ Db5 (554Hz) — iPhone スピーカーで再生可能な可聴域
+- **低音追加**: Db3 (138Hz), Ab3 (207Hz) を4箇所に配置 — 空間の深みを演出
+- **ランダム変化**: サイクルごとに微妙に異なるメロディ（月の雲の揺らぎ）
+- **オクターブ範囲**: Db3 (138Hz) ～ Db5 (554Hz) — 低音はイヤホン推奨
 
 #### Sound Design
 
@@ -72,6 +75,7 @@ Fundamental:    1.0  (100%)
 - damping: 0.40 (明るめのトーン、透明感)
 - decay: 0.90 (非常に長いテール、余韻)
 - mix: 0.55 (リバーブ成分多め、浮遊感)
+- predelay: 0.030 (30ms) — バランスの取れた霧感
 
 **Volume**: 0.30
 → アンビエント、瞑想的な音量レベル
@@ -97,6 +101,18 @@ lazy var cumulativeTimes: [Float] = {
 }()
 ```
 
+**Random Variation System** (v2 - Clouds Moving Across Moon):
+```swift
+// サイクルごとに異なるシード値で再現可能なランダム性
+let cycleIndex = Int(t / cycleDuration)
+var rng = SeededRandomNumberGenerator(seed: UInt64(cycleIndex + 1000))
+
+// 3種類の微妙な変化
+1. Octave Shift (20%): 音を1オクターブ上/下に移動
+2. Note Omission (10%): 雲が月を隠す（無音）
+3. Duration Adjustment (30%): ±0.1秒の微調整
+```
+
 **Note Lookup Algorithm**:
 - 現在時刻を累積時間配列と比較してノートインデックスを検索
 - ノート開始時刻からの相対時間でエンベロープ計算
@@ -106,11 +122,14 @@ lazy var cumulativeTimes: [Float] = {
 
 > "印象派の絵画が「光の粒子」を描くように、音もまた「響きの粒子」として表現する。
 > メロディは流れ、リバーブは空間を、長いディケイは時間の経過そのものを描く。"
+>
+> **(v2)** "そして雲が月を覆い、また去っていく——ランダムな揺らぎが、自然の息吹を吹き込む。"
 
 **Inspirations**:
 - 印象派音楽の透明感と浮遊感（ドビュッシー、ラヴェル）
 - 月明かりの下で揺らぐ水面の反射
 - 静寂の中に漂う余韻
+- **(v2)** 雲が月を覆い隠す瞬間、風に揺れる光の粒子
 
 **NOT Inspirations** (著作権回避):
 - 特定の楽曲のメロディやコード進行
