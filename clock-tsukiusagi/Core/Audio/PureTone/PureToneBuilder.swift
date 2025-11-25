@@ -48,13 +48,15 @@ public struct PureToneBuilder {
             sources.append(treeChime)
 
         case .cathedralStillness:
-            // Signal-based organ drone + harp arpeggios with large reverb
+            // Signal-based organ drone + harp arpeggios + Jupiter melody with large reverb
             let organSignal = CathedralStillnessSignal.makeSignal()
             let harpSignal = MidnightDropletsSignal.makeSignal()
+            let jupiterSignal = JupiterMelodySignal.makeSignal()
 
             let mixer = FinalMixer()
-            mixer.add(organSignal, gain: 1.0)     // オルガンドローン
-            mixer.add(harpSignal, gain: 0.8)      // ハープアルペジオ（少し控えめ）
+            mixer.add(organSignal, gain: 1.0)     // オルガンドローン（ベース）
+            mixer.add(harpSignal, gain: 0.6)      // ハープアルペジオ（控えめに、メロディを引き立てる）
+            mixer.add(jupiterSignal, gain: 0.7)   // Jupiterメロディ（メインテーマ）
 
             // Large reverb for cathedral atmosphere (3s decay)
             let reverb = SchroederReverb(

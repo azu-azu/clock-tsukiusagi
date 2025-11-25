@@ -158,13 +158,148 @@ var rng = SeededRandomNumberGenerator(seed: UInt64(cycleIndex + 1000))
 
 ### Cathedral Stillness (大聖堂の静寂)
 
-**File**: `CathedralStillnessSignal.swift`
+**Added**: 2025-11-25 (Updated with Jupiter melody)
+**Files**:
+- `CathedralStillnessSignal.swift` (Organ drone)
+- `MidnightDropletsSignal.swift` (Harp arpeggios)
+- `JupiterMelodySignal.swift` (Jupiter melody)
 
 #### Concept
 
-大聖堂の静寂と荘厳さを表現したオルガンドローン。
+大聖堂の静寂と荘厳さを表現した多層オルガンサウンド。Holst の "Jupiter" (『惑星』より) の旋律を取り入れ、宇宙聖堂のような響きを実現。
 
-（※ 今後追記予定）
+**3層構造**:
+1. **Organ Drone** — C3 + G3 の完全5度、超低速 LFO で呼吸する土台
+2. **Harp Arpeggios** — 稀に鳴る上昇アルペジオ、夜の雫のような装飾
+3. **Jupiter Melody** — 荘厳なメロディ、宇宙と祈りの象徴
+
+#### Musical Characteristics
+
+**Layer 1: Organ Drone (Foundation)**
+
+**Chord**: C3 (130.81 Hz) + G3 (196.00 Hz) — Perfect fifth harmony
+- 和音による厚みのある響き
+- 4倍音までの加算合成で透明な音色
+
+**LFO Breathing**: 0.02 Hz (50秒で1周期)
+- 音量が 0.4 ～ 0.8 の範囲でゆっくり変化
+- ほぼ静止したドローンとして機能
+
+**Volume**: 0.12 (控えめ、ベースとして機能)
+
+---
+
+**Layer 2: Harp Arpeggios (Sparse Decoration)**
+
+See: [Midnight Droplets](#midnight-droplets-深夜の雫) for detailed specification.
+
+**Integration**: Pentatonic arpeggios (C4, D4, E4, G4, A4)
+- 6～15秒のランダム間隔で稀に鳴る
+- 2～4音の上昇アルペジオパターン
+- 5秒の長い減衰で空間に溶け込む
+
+**Volume**: 0.22 (adjusted to 0.6 gain in mixer)
+
+---
+
+**Layer 3: Jupiter Melody (Majestic Centerpiece)**
+
+**Source**: Gustav Holst — "The Planets: Jupiter" (1918, **public domain**)
+- Composer died 1934 → Copyright expired 2004 (Japan: 70 years after death)
+- Using the melody is completely legal
+
+**Original Key**: E Major
+
+**Transposed to**: C Major (-4 semitones)
+- Harmonizes with C/G drone foundation
+- Maintains majesty while fitting the tonal landscape
+
+**Melody Structure**:
+```
+C4  G3  E4   A4  G4  F4  E4   (First phrase: ascending majesty)
+D4  F3  F4   A4  G4  F4  D4   (Second phrase: responding descent)
+```
+
+- **14音のフレーズ**、サイクル時間 ~9.6秒
+- **可変音長**: 0.6秒と0.8秒の組み合わせで自然なフレージング
+- **オクターブ範囲**: F3 (174.61Hz) ～ A4 (440Hz)
+
+#### Sound Design
+
+**Layer 1 (Organ Drone)**:
+- Harmonics: [1.0, 2.0, 3.0, 4.0]
+- Amps: [0.9, 0.4, 0.25, 0.15] (柔らかめのオルガン)
+
+**Layer 2 (Harp Arpeggios)**:
+- Harmonics: [1.0, 2.0, 3.0, 4.0]
+- Amps: [1.0, 0.5, 0.3, 0.15] (豊かなハープ倍音)
+
+**Layer 3 (Jupiter Melody)**:
+- Harmonics: [1.0, 2.0, 3.0, 4.0]
+- Amps: [1.0, 0.45, 0.30, 0.18] (荘厳なオルガン倍音)
+
+**Envelope (Jupiter)**:
+- **Attack**: 50ms — オルガンらしいソフトな立ち上がり
+- **Decay**: 3.0秒 — 大聖堂の長い余韻
+
+**Reverb** (Cathedral atmosphere — shared by all layers):
+- roomSize: 2.2 (広大な空間)
+- damping: 0.35 (明るめのトーン)
+- decay: 0.88 (非常に長いテール、3秒級)
+- mix: 0.55 (リバーブ成分多め、荘厳さ)
+- predelay: 0.04 (40ms、空間の奥行き)
+
+**Gain Balance**:
+- Organ drone: 1.0 (foundation)
+- Harp: 0.6 (subdued, supports melody)
+- Jupiter melody: 0.7 (prominent, centerpiece)
+
+#### Implementation Notes
+
+**Architecture**: 3-layer Signal-based composition
+
+**Mixer Configuration**:
+```swift
+mixer.add(organSignal, gain: 1.0)     // Foundation
+mixer.add(harpSignal, gain: 0.6)      // Decoration
+mixer.add(jupiterSignal, gain: 0.7)   // Melody
+```
+
+All layers share the same large Cathedral reverb for cohesive atmosphere.
+
+**Jupiter Melody Technical**:
+- Variable duration notes ([0.6s, 0.8s] pattern)
+- Cumulative time array for efficient note lookup
+- Per-note independent envelope (attack/decay)
+- 14-note cycle, ~9.6 second loop
+
+#### Design Philosophy
+
+> "宇宙の静寂の中に、祈りのような旋律が響く。
+> オルガンの土台、ハープの装飾、そして Jupiter の荘厳なメロディが織りなす、
+> 宇宙聖堂の響き。"
+
+**Inspirations**:
+- Holst's "Jupiter" — Majesty and cosmic grandeur
+- Cathedral organ music — Solemn, meditative atmosphere
+- Quiet Cosmos philosophy — Stillness with occasional beauty
+
+**Design Intent**:
+- **Drone**: Timeless foundation, breathing gently
+- **Harp**: Sparse decoration, like droplets in the night
+- **Melody**: Majestic centerpiece, cosmic hymn
+
+**Copyright Safety**:
+- Holst's work is public domain (>70 years after death)
+- Melody synthesized from scratch (no existing recordings)
+- Legal to use for original composition
+
+#### Use Cases
+
+- **瞑想 / Meditation**: 荘厳な響きが心を静める
+- **睡眠導入 / Sleep Aid**: 長い余韻と柔らかなドローン
+- **作業用BGM / Background Music**: 主張しすぎない、空間に溶け込む音楽
+- **時間感覚の演出 / Time Perception**: 時計アプリとして「永遠の時の流れ」を音で表現
 
 ---
 
