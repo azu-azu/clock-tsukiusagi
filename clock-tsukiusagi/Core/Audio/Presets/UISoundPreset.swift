@@ -41,7 +41,7 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
         case .pentatonic:
             return "🔔 チャイム"
         case .softOrgan:
-            return "🪐 ジュピター"
+            return "🪐 ジュピターの響き"
         case .toyPiano:
             return "🎹 トイピアノ"
         case .gentleFlute:
