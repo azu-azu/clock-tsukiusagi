@@ -38,8 +38,8 @@ public final class AutoTriggerBoomHit: AudioSource {
         triggerRate: Double = 0.33,     // ~3秒に1回
         minInterval: Double = 3.0,      // 最低3秒間隔
         duration: Double = 3.0,
-        fundamental: Double = 110.0,    // 55Hz → 110Hz（再生可能な周波数）
-        pitchDropAmount: Double = 0.25  // BoomHitのデフォルトに合わせる
+        fundamental: Double = 150.0,    // スピーカー寄り安全値（BoomHitに合わせる）
+        pitchDropAmount: Double = 0.25  // 25% pitch drop
     ) {
         self.triggerRate = triggerRate
         self.minInterval = minInterval

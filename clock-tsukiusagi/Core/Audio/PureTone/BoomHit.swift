@@ -55,25 +55,24 @@ public final class BoomHit: AudioSource {
     ///   - pitchDropAmount: How much pitch drops over duration (0.1 = 10% drop)
     public init(
         duration: Double = 3.0,
-        fundamental: Double = 110.0,  // 55Hz → 110Hz（iPhone/イヤホンで再生可能に）
-        pitchDropAmount: Double = 0.25  // ズゥーン感のため 0.15 → 0.25
+        fundamental: Double = 150.0,  // スピーカー寄り安全値（route別に上書き推奨）
+        pitchDropAmount: Double = 0.25  // 25% pitch drop for falling effect
     ) {
         let sampleRate: Double = 48_000.0
         let twoPi = 2.0 * Double.pi
 
         // ============================================================
-        // HARMONIC STRUCTURE: Simple, fundamental-dominant
+        // HARMONIC STRUCTURE: Square-wave-ish for "DOOM" punch
         // ============================================================
-        let harmonics: [Double] = [1.0, 2.0]
-        let harmonicAmps: [Double] = [1.0, 0.25]  // 基音主役、2倍音控えめ
+        let harmonics: [Double] = [1.0, 2.0, 3.0]
+        let harmonicAmps: [Double] = [1.0, 0.5, 0.3]  // 矩形波寄り（高域エネルギー増→存在感UP）
 
         var phases: [Double] = Array(repeating: 0, count: harmonics.count)
 
         // ============================================================
-        // ENVELOPE TIMING
+        // ENVELOPE TIMING: Short attack for punch
         // ============================================================
-        let attack: Double = 0.03      // 30ms: fast but smooth attack
-        // ✂️ let noiseDuration: Double = 0.008  // ノイズオフ中は不要
+        let attack: Double = 0.02      // 20ms: shorter attack for "DOOM" punch
 
         let state = self.state
 
@@ -104,17 +103,7 @@ public final class BoomHit: AudioSource {
                 var value: Double = 0.0
 
                 // --------------------------------------------------------
-                // LAYER 1: Noise attack (initial impact "D")
-                // --------------------------------------------------------
-                // ✂️ 一旦オフ：チチチチの原因確認のため
-                // if state.currentTime < noiseDuration {
-                //     let noise = Double.random(in: -1.0 ... 1.0)
-                //     let noiseEnv = exp(-state.currentTime * 600.0)
-                //     value += noise * 0.2 * noiseEnv
-                // }
-
-                // --------------------------------------------------------
-                // LAYER 2: Sub-bass body envelope
+                // Sub-bass body envelope
                 // --------------------------------------------------------
                 let envelope: Double
                 if state.currentTime < attack {
@@ -158,11 +147,15 @@ public final class BoomHit: AudioSource {
                 }
 
                 // ============================================================
-                // OUTPUT GAIN
+                // OUTPUT GAIN with soft saturation
                 // ============================================================
-                // Normalize by harmonic count and apply safe output level
+                // Normalize by harmonic count
                 let normalized = value / Double(harmonics.count)
-                samples?[frame] = Float(normalized * 1.0)  // ガッと上げる（0.70 → 1.0）
+
+                // Soft clipping (saturation) for presence and punch
+                let saturated = tanh(normalized * 1.3)  // 軽い歪みで存在感UP
+
+                samples?[frame] = Float(saturated * 1.0)
 
                 // ============================================================
                 // TIME ADVANCEMENT & DEACTIVATION

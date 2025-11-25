@@ -11,9 +11,11 @@ import Foundation
 public struct PureToneBuilder {
 
     /// Build audio sources for a given pure tone preset
-    /// - Parameter preset: The preset to build
+    /// - Parameters:
+    ///   - preset: The preset to build
+    ///   - outputRoute: Current audio output route for frequency optimization
     /// - Returns: Array of AudioSource instances (may include multiple sources for layered presets)
-    public static func build(_ preset: PureTonePreset) -> [AudioSource] {
+    public static func build(_ preset: PureTonePreset, outputRoute: AudioOutputRoute = .unknown) -> [AudioSource] {
         var sources: [AudioSource] = []
 
         switch preset {
@@ -46,13 +48,15 @@ public struct PureToneBuilder {
             sources.append(treeChime)
 
         case .cathedralStillness:
-            // Signal-based organ drone + harp arpeggios with large reverb
+            // Signal-based organ drone + harp arpeggios + Jupiter melody with large reverb
             let organSignal = CathedralStillnessSignal.makeSignal()
             let harpSignal = MidnightDropletsSignal.makeSignal()
+            let jupiterSignal = JupiterMelodySignal.makeSignal()
 
             let mixer = FinalMixer()
-            mixer.add(organSignal, gain: 1.0)     // オルガンドローン
-            mixer.add(harpSignal, gain: 0.8)      // ハープアルペジオ（少し控えめ）
+            mixer.add(organSignal, gain: 1.0)     // オルガンドローン（ベース）
+            mixer.add(harpSignal, gain: 0.6)      // ハープアルペジオ（控えめに、メロディを引き立てる）
+            mixer.add(jupiterSignal, gain: 0.7)   // Jupiterメロディ（メインテーマ）
 
             // Large reverb for cathedral atmosphere (3s decay)
             let reverb = SchroederReverb(
@@ -99,13 +103,27 @@ public struct PureToneBuilder {
             sources.append(chime)
 
         case .boomHitOnly:
-            // Auto-triggering BoomHit test (no reverb)
+            // Auto-triggering BoomHit test with route-optimized frequency
+            // Output route determines optimal fundamental frequency:
+            // - Speaker: 220Hz (iPhone speaker audible range)
+            // - Headphones/Bluetooth: 80Hz (true low bass)
+            // - Unknown: 150Hz (safe middle ground)
+            let fundamental: Double
+            switch outputRoute {
+            case .speaker:
+                fundamental = 220.0  // iPhone スピーカー最適（可聴域で「ズズーン」近似）
+            case .headphones, .bluetooth:
+                fundamental = 80.0   // 本物の低音「ドゥーン」
+            case .unknown:
+                fundamental = 150.0  // 安全な中間値
+            }
+
             let boom = AutoTriggerBoomHit(
                 triggerRate: 0.33,     // Test: every ~3 seconds
                 minInterval: 3.0,      // Minimum 3s between booms
                 duration: 3.0,         // 3s boom with falling pitch
-                fundamental: 110.0,    // 110Hz (A2) - iPhone/イヤホンで再生可能
-                pitchDropAmount: 0.25  // 25% pitch drop（ズゥーン感強化）
+                fundamental: fundamental,  // Route-optimized frequency
+                pitchDropAmount: 0.25  // 25% pitch drop
             )
             sources.append(boom)
 
@@ -158,6 +176,52 @@ public struct PureToneBuilder {
                 decay: 0.88,        // Long, airy tail
                 mix: 0.50,          // Very spacious
                 predelay: 0.030,    // 30ms initial reflection
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            // Soft limiter for safety
+            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
+
+        case .moonlightFlow:
+            // Moonlight flow melody with spacious, dreamy reverb
+            let signal = MoonlightFlowSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Deep, majestic reverb for rich moonlight atmosphere
+            let reverb = SchroederReverb(
+                roomSize: 2.4,      // Larger space (cathedral-like depth)
+                damping: 0.35,      // Less damping for richer resonance
+                decay: 0.92,        // Longer tail for weight
+                mix: 0.60,          // More reverb for depth
+                predelay: 0.035,    // Slightly longer for spatial depth
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            // Soft limiter for safety
+            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
+
+        case .moonlightFlowMidnight:
+            // Midnight version with darker, closer atmosphere
+            let signal = MoonlightFlowMidnightSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Deep, close reverb for rich midnight atmosphere
+            let reverb = SchroederReverb(
+                roomSize: 2.4,      // Large space (deep night stillness)
+                damping: 0.32,      // Less damping for richer, darker resonance
+                decay: 0.93,        // Very long tail for heavy presence
+                mix: 0.62,          // More reverb for weight and depth
+                predelay: 0.012,    // 12ms - dense fog, intimate feeling
                 sampleRate: 48000.0
             )
             mixer.addEffect(reverb)

@@ -16,6 +16,8 @@ public enum PureTonePreset {
     case boomHitOnly        // BoomHit only (for testing)
     case toyPiano           // Toy piano chord progression (Signal-based)
     case gentleFlute        // Gentle flute melody (Signal-based)
+    case moonlightFlow      // Moonlight flow melody in Db Major (Signal-based)
+    case moonlightFlowMidnight  // Midnight version in Bb Minor (Signal-based)
 
     /// Whether this preset uses Signal-based implementation
     public var usesSignalEngine: Bool {
@@ -33,6 +35,10 @@ public enum PureTonePreset {
         case .toyPiano:
             return true
         case .gentleFlute:
+            return true
+        case .moonlightFlow:
+            return true
+        case .moonlightFlowMidnight:
             return true
         }
     }
@@ -53,6 +59,10 @@ public enum PureTonePreset {
         case .toyPiano:
             return false
         case .gentleFlute:
+            return false
+        case .moonlightFlow:
+            return false
+        case .moonlightFlowMidnight:
             return false
         }
     }
