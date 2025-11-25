@@ -12,9 +12,9 @@ This document describes the artistic concept, design philosophy, and implementat
 - [Pure Tone Presets](#pure-tone-presets)
   - [Moonlight Flow (月の流れ)](#moonlight-flow-月の流れ)
   - [Moonlight Flow — Midnight (深夜の月影)](#moonlight-flow--midnight-深夜の月影)
-  - [Pentatonic Chime (チャイム)](#pentatonic-chime-チャイム)
+  - [Moonlit Slumber Chimes (月のまどろみ)](#moonlit-slumber-chimes-月のまどろみ)
   - [Cathedral Stillness (大聖堂の静寂)](#cathedral-stillness-大聖堂の静寂)
-  - [Toy Piano Dream (トイピアノ)](#toy-piano-dream-トイピアノ)
+  - [Fading Star Piano (消えゆく星)](#fading-star-piano-消えゆく星)
 - [Design Philosophy](#design-philosophy)
 
 ---
@@ -258,13 +258,13 @@ Fundamental:    1.0  (100%)
 
 ---
 
-### Pentatonic Chime (チャイム)
+### Moonlit Slumber Chimes (月のまどろみ)
 
 **File**: `PentatonicChimeSignal.swift`
 
 #### Concept
 
-ペンタトニック（五音音階）の鐘の音。シンプルで普遍的な響き。
+ペンタトニック（五音音階）の鐘の音。シンプルで普遍的な響き。月明かりの下で眠りに落ちる瞬間を表現した、穏やかなチャイム音。
 
 （※ 今後追記予定）
 
@@ -431,13 +431,13 @@ All layers share the same large Cathedral reverb for cohesive atmosphere.
 
 ---
 
-### Toy Piano Dream (トイピアノ)
+### Fading Star Piano (消えゆく星)
 
 **File**: `PianoSignal.swift`, `SubPianoSignal.swift`
 
 #### Concept
 
-トイピアノの和音進行。夢のような、懐かしい音色。
+トイピアノの和音進行。夢のような、懐かしい音色。夜空に消えゆく星のように、儚く優しい音が響く。
 
 （※ 今後追記予定）
 

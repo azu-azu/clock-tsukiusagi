@@ -22,11 +22,11 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     public var displayName: String {
         switch self {
         case .pentatonic:
-            return "🔔 チャイム"
+            return "🌓 月のまどろみ"
         case .softOrgan:
             return "🪐 ジュピターの響き"
         case .toyPiano:
-            return "🎹 トイピアノ"
+            return "⭐ 消えゆく星"
         case .moonlightFlow:
             return "🌙 月の流れ"
         case .moonlightFlowMidnight:
@@ -38,11 +38,11 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     public var englishTitle: String {
         switch self {
         case .pentatonic:
-            return "Pentatonic Chime"
+            return "Moonlit Slumber Chimes"
         case .softOrgan:
             return "Jupiter (Holst)"
         case .toyPiano:
-            return "Toy Piano Dream"
+            return "Fading Star Piano"
         case .moonlightFlow:
             return "Moonlight Flow"
         case .moonlightFlowMidnight:
