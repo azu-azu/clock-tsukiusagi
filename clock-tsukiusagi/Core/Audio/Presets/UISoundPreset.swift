@@ -14,6 +14,7 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case softOrgan          // 柔らかなオルガン（PureTone module）
     case toyPiano           // トイピアノ（PureTone module）
     case gentleFlute        // やさしいフルート（PureTone module）
+    case moonlightFlow      // 月の流れ（PureTone module）
     case darkShark          // 黒いサメの影
     case midnightTrain      // 夜汽車
     case distantThunder     // 遠雷
@@ -44,6 +45,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🎹 トイピアノ"
         case .gentleFlute:
             return "🪈 やさしいフルート"
+        case .moonlightFlow:
+            return "🌙 月の流れ"
         case .darkShark:
             return "🦈 黒いサメの影"
         case .midnightTrain:
@@ -66,6 +69,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Toy Piano Dream"
         case .gentleFlute:
             return "Gentle Flute Melody"
+        case .moonlightFlow:
+            return "Moonlight Flow"
         case .darkShark:
             return "Dark Shape Underwater"
         case .midnightTrain:

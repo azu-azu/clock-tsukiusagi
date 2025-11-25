@@ -608,6 +608,8 @@ public final class AudioService: ObservableObject {
             return .toyPiano
         case .gentleFlute:
             return .gentleFlute
+        case .moonlightFlow:
+            return .moonlightFlow
         case .boomHitTest:
             return .boomHitOnly
         case .darkShark, .midnightTrain, .distantThunder:
@@ -624,7 +626,7 @@ public final class AudioService: ObservableObject {
             return .midnightTrain
         case .distantThunder:
             return .distantThunder
-        case .pentatonic, .softOrgan, .toyPiano, .gentleFlute, .boomHitTest:
+        case .pentatonic, .softOrgan, .toyPiano, .gentleFlute, .moonlightFlow, .boomHitTest:
             return nil  // Handled by PureTone
         }
     }
