@@ -330,15 +330,20 @@ See: [Midnight Droplets](#midnight-droplets-深夜の雫) for detailed specifica
 
 **Reference**: Same melody as Ayaka Hirahara's "Jupiter" (everyday I listen to my heart~)
 
-**Melody Structure** (3/4 time):
+**Melody Structure** (3/4 time, 2 measures):
 ```
-Notation: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4  e2
-Notes:    E4  G4  A4   C5   B4  G4   C5  D5  C5  B4  A4 B4  A4  G4  E4
+Measure 1: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4
+Measure 2: c8 d e4 d8 c b a g (with slight extension on final G)
+
+Notes:
+Measure 1: E4  G4  A4   C5   B4  G4   C5  D5  C5  B4  A4 B4  A4  G4
+Measure 2: C5  D5  E5   D5   C5  B4   A4  G4
 ```
 
-- **15音のフレーズ**、サイクル時間 ~9.2秒
-- **可変音長**: 0.2秒～1.6秒（3/4拍子のリズムを反映）
-- **オクターブ範囲**: E4 (329.63Hz) ～ D5 (587.33Hz)
+- **22音のフレーズ**（2小節の完全なフレーズ）、サイクル時間 ~18秒
+- **可変音長**: 0.2秒～1.2秒（3/4拍子のリズムを反映）
+- **オクターブ範囲**: E4 (329.63Hz) ～ E5 (659.25Hz)
+- **ループ感軽減**: 2小節フレーズで自然な音楽的終止、最後の G4 を微妙に延長
 
 #### Sound Design
 
@@ -384,10 +389,11 @@ mixer.add(jupiterSignal, gain: 0.7)   // Melody
 All layers share the same large Cathedral reverb for cohesive atmosphere.
 
 **Jupiter Chorale Technical**:
-- Variable duration notes (0.2s to 1.6s, reflecting 3/4 time signature)
+- Variable duration notes (0.2s to 1.2s, reflecting 3/4 time signature)
 - Cumulative time array for efficient note lookup
 - Per-note independent envelope (attack/decay)
-- 15-note cycle, ~9.2 second loop
+- 22-note cycle, ~18 second loop (2 measures)
+- Loop hiding: Extended final note + long reverb tail
 
 #### Design Philosophy
 

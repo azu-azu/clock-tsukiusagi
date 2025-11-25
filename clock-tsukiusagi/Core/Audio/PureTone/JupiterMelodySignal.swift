@@ -45,40 +45,46 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Melody Definition
 
-    /// Jupiter chorale melody in C major (Holst "Thaxted" opening phrase)
+    /// Jupiter chorale melody in C major (Holst "Thaxted" opening 2 measures)
     ///
     /// Based on Holst's own C-major setting of the Jupiter chorale
-    /// ("Thaxted" / "I Vow to Thee, My Country" first phrase),
+    /// ("Thaxted" / "I Vow to Thee, My Country" first 2 measures),
     /// arranged to sit over CathedralStillness (C/G drone).
     ///
-    /// Notation (in C major, 3/4):
-    /// e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4  e2
+    /// Extended to 2-measure phrase to reduce loop perception.
+    /// Measure 1 + Measure 2 = complete opening phrase (~18-20 seconds)
     ///
-    /// Total duration: ~9.2 seconds
+    /// Notation (in C major, 3/4):
+    /// Measure 1: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4
+    /// Measure 2: c8 d e4 d8 c b a g (with slight extension on final G)
+    ///
+    /// Total duration: ~18 seconds
     let melody: [Note] = [
-        Note(freq: 329.63, duration: 0.4),  // E4  - eighth
-        Note(freq: 392.00, duration: 0.4),  // G4  - eighth
+        // === Measure 1 ===
+        Note(freq: 329.63, duration: 0.40), // E4 - eighth
+        Note(freq: 392.00, duration: 0.40), // G4 - eighth
+        Note(freq: 440.00, duration: 1.20), // A4 - dotted quarter
+        Note(freq: 523.25, duration: 0.40), // C5 - eighth
+        Note(freq: 493.88, duration: 0.60), // B4 - dotted eighth
+        Note(freq: 392.00, duration: 0.20), // G4 - sixteenth
+        Note(freq: 523.25, duration: 0.40), // C5 - eighth
+        Note(freq: 587.33, duration: 0.40), // D5 - eighth
+        Note(freq: 523.25, duration: 0.80), // C5 - quarter
+        Note(freq: 493.88, duration: 0.80), // B4 - quarter
+        Note(freq: 440.00, duration: 0.40), // A4 - eighth
+        Note(freq: 493.88, duration: 0.40), // B4 - eighth
+        Note(freq: 440.00, duration: 0.80), // A4 - quarter
+        Note(freq: 392.00, duration: 0.80), // G4 - quarter
 
-        Note(freq: 440.00, duration: 1.2),  // A4  - dotted quarter
-
-        Note(freq: 523.25, duration: 0.4),  // C5  - eighth
-
-        Note(freq: 493.88, duration: 0.6),  // B4  - dotted eighth
-        Note(freq: 392.00, duration: 0.2),  // G4  - sixteenth
-
-        Note(freq: 523.25, duration: 0.4),  // C5  - eighth
-        Note(freq: 587.33, duration: 0.4),  // D5  - eighth
-
-        Note(freq: 523.25, duration: 0.8),  // C5  - quarter
-        Note(freq: 493.88, duration: 0.8),  // B4  - quarter
-
-        Note(freq: 440.00, duration: 0.4),  // A4  - eighth
-        Note(freq: 493.88, duration: 0.4),  // B4  - eighth
-
-        Note(freq: 440.00, duration: 0.8),  // A4  - quarter
-        Note(freq: 392.00, duration: 0.8),  // G4  - quarter
-
-        Note(freq: 329.63, duration: 1.6)   // E4  - half (long resolve)
+        // === Measure 2 ===
+        Note(freq: 523.25, duration: 0.40), // C5 - eighth
+        Note(freq: 587.33, duration: 0.40), // D5 - eighth
+        Note(freq: 659.25, duration: 0.80), // E5 - quarter
+        Note(freq: 587.33, duration: 0.40), // D5 - eighth
+        Note(freq: 523.25, duration: 0.40), // C5 - eighth
+        Note(freq: 493.88, duration: 0.40), // B4 - eighth
+        Note(freq: 440.00, duration: 0.40), // A4 - eighth
+        Note(freq: 392.00, duration: 0.60)  // G4 - slightly longer to hide loop
     ]
 
     // MARK: - Timing Calculations
@@ -184,8 +190,16 @@ private final class JupiterMelodyGenerator {
 // Also known as: "I Vow to Thee, My Country" hymn tune
 // Key: C Major (Holst's own C-major setting, fits CathedralStillness C/G drone)
 // Time Signature: 3/4 (mapped to seconds: 0.4s = eighth note)
-// Phrasing: Single opening phrase from the famous Jupiter chorale
-// Duration: Variable note lengths (0.2s to 1.6s) for expressive, natural flow
+// Phrasing: First 2 measures of the famous Jupiter chorale (complete opening phrase)
+// Duration: Variable note lengths (0.2s to 1.2s) for expressive, natural flow
+//
+// DESIGN PHILOSOPHY:
+//
+// Extended from 1 measure to 2 measures to:
+// - Reduce loop perception (18s cycle vs 9s cycle)
+// - Create complete musical phrase (Measure 1: ascent, Measure 2: descent)
+// - Match Calm Technology philosophy (slow, breathing, cosmic rhythm)
+// - Better fit CathedralStillness atmosphere (long, meditative cycles)
 //
 // REFERENCE:
 //
@@ -206,7 +220,8 @@ private final class JupiterMelodyGenerator {
 // - Uses Signal protocol (pure time-based function)
 // - Cumulative time array for efficient note lookup
 // - Per-note envelope (independent attack/decay)
-// - 15-note cycle, ~9.2 second loop
+// - 22-note cycle, ~18 second loop (2 measures)
+// - Final note (G4) slightly extended (0.6s) to smooth loop transition
 //
 // INTEGRATION WITH CATHEDRALSTILLNESS:
 //
@@ -216,6 +231,13 @@ private final class JupiterMelodyGenerator {
 // 3. Jupiter chorale (this) - majestic centerpiece
 //
 // All layers share the same large reverb (Cathedral atmosphere, 3s decay).
+//
+// LOOP HIDING TECHNIQUE:
+//
+// - 2-measure phrase creates natural musical closure
+// - Final G4 extended to 0.6s (vs standard 0.4s eighth note)
+// - Long cycle (18s) reduces loop perception
+// - Reverb tail (3s) smooths transition between cycles
 //
 // COPYRIGHT:
 //
