@@ -23,15 +23,7 @@ enum AudioSourcePreset: Identifiable {
     var displayName: String {
         switch self {
         case .synthesis(let preset):
-            let icon = preset.isTest ? "♟️ " : ""
-            return icon + preset.displayName
-        }
-    }
-
-    var isTest: Bool {
-        switch self {
-        case .synthesis(let preset):
-            return preset.isTest
+            return preset.displayName
         }
     }
 
@@ -53,25 +45,10 @@ extension AudioSourcePreset: Hashable, Equatable {
         lhs.id == rhs.id
     }
 
-    /// All available audio sources (production first, then test in debug)
+    /// All available audio sources
     static var allSources: [AudioSourcePreset] {
-        var production: [AudioSourcePreset] = []
-        var test: [AudioSourcePreset] = []
-
-        // Collect synthesis presets
-        for preset in UISoundPreset.allCases {
-            let source = AudioSourcePreset.synthesis(preset)
-            if source.isTest {
-                #if DEBUG
-                test.append(source)
-                #endif
-            } else {
-                production.append(source)
-            }
-        }
-
-        // Production first, then test
-        return production + test
+        // All presets are production presets now
+        return UISoundPreset.allCases.map { AudioSourcePreset.synthesis($0) }
     }
 }
 
