@@ -151,6 +151,41 @@ See: `Docs/implementation/navigation-design.md`
 
 ---
 
+### arch-04: Domain Layer (World Concepts)
+
+**Added: 2025-11-26**
+
+The **Domain layer** contains core concepts that define the app's "world" — mathematical models, astronomical calculations, and conceptual representations that exist independently of UI or implementation details.
+
+**Domain/Moon/ — Lunar System:**
+```
+Domain/Moon/
+├── MoonPhaseCalculator.swift    # Astronomical calculations
+├── MoonPainter.swift             # Geometric rendering logic
+└── Templates/                    # Moon phase visual templates
+```
+
+**Rules:**
+* Domain layer is **pure knowledge** — no UI dependencies, no SwiftUI imports
+* World concepts live in Domain/, not SharedUI/ or Features/
+* Moon系 is a **world concept**, not a UI component
+* Features/ can use Domain concepts, but Domain never depends on Features
+* If it defines "what the world is", it belongs in Domain/
+* If it's "how we show the world", it belongs in Features/
+
+**Examples:**
+```
+✅ Domain/Moon/MoonPhaseCalculator.swift  (astronomical math)
+✅ Domain/Moon/MoonPainter.swift          (geometric rendering)
+❌ SharedUI/Visual/Painters/Moon/         (was incorrectly placed)
+✅ Features/Clock/Components/MoonGlyph.swift (UI presentation of moon)
+```
+
+**Philosophy:**
+Domain represents the **truth** of TsukiUsagi's world. The moon's phase calculation is not a "shared UI component" — it's a fundamental fact about how time and lunar cycles relate in this app's universe.
+
+---
+
 ### ui-01: Design System Usage
 
 **Last Updated: 2025-11-16**
