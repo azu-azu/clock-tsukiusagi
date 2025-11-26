@@ -48,10 +48,10 @@ QuietClockView (SwiftUI)
 
 ### Sky Tone
 
-* **🌅 Dawn**: 04:00–08:00
-* **☀️ Day**: 08:00–16:00
-* **🌆 Dusk**: 16:00–20:00
-* **🌙 Night**: 20:00–04:00
+* **🌅 Dawn**: 04:00–08:00 (purple-tinted deep blue)
+* **☀️ Day**: 08:00–16:00 (water blue gradient)
+* **🌆 Dusk**: 16:00–18:00 (deep navy)
+* **🌙 Night**: 18:00–04:00 (deepest navy/black)
 
 ---
 
@@ -59,17 +59,10 @@ QuietClockView (SwiftUI)
 
 ### Color Palette
 
-* **Dawn**: Deep blue → Bright blue
-* **Day**: Light blue → White
-* **Dusk**: Orange → Deep blue
-* **Night**: Deep blue → Black
-
-### Messages
-
-* **Dawn**: “Begin softly.”
-* **Day**: “Keep a steady rhythm.”
-* **Dusk**: “Unwind gently.”
-* **Night**: “It’s a gentle hour.”
+* **Dawn**: `#293f72` → `#ca9cff` (purple-tinted night sky)
+* **Day**: `#3a61a1` → `#b6d7ff` (water blue)
+* **Dusk**: `#0F1420` → `#1A2030` (deep navy)
+* **Night**: `#0B0F18` → `#141A26` (deepest navy)
 
 ---
 
@@ -103,32 +96,55 @@ QuietClockView (SwiftUI)
 ```
 clock-tsukiusagi/
 ├── App/                    # Application entry point
-├── Core/                   # Shared utilities
-│   └── Extensions/
+├── Core/                   # Core systems and services
+│   ├── Audio/              # Audio system (Service, Synthesis, Processing, Mixing, Playback, Presets)
+│   ├── Services/           # System services (Route, Volume, Scheduler, NowPlaying)
+│   ├── Settings/           # Settings models
+│   └── Extensions/         # Swift extensions
+├── Domain/                 # World concepts (pure knowledge)
+│   └── Moon/               # Lunar system (MoonPhaseCalculator, MoonPainter, Templates)
 ├── DesignSystem/           # Design system
-│   ├── Color/
-│   └── Typography/
+│   ├── Color/              # Sky tones and semantic colors
+│   ├── DesignTokens.swift  # Unified visual tokens
+│   └── SettingsComponents.swift
 ├── Features/               # Feature-based modules
-│   └── Clock/
-│       ├── Components/     # UI components
-│       ├── Painters/       # Canvas drawing logic
-│       └── Views/          # SwiftUI views
+│   ├── Clock/              # Clock screen
+│   │   ├── Components/     # UI components (MoonGlyph, etc.)
+│   │   ├── Animations/     # Clock-specific animations
+│   │   └── Views/          # SwiftUI views
+│   ├── Audio/              # Audio feature
+│   │   ├── Views/          # Audio playback UI
+│   │   ├── Components/     # Audio-specific UI (CircularWaveformView)
+│   │   └── LiveActivity/   # Live Activity support
+│   └── Settings/           # Settings screen
+│       ├── Views/          # Settings UI
+│       └── Components/     # Settings-specific components
+├── SharedUI/               # Pure, reusable UI primitives (3+ Feature reuse only)
+│   └── Primitives/         # Visual primitives (DotGrid, etc.)
 └── Resources/              # Resource files
-    └── Localization/
+    ├── Audio/              # Audio files (.caf format)
+    └── Localization/       # i18n resources
 ```
 
 ---
 
 ## 📖 Documentation
 
-### Architecture Guides
+All documentation is located in `clock-tsukiusagi/Docs/`:
 
-* **[SwiftUI-First Architecture Guide](docs/SwiftUI-First-Architecture-Guide.md)** - Architectural principles for UIKit avoidance and SwiftUI-first development
+### Architecture & Specs
+* `Docs/architecture/` — Architecture specifications and ADRs
+* `Docs/architecture/audio-system-spec.md` — Complete audio system specification
+* `CLAUDE.md` — Claude Code guidance (architecture overview)
+* `ENGINEERING_RULES.md` — Development rules and architectural principles
 
-### Implementation Notes
+### Implementation Guides
+* `Docs/implementation/` — Implementation guides (prefix: `_guide-*.md`)
+* `Docs/implementation/_guide-audio-system-impl.md` — Audio system implementation
+* `Docs/implementation/navigation-design.md` — Navigation bar and tab integration
 
-* [Live Activity Setup Guide](docs/LiveActivity-Setup-Guide.md)
-* [TrackPlayer Implementation Notes](docs/TrackPlayer-Implementation-Notes.md)
+### Troubleshooting
+* `Docs/trouble-*.md` — Troubleshooting guides for common issues
 
 ---
 
