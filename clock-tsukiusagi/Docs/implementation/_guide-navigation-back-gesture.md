@@ -263,7 +263,7 @@ if value.translation.width > 50 && abs(value.translation.height) < 100 {
 | ドキュメント | 担当範囲 |
 |-------------|---------|
 | **navigation-design.md** | ナビゲーションバーの外観設計（フォント、ブラー、透明度） |
-| **navigation-back-gesture-guide.md**（本ドキュメント） | 戻る操作の実装（Backボタン、スワイプジェスチャー） |
+| **_guide-navigation-back-gesture.md**（本ドキュメント） | 戻る操作の実装（Backボタン、スワイプジェスチャー） |
 
 ### 統合された実装例
 

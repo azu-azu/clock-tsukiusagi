@@ -536,7 +536,7 @@ xcodebuild -project clock-tsukiusagi.xcodeproj \
 ### プロジェクト内ドキュメント
 
 - `CLAUDE.md` - Design System Guidelines
-- `Docs/implementation/design-tokens-guide.md` - デザイントークン使用ガイド
+- `Docs/implementation/_guide-design-tokens.md` - デザイントークン使用ガイド
 - `Docs/architecture/audio-system-spec.md` - AudioService 仕様
 
 ### SwiftUI リファレンス
