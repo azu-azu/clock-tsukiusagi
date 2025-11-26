@@ -1,4 +1,4 @@
-# Development Guidelines for clock-tsukiusagi
+# Development Guidelines for TsukiSound
 
 **Version**: 3.0 (Updated for Audio System & Navigation Integration)
 **Last Updated**: 2025-11-16
@@ -288,7 +288,7 @@ See: `Docs/implementation/_guide-audio-system-impl.md`
 **Last Updated: 2025-11-16**
 
 ```
-clock-tsukiusagi/
+TsukiSound/
 ├── App/                          # Entry point
 ├── Core/                         # Core systems
 │   ├── Audio/                    # Audio system

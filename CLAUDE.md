@@ -1,4 +1,4 @@
-# Claude Code Guidance for clock-tsukiusagi
+# Claude Code Guidance for TsukiSound
 
 **Version**: 3.2 (Simplified structure guidance)
 **Last Updated**: 2025-11-23
@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (`claude.ai/code`) when working with 
 
 ## Project Overview
 
-**clock-tsukiusagi** is a SwiftUI-based minimalist clock app that visualizes time through the moon's position and sky tone, accompanied by calming natural sounds.
+**TsukiSound** is a SwiftUI-based minimalist clock app that visualizes time through the moon's position and sky tone, accompanied by calming natural sounds.
 
 The app features:
 - **Visual time representation**: Moon phase and position indicate current time
@@ -24,8 +24,8 @@ The project follows **Clean Architecture** with **feature-based organization** a
 ## Key Components
 
 ### Entry Points
-* **App**: `clock-tsukiusagi/App/clock_tsukiusagiApp.swift`
-* **Main View**: `clock-tsukiusagi/App/ContentView.swift` — Tab-based navigation (Clock, Audio, Settings)
+* **App**: `TsukiSound/App/TsukiSoundApp.swift`
+* **Main View**: `TsukiSound/App/ContentView.swift` — Tab-based navigation (Clock, Audio, Settings)
 
 ### Design System
 * **DesignTokens**: `DesignSystem/DesignTokens.swift` — Unified visual tokens for all UI
@@ -82,7 +82,7 @@ Core/Audio/
 - Service → Synthesis → Processing → Mixing → Playback flow
 - Clear separation of concerns prevents architectural drift
 
-See: `clock-tsukiusagi/Docs/architecture/audio-system-spec.md` for full specification
+See: `TsukiSound/Docs/architecture/audio-system-spec.md` for full specification
 
 ### Navigation Design
 
@@ -92,7 +92,7 @@ See: `clock-tsukiusagi/Docs/architecture/audio-system-spec.md` for full specific
 - Current page icon is hidden from navigation
 - Tab state managed in ContentView, passed via `@Binding`
 
-See: `clock-tsukiusagi/Docs/implementation/navigation-design.md` for full specification
+See: `TsukiSound/Docs/implementation/navigation-design.md` for full specification
 
 ---
 
@@ -125,9 +125,9 @@ See: `clock-tsukiusagi/Docs/implementation/navigation-design.md` for full specif
 - Quiet breaks: Scheduled pause periods (configurable duration)
 
 **Reference documentation:**
-- Audio architecture: `clock-tsukiusagi/Docs/architecture/audio-system-spec.md`
-- Implementation guide: `clock-tsukiusagi/Docs/implementation/_guide-audio-system-impl.md`
-- 3-layer architecture rules: `clock-tsukiusagi/Docs/implementation/audio-parameter-safety-rules.md`
+- Audio architecture: `TsukiSound/Docs/architecture/audio-system-spec.md`
+- Implementation guide: `TsukiSound/Docs/implementation/_guide-audio-system-impl.md`
+- 3-layer architecture rules: `TsukiSound/Docs/implementation/audio-parameter-safety-rules.md`
 
 ### Navigation & UI
 
@@ -144,7 +144,7 @@ See: `clock-tsukiusagi/Docs/implementation/navigation-design.md` for full specif
 - Font: Rounded design (`.withDesign(.rounded)`)
 - Large Title: 28pt bold, Inline Title: 17pt semibold
 
-See: `clock-tsukiusagi/Docs/implementation/navigation-design.md`
+See: `TsukiSound/Docs/implementation/navigation-design.md`
 
 ### Design System
 
@@ -219,7 +219,7 @@ SharedUI/
 
 **All temporary comments and debug logs must be marked with emojis (✂️ / 🔥 / 🐛 / 🧪) and removed before production.**
 
-See: `clock-tsukiusagi/Docs/implementation/comment-log-standards.md` for full specification
+See: `TsukiSound/Docs/implementation/comment-log-standards.md` for full specification
 
 ---
 
@@ -243,7 +243,7 @@ See: `clock-tsukiusagi/Docs/implementation/comment-log-standards.md` for full sp
 6. Add effects in `SignalPresetBuilder.applyEffectsForPreset()`
 7. Add mapping in `AudioService.mapToNaturalSound()`
 
-See: `clock-tsukiusagi/Docs/implementation/audio-parameter-safety-rules.md`
+See: `TsukiSound/Docs/implementation/audio-parameter-safety-rules.md`
 
 ### Adding a Settings Option
 
@@ -267,29 +267,29 @@ See: `clock-tsukiusagi/Docs/implementation/audio-parameter-safety-rules.md`
 3. Check for AVAudioUnitDistortion — remove if not needed
 4. Force audio graph rebuild if switching between sources
 
-See: `clock-tsukiusagi/Docs/trouble-audio-distortion-noise.md`
+See: `TsukiSound/Docs/trouble-audio-distortion-noise.md`
 
 ---
 
 ## Documentation References
 
 ### Architecture & Specs
-* `clock-tsukiusagi/Docs/architecture/audio-system-spec.md` — Complete audio system specification
-* `clock-tsukiusagi/Docs/implementation/navigation-design.md` — Navigation bar and tab integration
+* `TsukiSound/Docs/architecture/audio-system-spec.md` — Complete audio system specification
+* `TsukiSound/Docs/implementation/navigation-design.md` — Navigation bar and tab integration
 
 ### Implementation Guides
-* `clock-tsukiusagi/Docs/implementation/_guide-audio-system-impl.md` — Audio system implementation guide
-* `clock-tsukiusagi/Docs/implementation/seamless-loop-audio-generation.md` — Audio file generation for seamless loops
-* `clock-tsukiusagi/Docs/implementation/natural-sound-presets-restoration.md` — Restoring natural sound presets
-* `clock-tsukiusagi/Docs/implementation/comment-log-standards.md` — Comment and log standards
+* `TsukiSound/Docs/implementation/_guide-audio-system-impl.md` — Audio system implementation guide
+* `TsukiSound/Docs/implementation/seamless-loop-audio-generation.md` — Audio file generation for seamless loops
+* `TsukiSound/Docs/implementation/natural-sound-presets-restoration.md` — Restoring natural sound presets
+* `TsukiSound/Docs/implementation/comment-log-standards.md` — Comment and log standards
 
 ### Troubleshooting
-* `clock-tsukiusagi/Docs/trouble-audio-distortion-noise.md` — Audio distortion RCA
-* `clock-tsukiusagi/Docs/trouble-audio-no-sound-silent-switch.md` — Silent switch issues
-* `clock-tsukiusagi/Docs/_guide-error-resolution.md` — General error resolution checklist
+* `TsukiSound/Docs/trouble-audio-distortion-noise.md` — Audio distortion RCA
+* `TsukiSound/Docs/trouble-audio-no-sound-silent-switch.md` — Silent switch issues
+* `TsukiSound/Docs/_guide-error-resolution.md` — General error resolution checklist
 
 ### Other
-* `clock-tsukiusagi/Docs/README.md` — Documentation index with naming conventions
+* `TsukiSound/Docs/README.md` — Documentation index with naming conventions
 * `ENGINEERING_RULES.md` — Project-wide development rules (inherited from parent project)
 
 ---
@@ -331,8 +331,8 @@ See: `clock-tsukiusagi/Docs/trouble-audio-distortion-noise.md`
 
 ### Build
 ```bash
-xcodebuild -project clock-tsukiusagi.xcodeproj \
-           -scheme clock-tsukiusagi \
+xcodebuild -project TsukiSound.xcodeproj \
+           -scheme TsukiSound \
            -destination 'platform=iOS Simulator,name=iPhone 16' build
 ```
 
@@ -356,4 +356,4 @@ python3 scripts/generate_test_tone.py
 
 ---
 
-🌙 *This guide ensures Claude Code assistance stays faithful to the calm, safety-first, and well-structured essence of clock-tsukiusagi.*
+🌙 *This guide ensures Claude Code assistance stays faithful to the calm, safety-first, and well-structured essence of TsukiSound.*

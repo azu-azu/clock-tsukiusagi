@@ -79,13 +79,13 @@ QuietClockView (SwiftUI)
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/azu-azu/clock-tsukiusagi.git
-   cd clock-tsukiusagi
+   git clone https://github.com/azu-azu/TsukiSound.git
+   cd TsukiSound
    ```
 2. Open the project in Xcode:
 
    ```bash
-   open clock-tsukiusagi.xcodeproj
+   open TsukiSound.xcodeproj
    ```
 3. Build and run on simulator or device.
 
@@ -94,7 +94,7 @@ QuietClockView (SwiftUI)
 ## 📁 Project Structure
 
 ```
-clock-tsukiusagi/
+TsukiSound/
 ├── App/                    # Application entry point
 ├── Core/                   # Core systems and services
 │   ├── Audio/              # Audio system (Service, Synthesis, Processing, Mixing, Playback, Presets)
@@ -130,7 +130,7 @@ clock-tsukiusagi/
 
 ## 📖 Documentation
 
-All documentation is located in `clock-tsukiusagi/Docs/`:
+All documentation is located in `TsukiSound/Docs/`:
 
 ### Architecture & Specs
 * `Docs/architecture/` — Architecture specifications and ADRs
@@ -154,17 +154,17 @@ All documentation is located in `clock-tsukiusagi/Docs/`:
 
 ```bash
 # Debug build
-xcodebuild -project clock-tsukiusagi.xcodeproj -scheme clock-tsukiusagi -configuration Debug
+xcodebuild -project TsukiSound.xcodeproj -scheme TsukiSound -configuration Debug
 
 # Release build
-xcodebuild -project clock-tsukiusagi.xcodeproj -scheme clock-tsukiusagi -configuration Release
+xcodebuild -project TsukiSound.xcodeproj -scheme TsukiSound -configuration Release
 ```
 
 ### Test
 
 ```bash
 # Run unit tests
-xcodebuild test -project clock-tsukiusagi.xcodeproj -scheme clock-tsukiusagi
+xcodebuild test -project TsukiSound.xcodeproj -scheme TsukiSound
 ```
 
 ---
@@ -201,7 +201,7 @@ Before contributing, please review the following steps:
 ## 📞 Support
 
 If you encounter issues or have questions, please open a ticket in
-[Issues](https://github.com/azu-azu/clock-tsukiusagi/issues).
+[Issues](https://github.com/azu-azu/TsukiSound/issues).
 
 ---
 

@@ -10,7 +10,7 @@ import SwiftUI
 import WidgetKit
 
 struct AudioLiveActivityControl: ControlWidget {
-    static let kind: String = "com.tsukiusagi.clock-tsukiusagi.AudioLiveActivity"
+    static let kind: String = "com.tsukiusagi.TsukiSound.AudioLiveActivity"
 
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(
