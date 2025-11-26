@@ -1,68 +1,98 @@
-# 🌙 Quiet Clock
+## 🌙 TsukiSound
 
-**A minimalist clock app for feeling time—quietly.**
+### Generative Ambient Audio Engine Inspired by the Quiet of the Moon
 
-Quiet Clock is designed not to *measure* time, but to *feel* it.
-It expresses the passage of time through the moon’s position and the tone of the sky, offering a calm and elegant experience of time.
+A generative ambient audio engine that paints the quiet of the moon.
 
----
-
-## ✨ Features
-
-* **🌙 Moon Position Visualization**: Maps time to an angle (0°–360°) and displays it as the moon’s position.
-* **🎨 Sky Tone Gradients**: Four beautiful color palettes for morning, day, evening, and night.
-* **💭 Gentle Messages**: Soft, time-based messages for each phase of the day.
-* **🌊 Wave Animation**: Elegant wave motion at the bottom of the screen that mirrors the flow of time.
-* **📱 Minimal UI**: A clean, single-screen experience.
+TsukiSound is not designed to measure time—it is made to let you
+feel an atmosphere through sound.
+The stillness of moonlight, the clarity of night air, the gentle drift of shadows—
+all of these are reconstructed through pure sonic layers and natural, organic randomness,
+creating an ambient sound engine shaped around quietness.
 
 ---
 
-## 🏗️ Architecture
+## ✨ Features | 主な特徴
+
+### 🎼 Generative Audio Layers
+
+時間とともに変化する、ジェネレーティブな音響レイヤー。
+
+* **PureTone Engine** — ピュアで減衰の美しい倍音
+* **LunarPulse** — 月の鼓動のような低周波の脈動
+* **WaveBed / Drone Layers** — 呼吸のように広がる安定した音の床
+
+### 🔊 Professional Mixing Architecture
+
+AVAudioEngine を基盤とした
+
+* Processing
+* Mixing
+* Playback
+* Filters
+* Dynamic Scheduling
+
+という複数レイヤーを統合した構造。
+
+### 🌘 Quiet UI
+
+音に集中するための、最小限で静かなインターフェイス。
+
+### 📱 Optional Features
+
+* Circular Waveform Visualization
+* Live Activity（再生中インジケータ）
+* Clock View（音と時間を並置する世界観 UI）
+
+---
+
+## 🌌 Design Philosophy | デザイン哲学
+
+TsukiSound の核にあるのは **Quiet Tech × Poetic Computing**。
+
+* **Not music, but atmosphere**
+  音楽ではなく“空気”をつくる。
+
+* **Natural randomness**
+  完全な規則性ではなく、自然界のゆらぎを模倣する。
+
+* **Calm foreground, silent background**
+  ユーザーの心を占領しない、穏やかな存在感。
+
+* **Poetic Structure**
+  コードやアーキテクチャも“静けさ”の一部として設計する。
+
+---
+
+## 🏗️ Architecture | アーキテクチャ構成
 
 ```
-QuietClockView (SwiftUI)
- ├─ QuietClockVM (Observable)
- │    ├─ time: Date
- │    ├─ phaseAngle: Double        // Moon position (0°–360°)
- │    ├─ skyTone: SkyTone          // Dawn / Day / Dusk / Night
- │    ├─ caption: String           // Message based on the time of day
- │    └─ tick()                    // Timeline update handler
- └─ MoonPainter (Canvas helper)
-      └─ drawMoon(phaseAngle, skyTone)
+TsukiSound/
+├── App/                    # Application entry point
+├── Core/                   # Audio・サービス層
+│   ├── Audio/              # Engine / Synthesis / Mixing / Presets
+│   ├── Services/           # Route / Volume / Scheduler / NowPlaying
+│   ├── Settings/           # App settings models
+│   └── Extensions/
+├── Domain/                 # 純粋な概念
+│   └── Moon/               # 月のアルゴリズムと描画
+├── DesignSystem/           # 色 / トークン / UI パーツ
+├── Features/               # 機能別モジュール
+│   ├── Audio/              # Audio UI
+│   ├── Clock/              # Clock UI（副次機能）
+│   └── Settings/
+└── Resources/              # Audio / Localization / Assets
 ```
 
 ---
 
-## 🧮 Mathematical Model of Time
+## 🖼️ Screenshots & Demos
 
-### Phase Angle (Moon Position)
+※ 後で追加予定
 
-```
-θ = (hour × 60 + minute) / 1440 × 360°
-```
-
-* 0:00 = 0°
-* 6:00 = 90°
-* 12:00 = 180°
-* 18:00 = 270°
-
-### Sky Tone
-
-* **🌅 Dawn**: 04:00–08:00 (purple-tinted deep blue)
-* **☀️ Day**: 08:00–16:00 (water blue gradient)
-* **🌆 Dusk**: 16:00–18:00 (deep navy)
-* **🌙 Night**: 18:00–04:00 (deepest navy/black)
-
----
-
-## 🎨 Design System
-
-### Color Palette
-
-* **Dawn**: `#293f72` → `#ca9cff` (purple-tinted night sky)
-* **Day**: `#3a61a1` → `#b6d7ff` (water blue)
-* **Dusk**: `#0F1420` → `#1A2030` (deep navy)
-* **Night**: `#0B0F18` → `#141A26` (deepest navy)
+* Generative audio waveform
+* Ambient gradient backgrounds
+* Moon-inspired audio transitions
 
 ---
 
@@ -70,81 +100,17 @@ QuietClockView (SwiftUI)
 
 ### Requirements
 
-* iOS 17.0+
-* Xcode 16.0+
+* iOS 17+
+* Xcode 16+
 * Swift 5.9+
 
-### Installation
+### Install
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/azu-azu/TsukiSound.git
-   cd TsukiSound
-   ```
-2. Open the project in Xcode:
-
-   ```bash
-   open TsukiSound.xcodeproj
-   ```
-3. Build and run on simulator or device.
-
----
-
-## 📁 Project Structure
-
+```sh
+git clone https://github.com/azu-azu/tsuki-sound.git
+cd tsuki-sound
+open TsukiSound.xcodeproj
 ```
-TsukiSound/
-├── App/                    # Application entry point
-├── Core/                   # Core systems and services
-│   ├── Audio/              # Audio system (Service, Synthesis, Processing, Mixing, Playback, Presets)
-│   ├── Services/           # System services (Route, Volume, Scheduler, NowPlaying)
-│   ├── Settings/           # Settings models
-│   └── Extensions/         # Swift extensions
-├── Domain/                 # World concepts (pure knowledge)
-│   └── Moon/               # Lunar system (MoonPhaseCalculator, MoonPainter, Templates)
-├── DesignSystem/           # Design system
-│   ├── Color/              # Sky tones and semantic colors
-│   ├── DesignTokens.swift  # Unified visual tokens
-│   └── SettingsComponents.swift
-├── Features/               # Feature-based modules
-│   ├── Clock/              # Clock screen
-│   │   ├── Components/     # UI components (MoonGlyph, etc.)
-│   │   ├── Animations/     # Clock-specific animations
-│   │   └── Views/          # SwiftUI views
-│   ├── Audio/              # Audio feature
-│   │   ├── Views/          # Audio playback UI
-│   │   ├── Components/     # Audio-specific UI (CircularWaveformView)
-│   │   └── LiveActivity/   # Live Activity support
-│   └── Settings/           # Settings screen
-│       ├── Views/          # Settings UI
-│       └── Components/     # Settings-specific components
-├── SharedUI/               # Pure, reusable UI primitives (3+ Feature reuse only)
-│   └── Primitives/         # Visual primitives (DotGrid, etc.)
-└── Resources/              # Resource files
-    ├── Audio/              # Audio files (.caf format)
-    └── Localization/       # i18n resources
-```
-
----
-
-## 📖 Documentation
-
-All documentation is located in `TsukiSound/Docs/`:
-
-### Architecture & Specs
-* `Docs/architecture/` — Architecture specifications and ADRs
-* `Docs/architecture/audio-system-spec.md` — Complete audio system specification
-* `CLAUDE.md` — Claude Code guidance (architecture overview)
-* `ENGINEERING_RULES.md` — Development rules and architectural principles
-
-### Implementation Guides
-* `Docs/implementation/` — Implementation guides (prefix: `_guide-*.md`)
-* `Docs/implementation/_guide-audio-system-impl.md` — Audio system implementation
-* `Docs/implementation/navigation-design.md` — Navigation bar and tab integration
-
-### Troubleshooting
-* `Docs/trouble-*.md` — Troubleshooting guides for common issues
 
 ---
 
@@ -152,49 +118,38 @@ All documentation is located in `TsukiSound/Docs/`:
 
 ### Build
 
-```bash
-# Debug build
+```sh
 xcodebuild -project TsukiSound.xcodeproj -scheme TsukiSound -configuration Debug
-
-# Release build
-xcodebuild -project TsukiSound.xcodeproj -scheme TsukiSound -configuration Release
 ```
 
 ### Test
 
-```bash
-# Run unit tests
+```sh
 xcodebuild test -project TsukiSound.xcodeproj -scheme TsukiSound
 ```
 
 ---
 
-## 🌐 Localization
+## 📖 Documentation
 
-Supported languages:
+ドキュメントは `TsukiSound/Docs/` にまとめています。
 
-* 🇺🇸 English (Base)
-* 🇯🇵 Japanese
-
-To add a new language, create an `.lproj` folder under `Resources/Localization/`.
+* `architecture/` — アーキテクチャ仕様
+* `audio-system-spec.md` — Audioエンジン仕様
+* `implementation/` — 実装ガイド
+* `trouble-*.md` — トラブルシュート
 
 ---
 
 ## 📝 License
 
-This project is released under the MIT License.
-See [LICENSE](LICENSE) for details.
+MIT License.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome pull requests and issue reports!
-Before contributing, please review the following steps:
-
-1. Fork the repository and create a new branch
-2. Commit your changes
-3. Open a pull request
+Pull Request と Issue は歓迎しています。
 
 ---
 
@@ -205,4 +160,4 @@ If you encounter issues or have questions, please open a ticket in
 
 ---
 
-**Quiet Clock** – Feel time beautifully. 🌙
+**TsukiSound**  — Feel the quiet. 🌙
