@@ -33,15 +33,15 @@ The project follows **Clean Architecture** with **feature-based organization** a
 * **Color System**: `DesignSystem/Color/` — Sky tones and semantic colors
 
 ### Core Systems
-* **Audio Service**: `Core/Audio/AudioService.swift` — Singleton service managing all audio playback
-* **Audio Engine**: `Core/Audio/Engine/LocalAudioEngine.swift` — AVAudioEngine wrapper
+* **Audio Service**: `Core/Audio/Service/AudioService.swift` — Singleton service managing all audio playback
+* **Audio Engine**: `Core/Audio/Service/LocalAudioEngine.swift` — AVAudioEngine wrapper
 * **Route Monitor**: `Core/Services/Route/AudioRouteMonitor.swift` — Headphone/speaker detection
 * **Volume Limiter**: `Core/Services/Volume/SafeVolumeLimiter.swift` — Output volume protection
 * **Break Scheduler**: `Core/Services/Scheduler/QuietBreakScheduler.swift` — Scheduled quiet periods
 
 ### Features
 * **Clock Screen**: `Features/Clock/Views/ClockScreenView.swift` — Main clock interface with moon visualization
-* **Audio**: `Core/Audio/AudioPlaybackView.swift` — Audio playback control interface
+* **Audio**: `Features/Audio/Views/AudioPlaybackView.swift` — Audio playback control interface
 * **Settings**: `Features/Settings/Views/AudioSettingsView.swift` — Audio configuration UI
 
 ---
@@ -66,17 +66,21 @@ UI (Views) → Application (Services) → Domain (Audio Sources/Effects)
 - Views send commands: `play()`, `stop()`, `updateSettings()`
 - Audio continues playing during screen transitions
 
-**Component Hierarchy**:
+**Responsibility-Based Architecture (Phase 2):**
 ```
-AudioService (singleton)
-├── LocalAudioEngine (engine lifecycle)
-├── AudioRouteMonitor (output detection)
-├── QuietBreakScheduler (scheduled breaks)
-├── SafeVolumeLimiter (volume protection)
-└── Audio Sources/Players
-    ├── NaturalSoundSource (synthesis)
-    └── TrackPlayer (file playback)
+Core/Audio/
+├── Service/          # Entry point (AudioService, AudioSessionManager, LocalAudioEngine)
+├── Synthesis/        # Sound generation (Oscillators, Signals, PureTone, Noise)
+├── Processing/       # Sound modification (Effects, Filters, Modifiers)
+├── Mixing/           # Mixer buses (FinalMixer, FinalMixerOutputNode)
+├── Playback/         # Playback control (Players: TrackPlayer)
+└── Presets/          # Sound presets (UISoundPreset, PureTonePreset, NaturalSoundPreset)
 ```
+
+**Design Philosophy:**
+- Directories named by **responsibility** (what they DO), not concepts (what they ARE)
+- Service → Synthesis → Processing → Mixing → Playback flow
+- Clear separation of concerns prevents architectural drift
 
 See: `clock-tsukiusagi/Docs/architecture/audio-system-spec.md` for full specification
 

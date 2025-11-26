@@ -89,19 +89,44 @@ Checklist:
 
 ### arch-02: Audio System Architecture
 
-**Last Updated: 2025-11-16**
+**Last Updated: 2025-11-26 (Phase 2: Responsibility-Based Reorganization)**
 
-**Singleton Service Pattern:**
+**Responsibility-Based Directory Structure:**
 ```
-AudioService (singleton)
-├── LocalAudioEngine (AVAudioEngine wrapper)
-├── AudioRouteMonitor (headphone/speaker detection)
-├── QuietBreakScheduler (scheduled quiet breaks)
-├── SafeVolumeLimiter (volume ceiling protection)
-└── Audio Sources/Players
-    ├── NaturalSoundSource (synthesis)
-    └── TrackPlayer (file playback)
+Core/Audio/
+├── Service/          # Entry point (API / Session)
+│   ├── AudioService.swift
+│   ├── AudioSessionManager.swift
+│   └── LocalAudioEngine.swift
+│
+├── Synthesis/        # Sound generation
+│   ├── AudioSourceProtocol.swift
+│   ├── Oscillators/  # Basic waveform generators
+│   ├── Signals/      # Signal processing primitives (Osc, Wave, Mix)
+│   ├── PureTone/     # Pure tone presets & builders
+│   └── Noise/        # Noise generators (white, bandpass, click masking)
+│
+├── Processing/       # Sound modification
+│   ├── Effects/      # Reverb, filters, limiters
+│   ├── Filters/      # Filter buses (FilterBus, ReverbBus)
+│   └── Modifiers/    # Envelopes, LFOs, modulation
+│
+├── Mixing/           # Mixer buses
+│   ├── FinalMixer.swift
+│   └── FinalMixerOutputNode.swift
+│
+├── Playback/         # Playback control
+│   └── Players/      # File players (TrackPlayer)
+│
+└── Presets/          # Sound presets
+    └── UISoundPreset.swift
 ```
+
+**Design Philosophy:**
+* Directories named by **responsibility** (what they DO), not concepts (what they ARE)
+* Signal flow: Service → Synthesis → Processing → Mixing → Playback
+* Prevents "historical sedimentation" — each file has a clear responsibility category
+* Scales cleanly: new oscillators go to Synthesis/Oscillators/, new effects to Processing/Effects/
 
 **Rules:**
 * Views NEVER create audio instances — always use `AudioService.shared`
