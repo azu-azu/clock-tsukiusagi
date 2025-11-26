@@ -162,6 +162,33 @@ See: `clock-tsukiusagi/Docs/implementation/navigation-design.md`
 - `SettingsToggle` — Toggle with title and subtitle
 - `SettingsStepper` — Stepper with title and value display
 
+### SharedUI Guidelines
+
+**境界破綻防止ルール (Boundary Violation Prevention Rules)**
+
+SharedUI is for **pure, reusable UI components only**. Following these rules prevents architectural pollution.
+
+**✅ SharedUI に入れてよいもの (What belongs in SharedUI):**
+1. **Rule of Three**: Components used by 3+ Features
+2. **Pure UI style components**: DotGrid, visual primitives, layout helpers
+3. **Design system primitives**: No business logic or domain concepts
+
+**❌ SharedUI に入れてはいけないもの (What does NOT belong in SharedUI):**
+1. **Feature-specific UI**: Audio waveforms, Clock-specific animations → Keep in Features/
+2. **World concepts**: Moon系 (goes to Domain/), time representations → Domain layer
+3. **Non-visual components**: Logic, services, utilities → Core/ or appropriate layer
+4. **Business logic**: Any component with domain knowledge → Domain/ or Core/
+
+**Examples:**
+```
+✅ SharedUI/Visual/Primitives/DotGrid.swift          (pure visual primitive)
+❌ SharedUI/Visual/Audio/CircularWaveformView.swift  (Audio Feature専用 → Features/Audio/Components/)
+❌ SharedUI/Domain/Moon/MoonPainter.swift            (世界観概念 → Domain/Moon/)
+❌ SharedUI/Visual/Animations/WavyBottomAnimation.swift (Clock専用 → Features/Clock/Animations/)
+```
+
+**When in doubt**: Keep it in the Feature that uses it. Only move to SharedUI after proven reuse by 3+ features.
+
 ### Code Quality
 
 **SwiftUI best practices:**
