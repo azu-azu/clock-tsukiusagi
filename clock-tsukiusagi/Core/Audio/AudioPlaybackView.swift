@@ -1,9 +1,9 @@
 //
-//  AudioTestView.swift
+//  AudioPlaybackView.swift
 //  clock-tsukiusagi
 //
 //  Created by Claude Code on 2025-11-09.
-//  オーディオシステムのテストビュー
+//  音声再生コントロール画面
 //
 
 import SwiftUI
@@ -52,8 +52,8 @@ extension AudioSourcePreset: Hashable, Equatable {
     }
 }
 
-/// オーディオテストビュー
-struct AudioTestView: View {
+/// 音声再生コントロールビュー
+struct AudioPlaybackView: View {
     @EnvironmentObject var audioService: AudioService
     @Binding var selectedTab: Tab
 
@@ -393,12 +393,12 @@ struct AudioTestView: View {
             Domain: \(error.domain)
             Description: \(error.localizedDescription)
             """
-            print("AudioTestView: \(detailedMessage)")
+            print("AudioPlaybackView: \(detailedMessage)")
             errorMessage = detailedMessage
             showError = true
         } catch {
             errorMessage = "再生エラー: \(error.localizedDescription)"
-            print("AudioTestView: \(errorMessage ?? "")")
+            print("AudioPlaybackView: \(errorMessage ?? "")")
             showError = true
         }
     }
@@ -409,6 +409,6 @@ struct AudioTestView: View {
 }
 
 #Preview {
-    AudioTestView(selectedTab: .constant(.audioTest))
+    AudioPlaybackView(selectedTab: .constant(.audioPlayback))
         .environmentObject(AudioService.shared)
 }

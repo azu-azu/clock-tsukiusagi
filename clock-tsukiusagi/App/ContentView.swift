@@ -21,8 +21,8 @@ public struct ContentView: View {
                             .allowsHitTesting(false)
                     }
 
-                case .audioTest:
-                    AudioTestView(selectedTab: $selectedTab)
+                case .audioPlayback:
+                    AudioPlaybackView(selectedTab: $selectedTab)
 
                 case .settings:
                     AudioSettingsView(selectedTab: $selectedTab)
@@ -55,7 +55,7 @@ public struct ContentView: View {
                             label: "Audio",
                             isSelected: false
                         ) {
-                            selectedTab = .audioTest
+                            selectedTab = .audioPlayback
                         }
                     }
 
@@ -81,7 +81,7 @@ public struct ContentView: View {
                         selectedTab = .clock
                     },
                     onOpenAudio: {
-                        selectedTab = .audioTest
+                        selectedTab = .audioPlayback
                     },
                     onOpenAudioSettings: {
                         selectedTab = .settings
@@ -135,7 +135,7 @@ public struct ContentView: View {
 
 public enum Tab {
     case clock
-    case audioTest
+    case audioPlayback
     case settings
     case appSettings
 }

@@ -43,7 +43,7 @@ public struct AppSettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        selectedTab = .audioTest
+                        selectedTab = .audioPlayback
                     }) {
                         Image(systemName: "music.quarternote.3")
                             .font(.system(size: 20))
