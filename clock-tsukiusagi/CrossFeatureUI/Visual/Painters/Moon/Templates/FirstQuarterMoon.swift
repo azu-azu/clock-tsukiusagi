@@ -113,7 +113,7 @@ enum FirstQuarterMoon {
                 layer.addFilter(.blur(radius: 3.0))
 
                 // Apply multiple stroke passes for feathering effect
-                let passes = 20
+                let passes = 40
                 for p in 0..<passes {
                     let w = 3.0 * (1.6 - 0.25 * CGFloat(p))
                     layer.stroke(
