@@ -64,7 +64,7 @@ struct ClockTsukiusagiApp: App {
 
 **View usage**:
 ```swift
-struct AudioTestView: View {
+struct AudioPlaybackView: View {
     @EnvironmentObject var audioService: AudioService
 
     var body: some View {

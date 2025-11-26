@@ -22,7 +22,7 @@ Phase 1 では、Audio システムの**基盤アーキテクチャ再設計**�
 
 | 問題点 | 詳細 |
 |--------|------|
-| 🎛️ View依存 | 各画面 (`AudioTestView` など) が独自に `LocalAudioEngine` を生成。 |
+| 🎛️ View依存 | 各画面 (`AudioPlaybackView` など) が独自に `LocalAudioEngine` を生成。 |
 | 🔇 破棄のタイミング問題 | Viewが閉じるたびにエンジンが破棄され、音が止まる。 |
 | ⚙️ セッション競合 | 各インスタンスが `AVAudioSession.setActive(true)` を繰り返すため、`OSStatus -50` エラーが発生。 |
 | 🧠 状態共有なし | 現在の再生状態や出力経路をアプリ全体で把握できない。 |

@@ -17,7 +17,7 @@
 ## 🔍 Problem Statement
 
 ### 症状
-- AudioTestViewで再生ボタンを押しても音が出ない
+- AudioPlaybackView（旧AudioTestView）で再生ボタンを押しても音が出ない
 - UIは「再生中」状態を表示
 - エラーメッセージなし
 - コンソールに異常なログなし
@@ -57,8 +57,8 @@
 ✅ LocalAudioEngine: AVAudioEngine started
 ✅ LocalAudioEngine: All audio sources started
 ✅ Oscillator: Rendering 1024 frames, amplitude: 0.3
-✅ AudioTestView: Device volume: 1.0
-✅ AudioTestView: Master volume: 1.0
+✅ AudioPlaybackView: Device volume: 1.0
+✅ AudioPlaybackView: Master volume: 1.0
 ```
 
 **重要な発見**:

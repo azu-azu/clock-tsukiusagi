@@ -51,8 +51,8 @@ ZStack(alignment: .top) {
                 ClockScreenView()        // ← 中で背景だけ .ignoresSafeArea()
                 WavyBottomView()
             }
-        case .audioTest:
-            AudioTestView()
+        case .audioPlayback:
+            AudioPlaybackView()
         }
     }
 
@@ -70,9 +70,9 @@ ZStack(alignment: .top) {
             TabButton(
                 icon: "waveform",
                 label: "Audio",
-                isSelected: selectedTab == .audioTest
+                isSelected: selectedTab == .audioPlayback
             ) {
-                selectedTab = .audioTest
+                selectedTab = .audioPlayback
             }
         }
         .frame(height: 60)

@@ -127,7 +127,7 @@ See: `Docs/architecture/audio-system-spec.md`
 ```swift
 public enum Tab {  // Must be public
     case clock
-    case audioTest
+    case audioPlayback
     case settings
 }
 ```

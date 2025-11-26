@@ -5,7 +5,7 @@
 
 ## 📋 概要
 
-`CircularWaveformView` は、オーディオ再生中に円形のアニメーション波形を表示するSwiftUIコンポーネントです。AudioTestView内で使用され、再生状態を視覚的にフィードバックします。
+`CircularWaveformView` は、オーディオ再生中に円形のアニメーション波形を表示するSwiftUIコンポーネントです。AudioPlaybackView内で使用され、再生状態を視覚的にフィードバックします。
 
 ### 主な特徴
 
@@ -317,7 +317,7 @@ where:
 
 ## 🎯 使用方法
 
-### AudioTestView への統合
+### AudioPlaybackView への統合
 
 ```swift
 private var waveformSection: some View {

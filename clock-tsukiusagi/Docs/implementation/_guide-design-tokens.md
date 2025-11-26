@@ -285,7 +285,7 @@ SkyToneを背景に使う場合、キャプションテキストがSkyToneの色
 背景色関連のopacity値が複数箇所で重複していた：
 
 1. `cardBackground`: `opacity(0.1)` vs `opacity(0.10)` の表記ゆれ
-2. `AudioTestView.swift`: hardcoded `opacity(0.15)`, `opacity(0.3)` with ✂️ comment
+2. `AudioPlaybackView.swift`（旧AudioTestView）: hardcoded `opacity(0.15)`, `opacity(0.3)` with ✂️ comment
 3. `SettingsComponents.swift`: hardcoded `opacity(0.25)`, `opacity(0.3)`
 
 #### 解決策
@@ -298,7 +298,7 @@ SkyToneを背景に使う場合、キャプションテキストがSkyToneの色
 
 2. **各Colors enumは参照のみ**: CosmosColors, SettingsColorsからCommonBackgroundColorsを参照
 
-3. **hardcoded値を削除**: AudioTestView, SettingsComponentsのhardcoded値をトークン参照に置き換え
+3. **hardcoded値を削除**: AudioPlaybackView, SettingsComponentsのhardcoded値をトークン参照に置き換え
 
 #### 影響範囲
 

@@ -13,7 +13,7 @@ Clock画面のフルスクリーン体験を維持しつつ、他の画面では
 ```swift
 public enum Tab {
     case clock
-    case audioTest
+    case audioPlayback
     case settings
 }
 ```
@@ -54,7 +54,7 @@ if selectedTab == .clock {
         Button { selectedTab = .clock } label: { ... }  // Clock
     }
     ToolbarItem(placement: .navigationBarTrailing) {
-        Button { selectedTab = .audioTest } label: { ... }  // Audio
+        Button { selectedTab = .audioPlayback } label: { ... }  // Audio
     }
     // Settings アイコンは非表示（現在のページ）
 }
@@ -289,7 +289,7 @@ let roundedFont = UIFont(descriptor: descriptor, size: 28)
 
 - `clock-tsukiusagi/App/ContentView.swift` - タブ管理とカスタムタブバー
 - `clock-tsukiusagi/Features/Settings/Views/AudioSettingsView.swift` - ナビバー実装例
-- `clock-tsukiusagi/Core/Audio/AudioTestView.swift` - ナビバー実装例
+- `clock-tsukiusagi/Core/Audio/AudioPlaybackView.swift` - ナビバー実装例
 - `clock-tsukiusagi/DesignSystem/DesignTokens.swift` - デザイントークン定義
 
 ## 変更履歴

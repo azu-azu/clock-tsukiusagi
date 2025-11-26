@@ -32,7 +32,7 @@ AudioSourcePreset enumに`.legacy(NaturalSoundPreset)`ケースを追加し、�
 
 **Commit: 23fd402 - "refactor: remove legacy SignalAudioSource code after A/B testing"**
 
-1. **AudioTestView.swift**
+1. **AudioPlaybackView.swift**（旧AudioTestView）
    - `.legacy(NaturalSoundPreset)` ケースを削除
    - 元の2ケース構造に戻す（synthesis, audioFile）
 

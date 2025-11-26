@@ -118,7 +118,7 @@ Phase 2で完成した安全性機構に、
 **ファイル:**
 - `Core/Audio/Players/TrackPlayer.swift` - ファイル再生プレイヤー
 - `Core/Audio/Presets/AudioFilePresets.swift` - 音源プリセット定義
-- `Core/Audio/AudioTestView.swift` - テストUI
+- `Core/Audio/AudioPlaybackView.swift` - 音声再生コントロールUI
 - `scripts/generate_test_tone.py` - テスト音源生成スクリプト
 
 **機能:**

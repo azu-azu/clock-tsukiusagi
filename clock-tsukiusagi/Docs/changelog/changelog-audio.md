@@ -177,8 +177,8 @@ public final class AirLayerSource: AudioSource {
   - Removed `.lunarPulse` handling from `createRawSignal()`
   - Removed PureTone effects from `applyEffectsForPreset()`
 
-#### AudioTestView
-- **File**: `Core/Audio/AudioTestView.swift`
+#### AudioPlaybackView (旧AudioTestView)
+- **File**: `Core/Audio/AudioPlaybackView.swift`
 - **Changes**:
   - `AudioSourcePreset` now uses `UISoundPreset`
   - `allSources` iterates `UISoundPreset.allCases`
@@ -247,7 +247,7 @@ public final class AirLayerSource: AudioSource {
 - **Production/Test Separation**:
   - Production presets: 💿 icon
   - Test presets: ✏️ icon (DEBUG build only)
-- **File**: `AudioTestView.swift` - Added `englishTitle` property to `AudioSourcePreset`
+- **File**: `AudioPlaybackView.swift` (旧AudioTestView) - Added `englishTitle` property to `AudioSourcePreset`
 - **File**: `NaturalSoundPresets.swift` - Added `englishTitle` computed property
 
 ### Changed

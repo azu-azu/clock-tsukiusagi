@@ -41,7 +41,7 @@ The project follows **Clean Architecture** with **feature-based organization** a
 
 ### Features
 * **Clock Screen**: `Features/Clock/Views/ClockScreenView.swift` — Main clock interface with moon visualization
-* **Audio**: `Core/Audio/AudioTestView.swift` — Audio playback control interface
+* **Audio**: `Core/Audio/AudioPlaybackView.swift` — Audio playback control interface
 * **Settings**: `Features/Settings/Views/AudioSettingsView.swift` — Audio configuration UI
 
 ---

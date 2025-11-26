@@ -187,7 +187,7 @@ struct AudioSettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        selectedTab = .audioTest  // Audioページに移動
+                        selectedTab = .audioPlayback  // Audioページに移動
                     }) {
                         Image(systemName: "music.quarternote.3")
                             .font(.system(size: 20))
