@@ -2,7 +2,125 @@
 
 **Module**: Audio System (Core/Audio, Core/Services, Features/Settings)
 **Current Version**: Phase 2 Complete + 3-Layer Architecture
-**Last Updated**: 2025-11-23
+**Last Updated**: 2025-11-26
+
+---
+
+## Experiment: Air Layer (2025-11-26) - REVERTED
+
+**Status**: ❌ Failed - Removed
+**Focus**: High-frequency transparency layer for ambient depth
+**Commits**: `37e4758` (added), `32823ff` (expanded), `fa91528` (removed)
+
+### Implementation Attempt
+
+#### Air Layer Concept
+- **Purpose**: Add subtle "air" presence in high-frequency range (6-10 kHz)
+- **Inspiration**: Endel-style transparency layering technique
+- **Goal**: Improve perceived transparency without muddying main sound
+
+#### Technical Implementation
+- **File**: `Core/Audio/Signal/Synthesis/AirLayer.swift` (created, then deleted)
+- **Approach**: White noise → High-pass filter (6-10 kHz) → Very low volume (0.02-0.03)
+- **Integration**: Added to all 5 presets via `FinalMixer`
+- **Settings**: UI controls for enable/disable and volume adjustment
+
+#### Preset-Specific Parameters
+- `.pentatonicChime`: 9kHz cutoff, 0.030 volume (bright)
+- `.cathedralStillness`: 8kHz cutoff, 0.035 volume (cathedral air)
+- `.toyPiano`: 7kHz cutoff, 0.025 volume (soft, warm)
+- `.moonlightFlow`: 8kHz cutoff, 0.030 volume (standard)
+- `.moonlightFlowMidnight`: 6kHz cutoff, 0.020 volume (deep night)
+
+### Why It Failed
+
+#### Problem: Audible White Noise
+- **Expected**: Barely audible "air" presence adding transparency
+- **Actual**: Clearly audible "さーーっ" white noise hiss
+- **User Feedback**: "Sounds like noise, not transparency"
+
+#### Root Cause: Design Flaw
+
+**1. Incorrect Use of Signal Paradigm**
+```swift
+// WRONG: Signal is a pure time function (stateless)
+let filter = StateVariableFilter(...)
+return Signal { time in
+    let noise = Float.random(in: -1...1)
+    return filter.process(noise * volume, time: time)
+}
+```
+
+**Issues**:
+- White noise is **random**, not a deterministic time function
+- `StateVariableFilter` is **stateful** (maintains z1, z2 internal state)
+- Signal closure is **stateless** (should be pure function of time)
+- Incompatible paradigms led to filter malfunction
+
+**2. Filter State Management Error**
+- Filter created **outside** Signal closure
+- But referenced **inside** closure with varying `time` parameter
+- Result: Filter state corrupted, passing raw noise instead of filtered air
+
+**3. Noise Generation Pattern**
+- `Float.random()` called per sample breaks Signal purity
+- No seed control means unpredictable behavior
+- Pattern incompatible with Signal's time-function model
+
+### Correct Implementation (Not Pursued)
+
+**Should Have Used TreeChime Pattern**:
+```swift
+public final class AirLayerSource: AudioSource {
+    private let _sourceNode: AVAudioSourceNode
+
+    init(...) {
+        _sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList in
+            // Real-time noise generation + filtering in render callback
+            // Proper stateful filter management
+        }
+    }
+}
+```
+
+**Why Not Implemented**:
+- Requires 2-3 hours of work
+- Effect was not perceptible even with correct implementation
+- Cost-benefit analysis: Not worth the effort
+
+### Changes Reverted
+
+**Files Deleted**:
+- `AirLayer.swift` - Flawed Signal-based implementation
+
+**Code Removed**:
+- `PureToneBuilder.swift` - All `airLayer` instantiation and `mixer.add()` calls
+- `AudioSettings.swift` - `airLayerEnabled` and `airLayerVolume` properties
+- `AudioSettingsView.swift` - Air Layer settings UI section
+
+**Presets Cleaned**:
+- All 5 presets reverted to original design (no air layer)
+
+### Lessons Learned
+
+1. **Signal vs AudioSource**: Use Signal for deterministic time functions only. Use AudioSource for stochastic processes (noise, random events).
+
+2. **Filter Paradigm Matching**: Stateful filters (StateVariableFilter) require stateful container (AudioSource), not stateless Signal.
+
+3. **Prototype Validation**: Test core concept (white noise filtering) in isolation before full integration.
+
+4. **User Perception > Theory**: "Transparency enhancement" that sounds like noise is worse than no enhancement.
+
+### Commits
+
+- `37e4758` - feat: add Air Layer for high-frequency transparency
+- `32823ff` - feat: expand Air Layer to all presets with user settings
+- `fa91528` - revert: remove Air Layer implementation completely
+
+### Documentation Impact
+
+- No changes to `Audio-Preset-Concepts.md` (not documented before removal)
+- This changelog entry serves as historical record
 
 ---
 
