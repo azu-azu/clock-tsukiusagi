@@ -131,8 +131,13 @@ public struct PureToneBuilder {
         case .moonlightFlow:
             // Moonlight flow melody with spacious, dreamy reverb
             let signal = MoonlightFlowSignal.makeSignal()
+
+            // Air layer for high-frequency transparency
+            let airLayer = AirLayer.make(cutoffFrequency: 8000, volume: 0.03)
+
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
+            mixer.add(airLayer, gain: 1.0)  // Add air layer for transparency
 
             // Deep, majestic reverb for rich moonlight atmosphere
             let reverb = SchroederReverb(
