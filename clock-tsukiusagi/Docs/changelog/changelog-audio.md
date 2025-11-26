@@ -205,7 +205,7 @@ public final class AirLayerSource: AudioSource {
    - UI can reorganize without code changes
 
 ### Documentation Updates
-- Updated `audio-parameter-safety-rules.md` to v2.0 with 3-layer architecture
+- Updated `architecture/_arch-audio-parameter-safety-rules.md` to v2.0 with 3-layer architecture
 - Updated `audio-system-spec.md` API examples
 - Updated `_guide-audio-system-impl.md` with mapping flow
 - Updated `CLAUDE.md` with architecture explanation

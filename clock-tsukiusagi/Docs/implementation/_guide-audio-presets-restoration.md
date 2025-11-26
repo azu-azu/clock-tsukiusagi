@@ -9,7 +9,7 @@
 >
 > このドキュメント内の `NaturalSoundPreset` への直接参照は、現在は `UISoundPreset` → マッピング → `NaturalSoundPreset/PureTonePreset` の流れに変更されています。
 >
-> 最新の実装については [`audio-parameter-safety-rules.md`](./audio-parameter-safety-rules.md) を参照してください。
+> 最新の実装については [`../architecture/_arch-audio-parameter-safety-rules.md`](../architecture/_arch-audio-parameter-safety-rules.md) を参照してください。
 
 ## 概要
 

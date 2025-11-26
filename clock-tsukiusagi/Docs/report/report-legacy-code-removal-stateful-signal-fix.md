@@ -372,7 +372,7 @@ Swiftのクロージャキャプチャの挙動を正しく理解する必要が
 - Commit: 23fd402 - "refactor: remove legacy SignalAudioSource code after A/B testing"
 - Commit: 3dbe879 - "fix: convert stateful Signal presets to class-based generators"
 - Commit: 02f4443 - "feat: add reset() methods to stateful Signal generators"
-- Previous session: `_2025-11-18_signal_engine_tpt_svf_fix.md`
+- Previous session: [`report-signal-engine-tpt-svf-fix.md`](./report-signal-engine-tpt-svf-fix.md)
 
 ---
 

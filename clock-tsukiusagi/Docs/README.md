@@ -47,10 +47,13 @@
 
 ### 🏛️ 設計思想・アーキテクチャ
 - [`_arch-guidelines.md`](./_arch-guidelines.md) - アーキテクチャガイドライン・設計原則
+- [`architecture/_arch-audio-parameter-safety-rules.md`](./architecture/_arch-audio-parameter-safety-rules.md) - オーディオパラメータ安全性ルール（3層アーキテクチャ）
+- [`architecture/audio-system-spec.md`](./architecture/audio-system-spec.md) - オーディオシステム仕様書（Phase 2完了 + 3層アーキテクチャ）
 
 ### 🎯 アーキテクチャ決定記録（ADR）
 - `_adr-*.md` - 設計判断の背景・トレードオフ・決定理由を記録
-- 例：`_adr-audio-service-singleton.md` - AudioService Singleton採用の決定記録
+- [`architecture/adrs/_adr-0001-audio-service-singleton.md`](./architecture/adrs/_adr-0001-audio-service-singleton.md) - AudioService Singleton採用の決定記録
+- [`architecture/adrs/_adr-0002-safe-volume-ios-alt.md`](./architecture/adrs/_adr-0002-safe-volume-ios-alt.md) - iOS互換ボリュームリミッター実装の決定記録
 
 ### 🔧 実装ガイド・手順書
 - [`_guide-error-resolution.md`](./_guide-error-resolution.md) - エラー解決ガイド（汎用チェックリスト）
@@ -59,10 +62,14 @@
 - [`_guide-keyboard.md`](./_guide-keyboard.md) - キーボード操作ガイドライン
 - [`_guide-notifications-fg-bg.md`](./_guide-notifications-fg-bg.md) - フォアグラウンド・バックグラウンド通知ガイド
 - [`_guide-quiet-moon-animation.md`](./_guide-quiet-moon-animation.md) - Quiet Moon状態からのSTART時アニメーション不発火問題の修正ガイド
+- [`implementation/_guide-audio-system-impl.md`](./implementation/_guide-audio-system-impl.md) - オーディオシステム実装ガイド（Phase 2 + 3層アーキテクチャ）★主要リファレンス
+- [`implementation/_guide-audio-seamless-loop-generation.md`](./implementation/_guide-audio-seamless-loop-generation.md) - シームレスループ音声ファイル生成ガイド
+- [`implementation/_guide-audio-presets-restoration.md`](./implementation/_guide-audio-presets-restoration.md) - ナチュラルサウンドプリセット復元ガイド（⚠️ 一部非推奨：3層アーキテクチャ移行済み）
+- [`implementation/navigation-design.md`](./implementation/navigation-design.md) - ナビゲーションバー・タブ統合設計
 
 ### 📖 運用・テスト手順書（Runbook）
 - `_runbook-*.md` - 運用手順、テスト手順、デバッグ手順を記録
-- 例：`_runbook-audio-ops-and-tests.md` - オーディオシステムの運用・テスト手順
+- [`runbook/_runbook-audio-ops-and-tests.md`](./runbook/_runbook-audio-ops-and-tests.md) - オーディオシステムの運用・テスト手順（Phase 2）
 
 ### 🏗️ 構造・設計ルール
 - [`structure-directory.md`](./structure-directory.md) - プロジェクトディレクトリ構造
@@ -70,20 +77,26 @@
 
 ### 📜 変更履歴（Changelog）
 - `changelog-*.md` - 機能別・モジュール別の変更履歴を記録
-- 例：`changelog-audio.md` - オーディオシステムの変更履歴
+- [`changelog/changelog-audio.md`](./changelog/changelog-audio.md) - オーディオシステムの変更履歴（Phase 2完了 + 3層アーキテクチャ + Air Layer実験）
 
 ### ⚙️ 設定・例外・ルール
 - [`lint-exceptions.md`](./lint-exceptions.md) - SwiftLint例外設定
 
 ### 📊 報告・記録
 - [`report-task-terminology-migration.md`](./report-task-terminology-migration.md) - Task用語移行レポート
+- [`report/report-audio-phase1-foundation.md`](./report/report-audio-phase1-foundation.md) - オーディオシステム Phase 1実装報告（基盤構築）
+- [`report/report-audio-phase2-safety.md`](./report/report-audio-phase2-safety.md) - オーディオシステム Phase 2実装報告（安全機能・スケジューリング）
+- [`report/report-audio-phase3-integration.md`](./report/report-audio-phase3-integration.md) - オーディオシステム Phase 3実装報告（統合・UI連携）
+- [`report/report-signal-engine-tpt-svf-fix.md`](./report/report-signal-engine-tpt-svf-fix.md) - Signal Engine TPT-SVFフィルタ置き換え修正レポート（2025-11-18）
+- [`report/report-legacy-code-removal-stateful-signal-fix.md`](./report/report-legacy-code-removal-stateful-signal-fix.md) - レガシーコード削除・Stateful Signal修正レポート（2025-11-19）
 
 ### 🎧 リファレンス音声
 - [`reference-audio/reference-audio-guide.md`](./reference-audio/reference-audio-guide.md) - 解析専用の音声ファイル置き場（アプリには同梱しない）
 
 ### 🔧 トラブルシューティング
-- [`trouble-audio-distortion-noise.md`](./trouble-audio-distortion-noise.md) - AVAudioUnitDistortion雑音問題RCA（最重要）
+- [`trouble-audio-distortion-noise.md`](./trouble-audio-distortion-noise.md) - AVAudioUnitDistortion雑音問題RCA（最重要）★CRITICAL
 - [`trouble-audio-no-sound-silent-switch.md`](./trouble-audio-no-sound-silent-switch.md) - オーディオ無音問題（サイレントスイッチ）RCA
+- [`trouble-audio-sample-rate-mismatch.md`](./trouble-audio-sample-rate-mismatch.md) - サンプルレート不一致によるノイズ問題RCA（パチパチ音）
 - [`trouble-cursor-swift.md`](./trouble-cursor-swift.md) - Cursor Swift拡張のトラブルシューティング
 
 ## 📝 ドキュメント作成・更新ルール
