@@ -151,55 +151,6 @@ public struct AudioSettingsView: View {
                             .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
                         }
 
-                        // MARK: - Air Layer (Transparency Enhancement)
-
-                        SettingsSection(title: "Air Layer (Transparency)") {
-                            SettingsToggle(
-                                title: "Enable Air Layer",
-                                subtitle: "High-frequency transparency layer for ambient depth",
-                                isOn: Binding(
-                                    get: { settings.airLayerEnabled },
-                                    set: {
-                                        settings.airLayerEnabled = $0
-                                        saveSettings()
-                                    }
-                                )
-                            )
-
-                            if settings.airLayerEnabled {
-                                VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalMedium) {
-                                    HStack {
-                                        Text("Air Layer Volume")
-                                            .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                                            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                                        Spacer()
-                                        Text(String(format: "%.3f", settings.airLayerVolume))
-                                            .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                                            .foregroundColor(DesignTokens.SettingsColors.accent)
-                                            .monospacedDigit()
-                                    }
-
-                                    Slider(
-                                        value: Binding(
-                                            get: { Double(settings.airLayerVolume) },
-                                            set: {
-                                                settings.airLayerVolume = Float($0)
-                                                saveSettings()
-                                            }
-                                        ),
-                                        in: 0.01...0.1,
-                                        step: 0.005
-                                    )
-                                    .tint(DesignTokens.SettingsColors.accent)
-
-                                    Text("Adjusts the volume of the high-frequency air layer. Very subtle by design. Default: 0.030")
-                                        .dynamicFont(size: DesignTokens.SettingsTypography.captionSize, weight: DesignTokens.SettingsTypography.captionWeight)
-                                        .foregroundColor(DesignTokens.SettingsColors.textQuaternary)
-                                }
-                                .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
-                            }
-                        }
-
                         // MARK: - Live Activity (Phase 3)
                         if #available(iOS 16.1, *) {
                             SettingsSection(title: "Live Activity") {

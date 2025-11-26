@@ -22,13 +22,8 @@ public struct PureToneBuilder {
         case .pentatonicChime:
             // Signal-based implementation with reverb effect
             let signal = PentatonicChimeSignal.makeSignal()
-
-            // Air layer for bright, crystalline transparency (9kHz)
-            let airLayer = AirLayer.make(cutoffFrequency: 9000, volume: 0.03)
-
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
-            mixer.add(airLayer, gain: 1.0)  // Add air layer for transparency
 
             // Add reverb effect (same as NaturalSound was using)
             let reverb = SchroederReverb(
@@ -58,14 +53,10 @@ public struct PureToneBuilder {
             let harpSignal = MidnightDropletsSignal.makeSignal()
             let jupiterSignal = JupiterMelodySignal.makeSignal()
 
-            // Air layer for cathedral atmosphere (8kHz)
-            let airLayer = AirLayer.make(cutoffFrequency: 8000, volume: 0.035)
-
             let mixer = FinalMixer()
             mixer.add(organSignal, gain: 1.0)     // オルガンドローン（ベース）
             mixer.add(harpSignal, gain: 0.6)      // ハープアルペジオ（控えめに、メロディを引き立てる）
             mixer.add(jupiterSignal, gain: 0.7)   // Jupiterメロディ（メインテーマ）
-            mixer.add(airLayer, gain: 1.0)        // Add air layer for cathedral air
 
             // Large reverb for cathedral atmosphere (3s decay)
             let reverb = SchroederReverb(
@@ -108,13 +99,9 @@ public struct PureToneBuilder {
             // Sub piano (octave-up shimmer layer)
             let subSignal = SubPianoSignal.makeSignal()
 
-            // Air layer for soft, warm transparency (7kHz)
-            let airLayer = AirLayer.make(cutoffFrequency: 7000, volume: 0.025)
-
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)        // Main piano
             mixer.add(subSignal, gain: 1.0)     // Sub piano (volume 0.20 internally)
-            mixer.add(airLayer, gain: 1.0)      // Add air layer for transparency
 
             // Deep reverb for dreamy atmosphere
             let reverb = SchroederReverb(
@@ -144,13 +131,8 @@ public struct PureToneBuilder {
         case .moonlightFlow:
             // Moonlight flow melody with spacious, dreamy reverb
             let signal = MoonlightFlowSignal.makeSignal()
-
-            // Air layer for high-frequency transparency
-            let airLayer = AirLayer.make(cutoffFrequency: 8000, volume: 0.03)
-
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
-            mixer.add(airLayer, gain: 1.0)  // Add air layer for transparency
 
             // Deep, majestic reverb for rich moonlight atmosphere
             let reverb = SchroederReverb(
@@ -172,13 +154,8 @@ public struct PureToneBuilder {
         case .moonlightFlowMidnight:
             // Midnight version with darker, closer atmosphere
             let signal = MoonlightFlowMidnightSignal.makeSignal()
-
-            // Air layer for deep midnight stillness (6kHz, minimal volume)
-            let airLayer = AirLayer.make(cutoffFrequency: 6000, volume: 0.02)
-
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
-            mixer.add(airLayer, gain: 1.0)  // Add air layer for subtle midnight air
 
             // Deep, close reverb for rich midnight atmosphere
             let reverb = SchroederReverb(
