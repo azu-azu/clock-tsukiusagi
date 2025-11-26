@@ -183,13 +183,22 @@ SharedUI is for **pure, reusable UI components only**. Following these rules pre
 3. **Non-visual components**: Logic, services, utilities → Core/ or appropriate layer
 4. **Business logic**: Any component with domain knowledge → Domain/ or Core/
 
+**Structure:**
+```
+SharedUI/
+├── Primitives/       # Pure visual primitives (DotGrid, etc.)
+└── (future: Foundations/, Controls/ if needed)
+```
+
 **Examples:**
 ```
-✅ SharedUI/Visual/Primitives/DotGrid.swift          (pure visual primitive)
+✅ SharedUI/Primitives/DotGrid.swift                 (pure visual primitive)
 ❌ SharedUI/Visual/Audio/CircularWaveformView.swift  (Audio Feature専用 → Features/Audio/Components/)
 ❌ SharedUI/Domain/Moon/MoonPainter.swift            (世界観概念 → Domain/Moon/)
 ❌ SharedUI/Visual/Animations/WavyBottomAnimation.swift (Clock専用 → Features/Clock/Animations/)
 ```
+
+**Important:** Keep SharedUI flat. No intermediate "Visual/", "Components/", or genre-based subdirectories. This prevents SharedUI from becoming a categorized UI library and re-attracting misplaced components.
 
 **When in doubt**: Keep it in the Feature that uses it. Only move to SharedUI after proven reuse by 3+ features.
 
