@@ -51,6 +51,14 @@ public struct AudioSettings: Codable {
     /// Picture in Pictureを有効化
     public var pipEnabled: Bool = false
 
+    // MARK: - Air Layer (Transparency Enhancement)
+
+    /// Air Layer（高域透明レイヤー）を有効化
+    public var airLayerEnabled: Bool = true
+
+    /// Air Layer 音量（0.01 - 0.1、デフォルト: 0.03）
+    public var airLayerVolume: Float = 0.03
+
     // MARK: - Initialization
 
     public init(
@@ -62,7 +70,9 @@ public struct AudioSettings: Codable {
         maxOutputDb: Float = -6.0,
         crossfadeDuration: TimeInterval = 2.0,
         liveActivityEnabled: Bool = true,
-        pipEnabled: Bool = false
+        pipEnabled: Bool = false,
+        airLayerEnabled: Bool = true,
+        airLayerVolume: Float = 0.03
     ) {
         self.onlyHeadphoneOutput = onlyHeadphoneOutput
         self.autoResumeAfterInterruption = autoResumeAfterInterruption
@@ -73,6 +83,8 @@ public struct AudioSettings: Codable {
         self.crossfadeDuration = crossfadeDuration
         self.liveActivityEnabled = liveActivityEnabled
         self.pipEnabled = pipEnabled
+        self.airLayerEnabled = airLayerEnabled
+        self.airLayerVolume = airLayerVolume
     }
 }
 
