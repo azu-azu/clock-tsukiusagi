@@ -86,16 +86,6 @@ TsukiSound/
 
 ---
 
-## 🖼️ Screenshots & Demos
-
-※ 後で追加予定
-
-* Generative audio waveform
-* Ambient gradient backgrounds
-* Moon-inspired audio transitions
-
----
-
 ## 🚀 Setup
 
 ### Requirements
@@ -149,7 +139,12 @@ MIT License.
 
 ## 🤝 Contributing
 
-Pull Request と Issue は歓迎しています。
+We welcome pull requests and issue reports!
+Before contributing, please review the following steps:
+
+1. Fork the repository and create a new branch
+2. Commit your changes
+3. Open a pull request
 
 ---
 
