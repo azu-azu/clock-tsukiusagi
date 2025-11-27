@@ -113,7 +113,7 @@ public final class AudioService: ObservableObject {
     // System Volume Monitoring
     @Published public private(set) var systemVolume: Float = 1.0
     private var volumeObservation: NSKeyValueObservation?
-    private let volumeCapLinear: Float = 0.501187  // -6dB = 10^(-6/20)
+    private let volumeCapLinear: Float = 0.75  // -2.5dB (was -6dB, increased for better audibility)
 
     private var sessionActivated = false  // セッション二重アクティベート防止フラグ
     private var interruptionObserver: NSObjectProtocol?
@@ -198,7 +198,7 @@ public final class AudioService: ObservableObject {
         print("   Max output: \(settings.maxOutputDb) dB")
         print("   Live Activity: \(activityController != nil ? "Available" : "Not Available")")
         print("   System volume monitoring: Enabled")
-        print("   Volume cap: \(volumeCapLinear) (-6dB)")
+        print("   Volume cap: \(volumeCapLinear) (-2.5dB)")
         print("   Audio routing: All sources → masterBusMixer → limiter → mainMixer → output")
     }
 

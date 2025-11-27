@@ -279,6 +279,7 @@ See: `TsukiSound/Docs/trouble-audio-distortion-noise.md`
 
 ### Implementation Guides
 * `TsukiSound/Docs/implementation/_guide-audio-system-impl.md` — Audio system implementation guide
+* `TsukiSound/Docs/implementation/volume-control-guide.md` — Volume control guide (IMPORTANT: read before adjusting volume)
 * `TsukiSound/Docs/implementation/seamless-loop-audio-generation.md` — Audio file generation for seamless loops
 * `TsukiSound/Docs/implementation/natural-sound-presets-restoration.md` — Restoring natural sound presets
 * `TsukiSound/Docs/implementation/comment-log-standards.md` — Comment and log standards
