@@ -1,7 +1,7 @@
 # Audio Preset Concepts
 
-**Version**: 1.0
-**Last Updated**: 2025-11-25
+**Version**: 2.0
+**Last Updated**: 2025-11-27
 
 This document describes the artistic concept, design philosophy, and implementation notes for each audio preset in TsukiSound.
 
@@ -10,265 +10,15 @@ This document describes the artistic concept, design philosophy, and implementat
 ## Table of Contents
 
 - [Pure Tone Presets](#pure-tone-presets)
-  - [Moonlight Flow (月の流れ)](#moonlight-flow-月の流れ)
-  - [Moonlight Flow — Midnight (深夜の月影)](#moonlight-flow--midnight-深夜の月影)
-  - [Moonlit Slumber Chimes (月のまどろみ)](#moonlit-slumber-chimes-月のまどろみ)
   - [Cathedral Stillness (大聖堂の静寂)](#cathedral-stillness-大聖堂の静寂)
   - [Fading Star Piano (消えゆく星)](#fading-star-piano-消えゆく星)
+  - [Moonlit Gymnopédie (月明かりのジムノペディ)](#moonlit-gymnopédie-月明かりのジムノペディ)
+  - [Midnight Gnossienne (真夜中のグノシエンヌ)](#midnight-gnossienne-真夜中のグノシエンヌ)
 - [Design Philosophy](#design-philosophy)
 
 ---
 
 ## Pure Tone Presets
-
-### Moonlight Flow (月の流れ)
-
-**Added**: 2025-11-25
-**File**: `MoonlightFlowSignal.swift`
-
-#### Concept
-
-印象派音楽の「月の光」からインスピレーションを得た、完全オリジナルのメロディプリセット。著作権の問題を避けるため、印象派の**特徴（透明感、浮遊感）だけを抽出**し、新たに作曲した単音メロディ。
-
-月明かりの下で静かに流れる時間、揺らぐ光の粒、夜の静寂の中に漂う音の余韻をイメージ。
-
-#### Musical Characteristics
-
-**Key Signature**: D♭ Major
-- ドビュッシーの「月の光」と同じ調性を採用
-- 透明感と浮遊感のある響き
-
-**Melody Structure** (v2 - with low notes & random variations):
-```
-Db3 → F4 → Ab4 → Ab3 → Eb4 → Gb4 → Db5 → C5
-→ F4 → Ab3 → Db5 → Ab4 → Gb4 → Db3 → Db4
- ^             ^             ^      ^
-低音         低音          低音    低音
-```
-
-- **15音のフレーズ**、サイクル時間 ~**19.6秒** (2倍ゆっくり)
-- **可変音長**: 1.2秒と1.6秒の組み合わせで荘厳なフレージング
-- **低音追加**: Db3 (138Hz), Ab3 (207Hz) を4箇所に配置 — 空間の深みを演出
-- **ランダム変化**: サイクルごとに微妙に異なるメロディ（月の雲の揺らぎ）
-- **オクターブ範囲**: Db3 (138Hz) ～ Db5 (554Hz) — 低音はイヤホン推奨
-
-#### Sound Design
-
-**Harmonic Structure** (v3 - 豊かで重みのある音):
-```
-Fundamental:    1.0  (100%)
-2nd harmonic:   0.55 (55%)  ← より強く、深く
-3rd harmonic:   0.35 (35%)  ← より豊かに
-4th harmonic:   0.20 (20%)  ← 追加（重みと荘厳さ）
-```
-→ 豊かで深く、重みのある音色（軽くない、存在感がある）
-
-**Envelope**:
-- **Attack**: 70ms — ゆっくりとした荘厳な立ち上がり
-- **Decay**: 4.0秒 — 大聖堂のような長い余韻
-
-**Reverb** (深く荘厳な大空間):
-- roomSize: 2.4 (より広大な空間)
-- damping: 0.35 (より豊かな響き)
-- decay: 0.92 (より長いテール、重み)
-- mix: 0.60 (より深いリバーブ)
-- predelay: 0.035 (35ms) — 空間の深さ
-
-**Volume**: 0.38
-→ より存在感のある音量レベル
-
-#### Implementation Notes
-
-**Architecture**: Signal-based (pure time function)
-
-**Variable Duration Support**:
-```swift
-struct Note {
-    let freq: Float
-    let duration: Float
-}
-
-// 累積時間配列で効率的にノート検索
-lazy var cumulativeTimes: [Float] = {
-    var times: [Float] = [0.0]
-    for note in melody {
-        times.append(times.last! + note.duration)
-    }
-    return times
-}()
-```
-
-**Random Variation System** (v2 - Clouds Moving Across Moon):
-```swift
-// サイクルごとに異なるシード値で再現可能なランダム性
-let cycleIndex = Int(t / cycleDuration)
-var rng = SeededRandomNumberGenerator(seed: UInt64(cycleIndex + 1000))
-
-// 3種類の微妙な変化
-1. Octave Shift (20%): 音を1オクターブ上/下に移動
-2. Note Omission (10%): 雲が月を隠す（無音）
-3. Duration Adjustment (30%): ±0.1秒の微調整
-```
-
-**Note Lookup Algorithm**:
-- 現在時刻を累積時間配列と比較してノートインデックスを検索
-- ノート開始時刻からの相対時間でエンベロープ計算
-- 各ノートは独立したアタック/ディケイを持つ
-
-#### Design Philosophy
-
-> "印象派の絵画が「光の粒子」を描くように、音もまた「響きの粒子」として表現する。
-> メロディは流れ、リバーブは空間を、長いディケイは時間の経過そのものを描く。"
->
-> **(v2)** "そして雲が月を覆い、また去っていく——ランダムな揺らぎが、自然の息吹を吹き込む。"
-
-**Inspirations**:
-- 印象派音楽の透明感と浮遊感（ドビュッシー、ラヴェル）
-- 月明かりの下で揺らぐ水面の反射
-- 静寂の中に漂う余韻
-- **(v2)** 雲が月を覆い隠す瞬間、風に揺れる光の粒子
-
-**NOT Inspirations** (著作権回避):
-- 特定の楽曲のメロディやコード進行
-- 既存曲の編曲や引用
-
-#### Use Cases
-
-- **瞑想**: 穏やかなメロディと長い余韻が心を落ち着ける
-- **睡眠導入**: アンビエントな音量と透明感のある音色
-- **作業用BGM**: 主張しすぎない、背景に溶け込む音楽
-- **時間感覚の演出**: 時計アプリとして「時の流れ」を音で表現
-
----
-
-### Moonlight Flow — Midnight (深夜の月影)
-
-**Added**: 2025-11-25
-**File**: `MoonlightFlowMidnightSignal.swift`
-
-#### Concept
-
-"月明かり"ではなく"月の影"を描く — Moonlight shadow, not moonlight.
-
-深夜2時の静寂と孤独を音にした、Moonlight Flow の深夜版。通常版が「優しい月明かり」なら、Midnight は「静かな路地裏の月影」。
-
-#### Musical Characteristics
-
-**Key Signature**: B♭ Minor (darker than D♭ Major)
-- Moonlight Flow (D♭ Major) の平行短調
-- 暗さと孤独を追加しながらも、調性的に親和性を保つ
-
-**Melody Structure**:
-```
-Bb3 → Db4 → F3 → Ab3 → C4 → F4 → Eb4 → Bb3
-→ Db4 → C4 → Ab3 → Bb2
-                     ^
-                  深い終わり
-```
-
-- **12音のフレーズ** (通常版15音 → より間が多い)
-- **サイクル時間**: ~**21.6秒** (2倍ゆっくり)
-- **可変音長**: 1.2秒、1.6秒、2.0秒の組み合わせで深い静寂
-- **オクターブ範囲**: Bb2 (116Hz) ～ F4 (349Hz) — より低く、重心が下
-- **下降傾向**: 沈静化していく動きで深夜の感覚を演出
-
-#### Sound Design
-
-**Harmonic Structure** (v3 - 豊かだが暗い):
-```
-Fundamental:    1.0  (100%)
-2nd harmonic:   0.50 (50%)  ← 豊かで深い
-3rd harmonic:   0.30 (30%)  ← 豊かだが暗め
-4th harmonic:   0.15 (15%)  ← 追加（重みと深さ）
-```
-→ 豊かで深く、暗く、重みのある音色
-
-**Envelope** (longer, more majestic):
-- **Attack**: 80ms — ゆっくりとした深夜の荘厳な立ち上がり
-- **Decay**: 4.5秒 — 通常版 (4.0秒) より長い、深い残響
-
-**Reverb** (deep, close, foggy):
-- roomSize: 2.4 (より広大な空間)
-- damping: 0.32 (より豊かで暗い響き)
-- decay: 0.93 (非常に長いテール、重い)
-- mix: 0.62 (より深いリバーブ)
-- predelay: 0.012 (12ms) — **濃い霧、親密で重い音**
-
-**Volume**: 0.36
-→ より存在感のある深夜の音量
-
-#### Random Variation System
-
-**Omission Rate**: 15% (通常版 10% → より多くの無音)
-→ 深夜の孤独、時折訪れる沈黙
-
-**Octave Shift**: Down only (10%)
-→ 上には飛ばず、下に沈む動きのみ（深夜の重力）
-
-**Duration Wobble**: ±0.16秒 (2倍テンポに合わせてスケール)
-→ 微妙な揺らぎ、より長い音符に対応
-
-#### Implementation Notes
-
-**Architecture**: Signal-based (same as normal version)
-
-**Key Differences from Normal Version**:
-
-| Aspect | Normal (Flow) | Midnight |
-|--------|---------------|----------|
-| Key | D♭ Major | B♭ Minor |
-| Notes | 15 | 12 |
-| Cycle Time | **19.6s** | **21.6s** |
-| Range | Db3~Db5 | Bb2~F4 |
-| Omission | 10% | 15% |
-| Octave Shift | Bidirectional | Down only |
-| Predelay | 35ms | 12ms |
-| Attack | 70ms | 80ms |
-| Decay | 4.0s | 4.5s |
-| Harmonics | [1.0, 0.55, 0.35, 0.20] | [1.0, 0.50, 0.30, 0.15] |
-| Volume | 0.38 | 0.36 |
-| Reverb Mix | 0.60 | 0.62 |
-| Feeling | Rich, majestic moonlight | Deep, rich moon shadow |
-
-#### Design Philosophy
-
-> "月明かりの下でひとり歩いてる感じ。
-> 夜が優しくて少し寂しい。
-> 時間がゆっくり止まってる感覚。
-> さっきまでの Moonlight Flow が夕方だとしたら、今はもう深夜の静寂。"
-
-**Listening Experience**:
-- 静かで、深い、少し孤独、少しミステリアス
-- "月明かり"ではなく "月の影" を描く
-- ノイズなし・硬い音なし
-- **深夜2時の心の空白をそのまま音にした感じ**
-
-**Inspirations**:
-- 深夜2時の静寂と孤独
-- 路地裏の月影
-- 時間が止まったような感覚
-- 濃い霧の中の近い音
-
-#### Use Cases
-
-- **深夜の瞑想**: より深く、孤独で、内省的な時間
-- **深夜作業**: 2AM の集中、世界が止まったような感覚
-- **睡眠前**: 通常版より暗く、静かで、眠りに落ちやすい
-- **孤独を感じたい時**: ひとりの時間を大切にする音楽
-
----
-
-### Moonlit Slumber Chimes (月のまどろみ)
-
-**File**: `PentatonicChimeSignal.swift`
-
-#### Concept
-
-ペンタトニック（五音音階）の鐘の音。シンプルで普遍的な響き。月明かりの下で眠りに落ちる瞬間を表現した、穏やかなチャイム音。
-
-（※ 今後追記予定）
-
----
 
 ### Cathedral Stillness (大聖堂の静寂)
 
@@ -304,8 +54,6 @@ Fundamental:    1.0  (100%)
 ---
 
 **Layer 2: Harp Arpeggios (Sparse Decoration)**
-
-See: [Midnight Droplets](#midnight-droplets-深夜の雫) for detailed specification.
 
 **Integration**: Pentatonic arpeggios (C4, D4, E4, G4, A4)
 - 6～15秒のランダム間隔で稀に鳴る
@@ -443,6 +191,103 @@ All layers share the same large Cathedral reverb for cohesive atmosphere.
 
 ---
 
+### Moonlit Gymnopédie (月明かりのジムノペディ)
+
+**Added**: 2025-11-27
+**File**: `GymnopedieMainMelodySignal.swift`
+
+#### Concept
+
+Satie の「ジムノペディ第1番」(1888, **public domain**) をアンビエント解釈した3層構造のピアノサウンド。月明かりの下で静かに響くピアノの音色。
+
+**3層構造**:
+1. **Bass** — 1拍目に低音を配置、和声の土台
+2. **Chord** — 2-3拍目に和音、空間を埋める
+3. **Melody** — 右手メロディ、透明感のある主旋律
+
+#### Musical Characteristics
+
+**Key Signature**: D Major (F#, C#)
+- サティの原曲と同じ調性
+- 穏やかで透明感のある響き
+
+**Time Signature**: 3/4
+- ワルツのリズムで、ゆったりとした流れ
+
+**Tempo**: 80 BPM (原曲より少し速め)
+- 1拍 = 0.75秒
+- 全曲（41小節）約92秒でループ
+
+**Melody Range**: E4 (329.63Hz) ～ A5 (880Hz)
+
+#### Sound Design
+
+**Envelope**:
+- Melody: Attack 80ms, Decay 2.5s
+- Bass: Attack 120ms, Decay 2.5s
+- Chord: Attack 80ms, Decay 1.8s
+
+**Volume Balance**:
+- Melody: 0.28
+- Bass: 0.12
+- Chord: 0.08
+
+**Reverb** (Spacious, moonlit):
+- roomSize: 2.2
+- damping: 0.40
+- decay: 0.85
+- mix: 0.45
+- predelay: 0.030
+
+#### Copyright Safety
+
+- Erik Satie died 1925 → Copyright expired 1995 (Japan: 70 years after death)
+- Melody synthesized from score transcription
+- Legal to use for original composition
+
+---
+
+### Midnight Gnossienne (真夜中のグノシエンヌ)
+
+**Added**: 2025-11-27
+**File**: `GnossienneIntroSignal.swift`
+
+#### Concept
+
+Satie の「グノシエンヌ第1番」(1890, **public domain**) をアンビエント解釈したピアノサウンド。深夜の静寂の中、ミステリアスで内省的な音色が響く。
+
+**特徴**:
+- 東洋的なスケール（フリギア旋法）
+- 拍子記号なし（自由なテンポ）
+- 暗く神秘的な雰囲気
+
+#### Musical Characteristics
+
+**Mode**: F Phrygian-like scale
+- 東洋的で神秘的な響き
+- 短2度の特徴的な音程
+
+**Tempo**: Variable (free tempo interpretation)
+- サティの原曲同様、拍子記号なし
+- アンビエント解釈で自由なテンポ
+
+#### Sound Design
+
+**Reverb** (Dark, mysterious):
+- roomSize: 2.4
+- damping: 0.35
+- decay: 0.90
+- mix: 0.50
+- predelay: 0.035
+
+#### Copyright Safety
+
+- Erik Satie died 1925 → Copyright expired 1995 (Japan: 70 years after death)
+- Melody synthesized from score transcription
+- Legal to use for original composition
+
+---
+
 ## Design Philosophy
 
 ### Calm Technology
@@ -484,25 +329,26 @@ TsukiSound は「穏やかな技術 (Calm Technology)」を目指します。
 
 ### Copyright & Legal
 
-**Original Compositions Only**:
-- 既存曲のメロディ、コード進行、リズムパターンは使用しない
-- 「インスピレーション」と「複製」の境界を厳守
-- 音楽理論的な特徴（調性、音階、和声）は著作権の対象外
+**Public Domain Works Used**:
+- Gustav Holst — "Jupiter" (1918) — died 1934, copyright expired 2004
+- Erik Satie — "Gymnopédie No.1" (1888) — died 1925, copyright expired 1995
+- Erik Satie — "Gnossienne No.1" (1890) — died 1925, copyright expired 1995
 
 **Safe to Use**:
 - 音階（ペンタトニック、メジャー、マイナー）
 - 和音の種類（メジャー7th、マイナー7thなど）
 - 音楽様式の特徴（印象派の透明感、ミニマリズムの反復など）
+- パブリックドメインの楽曲メロディ
 
 **NOT Safe**:
-- 特定楽曲のメロディライン
-- 特定楽曲のコード進行パターン
-- 既存曲の編曲や引用
+- 著作権保護期間内の楽曲のメロディライン
+- 既存曲の編曲や録音の使用
 
 ---
 
 ## Version History
 
+- **v2.0** (2025-11-27): Updated for current presets (removed deleted presets, added Satie presets)
 - **v1.0** (2025-11-25): Initial version with Moonlight Flow concept documentation
 
 ---

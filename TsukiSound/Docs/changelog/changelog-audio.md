@@ -25,12 +25,13 @@
 - **Integration**: Added to all 5 presets via `FinalMixer`
 - **Settings**: UI controls for enable/disable and volume adjustment
 
-#### Preset-Specific Parameters
-- `.pentatonicChime`: 9kHz cutoff, 0.030 volume (bright)
+#### Preset-Specific Parameters (Historical)
+> Note: These presets were deleted in a later refactor (2025-11-27).
+> This section is preserved for historical reference only.
+
 - `.cathedralStillness`: 8kHz cutoff, 0.035 volume (cathedral air)
 - `.toyPiano`: 7kHz cutoff, 0.025 volume (soft, warm)
-- `.moonlightFlow`: 8kHz cutoff, 0.030 volume (standard)
-- `.moonlightFlowMidnight`: 6kHz cutoff, 0.020 volume (deep night)
+- (Other presets removed)
 
 ### Why It Failed
 

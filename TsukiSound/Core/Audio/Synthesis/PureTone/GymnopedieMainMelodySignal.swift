@@ -8,7 +8,7 @@
 //  楽譜解析 (Ren's transcription - g1 to g4):
 //  - 調号: D Major (F#, C#)
 //  - 拍子: 3/4
-//  - テンポ: Lent et douloureux (≈70 BPM)
+//  - テンポ: 80 BPM (原曲より少し速め)
 //  - 構造: Bass(1拍目) + Chord(2-3拍目) + Melody
 //
 //  Disclaimer:
@@ -27,9 +27,9 @@ public struct GymnopedieMainMelodySignal {
 
 private final class GymnoGenerator {
 
-    // MARK: - Timing Constants (原曲テンポ ≈ 70 BPM)
+    // MARK: - Timing Constants (80 BPM - slightly faster than original 70 BPM)
 
-    let beat: Float = 0.857        // 1拍 ≈ 0.857秒 (70 BPM)
+    let beat: Float = 0.75         // 1拍 = 0.75秒 (80 BPM)
     lazy var barDuration: Float = beat * 3  // 1小節 = 3拍
     let totalBars: Int = 41       // 全曲（g1-g4）
     lazy var cycleDuration: Float = Float(totalBars) * barDuration
