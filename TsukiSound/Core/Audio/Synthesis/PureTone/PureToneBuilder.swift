@@ -19,34 +19,6 @@ public struct PureToneBuilder {
         var sources: [AudioSource] = []
 
         switch preset {
-        case .pentatonicChime:
-            // Signal-based implementation with reverb effect
-            let signal = PentatonicChimeSignal.makeSignal()
-            let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)
-
-            // Add reverb effect (same as NaturalSound was using)
-            let reverb = SchroederReverb(
-                roomSize: 1.4,
-                damping: 0.45,
-                decay: 0.7,
-                mix: 0.25,
-                predelay: 0.02,
-                sampleRate: 48000.0
-            )
-            mixer.addEffect(reverb)
-
-            let outputNode = FinalMixerOutputNode(mixer: mixer)
-            sources.append(outputNode)
-
-            // Add TreeChime overlay (ランダム間隔でシャラララ)
-            let treeChime = TreeChime(
-                grainRate: 0.15,       // 平均6〜7秒に1回のシャラララ
-                grainDuration: 1.2,    // 各粒の余韻（1.2秒）
-                brightness: 9000.0     // ペンタトニックより少し高め
-            )
-            sources.append(treeChime)
-
         case .cathedralStillness:
             // Signal-based organ drone + harp arpeggios + Jupiter melody with large reverb
             let organSignal = CathedralStillnessSignal.makeSignal()
@@ -128,19 +100,19 @@ public struct PureToneBuilder {
             )
             sources.append(treeChime)
 
-        case .moonlightFlow:
-            // Moonlight flow melody with spacious, dreamy reverb
-            let signal = MoonlightFlowSignal.makeSignal()
+        case .moonlitGymnopedie:
+            // Satie Gymnopédie No.1 melody (Public Domain)
+            let signal = GymnopedieMainMelodySignal.makeSignal()
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
 
-            // Deep, majestic reverb for rich moonlight atmosphere
+            // Spacious, moonlit reverb
             let reverb = SchroederReverb(
-                roomSize: 2.4,      // Larger space (cathedral-like depth)
-                damping: 0.35,      // Less damping for richer resonance
-                decay: 0.92,        // Longer tail for weight
-                mix: 0.60,          // More reverb for depth
-                predelay: 0.035,    // Slightly longer for spatial depth
+                roomSize: 2.2,      // Large, open space
+                damping: 0.40,      // Moderate damping for clarity
+                decay: 0.85,        // Long tail for depth
+                mix: 0.45,          // Rich reverb
+                predelay: 0.030,    // Spacious predelay
                 sampleRate: 48000.0
             )
             mixer.addEffect(reverb)
@@ -151,19 +123,19 @@ public struct PureToneBuilder {
             let outputNode = FinalMixerOutputNode(mixer: mixer)
             sources.append(outputNode)
 
-        case .moonlightFlowMidnight:
-            // Midnight version with darker, closer atmosphere
-            let signal = MoonlightFlowMidnightSignal.makeSignal()
+        case .midnightGnossienne:
+            // Satie Gnossienne No.1 melody (Public Domain)
+            let signal = GnossienneIntroSignal.makeSignal()
             let mixer = FinalMixer()
             mixer.add(signal, gain: 1.0)
 
-            // Deep, close reverb for rich midnight atmosphere
+            // Dark, mysterious reverb
             let reverb = SchroederReverb(
-                roomSize: 2.4,      // Large space (deep night stillness)
-                damping: 0.32,      // Less damping for richer, darker resonance
-                decay: 0.93,        // Very long tail for heavy presence
-                mix: 0.62,          // More reverb for weight and depth
-                predelay: 0.012,    // 12ms - dense fog, intimate feeling
+                roomSize: 2.4,      // Large, dark space
+                damping: 0.35,      // Less damping for haunting resonance
+                decay: 0.90,        // Very long tail
+                mix: 0.50,          // Rich, enveloping reverb
+                predelay: 0.035,    // Deeper predelay
                 sampleRate: 48000.0
             )
             mixer.addEffect(reverb)

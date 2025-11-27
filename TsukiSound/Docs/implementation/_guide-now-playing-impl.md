@@ -1076,7 +1076,7 @@ private func setupNowPlayingCommands() {
 
 **長期的改善**:
 - [ ] CarPlay統合
-- [ ] Siri統合（"Hey Siri, play pentatonic chime"）
+- [ ] Siri統合（"Hey Siri, play soft organ"）
 - [ ] Apple Watch対応
 - [ ] ウィジェット追加
 
