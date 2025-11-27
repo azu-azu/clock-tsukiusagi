@@ -19,34 +19,6 @@ public struct PureToneBuilder {
         var sources: [AudioSource] = []
 
         switch preset {
-        case .pentatonicChime:
-            // Signal-based implementation with reverb effect
-            let signal = PentatonicChimeSignal.makeSignal()
-            let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)
-
-            // Add reverb effect (same as NaturalSound was using)
-            let reverb = SchroederReverb(
-                roomSize: 1.4,
-                damping: 0.45,
-                decay: 0.7,
-                mix: 0.25,
-                predelay: 0.02,
-                sampleRate: 48000.0
-            )
-            mixer.addEffect(reverb)
-
-            let outputNode = FinalMixerOutputNode(mixer: mixer)
-            sources.append(outputNode)
-
-            // Add TreeChime overlay (ランダム間隔でシャラララ)
-            let treeChime = TreeChime(
-                grainRate: 0.15,       // 平均6〜7秒に1回のシャラララ
-                grainDuration: 1.2,    // 各粒の余韻（1.2秒）
-                brightness: 9000.0     // ペンタトニックより少し高め
-            )
-            sources.append(treeChime)
-
         case .cathedralStillness:
             // Signal-based organ drone + harp arpeggios + Jupiter melody with large reverb
             let organSignal = CathedralStillnessSignal.makeSignal()
@@ -127,52 +99,6 @@ public struct PureToneBuilder {
                 brightness: 9000.0     // ペンタトニックより少し高め
             )
             sources.append(treeChime)
-
-        case .moonlightFlow:
-            // Moonlight flow melody with spacious, dreamy reverb
-            let signal = MoonlightFlowSignal.makeSignal()
-            let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)
-
-            // Deep, majestic reverb for rich moonlight atmosphere
-            let reverb = SchroederReverb(
-                roomSize: 2.4,      // Larger space (cathedral-like depth)
-                damping: 0.35,      // Less damping for richer resonance
-                decay: 0.92,        // Longer tail for weight
-                mix: 0.60,          // More reverb for depth
-                predelay: 0.035,    // Slightly longer for spatial depth
-                sampleRate: 48000.0
-            )
-            mixer.addEffect(reverb)
-
-            // Soft limiter for safety
-            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
-
-            let outputNode = FinalMixerOutputNode(mixer: mixer)
-            sources.append(outputNode)
-
-        case .moonlightFlowMidnight:
-            // Midnight version with darker, closer atmosphere
-            let signal = MoonlightFlowMidnightSignal.makeSignal()
-            let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)
-
-            // Deep, close reverb for rich midnight atmosphere
-            let reverb = SchroederReverb(
-                roomSize: 2.4,      // Large space (deep night stillness)
-                damping: 0.32,      // Less damping for richer, darker resonance
-                decay: 0.93,        // Very long tail for heavy presence
-                mix: 0.62,          // More reverb for weight and depth
-                predelay: 0.012,    // 12ms - dense fog, intimate feeling
-                sampleRate: 48000.0
-            )
-            mixer.addEffect(reverb)
-
-            // Soft limiter for safety
-            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
-
-            let outputNode = FinalMixerOutputNode(mixer: mixer)
-            sources.append(outputNode)
 
         case .moonlitGymnopedie:
             // Satie Gymnopédie No.1 melody (Public Domain)
