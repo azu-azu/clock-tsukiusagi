@@ -5,11 +5,15 @@
 //  Satie - Gymnopédie No.1 (Public Domain)
 //  楽譜に基づく3層構造: ベース + 和音 + メロディ
 //
-//  楽譜解析 (g1-g4.jpeg):
+//  楽譜解析 (Ren's transcription):
 //  - 調号: D Major (F#, C#)
 //  - 拍子: 3/4
 //  - テンポ: Lent et douloureux (≈70 BPM)
-//  - メロディ: 小節6から始まる流れるようなレガート旋律
+//  - 構造: Bass(1拍目) + Chord(2-3拍目) + Melody
+//
+//  伴奏パターン:
+//  - 奇数小節: Bass=G3, Chord=B3+D4
+//  - 偶数小節: Bass=D3, Chord=A3+C#4
 //
 //  Disclaimer:
 //  The pitch sequence is based on score transcription.
@@ -31,189 +35,177 @@ private final class GymnoGenerator {
 
     let beat: Float = 0.857        // 1拍 ≈ 0.857秒 (70 BPM)
     lazy var barDuration: Float = beat * 3  // 1小節 = 3拍
-    let totalBars: Int = 39
+    let totalBars: Int = 24       // イントロ + テーマ（ループ用に短縮）
     lazy var cycleDuration: Float = Float(totalBars) * barDuration
 
     // MARK: - Frequency Constants (D Major: F#, C#)
 
     // Bass
-    let G2:  Float = 98.00
+    let G3:  Float = 196.00
     let D3:  Float = 146.83
+    let E3:  Float = 164.81
 
-    // Chord
+    // Chord (低い方)
+    let A3:  Float = 220.00
+    let B3:  Float = 246.94
+    let C_4: Float = 277.18   // C#4
     let D4:  Float = 293.66
-    let F_4: Float = 369.99   // F#4
 
-    // Melody (楽譜に基づく正確な音域)
-    let F_4m: Float = 369.99  // F#4 for melody
-    let G4:  Float = 392.00
+    // Melody
     let A4:  Float = 440.00
     let B4:  Float = 493.88
     let C_5: Float = 554.37   // C#5
     let D5:  Float = 587.33
     let E5:  Float = 659.25
+    let F_5: Float = 739.99   // F#5
+    let G5:  Float = 783.99
+    let A5:  Float = 880.00
 
     // MARK: - Sound Parameters
 
     let melodyAttack: Float = 0.08
-    let melodyDecay: Float = 2.5      // 長めのディケイでレガート感
+    let melodyDecay: Float = 2.5
     let melodyGain: Float = 0.28
 
     let bassAttack: Float = 0.12
     let bassDecay: Float = 2.5
-    let bassGain: Float = 0.10
+    let bassGain: Float = 0.12
 
     let chordAttack: Float = 0.08
     let chordDecay: Float = 1.8
-    let chordGain: Float = 0.07
+    let chordGain: Float = 0.08
 
     // MARK: - Data Structures
 
     struct MelodyNote {
         let freq: Float
-        let startBar: Int
-        let startBeat: Float
+        let startBar: Int      // 1-indexed (楽譜通り)
+        let startBeat: Float   // 0, 1, 2
         let durBeats: Float
     }
 
-    // MARK: - Melody Data (楽譜 g1-g4.jpeg より正確に転写)
+    struct BassNote {
+        let freq: Float
+        let bar: Int           // 1-indexed
+    }
+
+    struct ChordNote {
+        let freqs: [Float]
+        let bar: Int           // 1-indexed
+    }
+
+    // MARK: - Melody Data (Ren's transcription より)
     //
-    // 小節番号は0-indexed (楽譜の小節1 = startBar: 0)
-    // 拍は0-indexed (1拍目 = startBeat: 0)
-    //
-    // 楽譜の特徴:
-    // - 小節1-4: イントロ（メロディなし）
-    // - 小節5-6から: 有名な下降→上昇の流れるメロディ
-    // - 長いスラーでレガートに演奏
+    // Bar 1-4: イントロ（メロディなし）
+    // Bar 5以降: メロディ開始
 
     lazy var melodyNotes: [MelodyNote] = {
         return [
-            // ===== 小節1-4: イントロ（メロディなし） =====
+            // ===== Bar 5 (Melody Enters) =====
+            MelodyNote(freq: F_5, startBar: 5, startBeat: 0, durBeats: 1),  // F#5
+            MelodyNote(freq: A5, startBar: 5, startBeat: 1, durBeats: 1),   // A5
+            MelodyNote(freq: G5, startBar: 5, startBeat: 2, durBeats: 1),   // G5
 
-            // ===== 小節5-6: メロディ開始 =====
-            // 小節5: D5 が入る（アウフタクト的に）
-            MelodyNote(freq: D5, startBar: 4, startBeat: 2, durBeats: 1),
+            // ===== Bar 6 =====
+            MelodyNote(freq: F_5, startBar: 6, startBeat: 0, durBeats: 1),  // F#5
+            MelodyNote(freq: C_5, startBar: 6, startBeat: 1, durBeats: 1),  // C#5
+            MelodyNote(freq: B4, startBar: 6, startBeat: 2, durBeats: 1),   // B4
 
-            // 小節6-11: 第1フレーズ（有名な流れるメロディ）
-            // "C#5 → B4 → A4 → G4 → F#4 → G4 → A4 → B4 → C#5 → D5 → E5 → D5 → C#5 → B4"
-            // 長いスラーでレガート
+            // ===== Bar 7 =====
+            MelodyNote(freq: C_5, startBar: 7, startBeat: 0, durBeats: 2),  // C#5 (半音符)
+            MelodyNote(freq: D5, startBar: 7, startBeat: 2, durBeats: 1),   // D5
 
-            // 小節6: D5(2分) - B4(4分)
-            MelodyNote(freq: D5, startBar: 5, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: B4, startBar: 5, startBeat: 2, durBeats: 1),
+            // ===== Bar 8 =====
+            MelodyNote(freq: A4, startBar: 8, startBeat: 0, durBeats: 3),   // A4 (付点2分)
 
-            // 小節7: D5(4分) - B4(4分) - 休
-            MelodyNote(freq: D5, startBar: 6, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: B4, startBar: 6, startBeat: 1, durBeats: 1),
+            // ===== Bar 9 =====
+            MelodyNote(freq: A4, startBar: 9, startBeat: 0, durBeats: 1),   // A4
+            MelodyNote(freq: F_5, startBar: 9, startBeat: 1, durBeats: 1),  // F#5
+            MelodyNote(freq: E5, startBar: 9, startBeat: 2, durBeats: 1),   // E5
 
-            // 小節8: A4(付点2分、次へタイ)
-            MelodyNote(freq: A4, startBar: 7, startBeat: 0, durBeats: 6),  // 2小節分タイ
+            // ===== Bar 10 =====
+            MelodyNote(freq: D5, startBar: 10, startBeat: 0, durBeats: 1),  // D5
+            MelodyNote(freq: A4, startBar: 10, startBeat: 1, durBeats: 2),  // A4 (2分)
 
-            // 小節9-10: スラーで流れる旋律（下降→上昇）
-            // A4からの続き、そしてF#4 → G4 → A4 の動き
-            MelodyNote(freq: F_4m, startBar: 9, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: G4, startBar: 9, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: A4, startBar: 9, startBeat: 2, durBeats: 1),
+            // ===== Bar 11-12: 繰り返しパターン =====
+            MelodyNote(freq: F_5, startBar: 11, startBeat: 0, durBeats: 1),
+            MelodyNote(freq: A5, startBar: 11, startBeat: 1, durBeats: 1),
+            MelodyNote(freq: G5, startBar: 11, startBeat: 2, durBeats: 1),
 
-            // 小節10: B4 → C#5 → D5
-            MelodyNote(freq: B4, startBar: 9, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: C_5, startBar: 9, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: D5, startBar: 9, startBeat: 2, durBeats: 1),
+            MelodyNote(freq: F_5, startBar: 12, startBeat: 0, durBeats: 1),
+            MelodyNote(freq: C_5, startBar: 12, startBeat: 1, durBeats: 1),
+            MelodyNote(freq: B4, startBar: 12, startBeat: 2, durBeats: 1),
 
-            // 小節11: E5 → D5 → C#5
-            MelodyNote(freq: E5, startBar: 10, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: D5, startBar: 10, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: C_5, startBar: 10, startBeat: 2, durBeats: 1),
+            // ===== Bar 13-14 =====
+            MelodyNote(freq: C_5, startBar: 13, startBeat: 0, durBeats: 2),
+            MelodyNote(freq: D5, startBar: 13, startBeat: 2, durBeats: 1),
 
-            // ===== 小節12-17: 第2フレーズ =====
-            // 小節12: D5(2分) - B4(4分)
-            MelodyNote(freq: D5, startBar: 11, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: B4, startBar: 11, startBeat: 2, durBeats: 1),
+            MelodyNote(freq: A4, startBar: 14, startBeat: 0, durBeats: 3),
 
-            // 小節13: D5(4分) - B4(4分)
-            MelodyNote(freq: D5, startBar: 12, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: B4, startBar: 12, startBeat: 1, durBeats: 1),
+            // ===== Bar 15-16 =====
+            MelodyNote(freq: A4, startBar: 15, startBeat: 0, durBeats: 1),
+            MelodyNote(freq: F_5, startBar: 15, startBeat: 1, durBeats: 1),
+            MelodyNote(freq: E5, startBar: 15, startBeat: 2, durBeats: 1),
 
-            // 小節14: A4(付点2分、タイで続く)
-            MelodyNote(freq: A4, startBar: 13, startBeat: 0, durBeats: 6),
+            MelodyNote(freq: D5, startBar: 16, startBeat: 0, durBeats: 1),
+            MelodyNote(freq: A4, startBar: 16, startBeat: 1, durBeats: 2),
 
-            // 小節15-16: F#4 → G4 → A4 → B4 → C#5 → D5
-            MelodyNote(freq: F_4m, startBar: 15, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: G4, startBar: 15, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: A4, startBar: 15, startBeat: 2, durBeats: 1),
-            MelodyNote(freq: B4, startBar: 16, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: C_5, startBar: 16, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: D5, startBar: 16, startBeat: 2, durBeats: 1),
+            // ===== Bar 17-20: 展開部 =====
+            MelodyNote(freq: F_5, startBar: 17, startBeat: 0, durBeats: 1),
+            MelodyNote(freq: A5, startBar: 17, startBeat: 1, durBeats: 1),
+            MelodyNote(freq: G5, startBar: 17, startBeat: 2, durBeats: 1),
 
-            // 小節17: E5 → D5 → C#5
-            MelodyNote(freq: E5, startBar: 17, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: D5, startBar: 17, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: C_5, startBar: 17, startBeat: 2, durBeats: 1),
+            MelodyNote(freq: F_5, startBar: 18, startBeat: 0, durBeats: 1),
+            MelodyNote(freq: C_5, startBar: 18, startBeat: 1, durBeats: 1),
+            MelodyNote(freq: B4, startBar: 18, startBeat: 2, durBeats: 1),
 
-            // ===== 小節18-23: 第3フレーズ =====
-            // 小節18: D5(付点2分)
-            MelodyNote(freq: D5, startBar: 18, startBeat: 0, durBeats: 3),
+            MelodyNote(freq: C_5, startBar: 19, startBeat: 0, durBeats: 2),
+            MelodyNote(freq: D5, startBar: 19, startBeat: 2, durBeats: 1),
 
-            // 小節19: D5(付点2分、タイで続く)
-            MelodyNote(freq: D5, startBar: 19, startBeat: 0, durBeats: 6),
+            MelodyNote(freq: A4, startBar: 20, startBeat: 0, durBeats: 3),
 
-            // 小節21-22 (pセクション)
-            MelodyNote(freq: C_5, startBar: 21, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: B4, startBar: 21, startBeat: 2, durBeats: 1),
-            MelodyNote(freq: A4, startBar: 22, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: G4, startBar: 22, startBeat: 2, durBeats: 1),
+            // ===== Bar 21-24: 終結 =====
+            MelodyNote(freq: A4, startBar: 21, startBeat: 0, durBeats: 1),
+            MelodyNote(freq: F_5, startBar: 21, startBeat: 1, durBeats: 1),
+            MelodyNote(freq: E5, startBar: 21, startBeat: 2, durBeats: 1),
 
-            // 小節23: F#4 → G4 → A4
-            MelodyNote(freq: F_4m, startBar: 23, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: G4, startBar: 23, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: A4, startBar: 23, startBeat: 2, durBeats: 1),
+            MelodyNote(freq: D5, startBar: 22, startBeat: 0, durBeats: 1),
+            MelodyNote(freq: A4, startBar: 22, startBeat: 1, durBeats: 2),
 
-            // ===== 小節24-29: 第4フレーズ（繰り返し） =====
-            MelodyNote(freq: B4, startBar: 24, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: C_5, startBar: 24, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: D5, startBar: 24, startBeat: 2, durBeats: 1),
+            MelodyNote(freq: D5, startBar: 23, startBeat: 0, durBeats: 3),
 
-            MelodyNote(freq: E5, startBar: 25, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: D5, startBar: 25, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: C_5, startBar: 25, startBeat: 2, durBeats: 1),
-
-            MelodyNote(freq: D5, startBar: 26, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: B4, startBar: 26, startBeat: 2, durBeats: 1),
-
-            MelodyNote(freq: D5, startBar: 27, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: B4, startBar: 27, startBeat: 1, durBeats: 1),
-
-            MelodyNote(freq: A4, startBar: 28, startBeat: 0, durBeats: 6),
-
-            // ===== 小節30-35: 終結部へ =====
-            MelodyNote(freq: F_4m, startBar: 30, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: G4, startBar: 30, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: A4, startBar: 30, startBeat: 2, durBeats: 1),
-
-            MelodyNote(freq: B4, startBar: 31, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: C_5, startBar: 31, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: D5, startBar: 31, startBeat: 2, durBeats: 1),
-
-            MelodyNote(freq: D5, startBar: 32, startBeat: 0, durBeats: 3),
-
-            // 小節33-35: 最終フレーズ
-            MelodyNote(freq: C_5, startBar: 33, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: B4, startBar: 33, startBeat: 2, durBeats: 1),
-
-            MelodyNote(freq: A4, startBar: 34, startBeat: 0, durBeats: 3),
-
-            MelodyNote(freq: G4, startBar: 35, startBeat: 0, durBeats: 3),
+            MelodyNote(freq: D5, startBar: 24, startBeat: 0, durBeats: 3),
         ]
     }()
 
-    // MARK: - Bass & Chord Data
+    // MARK: - Bass Data (DRY: 奇数=G3, 偶数=D3, 例外あり)
 
-    lazy var bassNotes: [(bar: Int, freq: Float)] = {
-        (0..<totalBars).map { (bar: $0, freq: G2) }
+    lazy var bassNotes: [BassNote] = {
+        (1...totalBars).map { bar in
+            let freq: Float
+            if bar == 9 || bar == 10 || bar == 15 || bar == 16 || bar == 21 || bar == 22 {
+                freq = E3  // 例外: E minor 7 context
+            } else if bar % 2 == 1 {
+                freq = G3  // 奇数小節
+            } else {
+                freq = D3  // 偶数小節
+            }
+            return BassNote(freq: freq, bar: bar)
+        }
     }()
 
-    lazy var chordBars: [Int] = {
-        Array(0..<totalBars)
+    // MARK: - Chord Data (DRY: 奇数=B3+D4, 偶数=A3+C#4)
+
+    lazy var chordNotes: [ChordNote] = {
+        (1...totalBars).map { bar in
+            let freqs: [Float]
+            if bar % 2 == 1 {
+                freqs = [B3, D4]      // 奇数小節
+            } else {
+                freqs = [A3, C_4]     // 偶数小節
+            }
+            return ChordNote(freqs: freqs, bar: bar)
+        }
     }()
 
     // MARK: - Sample Generation
@@ -235,7 +227,8 @@ private final class GymnoGenerator {
         var output: Float = 0
 
         for note in melodyNotes {
-            let noteStart = Float(note.startBar) * barDuration + note.startBeat * beat
+            // 1-indexed to 0-indexed
+            let noteStart = Float(note.startBar - 1) * barDuration + note.startBeat * beat
             let noteDur = note.durBeats * beat
 
             if t >= noteStart && t < noteStart + noteDur {
@@ -260,8 +253,9 @@ private final class GymnoGenerator {
         var output: Float = 0
 
         for note in bassNotes {
-            let noteStart = Float(note.bar) * barDuration
-            let noteDur = barDuration
+            // 1-indexed to 0-indexed
+            let noteStart = Float(note.bar - 1) * barDuration
+            let noteDur = barDuration  // 付点2分 = 小節全体
 
             if t >= noteStart && t < noteStart + noteDur {
                 let dt = t - noteStart
@@ -284,9 +278,10 @@ private final class GymnoGenerator {
     private func sampleChords(at t: Float) -> Float {
         var output: Float = 0
 
-        for bar in chordBars {
-            let chordStart = Float(bar) * barDuration + beat
-            let chordDur = 2 * beat
+        for chord in chordNotes {
+            // 1-indexed to 0-indexed, 2拍目から開始
+            let chordStart = Float(chord.bar - 1) * barDuration + beat
+            let chordDur = 2 * beat  // 2分音符
 
             if t >= chordStart && t < chordStart + chordDur {
                 let dt = t - chordStart
@@ -296,10 +291,14 @@ private final class GymnoGenerator {
                     attack: chordAttack,
                     decay: chordDecay
                 )
-                let v1 = SignalEnvelopeUtils.pureSine(frequency: F_4, t: t)
-                let v2 = SignalEnvelopeUtils.pureSine(frequency: D4, t: t)
-                let v = (v1 + v2) * 0.5
-                output += v * env * chordGain
+
+                var chordVal: Float = 0
+                for freq in chord.freqs {
+                    chordVal += SignalEnvelopeUtils.pureSine(frequency: freq, t: t)
+                }
+                chordVal /= Float(chord.freqs.count)
+
+                output += chordVal * env * chordGain
             }
         }
 
