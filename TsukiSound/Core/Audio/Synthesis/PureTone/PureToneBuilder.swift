@@ -173,6 +173,52 @@ public struct PureToneBuilder {
 
             let outputNode = FinalMixerOutputNode(mixer: mixer)
             sources.append(outputNode)
+
+        case .moonlitGymnopedie:
+            // Satie Gymnopédie No.1 melody (Public Domain)
+            let signal = GymnopedieMainMelodySignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Spacious, moonlit reverb
+            let reverb = SchroederReverb(
+                roomSize: 2.2,      // Large, open space
+                damping: 0.40,      // Moderate damping for clarity
+                decay: 0.85,        // Long tail for depth
+                mix: 0.45,          // Rich reverb
+                predelay: 0.030,    // Spacious predelay
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            // Soft limiter for safety
+            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
+
+        case .midnightGnossienne:
+            // Satie Gnossienne No.1 melody (Public Domain)
+            let signal = GnossienneIntroSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Dark, mysterious reverb
+            let reverb = SchroederReverb(
+                roomSize: 2.4,      // Large, dark space
+                damping: 0.35,      // Less damping for haunting resonance
+                decay: 0.90,        // Very long tail
+                mix: 0.50,          // Rich, enveloping reverb
+                predelay: 0.035,    // Deeper predelay
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            // Soft limiter for safety
+            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
         }
 
         return sources

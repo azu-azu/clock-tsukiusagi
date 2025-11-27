@@ -15,6 +15,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case toyPiano           // トイピアノ（PureTone module）
     case moonlightFlow      // 月の流れ（PureTone module）
     case moonlightFlowMidnight  // 深夜の月影（PureTone module）
+    case moonlitGymnopedie      // Moonlit Gymnopédie（PureTone module）
+    case midnightGnossienne     // Midnight Gnossienne（PureTone module）
 
     public var id: String { rawValue }
 
@@ -31,6 +33,10 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🌙 月の流れ"
         case .moonlightFlowMidnight:
             return "🌑 深夜の月影"
+        case .moonlitGymnopedie:
+            return "🎹 月明かりのジムノペディ"
+        case .midnightGnossienne:
+            return "🌑 真夜中のグノシエンヌ"
         }
     }
 
@@ -47,6 +53,10 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Moonlight Flow"
         case .moonlightFlowMidnight:
             return "Moonlight Flow — Midnight"
+        case .moonlitGymnopedie:
+            return "Moonlit Gymnopédie"
+        case .midnightGnossienne:
+            return "Midnight Gnossienne"
         }
     }
 }

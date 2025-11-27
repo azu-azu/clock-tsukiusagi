@@ -60,6 +60,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		321A50212ED7289400FAB4AE /* Exceptions for "TsukiSound" folder in "TsukiSound" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 32C0CBE72EA3141F008ACC87 /* TsukiSound */;
+		};
 		3284D4012EC3035F005F899F /* Exceptions for "AudioLiveActivity" folder in "AudioLiveActivityExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -83,19 +90,22 @@
 			path = AudioLiveActivity;
 			sourceTree = "<group>";
 		};
-		32C0CBEA2EA3141F008ACC87 /* clock-tsukiusagi */ = {
+		32C0CBEA2EA3141F008ACC87 /* TsukiSound */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "TsukiSound";
+			exceptions = (
+				321A50212ED7289400FAB4AE /* Exceptions for "TsukiSound" folder in "TsukiSound" target */,
+			);
+			path = TsukiSound;
 			sourceTree = "<group>";
 		};
-		32C0CBF82EA31420008ACC87 /* clock-tsukiusagiTests */ = {
+		32C0CBF82EA31420008ACC87 /* TsukiSoundTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "TsukiSoundTests";
+			path = TsukiSoundTests;
 			sourceTree = "<group>";
 		};
-		32C0CC022EA31420008ACC87 /* clock-tsukiusagiUITests */ = {
+		32C0CC022EA31420008ACC87 /* TsukiSoundUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "TsukiSoundUITests";
+			path = TsukiSoundUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -146,9 +156,9 @@
 		32C0CBDF2EA3141F008ACC87 = {
 			isa = PBXGroup;
 			children = (
-				32C0CBEA2EA3141F008ACC87 /* clock-tsukiusagi */,
-				32C0CBF82EA31420008ACC87 /* clock-tsukiusagiTests */,
-				32C0CC022EA31420008ACC87 /* clock-tsukiusagiUITests */,
+				32C0CBEA2EA3141F008ACC87 /* TsukiSound */,
+				32C0CBF82EA31420008ACC87 /* TsukiSoundTests */,
+				32C0CC022EA31420008ACC87 /* TsukiSoundUITests */,
 				3284D3ED2EC3035B005F899F /* AudioLiveActivity */,
 				3284D40C2EC30848005F899F /* AudioLiveActivity */,
 				3284D3E82EC3035B005F899F /* Frameworks */,
@@ -207,7 +217,7 @@
 				3284D3FC2EC3035F005F899F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				32C0CBEA2EA3141F008ACC87 /* clock-tsukiusagi */,
+				32C0CBEA2EA3141F008ACC87 /* TsukiSound */,
 			);
 			name = TsukiSound;
 			packageProductDependencies = (
@@ -230,7 +240,7 @@
 				32C0CBF72EA31420008ACC87 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				32C0CBF82EA31420008ACC87 /* clock-tsukiusagiTests */,
+				32C0CBF82EA31420008ACC87 /* TsukiSoundTests */,
 			);
 			name = TsukiSoundTests;
 			packageProductDependencies = (
@@ -253,7 +263,7 @@
 				32C0CC012EA31420008ACC87 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				32C0CC022EA31420008ACC87 /* clock-tsukiusagiUITests */,
+				32C0CC022EA31420008ACC87 /* TsukiSoundUITests */,
 			);
 			name = TsukiSoundUITests;
 			packageProductDependencies = (
@@ -585,7 +595,7 @@
 				DEVELOPMENT_TEAM = ZD854UM35V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "TsukiSound/Info.plist";
+				INFOPLIST_FILE = TsukiSound/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -618,7 +628,7 @@
 				DEVELOPMENT_TEAM = ZD854UM35V;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "TsukiSound/Info.plist";
+				INFOPLIST_FILE = TsukiSound/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
