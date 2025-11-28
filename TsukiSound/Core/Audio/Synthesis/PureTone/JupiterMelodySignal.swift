@@ -19,11 +19,12 @@ import Foundation
 /// Transposed from E Major to C Major to harmonize with CathedralStillness drone (C/G).
 ///
 /// Characteristics:
+/// - Full "Thaxted" theme with climax (G5 peak) and resolution
 /// - Organ-style ASR envelope (Attack-Sustain-Release)
 /// - C Major key (transposed from original E Major)
 /// - Readable note definitions (Pitch.C5, Duration.eighth)
 /// - Rich harmonics with 8th overtone (Mixture stop)
-/// - Cycle: 31 notes, ~52-54 seconds total
+/// - Cycle: ~90 seconds (8 measures, complete musical arc)
 ///
 /// Legal: Holst's "The Planets" (1918) is public domain (composer died 1934, >70 years).
 public struct JupiterMelodySignal {
@@ -62,6 +63,7 @@ private final class JupiterMelodyGenerator {
     }
 
     /// Note pitch abstraction with frequency values
+    /// Added F5 and G5 for the climax (the emotional peak)
     enum Pitch: Float {
         case E4 = 329.63
         case G4 = 392.00
@@ -70,6 +72,8 @@ private final class JupiterMelodyGenerator {
         case C5 = 523.25
         case D5 = 587.33
         case E5 = 659.25
+        case F5 = 698.46  // High F - for descent from peak
+        case G5 = 783.99  // High G - THE PEAK (most emotional point)
     }
 
     /// Single note with frequency and duration
@@ -92,16 +96,18 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Melody Definition
 
-    /// Jupiter chorale melody in C major (Holst "Thaxted" opening 3 measures)
+    /// Jupiter chorale melody in C major (Full Stanza - Complete "Thaxted" theme)
     ///
     /// Based on Holst's own C-major setting of the Jupiter chorale
-    /// ("Thaxted" / "I Vow to Thee, My Country" first 3 measures),
+    /// ("Thaxted" / "I Vow to Thee, My Country"),
     /// arranged to sit over CathedralStillness (C/G drone).
     ///
-    /// Notation (in C major, 3/4):
-    /// Measure 1: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4
-    /// Measure 2: c8 d e4 d8 c b a g
-    /// Measure 3: e8 g a4 c8 d8 c b a g (with extended final G for loop smoothing)
+    /// Structure:
+    /// - Measure 1-3: Introduction (Rising)
+    /// - Measure 4-5: Climax (The peak "G5" - the most emotional point)
+    /// - Measure 6-8: Resolution (Landing on C Major)
+    ///
+    /// Duration: ~90 seconds (8 measures, 2x slower tempo)
     let melody: [Note] = [
         // === Measure 1 (Introduction - ascending) ===
         Note(.E4, .eighth),
@@ -129,7 +135,7 @@ private final class JupiterMelodyGenerator {
         Note(.A4, .eighth),
         Note(.G4, .eighth),
 
-        // === Measure 3 (Climax - emotional peak) ===
+        // === Measure 3 (Bridge to Climax - re-ascending) ===
         Note(.E4, .eighth),
         Note(.G4, .eighth),
         Note(.A4, .quarter),
@@ -138,8 +144,33 @@ private final class JupiterMelodyGenerator {
         Note(.C5, .eighth),
         Note(.B4, .eighth),
         Note(.A4, .eighth),
-        // Extended final note for smooth loop transition
-        Note(.G4, seconds: 1.80)
+        Note(.G4, .quarter),  // Shortened to lead into next phrase
+
+        // === Measure 4 (The Ascent - "And soul by soul...") ===
+        // Climbing up: C -> D -> E
+        Note(.C5, .quarter),
+        Note(.D5, .quarter),
+        Note(.E5, .quarter),
+
+        // === Measure 5 (THE CLIMAX - High Peak) ===
+        // Hitting the High G (G5) - The most emotional point!
+        Note(.G5, .dottedQuarter),  // THE PEAK!
+        Note(.F5, .eighth),
+        Note(.E5, .eighth),
+        Note(.D5, .eighth),
+
+        // === Measure 6 (Descent) ===
+        Note(.C5, .quarter),
+        Note(.B4, .quarter),
+        Note(.C5, .quarter),
+
+        // === Measure 7 (Turnaround) ===
+        Note(.D5, .half),
+        Note(.G4, .quarter),  // Low G anchor
+
+        // === Measure 8 (Final Resolution) ===
+        // Landing safely on C Major with long sustain for reverb fade
+        Note(.C5, seconds: 4.8)  // 3 measures worth of sustain for final fade
     ]
 
     // MARK: - Timing & Optimization
@@ -272,13 +303,28 @@ private final class JupiterMelodyGenerator {
 //    - Added 200ms release time at end of each note
 //    - Prevents "pop" noise at note transitions
 //
+// 5. MELODY EXTENSION (2025-11-28):
+//    - Extended from 3 measures to 8 measures (full stanza)
+//    - Added climax: G5 (the emotional peak)
+//    - Added resolution: landing on C5 with long sustain
+//    - Structure: Introduction → Climax → Resolution
+//    - Duration: ~90 seconds (complete musical arc)
+//
 // MELODY DESIGN:
 //
 // Source: Holst's "Thaxted" chorale from Jupiter (1918, public domain)
 // Also known as: "I Vow to Thee, My Country" hymn tune
 // Key: C Major (Holst's own C-major setting, fits CathedralStillness C/G drone)
 // Time Signature: 3/4
-// Duration: ~52-54 seconds (3 measures, 2x slower tempo)
+// Duration: ~90 seconds (8 measures, 2x slower tempo)
+//
+// MELODIC STRUCTURE:
+//
+// Measure 1-3: Introduction (ascending, building tension)
+// Measure 4:   The Ascent (C5 → D5 → E5, climbing to peak)
+// Measure 5:   THE CLIMAX (G5 - the emotional peak, then descent)
+// Measure 6-7: Descent and turnaround
+// Measure 8:   Final Resolution (C5 with long sustain for reverb fade)
 //
 // INTEGRATION WITH CATHEDRALSTILLNESS:
 //
