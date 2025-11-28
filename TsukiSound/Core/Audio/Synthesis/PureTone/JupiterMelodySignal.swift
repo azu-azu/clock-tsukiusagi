@@ -41,9 +41,9 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Constants & Configuration
 
-    /// BPM Control: ~37.5 BPM (2x slower than original 75 BPM)
-    /// Quarter note = 1.6s (original 0.8s × 2)
-    private static let beatDuration: Float = 1.6
+    /// BPM Control: ~43 BPM
+    /// Quarter note = 1.4s
+    private static let beatDuration: Float = 1.4
 
     // MARK: - Data Structures
 
