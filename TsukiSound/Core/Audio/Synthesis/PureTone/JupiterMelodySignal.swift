@@ -225,12 +225,15 @@ private final class JupiterMelodyGenerator {
     /// Reduced higher harmonics for smoother, more solemn character
     let harmonicAmps: [Float] = [1.0, 0.45, 0.25, 0.12, 0.03]
 
-    /// ASR Envelope Parameters (Organ-style, slower for majesty)
-    /// - Attack: Slow rise for cathedral feel
-    /// - Sustain: Full volume held during note
-    /// - Release: Smooth fade to prevent clicks
-    let attackTime: Float = 0.15  // 150ms: slower attack for grandeur
-    let releaseTime: Float = 0.3  // 300ms: longer release for legato feel
+    /// Legato Envelope Parameters (smooth, connected notes)
+    /// - Attack: Gentle rise for smooth entry
+    /// - Release: Extends beyond note boundary for overlap
+    let attackTime: Float = 0.12   // 120ms: smooth but not sluggish
+    let releaseTime: Float = 0.5   // 500ms: long tail for legato overlap
+
+    /// Legato overlap: how much the release extends into next note
+    /// This creates smooth connections between notes
+    let legatoOverlap: Float = 0.35  // 350ms overlap with next note
 
     /// Master gain for balance with other layers
     let masterGain: Float = 0.28
@@ -240,27 +243,45 @@ private final class JupiterMelodyGenerator {
     func sample(at t: Float) -> Float {
         let cycleTime = t.truncatingRemainder(dividingBy: cycleDuration)
 
-        guard let index = findNoteIndex(at: cycleTime) else { return 0.0 }
+        var totalSignal: Float = 0.0
 
-        let note = melody[index]
-        let noteStartTime = cumulativeTimes[index]
-        let localTime = cycleTime - noteStartTime
+        // Find current note and potentially overlapping previous note
+        if let index = findNoteIndex(at: cycleTime) {
+            let note = melody[index]
+            let noteStartTime = cumulativeTimes[index]
+            let localTime = cycleTime - noteStartTime
 
-        // 1. Calculate ASR Envelope (Attack, Sustain, Release)
-        let envelope = calculateOrganEnvelope(time: localTime, duration: note.duration)
+            // Current note with legato envelope
+            let envelope = calculateLegatoEnvelope(time: localTime, duration: note.duration)
+            totalSignal += generateTone(freq: note.freq, t: t) * envelope
 
-        // 2. Generate Organ Tone (Additive Synthesis)
+            // Check if previous note is still releasing (legato overlap)
+            if index > 0 && localTime < legatoOverlap {
+                let prevNote = melody[index - 1]
+                let prevDuration = prevNote.duration
+                let timeIntoRelease = prevDuration + localTime  // time since prev note started
+
+                let prevEnvelope = calculateLegatoEnvelope(time: timeIntoRelease, duration: prevDuration)
+                if prevEnvelope > 0 {
+                    totalSignal += generateTone(freq: prevNote.freq, t: t) * prevEnvelope
+                }
+            }
+        }
+
+        return totalSignal * masterGain
+    }
+
+    /// Generate organ tone with harmonics
+    private func generateTone(freq: Float, t: Float) -> Float {
         var signal: Float = 0.0
         for i in 0..<harmonics.count {
-            let hFreq = note.freq * harmonics[i]
+            let hFreq = freq * harmonics[i]
             let phase = 2.0 * Float.pi * hFreq * t
             signal += sin(phase) * harmonicAmps[i]
         }
-
-        // Normalize by harmonic count
+        // Normalize
         signal /= Float(harmonics.count)
-
-        return signal * envelope * masterGain
+        return signal
     }
 
     // MARK: - Helper Methods
@@ -275,29 +296,33 @@ private final class JupiterMelodyGenerator {
         return nil
     }
 
-    /// Generates a trapezoidal ASR envelope (Attack -> Sustain -> Release)
-    /// This is crucial for organ sounds - they sustain while key is pressed.
+    /// Generates a smooth legato envelope with cosine interpolation
+    /// Release extends beyond note boundary for smooth overlap
     ///
-    /// Shape:
+    /// Shape (with overlap):
     /// ```
-    /// 1.0 ┌───────────────────┐
-    ///     │  Attack  Sustain  │ Release
-    ///     │   /               │\
-    /// 0.0 └───────────────────┴────
-    ///     0   attackTime    end-releaseTime  end
+    /// 1.0     ╭───────────────╮
+    ///        ╱                 ╲
+    ///       ╱                   ╲  (extends into next note)
+    /// 0.0 ─╯                     ╲─────
+    ///     0   attack    release-start   release-end
     /// ```
-    private func calculateOrganEnvelope(time: Float, duration: Float) -> Float {
-        // Attack Phase: smooth rise
+    private func calculateLegatoEnvelope(time: Float, duration: Float) -> Float {
+        let releaseStart = duration - legatoOverlap
+        let totalReleaseDuration = legatoOverlap + releaseTime
+
+        // Attack Phase: smooth cosine rise
         if time < attackTime {
-            return time / attackTime
+            let progress = time / attackTime
+            // Cosine interpolation: smoother than linear
+            return (1.0 - cos(progress * Float.pi)) * 0.5
         }
-        // Release Phase: smooth fade at end of note
-        else if time > (duration - releaseTime) {
-            let releaseStart = duration - releaseTime
+        // Release Phase: starts before note ends, extends beyond
+        else if time > releaseStart {
             let timeInRelease = time - releaseStart
-            // Clamp to prevent negative values for very short notes
-            let releaseProgress = min(timeInRelease / releaseTime, 1.0)
-            return max(1.0 - releaseProgress, 0.0)
+            let releaseProgress = min(timeInRelease / totalReleaseDuration, 1.0)
+            // Cosine interpolation for smooth fade
+            return (1.0 + cos(releaseProgress * Float.pi)) * 0.5
         }
         // Sustain Phase: full volume
         else {
