@@ -3,7 +3,7 @@
 //  TsukiSound
 //
 //  Satie - Gnossienne No.1 (Public Domain)
-//  Free tempo (non-mesuré) with flowing chromatic melody
+//  True opening: C5 → Eb5 → D5 → C5 → Bb4 → Bb4
 //
 //  Key signature: Bb, Eb, Ab (flats)
 //  Character: Lent, flowing, ambiguous meter
@@ -33,14 +33,15 @@ private final class GnossienneGenerator {
         static let Bb4: Float     = 466.16
         static let B4_Nat: Float  = 493.88   // Grace note
         static let C5: Float      = 523.25
-        static let Db5: Float     = 554.37
+        static let D5: Float      = 587.33
+        static let Eb5: Float     = 622.25
     }
 
     // MARK: - Note Event
 
     struct NoteEvent {
         let frequency: Float
-        let duration: Float  // Free tempo values
+        let duration: Float
 
         init(_ freq: Float, dur: Float) {
             self.frequency = freq
@@ -52,33 +53,26 @@ private final class GnossienneGenerator {
 
     let melody: [NoteEvent] = [
 
-        // === Intro: Lent (flowing chromatic phrase) ===
-        // The famous opening: G4 → Ab4 → Bb4 → C5 → Db5 → C5 → Bb4 → Ab4 → G4
-        // Free tempo, connected legato
+        // === Intro: True Satie Opening ===
+        // The famous "wandering" melody everyone recognizes
+        // C5 → Eb5 → D5 → C5 → Bb4 → Bb4
 
-        NoteEvent(Pitch.G4,   dur: 1.2),
-        NoteEvent(Pitch.Ab4,  dur: 1.2),
-        NoteEvent(Pitch.Bb4,  dur: 1.2),
-        NoteEvent(Pitch.C5,   dur: 1.3),   // Slightly longer at peak
-        NoteEvent(Pitch.Db5,  dur: 1.4),   // The highest point, linger
-        NoteEvent(Pitch.C5,   dur: 1.2),
-        NoteEvent(Pitch.Bb4,  dur: 1.2),
-        NoteEvent(Pitch.Ab4,  dur: 1.2),
-        NoteEvent(Pitch.G4,   dur: 1.5),   // Rest at bottom
+        NoteEvent(Pitch.C5,  dur: 1.2),   // Do
+        NoteEvent(Pitch.Eb5, dur: 1.2),   // Mi♭
+        NoteEvent(Pitch.D5,  dur: 1.2),   // Re
+        NoteEvent(Pitch.C5,  dur: 1.3),   // Do
+        NoteEvent(Pitch.Bb4, dur: 1.2),   // Si♭
+        NoteEvent(Pitch.Bb4, dur: 1.5),   // Si♭ (longer)
 
         // === Theme A: "Ta - Ta(Grace) - Tan - Tan" ===
 
-        // Beat 1: C5
         NoteEvent(Pitch.C5, dur: 1.0),
 
-        // Beat 2: Grace note split (0.15 + 0.85)
+        // Grace note split (0.15 + 0.85)
         NoteEvent(Pitch.B4_Nat, dur: 0.15),
         NoteEvent(Pitch.C5, dur: 0.85),
 
-        // Beat 3: Ab4
         NoteEvent(Pitch.Ab4, dur: 1.0),
-
-        // Beat 4: F4
         NoteEvent(Pitch.F4, dur: 1.0),
 
         // === Bar 3: Syncopated ===
@@ -108,10 +102,10 @@ private final class GnossienneGenerator {
         cumulative.last!
     }()
 
-    // MARK: - Sound Parameters (Voice-like, soft)
+    // MARK: - Sound Parameters
 
-    let attack: Float = 0.08    // Slower attack for voice-like feel
-    let decay: Float = 2.5      // Longer decay for legato
+    let attack: Float = 0.08
+    let decay: Float = 2.5
     let gain: Float = 0.40
 
     // MARK: - Sample Generation
@@ -144,10 +138,9 @@ private final class GnossienneGenerator {
         return nil
     }
 
-    /// Soft, voice-like tone (less harsh harmonics)
     private func softTone(freq: Float, t: Float) -> Float {
         let harmonics: [Float] = [1.0, 2.0, 3.0]
-        let amplitudes: [Float] = [1.0, 0.3, 0.1]  // Softer overtones
+        let amplitudes: [Float] = [1.0, 0.3, 0.1]
 
         var signal: Float = 0.0
         for i in 0..<harmonics.count {
@@ -156,15 +149,12 @@ private final class GnossienneGenerator {
         return signal / Float(harmonics.count)
     }
 
-    /// Soft envelope for legato, voice-like feel
     private func envelope(time: Float, noteDuration: Float) -> Float {
-        // Slow attack
         if time < attack {
             let p = time / attack
-            return p  // Linear rise for softer attack
+            return p
         }
 
-        // Long, gentle decay
         let decayTime = time - attack
         let effectiveDecay = max(decay, noteDuration * 0.6)
         return exp(-decayTime / effectiveDecay)
@@ -173,33 +163,24 @@ private final class GnossienneGenerator {
 
 // MARK: - Design Notes
 //
-// GNOSSIENNE NO. 1 - FREE TEMPO (NON-MESURÉ)
+// GNOSSIENNE NO. 1 - TRUE OPENING
 //
 // Source: Erik Satie (1890, public domain)
 //
-// INTRO PHRASE:
+// INTRO:
 //
-// The famous opening chromatic melody:
-// G4 → Ab4 → Bb4 → C5 → Db5 → C5 → Bb4 → Ab4 → G4
+// The famous "wandering" melody:
+// C5 → Eb5 → D5 → C5 → Bb4 → Bb4
+// (Do Mi Re Do Si Si)
 //
-// Character:
-// - Flowing, connected legato
-// - Ambiguous meter (no strict beats)
-// - Duration varies: 1.2 - 1.5 seconds per note
-//
-// SOUND DESIGN:
-//
-// - Voice-like (soft harmonics: 1.0, 0.3, 0.1)
-// - Slow attack (0.08s) for gentle onset
-// - Long decay (2.5s) for legato connection
-// - No harsh piano attack
+// This is what everyone recognizes as "Gnossienne No.1"
 //
 // STRUCTURE:
 //
-// 1. Intro: Chromatic ascent/descent (9 notes)
+// 1. Intro: Do-Mi-Re-Do-Si-Si (6 notes)
 // 2. Theme A: Ta-Ta-Tan-Tan pattern
-// 3. Bar 3: Syncopated movement
-// 4. Bar 4: Long D Natural resolve
+// 3. Syncopated movement
+// 4. Long D Natural resolve
 //
 // COPYRIGHT:
 //
