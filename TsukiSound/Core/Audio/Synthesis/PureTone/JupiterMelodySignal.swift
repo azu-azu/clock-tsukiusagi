@@ -241,15 +241,15 @@ private final class JupiterMelodyGenerator {
     let octaveAboveRatio: Float = 2.0  // freq * 2.0 = one octave up
     let octaveAboveGain: Float = 0.2   // Moderate, adds brightness
 
-    /// Legato Envelope Parameters (smooth, connected notes)
-    /// - Attack: Gentle rise for smooth entry
-    /// - Release: Extends beyond note boundary for overlap
-    let attackTime: Float = 0.12   // 120ms: smooth but not sluggish
-    let releaseTime: Float = 0.5   // 500ms: long tail for legato overlap
+    /// Legato Envelope Parameters (very smooth, connected notes)
+    /// - Attack: Slow rise for seamless entry
+    /// - Release: Long tail extending well into next note
+    let attackTime: Float = 0.20   // 200ms: slow, gentle rise
+    let releaseTime: Float = 0.8   // 800ms: very long tail for seamless blend
 
     /// Legato overlap: how much the release extends into next note
-    /// This creates smooth connections between notes
-    let legatoOverlap: Float = 0.35  // 350ms overlap with next note
+    /// Higher value = more blending between notes
+    let legatoOverlap: Float = 0.5  // 500ms overlap with next note
 
     /// Master gain for balance with other layers
     let masterGain: Float = 0.22  // Reduced to compensate for added voices
