@@ -602,12 +602,8 @@ public final class AudioService: ObservableObject {
         switch uiPreset {
         case .softOrgan:
             return .cathedralStillness
-        case .toyPiano:
-            return .toyPiano
         case .moonlitGymnopedie:
             return .moonlitGymnopedie
-        case .midnightGnossienne:
-            return .midnightGnossienne
         }
     }
 

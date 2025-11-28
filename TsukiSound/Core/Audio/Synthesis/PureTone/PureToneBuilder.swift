@@ -64,42 +64,6 @@ public struct PureToneBuilder {
             let outputNode = FinalMixerOutputNode(mixer: mixer)
             sources.append(outputNode)
 
-        case .toyPiano:
-            // Toy piano chord progression with deep, dreamy reverb
-            let signal = PianoSignal.makeSignal()
-
-            // Sub piano (octave-up shimmer layer)
-            let subSignal = SubPianoSignal.makeSignal()
-
-            let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)        // Main piano
-            mixer.add(subSignal, gain: 1.0)     // Sub piano (volume 0.20 internally)
-
-            // Deep reverb for dreamy atmosphere
-            let reverb = SchroederReverb(
-                roomSize: 1.8,      // Medium-large space
-                damping: 0.65,      // Warm tone
-                decay: 0.85,        // Long tail for dreamy feel
-                mix: 0.45,          // Rich reverb
-                predelay: 0.020,    // 20ms initial reflection
-                sampleRate: 48000.0
-            )
-            mixer.addEffect(reverb)
-
-            // Soft limiter for safety
-            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
-
-            let outputNode = FinalMixerOutputNode(mixer: mixer)
-            sources.append(outputNode)
-
-            // Add TreeChime overlay (ランダム間隔でシャラララ)
-            let treeChime = TreeChime(
-                grainRate: 0.15,       // 平均6〜7秒に1回のシャラララ
-                grainDuration: 1.2,    // 各粒の余韻（1.2秒）
-                brightness: 9000.0     // ペンタトニックより少し高め
-            )
-            sources.append(treeChime)
-
         case .moonlitGymnopedie:
             // Satie Gymnopédie No.1 melody (Public Domain)
             let signal = GymnopedieMainMelodySignal.makeSignal()
@@ -123,28 +87,6 @@ public struct PureToneBuilder {
             let outputNode = FinalMixerOutputNode(mixer: mixer)
             sources.append(outputNode)
 
-        case .midnightGnossienne:
-            // Satie Gnossienne No.1 melody (Public Domain)
-            let signal = GnossienneIntroSignal.makeSignal()
-            let mixer = FinalMixer()
-            mixer.add(signal, gain: 1.0)
-
-            // Dark, mysterious reverb
-            let reverb = SchroederReverb(
-                roomSize: 2.4,      // Large, dark space
-                damping: 0.35,      // Less damping for haunting resonance
-                decay: 0.90,        // Very long tail
-                mix: 0.50,          // Rich, enveloping reverb
-                predelay: 0.035,    // Deeper predelay
-                sampleRate: 48000.0
-            )
-            mixer.addEffect(reverb)
-
-            // Soft limiter for safety
-            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
-
-            let outputNode = FinalMixerOutputNode(mixer: mixer)
-            sources.append(outputNode)
         }
 
         return sources
