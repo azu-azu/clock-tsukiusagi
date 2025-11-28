@@ -41,14 +41,14 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Constants & Configuration
 
-    /// BPM Control: 75 BPM
-    /// Quarter note = 0.8s (60.0 / 75.0)
-    private static let beatDuration: Float = 0.8
+    /// BPM Control: 54 BPM (majestic, solemn tempo)
+    /// Quarter note = 1.1s (60.0 / 54.0 ≈ 1.11)
+    private static let beatDuration: Float = 1.1
 
     // MARK: - Data Structures
 
     /// Note length abstraction to avoid magic numbers
-    /// All values are multiplied by beatDuration (0.8s)
+    /// All values are multiplied by beatDuration (1.1s)
     enum Duration: Float {
         case thirtySecond  = 0.125 // 32分音符
         case sixteenth     = 0.25  // 16分音符
@@ -241,22 +241,23 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Sound Design (Organ Characteristics)
 
-    /// Organ-style harmonics with Mixture stop (8th harmonic)
-    /// The 8.0 harmonic adds "brilliance" typical of cathedral organs
-    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 8.0]
+    /// Organ-style harmonics with warm foundation
+    /// Emphasizing fundamental and lower harmonics for majestic warmth
+    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 6.0]
 
-    /// Harmonic amplitudes: rich organ tone with subtle Mixture
-    let harmonicAmps: [Float] = [1.0, 0.5, 0.3, 0.1, 0.05]
+    /// Harmonic amplitudes: warm, full organ tone
+    /// Reduced higher harmonics for smoother, more solemn character
+    let harmonicAmps: [Float] = [1.0, 0.45, 0.25, 0.12, 0.03]
 
-    /// ASR Envelope Parameters (Organ-style)
+    /// ASR Envelope Parameters (Organ-style, slower for majesty)
     /// - Attack: Slow rise for cathedral feel
     /// - Sustain: Full volume held during note
     /// - Release: Smooth fade to prevent clicks
-    let attackTime: Float = 0.1   // 100ms: slow attack for organ feel
-    let releaseTime: Float = 0.2  // 200ms: smooth release to prevent clicks
+    let attackTime: Float = 0.15  // 150ms: slower attack for grandeur
+    let releaseTime: Float = 0.3  // 300ms: longer release for legato feel
 
     /// Master gain for balance with other layers
-    let masterGain: Float = 0.30
+    let masterGain: Float = 0.28
 
     // MARK: - Sample Generation
 
