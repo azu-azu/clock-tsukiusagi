@@ -3,14 +3,10 @@
 //  TsukiSound
 //
 //  Satie - Gnossienne No.1 (Public Domain)
-//  Theme presentation section (Bars 1-6)
+//  Theme A and B (Bars 1-6)
 //
-//  Key: F Minor (3 flats: Bb, Eb, Ab)
+//  Key: F Minor / Dorian Mode (3 flats, but with D natural)
 //  Time: 4/4
-//
-//  Corrections based on score analysis:
-//  - Grace notes (Acciaccatura) for Oriental flavor
-//  - Proper half note duration in Bar 5
 //
 
 import Foundation
@@ -26,100 +22,108 @@ public struct GnossienneIntroSignal {
 
 private final class GnossienneGenerator {
 
-    // MARK: - Tempo Configuration
+    // MARK: - Tempo
 
-    /// Lento (Very slow, approx 50 BPM)
+    /// Lento (~50 BPM)
     private static let beatDuration: Float = 1.2
 
     // MARK: - Pitch Frequencies
 
-    enum Pitch: Float {
-        // Bass & Chord
-        case F2  = 87.31
-        case F3  = 174.61
-        case Ab3 = 207.65
-        case C4_chord = 261.63  // For chord use
+    // Bass & Chord
+    let F2: Float  = 87.31
+    let F3: Float  = 174.61
+    let Ab3: Float = 207.65
+    let C4_chord: Float = 261.63
 
-        // Melody range
-        case D4  = 293.66
-        case Eb4 = 311.13
-        case F4  = 349.23
-        case G4  = 392.00
-        case Ab4 = 415.30
-        case Bb4 = 466.16
-        case B4_Natural = 493.88  // Grace note (Oriental flavor)
-        case C5  = 523.25
-        case Db5 = 554.37
-        case Eb5 = 622.25
-        case F5  = 698.46
-    }
+    // Melody
+    let D4: Float  = 293.66
+    let Eb4: Float = 311.13
+    let F4: Float  = 349.23
+    let G4: Float  = 392.00
+    let Ab4: Float = 415.30
+    let Bb4: Float = 466.16
+    let B4_Nat: Float = 493.88  // Grace note
+    let C5: Float  = 523.25
+    let Db5: Float = 554.37
+    let Eb5: Float = 622.25
+    let F5: Float  = 698.46
 
-    // MARK: - Note Data Structure
+    // MARK: - Note Data
 
     struct MelodyNote {
-        let pitch: Pitch
+        let freq: Float
+        let startBar: Int
         let startBeat: Float
-        let duration: Float
-        let graceNote: Pitch?  // Optional grace note (Acciaccatura)
+        let durBeats: Float
+        let graceFreq: Float?
 
-        init(_ pitch: Pitch, start: Float, dur: Float, grace: Pitch? = nil) {
-            self.pitch = pitch
-            self.startBeat = start
-            self.duration = dur
-            self.graceNote = grace
+        init(_ freq: Float, bar: Int, beat: Float, dur: Float, grace: Float? = nil) {
+            self.freq = freq
+            self.startBar = bar
+            self.startBeat = beat
+            self.durBeats = dur
+            self.graceFreq = grace
         }
     }
 
-    // MARK: - Melody Definition (Corrected from score)
+    struct BassNote {
+        let freq: Float
+        let isChord: Bool
+        let startBar: Int
+        let startBeat: Float
+        let durBeats: Float
+    }
 
-    let melodyByBar: [[MelodyNote]] = [
-        // --- Bar 1 (Intro) ---
-        // LH only, no melody
-        [],
+    // MARK: - Melody (Right Hand)
 
-        // --- Bar 2 (Theme A) ---
-        // C5 - [Grace B4]-C5 - Ab4 - F4
+    lazy var melody: [MelodyNote] = {
         [
-            MelodyNote(.C5, start: 0.0, dur: 1.0),
-            MelodyNote(.C5, start: 1.0, dur: 1.0, grace: .B4_Natural),  // Grace note!
-            MelodyNote(.Ab4, start: 2.0, dur: 1.0),
-            MelodyNote(.F4, start: 3.0, dur: 1.0),
-        ],
+            // --- Theme A (Bars 2-4) ---
 
-        // --- Bar 3 ---
-        // G4 - F4(8th)-G4(8th) - F4 - Eb4
-        [
-            MelodyNote(.G4, start: 0.0, dur: 1.0),
-            MelodyNote(.F4, start: 1.0, dur: 0.5),
-            MelodyNote(.G4, start: 1.5, dur: 0.5),
-            MelodyNote(.F4, start: 2.0, dur: 1.0),
-            MelodyNote(.Eb4, start: 3.0, dur: 1.0),
-        ],
+            // Bar 2: C5 ... [Grace B]->C5 ... Ab4 ... F4
+            MelodyNote(C5, bar: 2, beat: 0.0, dur: 1.0),
+            MelodyNote(C5, bar: 2, beat: 1.0, dur: 1.0, grace: B4_Nat),
+            MelodyNote(Ab4, bar: 2, beat: 2.0, dur: 1.0),
+            MelodyNote(F4, bar: 2, beat: 3.0, dur: 1.0),
 
-        // --- Bar 4 ---
-        // D4 (Whole Note) - Dorian flavor
-        [
-            MelodyNote(.D4, start: 0.0, dur: 4.0),
-        ],
+            // Bar 3: G4 ... F4(8)-G4(8) ... F4 ... Eb4
+            MelodyNote(G4, bar: 3, beat: 0.0, dur: 1.0),
+            MelodyNote(F4, bar: 3, beat: 1.0, dur: 0.5),
+            MelodyNote(G4, bar: 3, beat: 1.5, dur: 0.5),
+            MelodyNote(F4, bar: 3, beat: 2.0, dur: 1.0),
+            MelodyNote(Eb4, bar: 3, beat: 3.0, dur: 1.0),
 
-        // --- Bar 5 ---
-        // F5 - Eb5 - [Grace Db5]-Eb5 (Half Note!)
-        // Melody starts on beat 1 (rest on beat 0)
-        [
-            MelodyNote(.F5, start: 1.0, dur: 1.0),
-            MelodyNote(.Eb5, start: 2.0, dur: 1.0),
-            MelodyNote(.Eb5, start: 3.0, dur: 2.0, grace: .Db5),  // Half note with grace!
-        ],
+            // Bar 4: D4 (Dorian note, held long)
+            MelodyNote(D4, bar: 4, beat: 0.0, dur: 4.0),
 
-        // --- Bar 6 ---
-        // Db5 - C5 - Bb4 - C5
-        [
-            MelodyNote(.Db5, start: 0.0, dur: 1.0),
-            MelodyNote(.C5, start: 1.0, dur: 1.0),
-            MelodyNote(.Bb4, start: 2.0, dur: 1.0),
-            MelodyNote(.C5, start: 3.0, dur: 1.0),
-        ],
-    ]
+            // --- Theme B (Bars 5-6) ---
+
+            // Bar 5: F5 ... Eb5 ... [Grace Db]->Eb5 (Long)
+            MelodyNote(F5, bar: 5, beat: 1.0, dur: 1.0),
+            MelodyNote(Eb5, bar: 5, beat: 2.0, dur: 1.0),
+            MelodyNote(Eb5, bar: 5, beat: 3.0, dur: 2.0, grace: Db5),
+
+            // Bar 6: Db5 ... C5 ... Bb4 ... C5
+            MelodyNote(Db5, bar: 6, beat: 0.0, dur: 1.0),
+            MelodyNote(C5, bar: 6, beat: 1.0, dur: 1.0),
+            MelodyNote(Bb4, bar: 6, beat: 2.0, dur: 1.0),
+            MelodyNote(C5, bar: 6, beat: 3.0, dur: 1.0),
+        ]
+    }()
+
+    // MARK: - Bass (Left Hand)
+
+    lazy var bass: [BassNote] = {
+        var notes: [BassNote] = []
+        for bar in 1...6 {
+            // Bass -> Chord -> Bass -> Chord
+            notes.append(BassNote(freq: F2, isChord: false, startBar: bar, startBeat: 0.0, durBeats: 1.0))
+            notes.append(BassNote(freq: F3, isChord: true,  startBar: bar, startBeat: 1.0, durBeats: 1.0))
+            notes.append(BassNote(freq: F2, isChord: false, startBar: bar, startBeat: 2.0, durBeats: 1.0))
+            notes.append(BassNote(freq: F3, isChord: true,  startBar: bar, startBeat: 3.0, durBeats: 1.0))
+        }
+        return notes
+    }()
 
     // MARK: - Timing
 
@@ -132,20 +136,15 @@ private final class GnossienneGenerator {
 
     // MARK: - Sound Parameters
 
-    // Grace note timing
-    let graceDuration: Float = 0.12  // Very short (Acciaccatura)
+    let graceDuration: Float = 0.12
 
-    // Melody
     let melodyAttack: Float = 0.05
     let melodyDecay: Float = 2.0
     let melodyGain: Float = 0.45
-
-    // Grace note
     let graceGain: Float = 0.30
 
-    // Accompaniment
-    let accompAttack: Float = 0.03
-    let accompDecay: Float = 1.5
+    let bassAttack: Float = 0.03
+    let bassDecay: Float = 1.5
     let bassGain: Float = 0.18
     let chordGain: Float = 0.10
 
@@ -159,13 +158,11 @@ private final class GnossienneGenerator {
 
         var signal: Float = 0.0
 
-        // 1. Accompaniment (Bass-Chord-Bass-Chord)
-        signal += generateAccompaniment(beat: beatInBar, t: t)
+        // Bass
+        signal += generateBass(bar: currentBar, beat: beatInBar, t: t)
 
-        // 2. Melody with grace notes
-        if currentBar >= 1 && currentBar <= melodyByBar.count {
-            signal += generateMelody(bar: currentBar, beat: beatInBar, t: t)
-        }
+        // Melody
+        signal += generateMelody(bar: currentBar, beat: beatInBar, t: t)
 
         return SignalEnvelopeUtils.softClip(signal * 0.6)
     }
@@ -173,74 +170,66 @@ private final class GnossienneGenerator {
     // MARK: - Melody Generation
 
     private func generateMelody(bar: Int, beat: Float, t: Float) -> Float {
-        let notes = melodyByBar[bar - 1]
         var signal: Float = 0.0
 
-        for note in notes {
-            // Grace note handling (Acciaccatura - crushed note)
-            if let grace = note.graceNote {
+        for note in melody {
+            guard note.startBar == bar else { continue }
+
+            // Grace note
+            if let grace = note.graceFreq {
                 let graceStart = note.startBeat
                 let graceEnd = graceStart + graceDuration
 
                 if beat >= graceStart && beat < graceEnd {
                     let timeInGrace = (beat - graceStart) * Self.beatDuration
-                    let env = calculateEnvelope(
-                        time: timeInGrace,
-                        attack: 0.01,
-                        decay: 0.08
-                    )
-                    signal += generatePianoTone(freq: grace.rawValue, t: t) * env * graceGain
+                    let env = envelope(time: timeInGrace, attack: 0.01, decay: 0.08)
+                    signal += pianoTone(freq: grace, t: t) * env * graceGain
                 }
             }
 
             // Main note
-            let noteEnd = note.startBeat + note.duration
+            let noteEnd = note.startBeat + note.durBeats
             if beat >= note.startBeat && beat < noteEnd {
                 let timeSinceStart = (beat - note.startBeat) * Self.beatDuration
-                let env = calculateEnvelope(
-                    time: timeSinceStart,
-                    attack: melodyAttack,
-                    decay: melodyDecay
-                )
-                signal += generatePianoTone(freq: note.pitch.rawValue, t: t) * env * melodyGain
+                let env = envelope(time: timeSinceStart, attack: melodyAttack, decay: melodyDecay)
+                signal += pianoTone(freq: note.freq, t: t) * env * melodyGain
             }
         }
 
         return signal
     }
 
-    // MARK: - Accompaniment Generation
+    // MARK: - Bass Generation
 
-    /// Hypnotic ostinato: Bass(F2) - Chord(Fm) - Bass(F2) - Chord(Fm)
-    private func generateAccompaniment(beat: Float, t: Float) -> Float {
+    private func generateBass(bar: Int, beat: Float, t: Float) -> Float {
         var signal: Float = 0.0
 
-        let beatIndex = Int(beat)
-        let beatFraction = beat - Float(beatIndex)
-        let timeSinceBeat = beatFraction * Self.beatDuration
+        for note in bass {
+            guard note.startBar == bar else { continue }
 
-        let env = calculateEnvelope(
-            time: timeSinceBeat,
-            attack: accompAttack,
-            decay: accompDecay
-        )
+            let noteEnd = note.startBeat + note.durBeats
+            if beat >= note.startBeat && beat < noteEnd {
+                let timeSinceStart = (beat - note.startBeat) * Self.beatDuration
+                let env = envelope(time: timeSinceStart, attack: bassAttack, decay: bassDecay)
 
-        if beatIndex == 0 || beatIndex == 2 {
-            // Bass (F2)
-            signal += sin(2.0 * Float.pi * Pitch.F2.rawValue * t) * env * bassGain
-        } else {
-            // Chord (Fm: F3, Ab3, C4)
-            signal += sin(2.0 * Float.pi * Pitch.F3.rawValue * t) * env * chordGain
-            signal += sin(2.0 * Float.pi * Pitch.Ab3.rawValue * t) * env * chordGain
-            signal += sin(2.0 * Float.pi * Pitch.C4_chord.rawValue * t) * env * chordGain
+                if note.isChord {
+                    // Fm chord: F3, Ab3, C4
+                    signal += sin(2.0 * Float.pi * F3 * t) * env * chordGain
+                    signal += sin(2.0 * Float.pi * Ab3 * t) * env * chordGain
+                    signal += sin(2.0 * Float.pi * C4_chord * t) * env * chordGain
+                } else {
+                    // Bass note
+                    signal += sin(2.0 * Float.pi * note.freq * t) * env * bassGain
+                }
+            }
         }
 
         return signal
     }
 
-    // MARK: - Tone Generation
+    // MARK: - Helpers
 
-    private func generatePianoTone(freq: Float, t: Float) -> Float {
+    private func pianoTone(freq: Float, t: Float) -> Float {
         let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0]
         let amplitudes: [Float] = [1.0, 0.4, 0.2, 0.1]
 
@@ -248,16 +237,13 @@ private final class GnossienneGenerator {
         for i in 0..<harmonics.count {
             signal += sin(2.0 * Float.pi * freq * harmonics[i] * t) * amplitudes[i]
         }
-
         return signal / Float(harmonics.count)
     }
 
-    // MARK: - Envelope
-
-    private func calculateEnvelope(time: Float, attack: Float, decay: Float) -> Float {
+    private func envelope(time: Float, attack: Float, decay: Float) -> Float {
         if time < attack {
-            let progress = time / attack
-            return progress * progress
+            let p = time / attack
+            return p * p
         } else {
             return exp(-(time - attack) / decay)
         }
@@ -266,36 +252,34 @@ private final class GnossienneGenerator {
 
 // MARK: - Design Notes
 //
-// GNOSSIENNE NO. 1 - CORRECTED IMPLEMENTATION
+// GNOSSIENNE NO. 1
 //
-// Source: Erik Satie's Gnossienne No. 1 (1890, public domain)
+// Source: Erik Satie (1890, public domain)
 //
-// KEY CORRECTIONS:
+// STRUCTURE:
 //
-// 1. GRACE NOTES (Acciaccatura):
-//    - Bar 2: B4 Natural before C5 (Oriental flavor)
-//    - Bar 5: Db5 before final Eb5
-//    - Short duration (0.12 beats) for crushed effect
+// Theme A (Bars 2-4):
+// - Bar 2: C5, [B Natural]->C5, Ab4, F4
+// - Bar 3: G4, F4-G4 (8ths), F4, Eb4
+// - Bar 4: D4 (whole note, Dorian color)
 //
-// 2. BAR 5 DURATION:
-//    - Final Eb5 is Half Note (2.0 beats), not Quarter
-//    - Creates proper phrase breathing
+// Theme B (Bars 5-6):
+// - Bar 5: F5, Eb5, [Db5]->Eb5 (long)
+// - Bar 6: Db5, C5, Bb4, C5
 //
-// 3. MELODY START IN BAR 5:
-//    - Melody starts on beat 1, not beat 0
-//    - Beat 0 is rest (LH bass only)
+// ACCOMPANIMENT:
 //
-// MUSICAL STRUCTURE:
-//
-// Key: F Minor
-// Time: 4/4 (Lento)
-// Tempo: ~50 BPM
-//
-// LH Pattern (constant):
-// Beat 0: F2 (Bass)
+// Hypnotic ostinato (all bars):
+// Beat 0: F2 (bass)
 // Beat 1: Fm chord (F3, Ab3, C4)
-// Beat 2: F2 (Bass)
+// Beat 2: F2 (bass)
 // Beat 3: Fm chord (F3, Ab3, C4)
+//
+// KEY FEATURES:
+//
+// - Grace notes (Acciaccatura) for Oriental flavor
+// - D natural creates Dorian mode color
+// - Bar 3 rhythm: 1-0.5-0.5-1-1 beats
 //
 // COPYRIGHT:
 //
