@@ -104,99 +104,112 @@ private final class JupiterMelodyGenerator {
     let melody: [Note] = [
 
         // === Measures 1-4 (木星の有名なフレーズ) ===
-        // 1小節目: ミソ ララドシソ
-        Note(.E4, .eighth),           // ミ
-        Note(.G4, .eighth),           // ソ
-        Note(.A4, .dottedEighth),     // ラ
-        Note(.C5, .sixteenth),        // ラ -> C5
-        Note(.B4, .eighth),           // ド -> B4
-        Note(.G4, .eighth),           // シ -> G4
+        // 1小節目: ミソ ラ ラ ド シ ソ (4/4拍子)
+        Note(.E4, .eighth),           // ミ (8分)
+        Note(.G4, .eighth),           // ソ (8分)
+        Note(.A4, .eighth),           // ラ (8分)
+        Note(.A4, .eighth),           // ラ (8分)
+        Note(.C5, .sixteenth),        // ド (16分)
+        Note(.B4, .sixteenth),        // シ (16分)
+        Note(.G4, .quarter),          // ソ (4分)
 
-        // 2小節目: ドレドシ ラシラソ
-        Note(.C5, .sixteenth),        // ド
-        Note(.D5, .sixteenth),        // レ
-        Note(.C5, .sixteenth),        // ド
-        Note(.B4, .sixteenth),        // シ
-        Note(.A4, .dottedEighth),     // ラ
-        Note(.B4, .sixteenth),        // シ
+        // 2小節目: ドレドシ ラシラ ソ (4/4拍子)
+        Note(.C5, .sixteenth),        // ド (16分)
+        Note(.D5, .sixteenth),        // レ (16分)
+        Note(.C5, .sixteenth),        // ド (16分)
+        Note(.B4, .sixteenth),        // シ (16分)
+        Note(.A4, .quarter),          // ラ (4分)
+        Note(.B4, .eighth),           // シ (8分)
+        Note(.A4, .eighth),           // ラ (8分)
+        Note(.G4, .quarter),          // ソ (4分)
 
-        // 3小節目: ミミソ
-        Note(.A4, .eighth),           // ラ
-        Note(.G4, .eighth),           // ソ
-        Note(.E4, .eighth),           // ミ
-        Note(.E4, .eighth),           // ミ
-        Note(.G4, .quarter),          // ソ
+        // 3小節目: ミミソ (4/4拍子)
+        Note(.E4, .quarter),          // ミ (4分)
+        Note(.E4, .quarter),          // ミ (4分)
+        Note(.G4, .half),             // ソ (2分)
 
-        // 4小節目: ミソ (次のフレーズへの準備)
-        Note(.E4, .dottedQuarter),    // ミ
-        Note(.G4, .eighth),           // ソ
+        // 4小節目: ミ ソ (4/4拍子)
+        Note(.E4, .dottedQuarter),    // ミ (付点4分)
+        Note(.G4, .eighth),           // ソ (8分)
+        Note(.A4, .eighth),           // 次のフレーズへの橋渡しとしてA4を挿入
 
-        // === Measures 5-8 (2回目のフレーズ) ===
-        // 5小節目: ララドシソ
-        Note(.A4, .dottedEighth),     // ラ
-        Note(.C5, .sixteenth),        // ラ
-        Note(.B4, .eighth),           // ド
-        Note(.G4, .eighth),           // シ
+        // === Measures 5-8 (2回目のフレーズ: 6小節目から) ===
+        // 5小節目: ラ ラ ド シ ソ (4/4拍子)
+        Note(.A4, .eighth),           // ラ (8分)
+        Note(.A4, .eighth),           // ラ (8分)
+        Note(.C5, .sixteenth),        // ド (16分)
+        Note(.B4, .sixteenth),        // シ (16分)
+        Note(.G4, .quarter),          // ソ (4分)
+        Note(.C5, .quarter),          // ド (4分)
 
-        // 6小節目: ドレミミ
-        Note(.C5, .eighth),           // ソ
-        Note(.D5, .eighth),           // ド
-        Note(.E5, .eighth),           // レ
-        Note(.E5, .eighth),           // ミ
+        // 6小節目: ド レ ミ ミ (4/4拍子)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.E5, .eighth),           // ミ (8分)
+        Note(.E5, .half),             // ミ (2分)
 
-        // 7小節目: ミレドレ
-        Note(.E5, .eighth),           // ミ
-        Note(.D5, .eighth),           // レ
-        Note(.C5, .eighth),           // ド
-        Note(.D5, .eighth),           // レ
+        // 7小節目: ミ レ ド レ (4/4拍子)
+        Note(.E5, .eighth),           // ミ (8分)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.C5, .eighth),           // ド (8分)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.C5, .half),             // ド (2分)
 
-        // 8小節目: ド (長めの音)
-        Note(.C5, .half),             // ド
+        // 8小節目: ド (長めの音) (4/4拍子)
+        Note(.C5, .whole),            // ド (全音符)
 
-        // === Measures 9-12 (展開フレーズ) ===
-        // 9小節目: レレドミラ
-        Note(.D5, .quarter),          // レ
-        Note(.E5, .eighth),           // レ
-        Note(.C5, .eighth),           // ド
-        Note(.A4, .quarter),          // ミ
+        // === Measures 9-12 (展開フレーズ: 10小節目から) ===
+        // 9小節目: レ レ ド ミ レ レ ソ ソ ミ レ (4/4拍子)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.E5, .eighth),           // レ (8分)
+        Note(.C5, .eighth),           // ド (8分)
+        Note(.E5, .eighth),           // ミ (8分)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.E5, .eighth),           // レ (8分)
+        Note(.G4, .eighth),           // ソ (8分)
+        Note(.G4, .eighth),           // ソ (8分)
 
-        // 10小節目: ソソミレ
-        Note(.G4, .eighth),           // ソ
-        Note(.G4, .eighth),           // ソ
-        Note(.E5, .eighth),           // ミ
-        Note(.D5, .eighth),           // レ
+        // 10小節目: ミ レ レ レ ミ ソ ラ (4/4拍子)
+        Note(.E5, .eighth),           // ミ (8分)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.E5, .eighth),           // レ (8分)
+        Note(.G4, .eighth),           // ミ (8分)
+        Note(.A4, .eighth),           // ソ (8分)
+        Note(.A4, .half),             // ラ (2分)
 
-        // 11小節目: レレミソラ
-        Note(.D5, .eighth),           // レ
-        Note(.E5, .eighth),           // レ
-        Note(.G4, .eighth),           // ミ
-        Note(.A4, .eighth),           // ソ
+        // 11小節目: ラ シ ド (4/4拍子)
+        Note(.B4, .half),             // シ (2分)
+        Note(.C5, .half),             // ド (2分)
 
-        // 12小節目: ラシ
-        Note(.A4, .quarter),          // ラ
-        Note(.B4, .half),             // シ
+        // 12小節目: シ ソ (4/4拍子)
+        Note(.B4, .whole),            // シ (全音符)
 
-        // === Measures 13-16 (下降フレーズ) ===
-        // 13小節目: ドシラソ
-        Note(.C5, .eighth),           // ド
-        Note(.B4, .eighth),           // シ
-        Note(.A4, .eighth),           // ラ
-        Note(.G4, .eighth),           // ソ
+        // === Measures 13-16 (下降フレーズ: 14小節目から) ===
+        // 13小節目: ド シ ラ ソ (4/4拍子)
+        Note(.C5, .eighth),           // ド (8分)
+        Note(.B4, .eighth),           // シ (8分)
+        Note(.A4, .eighth),           // ラ (8分)
+        Note(.G4, .eighth),           // ソ (8分)
+        Note(.C5, .quarter),          // ド (4分)
 
-        // 14小節目: ドレミ
-        Note(.C5, .eighth),           // ド
-        Note(.D5, .eighth),           // レ
-        Note(.E5, .eighth),           // ミ
+        // 14小節目: レ ド レ ミ (4/4拍子)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.C5, .eighth),           // ド (8分)
+        Note(.D5, .eighth),           // レ (8分)
+        Note(.E5, .eighth),           // ミ (8分)
+        Note(.G4, .quarter),          // ソ (4分)
 
-        // 15小節目: レドレミソ
-        Note(.D5, .eighth),           // レ
-        Note(.C5, .eighth),           // ド
-        Note(.D5, .eighth),           // レ
-        Note(.E5, .eighth),           // ミ
+        // 15小節目: ミ ソ ミ ソ (4/4拍子)
+        Note(.E5, .eighth),           // ミ (8分)
+        Note(.G4, .eighth),           // ソ (8分)
+        Note(.E5, .eighth),           // ミ (8分)
+        Note(.G4, .eighth),           // ソ (8分)
+        Note(.E5, .half),             // ミ (2分)
 
-        // 16小節目: ミソ (繰り返しへの準備)
-        Note(.E5, .quarter),          // ソ
-        Note(.G4, .half),             // ミ
+        // 16小節目: ソ ミ (4/4拍子)
+        Note(.G4, .half),             // ソ (2分)
+        Note(.E4, .quarter),          // ミ (4分)
+        Note(.C5, .quarter),          // C5を終止として追加
 
         // === 最終解決 (Climax and Resolution) ===
         Note(.C5, .quarter),
