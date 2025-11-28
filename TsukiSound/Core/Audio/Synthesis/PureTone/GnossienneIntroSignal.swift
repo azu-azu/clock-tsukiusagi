@@ -3,10 +3,10 @@
 //  TsukiSound
 //
 //  Satie - Gnossienne No.1 (Public Domain)
-//  Intro and Theme A (Bars 1-4)
+//  Rhythmic correction: "Ta-Ta-Tan-Tan" articulation
 //
-//  Key: F Dorian Mode (F Minor with D Natural)
-//  Time: 4/4
+//  Key: F Dorian Mode
+//  Rhythm: Based on ear-copy timing, not strict notation
 //
 
 import Foundation
@@ -24,211 +24,120 @@ private final class GnossienneGenerator {
 
     // MARK: - Tempo
 
-    /// Lento (~50 BPM)
-    private static let beatDuration: Float = 1.2
+    /// Base beat duration (~50 BPM feel)
+    private static let beatDuration: Float = 1.0
 
-    // MARK: - Frequencies (F Dorian Mode)
+    // MARK: - Frequencies
 
     struct Freq {
-        static let F2: Float  = 87.31
         static let F3: Float  = 174.61
         static let Ab3: Float = 207.65
         static let C4: Float  = 261.63
 
-        static let D4: Float  = 293.66   // D Natural (Dorian characteristic)
+        static let D4: Float  = 293.66   // Natural D (Dorian)
         static let Eb4: Float = 311.13
         static let F4: Float  = 349.23
         static let G4: Float  = 392.00
         static let Ab4: Float = 415.30
-        static let B4_Nat: Float = 493.88  // Grace note
+        static let B4: Float  = 493.88   // Natural B (grace note)
         static let C5: Float  = 523.25
     }
 
     // MARK: - Note Data
 
-    struct NoteData {
+    struct Note {
         let frequency: Float
-        let duration: Float  // In beats
-        let graceNoteFreq: Float?
+        let duration: Float  // Relative length (1.0 = standard beat)
 
-        init(freq: Float, dur: Float, grace: Float? = nil) {
+        init(_ freq: Float, dur: Float) {
             self.frequency = freq
             self.duration = dur
-            self.graceNoteFreq = grace
-        }
-
-        static func rest(dur: Float) -> NoteData {
-            return NoteData(freq: 0, dur: dur, grace: nil)
         }
     }
 
-    // MARK: - Left Hand (Bass Ostinato)
+    // MARK: - Melody (Rhythmic Correction)
+    // "Ta-Ta-Tan-Tan-TaaanTaaan" - immediate start, no intro
 
-    let leftHand: [NoteData] = [
-        // --- Bar 1 (Intro) ---
-        NoteData(freq: Freq.F2,  dur: 1.0),
-        NoteData(freq: Freq.Ab3, dur: 1.0, grace: Freq.F3),  // Chord hint
-        NoteData(freq: Freq.F2,  dur: 1.0),
-        NoteData(freq: Freq.Ab3, dur: 1.0, grace: Freq.F3),
+    let melody: [Note] = [
+        // --- Phrase 1: "Ta-Ta-Tan-Tan" ---
 
-        // --- Bar 2 ---
-        NoteData(freq: Freq.F2,  dur: 1.0),
-        NoteData(freq: Freq.Ab3, dur: 1.0, grace: Freq.F3),
-        NoteData(freq: Freq.F2,  dur: 1.0),
-        NoteData(freq: Freq.Ab3, dur: 1.0, grace: Freq.F3),
+        // "Ta" (Grace B - very short)
+        Note(Freq.B4, dur: 0.2),
 
-        // --- Bar 3 ---
-        NoteData(freq: Freq.F2,  dur: 1.0),
-        NoteData(freq: Freq.Ab3, dur: 1.0, grace: Freq.F3),
-        NoteData(freq: Freq.F2,  dur: 1.0),
-        NoteData(freq: Freq.Ab3, dur: 1.0, grace: Freq.F3),
+        // "Ta" (Main C - shorter to fit bounce)
+        Note(Freq.C5, dur: 0.8),
 
-        // --- Bar 4 ---
-        NoteData(freq: Freq.F2,  dur: 1.0),
-        NoteData(freq: Freq.Ab3, dur: 1.0, grace: Freq.F3),
-        NoteData(freq: Freq.F2,  dur: 1.0),
-        NoteData(freq: Freq.Ab3, dur: 1.0, grace: Freq.F3),
-    ]
+        // "Tan" (Ab)
+        Note(Freq.Ab4, dur: 1.0),
 
-    // MARK: - Right Hand (Melody)
+        // "Tan" (F)
+        Note(Freq.F4, dur: 1.0),
 
-    let rightHand: [NoteData] = [
-        // --- Bar 1 (Intro - Silence) ---
-        NoteData.rest(dur: 4.0),
+        // --- Phrase 2: "Taaan Taaan" (Syncopated) ---
 
-        // --- Bar 2 (Theme Entry) ---
-        NoteData(freq: Freq.C5,  dur: 1.0),
-        NoteData(freq: Freq.C5,  dur: 1.0, grace: Freq.B4_Nat),  // Grace note!
-        NoteData(freq: Freq.Ab4, dur: 1.0),
-        NoteData(freq: Freq.F4,  dur: 1.0),
+        // "Taaan" (G)
+        Note(Freq.G4, dur: 1.0),
 
-        // --- Bar 3 ---
-        NoteData(freq: Freq.G4,  dur: 1.0),
-        NoteData(freq: Freq.F4,  dur: 0.5),
-        NoteData(freq: Freq.G4,  dur: 0.5),
-        NoteData(freq: Freq.F4,  dur: 1.0),
-        NoteData(freq: Freq.Eb4, dur: 1.0),
+        // "Ta-Ta" (Quick F-G)
+        Note(Freq.F4, dur: 0.5),
+        Note(Freq.G4, dur: 0.5),
 
-        // --- Bar 4 (Long D Natural - Dorian) ---
-        NoteData(freq: Freq.D4,  dur: 4.0),
+        // "Tan" (F)
+        Note(Freq.F4, dur: 1.0),
+
+        // "Tan" (Eb)
+        Note(Freq.Eb4, dur: 1.0),
+
+        // --- Phrase 3: Long Resolve ---
+
+        // "Taaaaaaan" (D Natural - held long)
+        Note(Freq.D4, dur: 4.0),
     ]
 
     // MARK: - Timing
 
-    lazy var leftHandCumulative: [Float] = {
+    lazy var cumulative: [Float] = {
         var times: [Float] = [0]
-        for note in leftHand {
-            times.append(times.last! + note.duration)
-        }
-        return times
-    }()
-
-    lazy var rightHandCumulative: [Float] = {
-        var times: [Float] = [0]
-        for note in rightHand {
+        for note in melody {
             times.append(times.last! + note.duration)
         }
         return times
     }()
 
     lazy var cycleDuration: Float = {
-        max(leftHandCumulative.last!, rightHandCumulative.last!)
+        cumulative.last! * Self.beatDuration
     }()
 
     // MARK: - Sound Parameters
 
-    let graceDuration: Float = 0.10
-
-    let melodyAttack: Float = 0.05
-    let melodyDecay: Float = 2.0
-    let melodyGain: Float = 0.45
-    let graceGain: Float = 0.25
-
-    let bassAttack: Float = 0.03
-    let bassDecay: Float = 1.5
-    let bassGain: Float = 0.20
-    let chordGain: Float = 0.12
+    let attack: Float = 0.03
+    let decay: Float = 1.8
+    let gain: Float = 0.45
 
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
-        let cycleTime = t.truncatingRemainder(dividingBy: cycleDuration * Self.beatDuration)
+        let cycleTime = t.truncatingRemainder(dividingBy: cycleDuration)
         let beatPosition = cycleTime / Self.beatDuration
 
-        var signal: Float = 0.0
-
-        // Left hand (bass)
-        signal += generateLeftHand(beat: beatPosition, t: t)
-
-        // Right hand (melody)
-        signal += generateRightHand(beat: beatPosition, t: t)
-
-        return SignalEnvelopeUtils.softClip(signal * 0.6)
-    }
-
-    // MARK: - Left Hand Generation
-
-    private func generateLeftHand(beat: Float, t: Float) -> Float {
-        guard let idx = findNoteIndex(beat: beat, cumulative: leftHandCumulative) else {
+        guard let idx = findNoteIndex(beat: beatPosition) else {
             return 0.0
         }
 
-        let note = leftHand[idx]
-        guard note.frequency > 0 else { return 0.0 }  // Rest
+        let note = melody[idx]
+        let noteStart = cumulative[idx]
+        let timeSinceStart = (beatPosition - noteStart) * Self.beatDuration
 
-        let noteStart = leftHandCumulative[idx]
-        let timeSinceStart = (beat - noteStart) * Self.beatDuration
+        let env = envelope(time: timeSinceStart, noteDuration: note.duration * Self.beatDuration)
+        let tone = pianoTone(freq: note.frequency, t: t)
 
-        var signal: Float = 0.0
-
-        // Main bass note
-        let env = envelope(time: timeSinceStart, attack: bassAttack, decay: bassDecay)
-        signal += sin(2.0 * Float.pi * note.frequency * t) * env * bassGain
-
-        // Chord notes (F3, Ab3, C4) when grace hint present
-        if note.graceNoteFreq != nil {
-            signal += sin(2.0 * Float.pi * Freq.F3 * t) * env * chordGain
-            signal += sin(2.0 * Float.pi * Freq.Ab3 * t) * env * chordGain
-            signal += sin(2.0 * Float.pi * Freq.C4 * t) * env * chordGain
-        }
-
-        return signal
-    }
-
-    // MARK: - Right Hand Generation
-
-    private func generateRightHand(beat: Float, t: Float) -> Float {
-        guard let idx = findNoteIndex(beat: beat, cumulative: rightHandCumulative) else {
-            return 0.0
-        }
-
-        let note = rightHand[idx]
-        guard note.frequency > 0 else { return 0.0 }  // Rest
-
-        let noteStart = rightHandCumulative[idx]
-        let timeSinceStart = (beat - noteStart) * Self.beatDuration
-
-        var signal: Float = 0.0
-
-        // Grace note
-        if let grace = note.graceNoteFreq {
-            if timeSinceStart < graceDuration * Self.beatDuration {
-                let graceEnv = envelope(time: timeSinceStart, attack: 0.01, decay: 0.06)
-                signal += pianoTone(freq: grace, t: t) * graceEnv * graceGain
-            }
-        }
-
-        // Main melody note
-        let env = envelope(time: timeSinceStart, attack: melodyAttack, decay: melodyDecay)
-        signal += pianoTone(freq: note.frequency, t: t) * env * melodyGain
-
-        return signal
+        return SignalEnvelopeUtils.softClip(tone * env * gain)
     }
 
     // MARK: - Helpers
 
-    private func findNoteIndex(beat: Float, cumulative: [Float]) -> Int? {
-        for i in 0..<(cumulative.count - 1) {
+    private func findNoteIndex(beat: Float) -> Int? {
+        for i in 0..<melody.count {
             if beat >= cumulative[i] && beat < cumulative[i + 1] {
                 return i
             }
@@ -247,48 +156,45 @@ private final class GnossienneGenerator {
         return signal / Float(harmonics.count)
     }
 
-    private func envelope(time: Float, attack: Float, decay: Float) -> Float {
+    private func envelope(time: Float, noteDuration: Float) -> Float {
+        // Attack
         if time < attack {
             let p = time / attack
             return p * p
-        } else {
-            return exp(-(time - attack) / decay)
         }
+
+        // Decay (shorter notes decay faster)
+        let decayTime = time - attack
+        let effectiveDecay = min(decay, noteDuration * 0.8)
+        return exp(-decayTime / effectiveDecay)
     }
 }
 
 // MARK: - Design Notes
 //
-// GNOSSIENNE NO. 1 - INTRO & THEME A
+// GNOSSIENNE NO. 1 - RHYTHMIC CORRECTION
 //
 // Source: Erik Satie (1890, public domain)
 //
-// KEY CORRECTION:
+// RHYTHM FIX:
 //
-// F Dorian Mode (not F Minor):
-// - Uses D Natural (293.66Hz) instead of Db
-// - This creates the characteristic "modal" sound
+// "Ta-Ta-Tan-Tan" articulation:
+// - Grace B is now independent short note (0.2 beats)
+// - Main C follows with 0.8 beats
+// - Creates "bounce" feel instead of "flat" rhythm
 //
-// STRUCTURE:
+// IMMEDIATE START:
 //
-// Bar 1 (Intro):
-// - Left hand: Bass ostinato (F2 -> Fm chord)
-// - Right hand: Silence (rest)
+// No bass intro - melody starts immediately
+// First sound is B4 (grace) -> C5 (main)
 //
-// Bar 2 (Theme Entry):
-// - C5, [B Natural]->C5, Ab4, F4
+// DURATION MIX:
 //
-// Bar 3:
-// - G4, F4(0.5)-G4(0.5), F4, Eb4
-//
-// Bar 4:
-// - D4 (whole note, Dorian characteristic)
-//
-// ACCOMPANIMENT:
-//
-// Left hand ostinato pattern:
-// - F2 (bass) -> Fm chord (F3, Ab3, C4)
-// - Repeats throughout
+// - 0.2: Very short (grace notes)
+// - 0.5: Quick movement (syncopation)
+// - 0.8: Slightly short main notes
+// - 1.0: Standard quarter note feel
+// - 4.0: Long held note (resolve)
 //
 // COPYRIGHT:
 //
