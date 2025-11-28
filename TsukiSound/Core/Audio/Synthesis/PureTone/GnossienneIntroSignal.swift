@@ -3,10 +3,10 @@
 //  TsukiSound
 //
 //  Satie - Gnossienne No.1 (Public Domain)
-//  Rhythmic correction: "Ta-Ta-Tan-Tan" articulation
+//  Explicit rhythm: Beat 2 split into 0.15 + 0.85 for grace note
 //
-//  Key: F Dorian Mode
-//  Rhythm: Based on ear-copy timing, not strict notation
+//  Key signature: Bb, Eb, Ab (flats)
+//  Accidentals: B Natural (grace), D Natural (Dorian)
 //
 
 import Foundation
@@ -24,30 +24,26 @@ private final class GnossienneGenerator {
 
     // MARK: - Tempo
 
-    /// Base beat duration (~50 BPM feel)
+    /// Beat duration (~50 BPM)
     private static let beatDuration: Float = 1.0
 
-    // MARK: - Frequencies
+    // MARK: - Pitches (Exact from sheet music)
 
-    struct Freq {
-        static let F3: Float  = 174.61
-        static let Ab3: Float = 207.65
-        static let C4: Float  = 261.63
-
-        static let D4: Float  = 293.66   // Natural D (Dorian)
-        static let Eb4: Float = 311.13
-        static let F4: Float  = 349.23
-        static let G4: Float  = 392.00
-        static let Ab4: Float = 415.30
-        static let B4: Float  = 493.88   // Natural B (grace note)
-        static let C5: Float  = 523.25
+    struct Pitch {
+        static let F4: Float      = 349.23
+        static let G4: Float      = 392.00
+        static let Ab4: Float     = 415.30   // Key signature flat
+        static let B4_Nat: Float  = 493.88   // Accidental Natural (Grace!)
+        static let C5: Float      = 523.25
+        static let D4_Nat: Float  = 293.66   // Dorian characteristic
+        static let Eb4: Float     = 311.13   // Key signature flat
     }
 
-    // MARK: - Note Data
+    // MARK: - Note Event
 
-    struct Note {
+    struct NoteEvent {
         let frequency: Float
-        let duration: Float  // Relative length (1.0 = standard beat)
+        let duration: Float  // In beats
 
         init(_ freq: Float, dur: Float) {
             self.frequency = freq
@@ -55,43 +51,44 @@ private final class GnossienneGenerator {
         }
     }
 
-    // MARK: - Melody (Rhythmic Correction)
-    // "Ta-Ta-Tan-Tan-TaaanTaaan" - immediate start, no intro
+    // MARK: - Melody Data (Bars 2-4)
 
-    let melody: [Note] = [
-        // --- Phrase 1: "Ta-Ta-Tan-Tan" ---
+    let melody: [NoteEvent] = [
 
-        // "Ta" (Grace B - very short)
-        Note(Freq.B4, dur: 0.2),
+        // === Bar 2: "Ta - Ta(Grace) - Tan - Tan" ===
 
-        // "Ta" (Main C - shorter to fit bounce)
-        Note(Freq.C5, dur: 0.8),
+        // Beat 1: "Ta" (C5 Quarter Note)
+        NoteEvent(Pitch.C5, dur: 1.0),
 
-        // "Tan" (Ab)
-        Note(Freq.Ab4, dur: 1.0),
+        // Beat 2: Grace note split (0.15 + 0.85)
+        NoteEvent(Pitch.B4_Nat, dur: 0.15),  // Grace B Natural
+        NoteEvent(Pitch.C5, dur: 0.85),       // Main C5
 
-        // "Tan" (F)
-        Note(Freq.F4, dur: 1.0),
+        // Beat 3: "Tan" (Ab4)
+        NoteEvent(Pitch.Ab4, dur: 1.0),
 
-        // --- Phrase 2: "Taaan Taaan" (Syncopated) ---
+        // Beat 4: "Tan" (F4)
+        NoteEvent(Pitch.F4, dur: 1.0),
 
-        // "Taaan" (G)
-        Note(Freq.G4, dur: 1.0),
+        // === Bar 3: "Taaan - Taaan..." ===
 
-        // "Ta-Ta" (Quick F-G)
-        Note(Freq.F4, dur: 0.5),
-        Note(Freq.G4, dur: 0.5),
+        // Beat 1: G4
+        NoteEvent(Pitch.G4, dur: 1.0),
 
-        // "Tan" (F)
-        Note(Freq.F4, dur: 1.0),
+        // Beat 2: F4, G4 Eighth Notes
+        NoteEvent(Pitch.F4, dur: 0.5),
+        NoteEvent(Pitch.G4, dur: 0.5),
 
-        // "Tan" (Eb)
-        Note(Freq.Eb4, dur: 1.0),
+        // Beat 3: F4
+        NoteEvent(Pitch.F4, dur: 1.0),
 
-        // --- Phrase 3: Long Resolve ---
+        // Beat 4: Eb4
+        NoteEvent(Pitch.Eb4, dur: 1.0),
 
-        // "Taaaaaaan" (D Natural - held long)
-        Note(Freq.D4, dur: 4.0),
+        // === Bar 4: Long Resolve ===
+
+        // Whole note D Natural
+        NoteEvent(Pitch.D4_Nat, dur: 4.0),
     ]
 
     // MARK: - Timing
@@ -110,8 +107,8 @@ private final class GnossienneGenerator {
 
     // MARK: - Sound Parameters
 
-    let attack: Float = 0.03
-    let decay: Float = 1.8
+    let attack: Float = 0.02
+    let decay: Float = 1.5
     let gain: Float = 0.45
 
     // MARK: - Sample Generation
@@ -157,44 +154,42 @@ private final class GnossienneGenerator {
     }
 
     private func envelope(time: Float, noteDuration: Float) -> Float {
-        // Attack
         if time < attack {
             let p = time / attack
             return p * p
         }
 
-        // Decay (shorter notes decay faster)
         let decayTime = time - attack
-        let effectiveDecay = min(decay, noteDuration * 0.8)
+        let effectiveDecay = min(decay, noteDuration * 0.7)
         return exp(-decayTime / effectiveDecay)
     }
 }
 
 // MARK: - Design Notes
 //
-// GNOSSIENNE NO. 1 - RHYTHMIC CORRECTION
+// GNOSSIENNE NO. 1 - EXPLICIT RHYTHM
 //
 // Source: Erik Satie (1890, public domain)
 //
-// RHYTHM FIX:
+// BEAT 2 SPLIT:
 //
-// "Ta-Ta-Tan-Tan" articulation:
-// - Grace B is now independent short note (0.2 beats)
-// - Main C follows with 0.8 beats
-// - Creates "bounce" feel instead of "flat" rhythm
+// The crucial "Ta-Ta" on Beat 2 of Bar 2:
+// - 0.15 beats: B Natural (grace note kick)
+// - 0.85 beats: C5 (main note)
+// Total: 1.0 beat (quarter note equivalent)
 //
-// IMMEDIATE START:
+// This ensures the "Ta-Ta" nuance is heard correctly.
 //
-// No bass intro - melody starts immediately
-// First sound is B4 (grace) -> C5 (main)
+// STRUCTURE:
 //
-// DURATION MIX:
+// Bar 2: C5 | B-C5 | Ab4 | F4
+// Bar 3: G4 | F4-G4 | F4 | Eb4
+// Bar 4: D4 (whole note, Dorian)
 //
-// - 0.2: Very short (grace notes)
-// - 0.5: Quick movement (syncopation)
-// - 0.8: Slightly short main notes
-// - 1.0: Standard quarter note feel
-// - 4.0: Long held note (resolve)
+// KEY SIGNATURE:
+//
+// Flats: Bb, Eb, Ab
+// Accidentals: B Natural (grace), D Natural (Dorian)
 //
 // COPYRIGHT:
 //
