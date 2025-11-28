@@ -127,27 +127,27 @@ private final class JupiterMelodyGenerator {
         Note(.G4, .quarter),          // ソ (4分)
         Note(.E4, .half),             // ミ (2分)
 
-        // === 6小節目: ラ ラドシ ソ ===
-        Note(.A4, .quarter),          // ラ (4分)
-        Note(.A4, .dottedQuarter),    // ラ (付点4分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.B4, .eighth),           // シ (8分)
+        // === 5小節目 ===
+        Note(.E4, .eighth),           // ミ (8分)
         Note(.G4, .eighth),           // ソ (8分)
+        Note(.A4, .quarter),          // ラ (4分)
 
-        // === 7小節目: ドレミ ミ ===
+        // === 6小節目 ===
+        Note(.A4, .eighth),           // ラ (8分)
+        Note(.C5, .eighth),           // ド (8分)
+        Note(.B4, .dottedEighth),     // シ (付点8分)
+        Note(.G4, .sixteenth),        // ソ (16分)
         Note(.C5, .eighth),           // ド (8分)
         Note(.D5, .eighth),           // レ (8分)
-        Note(.E5, .eighth),           // ミ (8分)
         Note(.E5, .quarter),          // ミ (4分)
 
-        // === 8小節目: ミレ ド ===
+        // === 7小節目 ===
+        Note(.E5, .quarter),          // ミ (4分)
         Note(.E5, .eighth),           // ミ (8分)
         Note(.D5, .eighth),           // レ (8分)
-        Note(.C5, .half),             // ド (2分)
-
-        // === 9小節目: ソ ミ ===
-        Note(.G4, .half),             // ソ (2分)
-        Note(.E4, .quarter),          // ミ (4分)
+        Note(.C5, .eighth),           // ド (8分)
+        Note(.D5, .quarter),          // レ (4分)
+        Note(.C5, .quarter),          // ド (4分)
 
         // === 10小節目: レ レ ドミ ===
         Note(.D5, .quarter),          // レ (4分)
