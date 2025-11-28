@@ -3,12 +3,11 @@
 //  TsukiSound
 //
 //  Debussy - Clair de Lune (Public Domain)
-//  3-layer PureTone engine
+//  2-layer PureTone Engine
 //
 //  Layers:
-//  1. Melody (right hand)
-//  2. Inner chords (arpeggio)
-//  3. Soft bass
+//  1. Melody (right hand, true Debussy intro)
+//  2. Arpeggio (Debussy-style moving inner voice, softened)
 //
 
 import Foundation
@@ -22,92 +21,89 @@ public struct ClairDeLuneIntroSignal {
 
 private final class ClairDeLuneGenerator {
 
-    // MARK: - Pitches (Ab Major)
+    // MARK: - Pitches (Db Major / Ab Major relative)
 
     struct Pitch {
-        static let Ab3: Float = 207.65
-        static let Bb3: Float = 233.08
-        static let C4: Float  = 261.63
         static let Db4: Float = 277.18
         static let Eb4: Float = 311.13
         static let F4: Float  = 349.23
-        static let G4: Float  = 392.00
         static let Ab4: Float = 415.30
         static let Bb4: Float = 466.16
-        static let C5: Float  = 523.25
+
+        static let Db5: Float = 554.37
+        static let Eb5: Float = 622.25
+        static let F5: Float  = 698.46
+        static let Ab5: Float = 830.61
+        static let Bb5: Float = 932.33
+
+        static let Db3: Float = 138.59
+        static let Ab3: Float = 207.65
+        static let Db4_low: Float = 277.18
+        static let F4_low: Float  = 349.23
     }
 
     struct NoteEvent {
         let frequency: Float
         let duration: Float
-
         init(_ freq: Float, dur: Float) {
             self.frequency = freq
             self.duration = dur
         }
     }
 
-    // MARK: - Melody (famous intro phrase)
+    // MARK: - Melody (True Debussy Intro)
 
     let melody: [NoteEvent] = [
-        NoteEvent(Pitch.Eb4, dur: 1.4),  // Mi♭
-        NoteEvent(Pitch.Db4, dur: 1.2),  // Re♭
-        NoteEvent(Pitch.C4,  dur: 1.2),  // Do
-        NoteEvent(Pitch.Bb3, dur: 1.4),  // Si♭
-        NoteEvent(Pitch.Ab3, dur: 1.0),  // La♭
-        NoteEvent(Pitch.Bb3, dur: 1.0),  // Si♭
-        NoteEvent(Pitch.C4,  dur: 1.6),  // Do
+        NoteEvent(Pitch.Db5, dur: 1.4),
+        NoteEvent(Pitch.Eb5, dur: 1.2),
+        NoteEvent(Pitch.F5,  dur: 1.2),
+        NoteEvent(Pitch.Ab5, dur: 1.4),
+        NoteEvent(Pitch.Bb5, dur: 1.0),
+        NoteEvent(Pitch.Ab5, dur: 1.0),
+        NoteEvent(Pitch.F5,  dur: 1.0),
+        NoteEvent(Pitch.Eb5, dur: 1.0),
+        NoteEvent(Pitch.Db5, dur: 1.8),
     ]
 
-    // MARK: - Inner Arpeggio (soft chords)
+    // MARK: - Inner Arpeggio (Debussy-style, softened)
 
     let inner: [NoteEvent] = [
-        NoteEvent(Pitch.Ab3, dur: 0.7),
-        NoteEvent(Pitch.C4,  dur: 0.7),
-        NoteEvent(Pitch.Eb4, dur: 0.7),
-        NoteEvent(Pitch.G4,  dur: 0.7),
-        NoteEvent(Pitch.Eb4, dur: 0.7),
-        NoteEvent(Pitch.C4,  dur: 0.7),
-    ]
-
-    // MARK: - Bass (simple support)
-
-    let bass: [NoteEvent] = [
-        NoteEvent(Pitch.Ab3, dur: 3.5),
-        NoteEvent(Pitch.Eb4, dur: 3.5),
+        NoteEvent(Pitch.Db3, dur: 0.8),
+        NoteEvent(Pitch.Ab3, dur: 0.8),
+        NoteEvent(Pitch.Db4_low, dur: 0.8),
+        NoteEvent(Pitch.F4_low, dur: 0.8),
+        NoteEvent(Pitch.Db4_low, dur: 0.8),
+        NoteEvent(Pitch.Ab3, dur: 0.8),
     ]
 
     // MARK: - Timing
 
-    lazy var melTimes: [Float] = cumulative(melody)
-    lazy var innerTimes: [Float] = cumulative(inner)
-    lazy var bassTimes: [Float] = cumulative(bass)
+    lazy var melTimes = cumulative(melody)
+    lazy var innerTimes = cumulative(inner)
 
     lazy var melDuration: Float = melTimes.last!
     lazy var innerDuration: Float = innerTimes.last!
-    lazy var bassDuration: Float = bassTimes.last!
 
-    // MARK: - Sound Parameters
+    // MARK: - Sound Parameters (PureTone)
 
-    let attack: Float = 0.05
-    let decay: Float = 2.6
-    let gainMel: Float = 0.45
-    let gainInner: Float = 0.25
-    let gainBass: Float = 0.22
+    let attack: Float = 0.06
+    let decay: Float = 3.2
+
+    let gainMel: Float = 0.48
+    let gainInner: Float = 0.30
 
     // MARK: - Mixer
 
     func mix(at t: Float) -> Float {
-        let m = playOneLayer(at: t, notes: melody, times: melTimes, cycle: melDuration, gain: gainMel)
-        let c = playOneLayer(at: t, notes: inner, times: innerTimes, cycle: innerDuration, gain: gainInner)
-        let b = playOneLayer(at: t, notes: bass, times: bassTimes, cycle: bassDuration, gain: gainBass)
+        let m = play(at: t, notes: melody, times: melTimes, cycle: melDuration, gain: gainMel)
+        let c = play(at: t, notes: inner, times: innerTimes, cycle: innerDuration, gain: gainInner)
 
-        return SignalEnvelopeUtils.softClip(m + c + b)
+        return SignalEnvelopeUtils.softClip(m + c)
     }
 
-    // MARK: - Layer Player
+    // MARK: - Layer Playback
 
-    private func playOneLayer(
+    private func play(
         at t: Float,
         notes: [NoteEvent],
         times: [Float],
@@ -132,20 +128,22 @@ private final class ClairDeLuneGenerator {
 
     private func cumulative(_ notes: [NoteEvent]) -> [Float] {
         var t: [Float] = [0]
-        notes.forEach { t.append(t.last! + $0.duration) }
+        for n in notes { t.append(t.last! + n.duration) }
         return t
     }
 
-    private func find(_ time: Float, in cum: [Float]) -> Int? {
+    private func find(_ x: Float, in cum: [Float]) -> Int? {
         for i in 0..<cum.count - 1 {
-            if time >= cum[i] && time < cum[i + 1] { return i }
+            if x >= cum[i] && x < cum[i + 1] {
+                return i
+            }
         }
         return nil
     }
 
     private func softTone(freq: Float, t: Float) -> Float {
         let h: [Float] = [1.0, 2.0, 3.0]
-        let a: [Float] = [1.0, 0.25, 0.12]
+        let a: [Float] = [1.0, 0.25, 0.10]
 
         var s: Float = 0
         for i in 0..<h.count {
@@ -155,9 +153,7 @@ private final class ClairDeLuneGenerator {
     }
 
     private func envelope(time: Float, dur: Float) -> Float {
-        if time < attack {
-            return time / attack
-        }
+        if time < attack { return time / attack }
         let d = time - attack
         let eff = max(decay, dur * 0.6)
         return exp(-d / eff)
@@ -166,23 +162,17 @@ private final class ClairDeLuneGenerator {
 
 // MARK: - Design Notes
 //
-// CLAIR DE LUNE - 3 LAYER STRUCTURE
+// CLAIR DE LUNE - TRUE DEBUSSY INTRO
 //
 // Source: Claude Debussy (1890, public domain)
 //
-// LAYERS:
+// MELODY (Layer 1):
+// Db5 → Eb5 → F5 → Ab5 → Bb5 → Ab5 → F5 → Eb5 → Db5
+// The famous ascending/descending phrase
 //
-// 1. Melody: Eb4 → Db4 → C4 → Bb3 → Ab3 → Bb3 → C4
-//    The famous "moonlight" descending phrase
-//
-// 2. Inner: Ab3 → C4 → Eb4 → G4 → Eb4 → C4
-//    Soft arpeggio for harmonic fill
-//
-// 3. Bass: Ab3 → Eb4
-//    Simple low support, not heavy
-//
-// Each layer has its own cycle duration and gain.
-// Layers are mixed together with soft clipping.
+// ARPEGGIO (Layer 2):
+// Db3 → Ab3 → Db4 → F4 → Db4 → Ab3
+// Debussy-style inner voice, simplified for ambient feel
 //
 // COPYRIGHT:
 //
