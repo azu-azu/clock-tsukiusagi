@@ -41,21 +41,24 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Constants & Configuration
 
-    /// BPM Control: ~43 BPM
-    /// Quarter note = 1.4s
-    private static let beatDuration: Float = 1.4
+    /// BPM Control: 75 BPM
+    /// Quarter note = 0.8s (60.0 / 75.0)
+    private static let beatDuration: Float = 0.8
 
     // MARK: - Data Structures
 
     /// Note length abstraction to avoid magic numbers
-    /// All values are multiplied by beatDuration (1.6s)
+    /// All values are multiplied by beatDuration (0.8s)
     enum Duration: Float {
-        case sixteenth    = 0.25  // 16分音符
-        case eighth       = 0.5   // 8分音符
-        case dottedEighth = 0.75  // 付点8分
-        case quarter      = 1.0   // 4分音符
-        case dottedQuarter = 1.5  // 付点4分
-        case half         = 2.0   // 2分音符
+        case thirtySecond  = 0.125 // 32分音符
+        case sixteenth     = 0.25  // 16分音符
+        case eighth        = 0.5   // 8分音符
+        case dottedEighth  = 0.75  // 付点8分
+        case quarter       = 1.0   // 4分音符
+        case dottedQuarter = 1.5   // 付点4分
+        case half          = 2.0   // 2分音符
+        case dottedHalf    = 3.0   // 付点2分
+        case whole         = 4.0   // 全音符
 
         var seconds: Float { self.rawValue * JupiterMelodyGenerator.beatDuration }
     }
@@ -94,74 +97,118 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Melody Definition
 
-    /// Jupiter chorale melody arranged for syllabic phrasing
+    /// Jupiter chorale melody (First 20 measures)
     ///
-    /// Based on Holst's Jupiter theme, adjusted for natural vocal phrasing.
-    /// Rhythm uses more even eighth notes for clear syllabic articulation.
-    ///
-    /// Structure:
-    /// - Phrase 1-2: Introduction
-    /// - Phrase 3-4: Development
-    /// - Phrase 5: Climax (G5 peak) and Resolution
+    /// Based on Holst's Jupiter theme, adjusted for precise score rhythm (d=75 BPM).
+    /// Transposed to C Major.
     let melody: [Note] = [
 
-        // === Phrase 1 (Opening) ===
-        Note(.E4, .eighth),
-        Note(.G4, .eighth),
-        Note(.A4, .dottedQuarter),
-        Note(.C5, .eighth),
-        Note(.B4, .eighth),
-        Note(.G4, .quarter),
+        // === Measures 1-4 (木星の有名なフレーズ) ===
+        // 1小節目: ミソ ララドシソ
+        Note(.E4, .eighth),           // ミ
+        Note(.G4, .eighth),           // ソ
+        Note(.A4, .dottedEighth),     // ラ
+        Note(.C5, .sixteenth),        // ラ -> C5
+        Note(.B4, .eighth),           // ド -> B4
+        Note(.G4, .eighth),           // シ -> G4
 
-        // === Phrase 2 (Response) ===
-        Note(.C5, .eighth),
-        Note(.D5, .eighth),
-        Note(.C5, .quarter),
-        Note(.B4, .eighth),
-        Note(.A4, .eighth),
-        Note(.G4, .quarter),
+        // 2小節目: ドレドシ ラシラソ
+        Note(.C5, .sixteenth),        // ド
+        Note(.D5, .sixteenth),        // レ
+        Note(.C5, .sixteenth),        // ド
+        Note(.B4, .sixteenth),        // シ
+        Note(.A4, .dottedEighth),     // ラ
+        Note(.B4, .sixteenth),        // シ
 
-        // === Phrase 3 (Development) ===
-        Note(.C5, .eighth),
-        Note(.D5, .eighth),
-        Note(.E5, .quarter),
-        Note(.D5, .eighth),
-        Note(.C5, .eighth),
-        Note(.B4, .eighth),
-        Note(.A4, .eighth),
-        Note(.G4, .half),
+        // 3小節目: ミミソ
+        Note(.A4, .eighth),           // ラ
+        Note(.G4, .eighth),           // ソ
+        Note(.E4, .eighth),           // ミ
+        Note(.E4, .eighth),           // ミ
+        Note(.G4, .quarter),          // ソ
 
-        // === Phrase 4 (Bridge to Climax) ===
-        Note(.E4, .eighth),
-        Note(.G4, .eighth),
-        Note(.A4, .eighth),
-        Note(.C5, .eighth),
-        Note(.D5, .eighth),
-        Note(.C5, .eighth),
-        Note(.B4, .eighth),
-        Note(.A4, .eighth),
-        Note(.G4, .quarter),
-        Note(.A4, .eighth),
-        Note(.G4, .quarter),
+        // 4小節目: ミソ (次のフレーズへの準備)
+        Note(.E4, .dottedQuarter),    // ミ
+        Note(.G4, .eighth),           // ソ
 
-        // === Phrase 5 (Climax and Resolution) ===
-        // The Ascent
+        // === Measures 5-8 (2回目のフレーズ) ===
+        // 5小節目: ララドシソ
+        Note(.A4, .dottedEighth),     // ラ
+        Note(.C5, .sixteenth),        // ラ
+        Note(.B4, .eighth),           // ド
+        Note(.G4, .eighth),           // シ
+
+        // 6小節目: ドレミミ
+        Note(.C5, .eighth),           // ソ
+        Note(.D5, .eighth),           // ド
+        Note(.E5, .eighth),           // レ
+        Note(.E5, .eighth),           // ミ
+
+        // 7小節目: ミレドレ
+        Note(.E5, .eighth),           // ミ
+        Note(.D5, .eighth),           // レ
+        Note(.C5, .eighth),           // ド
+        Note(.D5, .eighth),           // レ
+
+        // 8小節目: ド (長めの音)
+        Note(.C5, .half),             // ド
+
+        // === Measures 9-12 (展開フレーズ) ===
+        // 9小節目: レレドミラ
+        Note(.D5, .quarter),          // レ
+        Note(.E5, .eighth),           // レ
+        Note(.C5, .eighth),           // ド
+        Note(.A4, .quarter),          // ミ
+
+        // 10小節目: ソソミレ
+        Note(.G4, .eighth),           // ソ
+        Note(.G4, .eighth),           // ソ
+        Note(.E5, .eighth),           // ミ
+        Note(.D5, .eighth),           // レ
+
+        // 11小節目: レレミソラ
+        Note(.D5, .eighth),           // レ
+        Note(.E5, .eighth),           // レ
+        Note(.G4, .eighth),           // ミ
+        Note(.A4, .eighth),           // ソ
+
+        // 12小節目: ラシ
+        Note(.A4, .quarter),          // ラ
+        Note(.B4, .half),             // シ
+
+        // === Measures 13-16 (下降フレーズ) ===
+        // 13小節目: ドシラソ
+        Note(.C5, .eighth),           // ド
+        Note(.B4, .eighth),           // シ
+        Note(.A4, .eighth),           // ラ
+        Note(.G4, .eighth),           // ソ
+
+        // 14小節目: ドレミ
+        Note(.C5, .eighth),           // ド
+        Note(.D5, .eighth),           // レ
+        Note(.E5, .eighth),           // ミ
+
+        // 15小節目: レドレミソ
+        Note(.D5, .eighth),           // レ
+        Note(.C5, .eighth),           // ド
+        Note(.D5, .eighth),           // レ
+        Note(.E5, .eighth),           // ミ
+
+        // 16小節目: ミソ (繰り返しへの準備)
+        Note(.E5, .quarter),          // ソ
+        Note(.G4, .half),             // ミ
+
+        // === 最終解決 (Climax and Resolution) ===
         Note(.C5, .quarter),
         Note(.D5, .quarter),
         Note(.E5, .quarter),
-
-        // THE PEAK (G5)
         Note(.G5, .dottedQuarter),
         Note(.F5, .eighth),
         Note(.E5, .eighth),
-
-        // Descent
         Note(.D5, .quarter),
         Note(.C5, .eighth),
         Note(.B4, .eighth),
-
-        // Final Resolution
-        Note(.C5, seconds: 4.8)
+        Note(.C5, .whole)             // 全音符
     ]
 
     // MARK: - Timing & Optimization
