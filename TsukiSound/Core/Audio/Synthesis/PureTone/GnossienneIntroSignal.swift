@@ -23,73 +23,81 @@ public struct GnossienneIntroSignal {
 private final class GnossienneGenerator {
 
     // MARK: - Pitches
-
     struct Pitch {
-        static let D4_Nat: Float  = 293.66   // Dorian
+        static let D4_Nat: Float  = 293.66
         static let Eb4: Float     = 311.13
         static let F4: Float      = 349.23
         static let G4: Float      = 392.00
         static let Ab4: Float     = 415.30
-        static let Bb4: Float     = 466.16
-        static let B4_Nat: Float  = 493.88   // Grace note
+        static let Bb4: Float     = 466.16 // Si Flat
+        static let B4_Nat: Float  = 493.88 // Grace note
         static let C5: Float      = 523.25
         static let D5: Float      = 587.33
         static let Eb5: Float     = 622.25
     }
 
     // MARK: - Note Event
-
     struct NoteEvent {
         let frequency: Float
         let duration: Float
+        let volume: Float // Velocity (Humanize dynamics)
 
-        init(_ freq: Float, dur: Float) {
+        init(_ freq: Float, dur: Float, vol: Float = 1.0) {
             self.frequency = freq
             self.duration = dur
+            self.volume = vol
+        }
+
+        // Factory for Rest (Silence)
+        static func rest(dur: Float) -> NoteEvent {
+            return NoteEvent(0, dur: dur, vol: 0)
         }
     }
 
     // MARK: - Melody Data
-
     let melody: [NoteEvent] = [
 
-        // === Intro: True Satie Opening ===
-        // The famous "wandering" melody everyone recognizes
-        // C5 → Eb5 → D5 → C5 → Bb4 → Bb4
+        // === Intro: Azu's Ear Copy (Humanized Rhythm) ===
+        // "Ta(Do) - Ta(Mi) - Tan(Re)..."
+        // Changed durations to be less robotic.
 
-        NoteEvent(Pitch.C5,  dur: 1.2),   // Do
-        NoteEvent(Pitch.Eb5, dur: 1.2),   // Mi♭
-        NoteEvent(Pitch.D5,  dur: 1.2),   // Re
-        NoteEvent(Pitch.C5,  dur: 1.3),   // Do
-        NoteEvent(Pitch.Bb4, dur: 1.2),   // Si♭
-        NoteEvent(Pitch.Bb4, dur: 1.5),   // Si♭ (longer)
+        NoteEvent(Pitch.C5,  dur: 0.6, vol: 0.8),  // Do (Soft entry)
+        NoteEvent(Pitch.Eb5, dur: 0.6, vol: 0.85), // Mi♭
+        NoteEvent(Pitch.D5,  dur: 1.2, vol: 0.9),  // Re (Hold slightly)
+        NoteEvent(Pitch.C5,  dur: 1.0, vol: 0.8),  // Do
 
-        // === Theme A: "Ta - Ta(Grace) - Tan - Tan" ===
+        // "Si - Si" (The echo part)
+        NoteEvent(Pitch.Bb4, dur: 1.2, vol: 0.75), // Si♭
+        NoteEvent(Pitch.Bb4, dur: 2.5, vol: 0.6),  // Si♭ (Fade out long)
 
-        NoteEvent(Pitch.C5, dur: 1.0),
+        // Breath before the main theme
+        NoteEvent.rest(dur: 0.5),
 
-        // Grace note split (0.15 + 0.85)
-        NoteEvent(Pitch.B4_Nat, dur: 0.15),
-        NoteEvent(Pitch.C5, dur: 0.85),
+        // === Theme A: The Score (Accurate) ===
 
-        NoteEvent(Pitch.Ab4, dur: 1.0),
-        NoteEvent(Pitch.F4, dur: 1.0),
+        // Beat 1
+        NoteEvent(Pitch.C5, dur: 1.0, vol: 0.9),
 
-        // === Bar 3: Syncopated ===
+        // Beat 2: Grace Note Logic (Sharp attack)
+        NoteEvent(Pitch.B4_Nat, dur: 0.15, vol: 0.8), // Grace
+        NoteEvent(Pitch.C5,     dur: 0.85, vol: 1.0), // Main
 
-        NoteEvent(Pitch.G4, dur: 1.0),
-        NoteEvent(Pitch.F4, dur: 0.5),
-        NoteEvent(Pitch.G4, dur: 0.5),
-        NoteEvent(Pitch.F4, dur: 1.0),
-        NoteEvent(Pitch.Eb4, dur: 1.0),
+        // Beat 3 & 4
+        NoteEvent(Pitch.Ab4, dur: 1.0, vol: 0.9),
+        NoteEvent(Pitch.F4,  dur: 1.0, vol: 0.85),
 
-        // === Bar 4: Long Resolve ===
+        // === Bar 3 ===
+        NoteEvent(Pitch.G4,  dur: 1.0, vol: 0.9),
+        NoteEvent(Pitch.F4,  dur: 0.5, vol: 0.8),
+        NoteEvent(Pitch.G4,  dur: 0.5, vol: 0.85),
+        NoteEvent(Pitch.F4,  dur: 1.0, vol: 0.8),
+        NoteEvent(Pitch.Eb4, dur: 1.0, vol: 0.75),
 
-        NoteEvent(Pitch.D4_Nat, dur: 4.0),
+        // === Bar 4 ===
+        NoteEvent(Pitch.D4_Nat, dur: 4.0, vol: 0.6), // Fade out
     ]
 
-    // MARK: - Timing
-
+    // MARK: - Timing Setup
     lazy var cumulative: [Float] = {
         var times: [Float] = [0]
         for note in melody {
@@ -102,34 +110,40 @@ private final class GnossienneGenerator {
         cumulative.last!
     }()
 
-    // MARK: - Sound Parameters
+    // MARK: - Sound Design (Piano Physics)
 
-    let attack: Float = 0.08
-    let decay: Float = 2.5
-    let gain: Float = 0.40
+    // Sharper attack for piano hammer feel
+    let attack: Float = 0.02
+    let globalGain: Float = 0.5
 
     // MARK: - Sample Generation
-
     func sample(at t: Float) -> Float {
         let cycleTime = t.truncatingRemainder(dividingBy: cycleDuration)
 
-        guard let idx = findNoteIndex(time: cycleTime) else {
-            return 0.0
-        }
+        guard let idx = findNoteIndex(time: cycleTime) else { return 0.0 }
 
         let note = melody[idx]
+
+        // Silence handling
+        if note.frequency == 0 { return 0.0 }
+
         let noteStart = cumulative[idx]
         let timeSinceStart = cycleTime - noteStart
 
-        let env = envelope(time: timeSinceStart, noteDuration: note.duration)
-        let tone = softTone(freq: note.frequency, t: t)
+        // 1. Envelope (Piano-like shape)
+        let env = pianoEnvelope(time: timeSinceStart, duration: note.duration)
 
-        return SignalEnvelopeUtils.softClip(tone * env * gain)
+        // 2. Tone (Rich harmonics)
+        let tone = richTone(freq: note.frequency, t: t)
+
+        // 3. Apply Volume & Gain
+        return SignalEnvelopeUtils.softClip(tone * env * note.volume * globalGain)
     }
 
     // MARK: - Helpers
 
     private func findNoteIndex(time: Float) -> Int? {
+        // Simple linear search is fine for short melodies
         for i in 0..<melody.count {
             if time >= cumulative[i] && time < cumulative[i + 1] {
                 return i
@@ -138,26 +152,35 @@ private final class GnossienneGenerator {
         return nil
     }
 
-    private func softTone(freq: Float, t: Float) -> Float {
-        let harmonics: [Float] = [1.0, 2.0, 3.0]
-        let amplitudes: [Float] = [1.0, 0.3, 0.1]
+    private func richTone(freq: Float, t: Float) -> Float {
+        // Adding 4th and 5th harmonics for depth
+        let harmonics: [Float]  = [1.0, 2.0, 3.0, 4.0, 5.0]
+        let amplitudes: [Float] = [1.0, 0.4, 0.2, 0.1, 0.05]
 
         var signal: Float = 0.0
         for i in 0..<harmonics.count {
             signal += sin(2.0 * Float.pi * freq * harmonics[i] * t) * amplitudes[i]
         }
-        return signal / Float(harmonics.count)
+        return signal
     }
 
-    private func envelope(time: Float, noteDuration: Float) -> Float {
+    private func pianoEnvelope(time: Float, duration: Float) -> Float {
+        // Attack Phase (Hammer strike)
         if time < attack {
-            let p = time / attack
-            return p
+            return time / attack
         }
 
+        // Decay Phase (String vibration dying out)
+        // Exponential decay feels more natural than linear
         let decayTime = time - attack
-        let effectiveDecay = max(decay, noteDuration * 0.6)
-        return exp(-decayTime / effectiveDecay)
+        let decayRate: Float = 2.0 // Adjust for sustain length
+
+        // Release check: prevent sound from cutting off abruptly if note ends
+        if time > duration {
+            return 0.0
+        }
+
+        return exp(-decayTime * decayRate)
     }
 }
 
