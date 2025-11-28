@@ -145,6 +145,29 @@ public struct PureToneBuilder {
 
             let outputNode = FinalMixerOutputNode(mixer: mixer)
             sources.append(outputNode)
+
+        case .clairDeLune:
+            // Debussy Clair de Lune (Public Domain)
+            let signal = ClairDeLuneIntroSignal.makeSignal()
+            let mixer = FinalMixer()
+            mixer.add(signal, gain: 1.0)
+
+            // Moonlit, dreamy reverb
+            let reverb = SchroederReverb(
+                roomSize: 2.5,      // Large, open space
+                damping: 0.40,      // Moderate damping for warmth
+                decay: 0.88,        // Long, dreamy tail
+                mix: 0.50,          // Rich reverb
+                predelay: 0.040,    // Spacious predelay
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            // Soft limiter for safety
+            mixer.addEffect(SoftLimiter(drive: 1.05, ceiling: 0.95))
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
         }
 
         return sources

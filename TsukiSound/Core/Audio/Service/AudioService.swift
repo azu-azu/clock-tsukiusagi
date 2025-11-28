@@ -608,6 +608,8 @@ public final class AudioService: ObservableObject {
             return .moonlitGymnopedie
         case .midnightGnossienne:
             return .midnightGnossienne
+        case .clairDeLune:
+            return .clairDeLune
         }
     }
 
