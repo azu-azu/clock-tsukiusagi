@@ -103,33 +103,29 @@ private final class JupiterMelodyGenerator {
     /// Transposed to C Major. 3/4 time signature.
     let melody: [Note] = [
 
-        // === 1小節目: (休符) ミソ ===
-        Note(.E4, .quarter),          // ミ (4分)
-        Note(.G4, .quarter),          // ソ (4分)
-
-        // === 2小節目: ラ ラドシ ソ ===
-        Note(.A4, .quarter),          // ラ (4分)
-        Note(.A4, .dottedQuarter),    // ラ (付点4分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.B4, .eighth),           // シ (8分)
+        // === 1小節目 ===
+        Note(.E4, .eighth),           // ミ (8分)
         Note(.G4, .eighth),           // ソ (8分)
+        Note(.A4, .quarter),          // ラ (4分)
 
-        // === 3小節目: ドレドシ ===
+        // === 2小節目 ===
+        Note(.A4, .eighth),           // ラ (8分)
+        Note(.C5, .eighth),           // ド (8分)
+        Note(.B4, .dottedEighth),     // シ (付点8分)
+        Note(.G4, .sixteenth),        // ソ (16分)
         Note(.C5, .eighth),           // ド (8分)
         Note(.D5, .eighth),           // レ (8分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.B4, .quarter),          // シ (4分)
+        Note(.C5, .quarter),          // ド (4分)
 
-        // === 4小節目: ラシラ ソ ===
+        // === 3小節目 ===
+        Note(.B4, .quarter),          // シ (4分)
         Note(.A4, .eighth),           // ラ (8分)
         Note(.B4, .eighth),           // シ (8分)
-        Note(.A4, .eighth),           // ラ (8分)
-        Note(.G4, .quarter),          // ソ (4分)
+        Note(.A4, .quarter),          // ラ (4分)
 
-        // === 5小節目: ミ ミソ ===
-        Note(.E4, .half),             // ミ (2分)
-        Note(.E4, .quarter),          // ミ (4分)
+        // === 4小節目 ===
         Note(.G4, .quarter),          // ソ (4分)
+        Note(.E4, .half),             // ミ (2分)
 
         // === 6小節目: ラ ラドシ ソ ===
         Note(.A4, .quarter),          // ラ (4分)
