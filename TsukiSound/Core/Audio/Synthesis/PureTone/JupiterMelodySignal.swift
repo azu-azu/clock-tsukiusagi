@@ -64,7 +64,6 @@ private final class JupiterMelodyGenerator {
     }
 
     /// Note pitch abstraction with frequency values
-    /// Added F5 and G5 for the climax (the emotional peak)
     enum Pitch: Float {
         case E4 = 329.63
         case G4 = 392.00
@@ -73,8 +72,11 @@ private final class JupiterMelodyGenerator {
         case C5 = 523.25
         case D5 = 587.33
         case E5 = 659.25
-        case F5 = 698.46  // High F - for descent from peak
-        case G5 = 783.99  // High G - THE PEAK (most emotional point)
+        case F5 = 698.46
+        case G5 = 783.99
+        case A5 = 880.00
+        case B5 = 987.77
+        case C6 = 1046.50
     }
 
     /// Single note with frequency and duration
@@ -145,97 +147,57 @@ private final class JupiterMelodyGenerator {
         Note(.E5, .quarter),          // ミ (4分)
         Note(.E5, .eighth),           // ミ (8分)
         Note(.D5, .eighth),           // レ (8分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.D5, .quarter),          // レ (4分)
         Note(.C5, .quarter),          // ド (4分)
-
-        // === 10小節目: レ レ ドミ ===
         Note(.D5, .quarter),          // レ (4分)
-        Note(.D5, .quarter),          // レ (4分)
+        Note(.C5, .half),             // ド (2分)
+
+        // === 8小節目 ===
+        Note(.G5, .eighth),           // ソ (8分) 上
+        Note(.E5, .eighth),           // ミ (8分) 上
+        Note(.D5, .quarter),          // レ (4分) 上
+
+        // === 9小節目 ===
+        Note(.D5, .quarter),          // レ (4分) 上
         Note(.C5, .eighth),           // ド (8分)
-        Note(.E5, .eighth),           // ミ (8分)
+        Note(.E5, .eighth),           // ミ (8分) 上
+        Note(.D5, .quarter),          // レ (4分) 上
+        Note(.G4, .quarter),          // ソ (4分) 下
 
-        // === 11小節目: レ ソソミ ===
-        Note(.D5, .quarter),          // レ (4分)
-        Note(.G4, .eighth),           // ソ (8分)
-        Note(.G4, .eighth),           // ソ (8分)
-        Note(.E5, .eighth),           // ミ (8分)
+        // === 10小節目 ===
+        Note(.G5, .eighth),           // ソ (8分) 上
+        Note(.E5, .eighth),           // ミ (8分) 上
+        Note(.D5, .quarter),          // レ (4分) 上
 
-        // === 12小節目: レ レミソ ===
-        Note(.D5, .quarter),          // レ (4分)
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.E5, .eighth),           // ミ (8分)
-        Note(.G4, .quarter),          // ソ (4分)
+        // === 11小節目 ===
+        Note(.D5, .quarter),          // レ (4分) 上
+        Note(.E5, .eighth),           // ミ (8分) 上
+        Note(.G5, .eighth),           // ソ (8分) 上
+        Note(.A5, .half),             // ラ (2分) 上
 
-        // === 13小節目: ラ ラシ ===
-        Note(.A4, .half),             // ラ (2分)
-        Note(.A4, .quarter),          // ラ (4分)
-        Note(.B4, .quarter),          // シ (4分)
+        // === 12小節目 ===
+        Note(.A5, .eighth),           // ラ (8分) 上
+        Note(.B5, .eighth),           // シ (8分) 上
+        Note(.C6, .quarter),          // ド (4分) 上
+        Note(.B5, .quarter),          // シ (4分) 上
 
-        // === 14小節目: ド シ ラ ===
-        Note(.C5, .quarter),          // ド (4分)
-        Note(.B4, .quarter),          // シ (4分)
-        Note(.A4, .quarter),          // ラ (4分)
+        // === 13小節目 ===
+        Note(.A5, .quarter),          // ラ (4分) 上
+        Note(.G5, .quarter),          // ソ (4分) 上
+        Note(.C6, .quarter),          // ド (4分) 上
+        Note(.E5, .quarter),          // ミ (4分) 上
 
-        // === 15小節目: ソ ド ミ ===
-        Note(.G4, .quarter),          // ソ (4分)
-        Note(.C5, .quarter),          // ド (4分)
-        Note(.E5, .quarter),          // ミ (4分)
+        // === 14小節目 ===
+        Note(.D5, .eighth),           // レ (8分) 上
+        Note(.C5, .eighth),           // ド (8分) 上
+        Note(.D5, .quarter),          // レ (4分) 上
+        Note(.E5, .quarter),          // ミ (4分) 上
 
-        // === 16小節目: レドレ ミ ===
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.E5, .quarter),          // ミ (4分)
+        // === 15小節目 ===
+        Note(.G5, .half),             // ソ (2分) 上
+        Note(.E5, .quarter),          // ミ (4分) - 終止へ
 
-        // === 17小節目: ソ ミソ ===
-        Note(.G4, .half),             // ソ (2分)
-        Note(.E4, .quarter),          // ミ (4分)
-        Note(.G4, .quarter),          // ソ (4分)
-
-        // === 18小節目: ラ ラドシ ソ ===
-        Note(.A4, .quarter),          // ラ (4分)
-        Note(.A4, .dottedQuarter),    // ラ (付点4分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.B4, .eighth),           // シ (8分)
-        Note(.G4, .eighth),           // ソ (8分)
-
-        // === 19小節目: ドレド シ ===
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.B4, .quarter),          // シ (4分)
-
-        // === 20小節目: ラシラ ソ ===
-        Note(.A4, .eighth),           // ラ (8分)
-        Note(.B4, .eighth),           // シ (8分)
-        Note(.A4, .eighth),           // ラ (8分)
-        Note(.G4, .quarter),          // ソ (4分)
-
-        // === 21小節目: ミ ミソ ===
-        Note(.E4, .half),             // ミ (2分)
-        Note(.E4, .quarter),          // ミ (4分)
-        Note(.G4, .quarter),          // ソ (4分)
-
-        // === 22小節目: ラ ラドシ ソ ===
-        Note(.A4, .quarter),          // ラ (4分)
-        Note(.A4, .dottedQuarter),    // ラ (付点4分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.E5, .eighth),           // ミ (8分)
-
-        // === 23小節目: ミ ミレド ===
-        Note(.E5, .quarter),          // ミ (4分)
-        Note(.E5, .eighth),           // ミ (8分)
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.C5, .quarter),          // ド (4分)
-
-        // === 24小節目: レ ド ===
-        Note(.D5, .half),             // レ (2分)
-        Note(.C5, .quarter),          // ド (4分)
-
-        // === 25小節目: ド (終止) ===
-        Note(.C5, .dottedHalf)        // ド (付点2分 = 全小節)
+        // === 終止 ===
+        Note(.C5, .dottedHalf)        // ド (付点2分)
     ]
 
     // MARK: - Timing & Optimization
