@@ -225,6 +225,22 @@ private final class JupiterMelodyGenerator {
     /// Reduced higher harmonics for smoother, more solemn character
     let harmonicAmps: [Float] = [1.0, 0.45, 0.25, 0.12, 0.03]
 
+    // MARK: - Cathedral Organ Stops (Layered Voices)
+
+    /// 16' Principal (Sub-octave): Deep foundation, one octave below
+    /// Creates the gravitas and depth of a cathedral organ
+    let subOctaveRatio: Float = 0.5    // freq * 0.5 = one octave down
+    let subOctaveGain: Float = 0.4     // Strong but not overpowering
+
+    /// Quint (2-2/3'): Fifth above, adds brilliance and richness
+    /// Classic organ stop for majestic sound
+    let quintRatio: Float = 1.5        // freq * 1.5 = perfect fifth above
+    let quintGain: Float = 0.15        // Subtle, blends into the sound
+
+    /// 4' Octave: One octave above for clarity and presence
+    let octaveAboveRatio: Float = 2.0  // freq * 2.0 = one octave up
+    let octaveAboveGain: Float = 0.2   // Moderate, adds brightness
+
     /// Legato Envelope Parameters (smooth, connected notes)
     /// - Attack: Gentle rise for smooth entry
     /// - Release: Extends beyond note boundary for overlap
@@ -236,7 +252,7 @@ private final class JupiterMelodyGenerator {
     let legatoOverlap: Float = 0.35  // 350ms overlap with next note
 
     /// Master gain for balance with other layers
-    let masterGain: Float = 0.28
+    let masterGain: Float = 0.22  // Reduced to compensate for added voices
 
     // MARK: - Sample Generation
 
@@ -271,8 +287,27 @@ private final class JupiterMelodyGenerator {
         return totalSignal * masterGain
     }
 
-    /// Generate organ tone with harmonics
+    /// Generate cathedral organ tone with layered voices (stops)
+    /// Combines: 8' Principal (main) + 16' Sub-octave + Quint + 4' Octave
     private func generateTone(freq: Float, t: Float) -> Float {
+        // 8' Principal: Main melody voice
+        let mainTone = generateSingleVoice(freq: freq, t: t)
+
+        // 16' Principal: Sub-octave for depth and gravitas
+        let subOctaveTone = generateSingleVoice(freq: freq * subOctaveRatio, t: t) * subOctaveGain
+
+        // Quint (2-2/3'): Perfect fifth for richness
+        let quintTone = generateSingleVoice(freq: freq * quintRatio, t: t) * quintGain
+
+        // 4' Octave: Octave above for clarity
+        let octaveAboveTone = generateSingleVoice(freq: freq * octaveAboveRatio, t: t) * octaveAboveGain
+
+        // Blend all voices
+        return mainTone + subOctaveTone + quintTone + octaveAboveTone
+    }
+
+    /// Generate a single organ voice with harmonics
+    private func generateSingleVoice(freq: Float, t: Float) -> Float {
         var signal: Float = 0.0
         for i in 0..<harmonics.count {
             let hFreq = freq * harmonics[i]
