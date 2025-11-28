@@ -3,10 +3,10 @@
 //  TsukiSound
 //
 //  Satie - Gnossienne No.1 (Public Domain)
-//  Explicit rhythm: Beat 2 split into 0.15 + 0.85 for grace note
+//  Free tempo (non-mesuré) with flowing chromatic melody
 //
 //  Key signature: Bb, Eb, Ab (flats)
-//  Accidentals: B Natural (grace), D Natural (Dorian)
+//  Character: Lent, flowing, ambiguous meter
 //
 
 import Foundation
@@ -22,28 +22,25 @@ public struct GnossienneIntroSignal {
 
 private final class GnossienneGenerator {
 
-    // MARK: - Tempo
-
-    /// Beat duration (~50 BPM)
-    private static let beatDuration: Float = 1.0
-
-    // MARK: - Pitches (Exact from sheet music)
+    // MARK: - Pitches
 
     struct Pitch {
+        static let D4_Nat: Float  = 293.66   // Dorian
+        static let Eb4: Float     = 311.13
         static let F4: Float      = 349.23
         static let G4: Float      = 392.00
-        static let Ab4: Float     = 415.30   // Key signature flat
-        static let B4_Nat: Float  = 493.88   // Accidental Natural (Grace!)
+        static let Ab4: Float     = 415.30
+        static let Bb4: Float     = 466.16
+        static let B4_Nat: Float  = 493.88   // Grace note
         static let C5: Float      = 523.25
-        static let D4_Nat: Float  = 293.66   // Dorian characteristic
-        static let Eb4: Float     = 311.13   // Key signature flat
+        static let Db5: Float     = 554.37
     }
 
     // MARK: - Note Event
 
     struct NoteEvent {
         let frequency: Float
-        let duration: Float  // In beats
+        let duration: Float  // Free tempo values
 
         init(_ freq: Float, dur: Float) {
             self.frequency = freq
@@ -51,43 +48,49 @@ private final class GnossienneGenerator {
         }
     }
 
-    // MARK: - Melody Data (Bars 2-4)
+    // MARK: - Melody Data
 
     let melody: [NoteEvent] = [
 
-        // === Bar 2: "Ta - Ta(Grace) - Tan - Tan" ===
+        // === Intro: Lent (flowing chromatic phrase) ===
+        // The famous opening: G4 → Ab4 → Bb4 → C5 → Db5 → C5 → Bb4 → Ab4 → G4
+        // Free tempo, connected legato
 
-        // Beat 1: "Ta" (C5 Quarter Note)
+        NoteEvent(Pitch.G4,   dur: 1.2),
+        NoteEvent(Pitch.Ab4,  dur: 1.2),
+        NoteEvent(Pitch.Bb4,  dur: 1.2),
+        NoteEvent(Pitch.C5,   dur: 1.3),   // Slightly longer at peak
+        NoteEvent(Pitch.Db5,  dur: 1.4),   // The highest point, linger
+        NoteEvent(Pitch.C5,   dur: 1.2),
+        NoteEvent(Pitch.Bb4,  dur: 1.2),
+        NoteEvent(Pitch.Ab4,  dur: 1.2),
+        NoteEvent(Pitch.G4,   dur: 1.5),   // Rest at bottom
+
+        // === Theme A: "Ta - Ta(Grace) - Tan - Tan" ===
+
+        // Beat 1: C5
         NoteEvent(Pitch.C5, dur: 1.0),
 
         // Beat 2: Grace note split (0.15 + 0.85)
-        NoteEvent(Pitch.B4_Nat, dur: 0.15),  // Grace B Natural
-        NoteEvent(Pitch.C5, dur: 0.85),       // Main C5
+        NoteEvent(Pitch.B4_Nat, dur: 0.15),
+        NoteEvent(Pitch.C5, dur: 0.85),
 
-        // Beat 3: "Tan" (Ab4)
+        // Beat 3: Ab4
         NoteEvent(Pitch.Ab4, dur: 1.0),
 
-        // Beat 4: "Tan" (F4)
+        // Beat 4: F4
         NoteEvent(Pitch.F4, dur: 1.0),
 
-        // === Bar 3: "Taaan - Taaan..." ===
+        // === Bar 3: Syncopated ===
 
-        // Beat 1: G4
         NoteEvent(Pitch.G4, dur: 1.0),
-
-        // Beat 2: F4, G4 Eighth Notes
         NoteEvent(Pitch.F4, dur: 0.5),
         NoteEvent(Pitch.G4, dur: 0.5),
-
-        // Beat 3: F4
         NoteEvent(Pitch.F4, dur: 1.0),
-
-        // Beat 4: Eb4
         NoteEvent(Pitch.Eb4, dur: 1.0),
 
         // === Bar 4: Long Resolve ===
 
-        // Whole note D Natural
         NoteEvent(Pitch.D4_Nat, dur: 4.0),
     ]
 
@@ -102,49 +105,49 @@ private final class GnossienneGenerator {
     }()
 
     lazy var cycleDuration: Float = {
-        cumulative.last! * Self.beatDuration
+        cumulative.last!
     }()
 
-    // MARK: - Sound Parameters
+    // MARK: - Sound Parameters (Voice-like, soft)
 
-    let attack: Float = 0.02
-    let decay: Float = 1.5
-    let gain: Float = 0.45
+    let attack: Float = 0.08    // Slower attack for voice-like feel
+    let decay: Float = 2.5      // Longer decay for legato
+    let gain: Float = 0.40
 
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
         let cycleTime = t.truncatingRemainder(dividingBy: cycleDuration)
-        let beatPosition = cycleTime / Self.beatDuration
 
-        guard let idx = findNoteIndex(beat: beatPosition) else {
+        guard let idx = findNoteIndex(time: cycleTime) else {
             return 0.0
         }
 
         let note = melody[idx]
         let noteStart = cumulative[idx]
-        let timeSinceStart = (beatPosition - noteStart) * Self.beatDuration
+        let timeSinceStart = cycleTime - noteStart
 
-        let env = envelope(time: timeSinceStart, noteDuration: note.duration * Self.beatDuration)
-        let tone = pianoTone(freq: note.frequency, t: t)
+        let env = envelope(time: timeSinceStart, noteDuration: note.duration)
+        let tone = softTone(freq: note.frequency, t: t)
 
         return SignalEnvelopeUtils.softClip(tone * env * gain)
     }
 
     // MARK: - Helpers
 
-    private func findNoteIndex(beat: Float) -> Int? {
+    private func findNoteIndex(time: Float) -> Int? {
         for i in 0..<melody.count {
-            if beat >= cumulative[i] && beat < cumulative[i + 1] {
+            if time >= cumulative[i] && time < cumulative[i + 1] {
                 return i
             }
         }
         return nil
     }
 
-    private func pianoTone(freq: Float, t: Float) -> Float {
-        let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0]
-        let amplitudes: [Float] = [1.0, 0.4, 0.2, 0.1]
+    /// Soft, voice-like tone (less harsh harmonics)
+    private func softTone(freq: Float, t: Float) -> Float {
+        let harmonics: [Float] = [1.0, 2.0, 3.0]
+        let amplitudes: [Float] = [1.0, 0.3, 0.1]  // Softer overtones
 
         var signal: Float = 0.0
         for i in 0..<harmonics.count {
@@ -153,43 +156,50 @@ private final class GnossienneGenerator {
         return signal / Float(harmonics.count)
     }
 
+    /// Soft envelope for legato, voice-like feel
     private func envelope(time: Float, noteDuration: Float) -> Float {
+        // Slow attack
         if time < attack {
             let p = time / attack
-            return p * p
+            return p  // Linear rise for softer attack
         }
 
+        // Long, gentle decay
         let decayTime = time - attack
-        let effectiveDecay = min(decay, noteDuration * 0.7)
+        let effectiveDecay = max(decay, noteDuration * 0.6)
         return exp(-decayTime / effectiveDecay)
     }
 }
 
 // MARK: - Design Notes
 //
-// GNOSSIENNE NO. 1 - EXPLICIT RHYTHM
+// GNOSSIENNE NO. 1 - FREE TEMPO (NON-MESURÉ)
 //
 // Source: Erik Satie (1890, public domain)
 //
-// BEAT 2 SPLIT:
+// INTRO PHRASE:
 //
-// The crucial "Ta-Ta" on Beat 2 of Bar 2:
-// - 0.15 beats: B Natural (grace note kick)
-// - 0.85 beats: C5 (main note)
-// Total: 1.0 beat (quarter note equivalent)
+// The famous opening chromatic melody:
+// G4 → Ab4 → Bb4 → C5 → Db5 → C5 → Bb4 → Ab4 → G4
 //
-// This ensures the "Ta-Ta" nuance is heard correctly.
+// Character:
+// - Flowing, connected legato
+// - Ambiguous meter (no strict beats)
+// - Duration varies: 1.2 - 1.5 seconds per note
+//
+// SOUND DESIGN:
+//
+// - Voice-like (soft harmonics: 1.0, 0.3, 0.1)
+// - Slow attack (0.08s) for gentle onset
+// - Long decay (2.5s) for legato connection
+// - No harsh piano attack
 //
 // STRUCTURE:
 //
-// Bar 2: C5 | B-C5 | Ab4 | F4
-// Bar 3: G4 | F4-G4 | F4 | Eb4
-// Bar 4: D4 (whole note, Dorian)
-//
-// KEY SIGNATURE:
-//
-// Flats: Bb, Eb, Ab
-// Accidentals: B Natural (grace), D Natural (Dorian)
+// 1. Intro: Chromatic ascent/descent (9 notes)
+// 2. Theme A: Ta-Ta-Tan-Tan pattern
+// 3. Bar 3: Syncopated movement
+// 4. Bar 4: Long D Natural resolve
 //
 // COPYRIGHT:
 //
