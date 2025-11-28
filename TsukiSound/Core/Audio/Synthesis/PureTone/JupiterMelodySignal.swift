@@ -3,7 +3,12 @@
 //  TsukiSound
 //
 //  Jupiter Melody - Holst's "The Planets" Jupiter theme in C Major
-//  Organ-style melody with rich harmonics for cathedral atmosphere
+//  Organ-style melody with ASR envelope for cathedral atmosphere
+//
+//  Refactored with Ren's suggestions:
+//  - ASR envelope (Attack-Sustain-Release) instead of Decay
+//  - Readable note definitions using Pitch and Duration enums
+//  - Added 8th harmonic (Mixture stop) for brilliance
 //
 
 import Foundation
@@ -14,11 +19,10 @@ import Foundation
 /// Transposed from E Major to C Major to harmonize with CathedralStillness drone (C/G).
 ///
 /// Characteristics:
-/// - Organ-style melody with rich harmonics
-/// - C Major key (transposed from original E Major)
-/// - Variable duration (0.6s and 0.8s notes) for expressive phrasing
-/// - Long decay (3.0s) for cathedral reverb compatibility
-/// - Cycle: 14 notes, ~9.6 seconds total
+/// - Syllabic phrasing for natural vocal-style articulation
+/// - Climax with G5 peak and resolution
+/// - Organ-style ASR envelope (Attack-Sustain-Release)
+/// - Rich harmonics with 8th overtone (Mixture stop)
 ///
 /// Legal: Holst's "The Planets" (1918) is public domain (composer died 1934, >70 years).
 public struct JupiterMelodySignal {
@@ -35,76 +39,135 @@ public struct JupiterMelodySignal {
 
 private final class JupiterMelodyGenerator {
 
+    // MARK: - Constants & Configuration
+
+    /// BPM Control: ~43 BPM
+    /// Quarter note = 1.4s
+    private static let beatDuration: Float = 1.4
+
     // MARK: - Data Structures
+
+    /// Note length abstraction to avoid magic numbers
+    /// All values are multiplied by beatDuration (1.6s)
+    enum Duration: Float {
+        case sixteenth    = 0.25  // 16分音符
+        case eighth       = 0.5   // 8分音符
+        case dottedEighth = 0.75  // 付点8分
+        case quarter      = 1.0   // 4分音符
+        case dottedQuarter = 1.5  // 付点4分
+        case half         = 2.0   // 2分音符
+
+        var seconds: Float { self.rawValue * JupiterMelodyGenerator.beatDuration }
+    }
+
+    /// Note pitch abstraction with frequency values
+    /// Added F5 and G5 for the climax (the emotional peak)
+    enum Pitch: Float {
+        case E4 = 329.63
+        case G4 = 392.00
+        case A4 = 440.00
+        case B4 = 493.88
+        case C5 = 523.25
+        case D5 = 587.33
+        case E5 = 659.25
+        case F5 = 698.46  // High F - for descent from peak
+        case G5 = 783.99  // High G - THE PEAK (most emotional point)
+    }
 
     /// Single note with frequency and duration
     struct Note {
         let freq: Float
         let duration: Float
+
+        /// Create note with Pitch and Duration enums
+        init(_ pitch: Pitch, _ len: Duration) {
+            self.freq = pitch.rawValue
+            self.duration = len.seconds
+        }
+
+        /// Create note with manual duration (for special cases like final note)
+        init(_ pitch: Pitch, seconds: Float) {
+            self.freq = pitch.rawValue
+            self.duration = seconds
+        }
     }
 
     // MARK: - Melody Definition
 
-    /// Jupiter chorale melody in C major (Holst "Thaxted" opening 3 measures)
+    /// Jupiter chorale melody arranged for syllabic phrasing
     ///
-    /// Based on Holst's own C-major setting of the Jupiter chorale
-    /// ("Thaxted" / "I Vow to Thee, My Country" first 3 measures),
-    /// arranged to sit over CathedralStillness (C/G drone).
+    /// Based on Holst's Jupiter theme, adjusted for natural vocal phrasing.
+    /// Rhythm uses more even eighth notes for clear syllabic articulation.
     ///
-    /// Extended to full 3-measure phrase for complete musical statement.
-    /// Measure 1: Introduction (ascent)
-    /// Measure 2: First response (gentle descent)
-    /// Measure 3: Climax (secondary ascent — the emotional peak)
-    ///
-    /// Notation (in C major, 3/4):
-    /// Measure 1: e8( g) a4. c8  b8. g16  c8( d) c4  b4  a8 b  a4  g4
-    /// Measure 2: c8 d e4 d8 c b a g
-    /// Measure 3: e8 g a4 c8 d8 c b a g (with extended final G for loop smoothing)
-    ///
-    /// Total duration: ~52-54 seconds (2x slower, 3-measure complete phrase)
+    /// Structure:
+    /// - Phrase 1-2: Introduction
+    /// - Phrase 3-4: Development
+    /// - Phrase 5: Climax (G5 peak) and Resolution
     let melody: [Note] = [
-        // === Measure 1 ===
-        Note(freq: 329.63, duration: 0.80), // E4 - eighth (2x)
-        Note(freq: 392.00, duration: 0.80), // G4 - eighth (2x)
-        Note(freq: 440.00, duration: 2.40), // A4 - dotted quarter (2x)
-        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
-        Note(freq: 493.88, duration: 1.20), // B4 - dotted eighth (2x)
-        Note(freq: 392.00, duration: 0.40), // G4 - sixteenth (2x)
-        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
-        Note(freq: 587.33, duration: 0.80), // D5 - eighth (2x)
-        Note(freq: 523.25, duration: 1.60), // C5 - quarter (2x)
-        Note(freq: 493.88, duration: 1.60), // B4 - quarter (2x)
-        Note(freq: 440.00, duration: 0.80), // A4 - eighth (2x)
-        Note(freq: 493.88, duration: 0.80), // B4 - eighth (2x)
-        Note(freq: 440.00, duration: 1.60), // A4 - quarter (2x)
-        Note(freq: 392.00, duration: 1.60), // G4 - quarter (2x)
 
-        // === Measure 2 ===
-        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
-        Note(freq: 587.33, duration: 0.80), // D5 - eighth (2x)
-        Note(freq: 659.25, duration: 1.60), // E5 - quarter (2x)
-        Note(freq: 587.33, duration: 0.80), // D5 - eighth (2x)
-        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
-        Note(freq: 493.88, duration: 0.80), // B4 - eighth (2x)
-        Note(freq: 440.00, duration: 0.80), // A4 - eighth (2x)
-        Note(freq: 392.00, duration: 0.80), // G4 - eighth (2x)
+        // === Phrase 1 (Opening) ===
+        Note(.E4, .eighth),
+        Note(.G4, .eighth),
+        Note(.A4, .dottedQuarter),
+        Note(.C5, .eighth),
+        Note(.B4, .eighth),
+        Note(.G4, .quarter),
 
-        // === Measure 3 (Climax — the emotional peak) ===
-        Note(freq: 329.63, duration: 0.80), // E4 - eighth (2x)
-        Note(freq: 392.00, duration: 0.80), // G4 - eighth (2x)
-        Note(freq: 440.00, duration: 1.60), // A4 - quarter (2x)
-        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
-        Note(freq: 587.33, duration: 0.80), // D5 - eighth (2x)
-        Note(freq: 523.25, duration: 0.80), // C5 - eighth (2x)
-        Note(freq: 493.88, duration: 0.80), // B4 - eighth (2x)
-        Note(freq: 440.00, duration: 0.80), // A4 - eighth (2x)
-        Note(freq: 392.00, duration: 1.80)  // G4 - extended for smooth loop transition (2x + extra)
+        // === Phrase 2 (Response) ===
+        Note(.C5, .eighth),
+        Note(.D5, .eighth),
+        Note(.C5, .quarter),
+        Note(.B4, .eighth),
+        Note(.A4, .eighth),
+        Note(.G4, .quarter),
+
+        // === Phrase 3 (Development) ===
+        Note(.C5, .eighth),
+        Note(.D5, .eighth),
+        Note(.E5, .quarter),
+        Note(.D5, .eighth),
+        Note(.C5, .eighth),
+        Note(.B4, .eighth),
+        Note(.A4, .eighth),
+        Note(.G4, .half),
+
+        // === Phrase 4 (Bridge to Climax) ===
+        Note(.E4, .eighth),
+        Note(.G4, .eighth),
+        Note(.A4, .eighth),
+        Note(.C5, .eighth),
+        Note(.D5, .eighth),
+        Note(.C5, .eighth),
+        Note(.B4, .eighth),
+        Note(.A4, .eighth),
+        Note(.G4, .quarter),
+        Note(.A4, .eighth),
+        Note(.G4, .quarter),
+
+        // === Phrase 5 (Climax and Resolution) ===
+        // The Ascent
+        Note(.C5, .quarter),
+        Note(.D5, .quarter),
+        Note(.E5, .quarter),
+
+        // THE PEAK (G5)
+        Note(.G5, .dottedQuarter),
+        Note(.F5, .eighth),
+        Note(.E5, .eighth),
+
+        // Descent
+        Note(.D5, .quarter),
+        Note(.C5, .eighth),
+        Note(.B4, .eighth),
+
+        // Final Resolution
+        Note(.C5, seconds: 4.8)
     ]
 
-    // MARK: - Timing Calculations
+    // MARK: - Timing & Optimization
 
     /// Cumulative times for efficient note indexing
-    /// Example: [0.0, 0.8, 1.4, 2.0, ..., 9.6]
+    /// Calculated once and cached
     lazy var cumulativeTimes: [Float] = {
         var times: [Float] = [0.0]
         for note in melody {
@@ -114,62 +177,58 @@ private final class JupiterMelodyGenerator {
     }()
 
     /// Total cycle duration
-    lazy var cycleDuration: Float = {
-        cumulativeTimes.last!
-    }()
+    lazy var cycleDuration: Float = cumulativeTimes.last!
 
-    // MARK: - Envelope Parameters
+    // MARK: - Sound Design (Organ Characteristics)
 
-    let attack: Float = 0.080      // 80ms: slower, more majestic organ attack
-    let decay: Float = 4.0         // 4.0s: extended decay for cathedral grandeur
+    /// Organ-style harmonics with Mixture stop (8th harmonic)
+    /// The 8.0 harmonic adds "brilliance" typical of cathedral organs
+    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 8.0]
 
-    // MARK: - Harmonic Structure
+    /// Harmonic amplitudes: rich organ tone with subtle Mixture
+    let harmonicAmps: [Float] = [1.0, 0.5, 0.3, 0.1, 0.05]
 
-    /// Organ-style harmonics: fundamental + 3 overtones
-    /// Rich harmonic content for majestic character
-    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0]
+    /// ASR Envelope Parameters (Organ-style)
+    /// - Attack: Slow rise for cathedral feel
+    /// - Sustain: Full volume held during note
+    /// - Release: Smooth fade to prevent clicks
+    let attackTime: Float = 0.1   // 100ms: slow attack for organ feel
+    let releaseTime: Float = 0.2  // 200ms: smooth release to prevent clicks
 
-    /// Harmonic amplitudes: organ-like (fundamental strong, rich overtones)
-    let harmonicAmps: [Float] = [1.0, 0.45, 0.30, 0.18]
+    /// Master gain for balance with other layers
+    let masterGain: Float = 0.30
 
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
-        // Get time within current cycle
         let cycleTime = t.truncatingRemainder(dividingBy: cycleDuration)
 
-        // Find which note is currently playing
-        guard let noteIndex = findNoteIndex(at: cycleTime) else {
-            return 0.0
+        guard let index = findNoteIndex(at: cycleTime) else { return 0.0 }
+
+        let note = melody[index]
+        let noteStartTime = cumulativeTimes[index]
+        let localTime = cycleTime - noteStartTime
+
+        // 1. Calculate ASR Envelope (Attack, Sustain, Release)
+        let envelope = calculateOrganEnvelope(time: localTime, duration: note.duration)
+
+        // 2. Generate Organ Tone (Additive Synthesis)
+        var signal: Float = 0.0
+        for i in 0..<harmonics.count {
+            let hFreq = note.freq * harmonics[i]
+            let phase = 2.0 * Float.pi * hFreq * t
+            signal += sin(phase) * harmonicAmps[i]
         }
 
-        let note = melody[noteIndex]
-        let noteStartTime = cumulativeTimes[noteIndex]
-        let timeSinceNoteStart = cycleTime - noteStartTime
+        // Normalize by harmonic count
+        signal /= Float(harmonics.count)
 
-        // Calculate envelope for this note
-        let envelope = calculateEnvelope(timeSinceNoteStart)
-
-        // Generate harmonic content
-        var value: Float = 0.0
-        for h in 0..<harmonics.count {
-            let freq = note.freq * harmonics[h]
-            let phase = 2.0 * Float.pi * freq * t
-            value += sin(phase) * harmonicAmps[h]
-        }
-
-        // Normalize by harmonic count and apply envelope
-        let normalized = value / Float(harmonics.count)
-
-        // Return with softer volume (0.30) for meditative, majestic character
-        return normalized * envelope * 0.30
+        return signal * envelope * masterGain
     }
 
     // MARK: - Helper Methods
 
     /// Find index of note playing at given time
-    /// - Parameter time: Time within cycle
-    /// - Returns: Note index, or nil if out of bounds
     private func findNoteIndex(at time: Float) -> Int? {
         for i in 0..<melody.count {
             if time >= cumulativeTimes[i] && time < cumulativeTimes[i + 1] {
@@ -179,68 +238,80 @@ private final class JupiterMelodyGenerator {
         return nil
     }
 
-    /// Calculate envelope for note
-    /// - Parameter t: Time since note start
-    /// - Returns: Envelope value (0.0-1.0)
-    private func calculateEnvelope(_ t: Float) -> Float {
-        if t < attack {
-            // Attack phase: smooth rise using sine curve
-            let progress = t / attack
-            let sinValue = sin(progress * Float.pi / 2.0)
-            return sinValue * sinValue  // sin^2 for smooth curve
-        } else {
-            // Decay phase: exponential decay
-            let decayTime = t - attack
-            return exp(-decayTime / decay)
+    /// Generates a trapezoidal ASR envelope (Attack -> Sustain -> Release)
+    /// This is crucial for organ sounds - they sustain while key is pressed.
+    ///
+    /// Shape:
+    /// ```
+    /// 1.0 ┌───────────────────┐
+    ///     │  Attack  Sustain  │ Release
+    ///     │   /               │\
+    /// 0.0 └───────────────────┴────
+    ///     0   attackTime    end-releaseTime  end
+    /// ```
+    private func calculateOrganEnvelope(time: Float, duration: Float) -> Float {
+        // Attack Phase: smooth rise
+        if time < attackTime {
+            return time / attackTime
+        }
+        // Release Phase: smooth fade at end of note
+        else if time > (duration - releaseTime) {
+            let releaseStart = duration - releaseTime
+            let timeInRelease = time - releaseStart
+            // Clamp to prevent negative values for very short notes
+            let releaseProgress = min(timeInRelease / releaseTime, 1.0)
+            return max(1.0 - releaseProgress, 0.0)
+        }
+        // Sustain Phase: full volume
+        else {
+            return 1.0
         }
     }
 }
 
 // MARK: - Design Notes
 //
+// REFACTORING SUMMARY (2025-11-27):
+//
+// Based on Ren's code review suggestions:
+//
+// 1. ENVELOPE CHANGE: Decay → ASR (Attack-Sustain-Release)
+//    - Before: exp(-decayTime / decay) - bell/piano-like decay
+//    - After: Trapezoidal ASR - organ-like sustain
+//    - Result: Sound sustains during note, then releases smoothly
+//
+// 2. READABLE NOTE DEFINITIONS:
+//    - Before: Note(freq: 329.63, duration: 0.80)
+//    - After: Note(.E4, .eighth)
+//    - Result: Melody is now human-readable and music-theory aligned
+//
+// 3. HARMONIC ENRICHMENT:
+//    - Before: [1.0, 2.0, 3.0, 4.0]
+//    - After: [1.0, 2.0, 3.0, 4.0, 8.0] with amp 0.05
+//    - Result: Added "Mixture stop" brilliance typical of cathedral organs
+//
+// 4. CLICK PREVENTION:
+//    - Added 200ms release time at end of each note
+//    - Prevents "pop" noise at note transitions
+//
+// 5. MELODY REWRITE (2025-11-28):
+//    - Rewrote melody for syllabic phrasing (vocal-style articulation)
+//    - More even eighth notes for clear syllable separation
+//    - Added climax: G5 (the emotional peak)
+//    - Resolution: landing on C5 with long sustain
+//
 // MELODY DESIGN:
 //
 // Source: Holst's "Thaxted" chorale from Jupiter (1918, public domain)
-// Also known as: "I Vow to Thee, My Country" hymn tune
-// Key: C Major (Holst's own C-major setting, fits CathedralStillness C/G drone)
-// Time Signature: 3/4 (mapped to seconds: 0.4s = eighth note)
-// Phrasing: First 2 measures of the famous Jupiter chorale (complete opening phrase)
-// Duration: Variable note lengths (0.2s to 1.2s) for expressive, natural flow
+// Key: C Major (fits CathedralStillness C/G drone)
+// Phrasing: Syllabic rhythm for natural vocal flow
 //
-// DESIGN PHILOSOPHY:
+// MELODIC STRUCTURE:
 //
-// Extended from 1 measure to 3 measures, and slowed 2x to:
-// - Reduce loop perception (52-54s cycle vs 9s original)
-// - Create complete musical phrase with emotional arc:
-//   * Measure 1: Ascending introduction
-//   * Measure 2: Gentle descent (first response)
-//   * Measure 3: Secondary ascent (emotional climax — the "big tune" moment)
-// - Match Calm Technology philosophy (very slow, breathing, cosmic rhythm)
-// - Better fit CathedralStillness atmosphere (long, deeply meditative cycles)
-// - Enhance majestic, solemn character through slower tempo
-// - Provide satisfying musical completeness and resolution
-//
-// REFERENCE:
-//
-// This is the same melody used in:
-// - Ayaka Hirahara's "Jupiter" (everyday I listen to my heart~)
-// - Traditional hymn "I Vow to Thee, My Country"
-// - The famous "big tune" from Holst's Jupiter movement
-//
-// SOUND CHARACTER:
-//
-// - Organ-style harmonics (45%, 30%, 18%) for rich, majestic tone
-// - Extended decay (4.0s) for cathedral grandeur and spaciousness
-// - Slower attack (80ms) for majestic, solemn organ articulation
-// - Softer volume (0.30) for meditative, reverent atmosphere
-//
-// TECHNICAL IMPLEMENTATION:
-//
-// - Uses Signal protocol (pure time-based function)
-// - Cumulative time array for efficient note lookup
-// - Per-note envelope (independent attack/decay)
-// - 31-note cycle, ~52-54 second loop (3 measures, 2x slower)
-// - Final note (G4) extended (1.8s) to smooth loop transition
+// Phrase 1-2: Introduction and Response
+// Phrase 3:   Development (ascending to E5)
+// Phrase 4:   Bridge to Climax
+// Phrase 5:   THE CLIMAX (G5 peak) → Descent → Resolution (C5)
 //
 // INTEGRATION WITH CATHEDRALSTILLNESS:
 //
@@ -249,19 +320,7 @@ private final class JupiterMelodyGenerator {
 // 2. Harp arpeggios (MidnightDroplets) - sparse decoration
 // 3. Jupiter chorale (this) - majestic centerpiece
 //
-// All layers share the same large reverb (Cathedral atmosphere, 3s decay).
-//
-// LOOP HIDING TECHNIQUE:
-//
-// - 3-measure phrase creates complete musical arc with climax
-// - Final G4 extended to 1.8s (vs standard 0.8s eighth note)
-// - Extremely long cycle (52-54s) makes loop virtually imperceptible
-// - Reverb tail (4s decay) smooths transition between cycles
-// - Slow tempo creates timeless, meditative quality
-// - Measure 3 provides emotional resolution before loop restart
-//
 // COPYRIGHT:
 //
 // Gustav Holst died in 1934. Under Japanese copyright law (70 years after death),
 // "The Planets" entered public domain in 2004. Using the melody is completely legal.
-// This implementation synthesizes the melody from scratch (no existing recordings used).
