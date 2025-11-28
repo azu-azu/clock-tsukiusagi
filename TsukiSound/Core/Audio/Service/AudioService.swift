@@ -601,7 +601,7 @@ public final class AudioService: ObservableObject {
     private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
         switch uiPreset {
         case .softOrgan:
-            return .midnightDroplets
+            return .cathedralStillness
         case .moonlitGymnopedie:
             return .moonlitGymnopedie
         }

@@ -19,6 +19,31 @@ public struct PureToneBuilder {
         var sources: [AudioSource] = []
 
         switch preset {
+        case .cathedralStillness:
+            // Signal-based organ drone + harp arpeggios + Jupiter melody with large reverb
+            let organSignal = CathedralStillnessSignal.makeSignal()
+            let harpSignal = MidnightDropletsSignal.makeSignal()
+            let jupiterSignal = JupiterMelodySignal.makeSignal()
+
+            let mixer = FinalMixer()
+            mixer.add(organSignal, gain: 1.0)     // オルガンドローン（ベース）
+            mixer.add(harpSignal, gain: 0.6)      // ハープアルペジオ（控えめに、メロディを引き立てる）
+            mixer.add(jupiterSignal, gain: 0.7)   // Jupiterメロディ（メインテーマ）
+
+            // Large reverb for cathedral atmosphere (3s decay)
+            let reverb = SchroederReverb(
+                roomSize: 2.2,
+                damping: 0.35,
+                decay: 0.88,
+                mix: 0.55,
+                predelay: 0.04,
+                sampleRate: 48000.0
+            )
+            mixer.addEffect(reverb)
+
+            let outputNode = FinalMixerOutputNode(mixer: mixer)
+            sources.append(outputNode)
+
         case .midnightDroplets:
             // Signal-based arpeggio harp with rich, long reverb
             let signal = MidnightDropletsSignal.makeSignal()
