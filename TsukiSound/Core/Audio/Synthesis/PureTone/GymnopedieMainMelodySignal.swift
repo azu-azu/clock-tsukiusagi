@@ -77,17 +77,23 @@ private final class GymnoGenerator {
     //
     // 美学: Bass="床"、Melody="浮かぶ線"
     // 床が厚く、線が控えめ → 静謐で詩的な響き
+    //
+    // 滑らかさ方針（SignalEnvelopeUtils guide準拠）:
+    // - 低音(200Hz以下): attack 120ms以上
+    // - 中音(200-500Hz): attack 60ms以上
+    // - 高音(500Hz以上): attack 30ms以上
+    // - 急激な変化はクリックノイズの原因
 
-    let melodyAttack: Float = 0.11   // 0.08 → 0.11: ふわっと入る"サティ感"
-    let melodyDecay: Float = 3.5     // 4.0 → 3.5: 累積を軽減しつつlegato維持
-    let melodyGain: Float = 0.28     // 0.35 → 0.28: richSineなので控えめに
+    let melodyAttack: Float = 0.13   // 0.11 → 0.13: より滑らかな立ち上がり
+    let melodyDecay: Float = 4.0     // 3.5 → 4.0: legato感を強化
+    let melodyGain: Float = 0.28     // richSineなので控えめに
 
-    let bassAttack: Float = 0.12
-    let bassDecay: Float = 2.8       // 2.5 → 2.8: 鳴り止まない床感
-    let bassGain: Float = 0.16       // 0.08 → 0.16: pureSineは厚めに
+    let bassAttack: Float = 0.15     // 0.12 → 0.15: 低音は長めに（推奨120ms+）
+    let bassDecay: Float = 3.5       // 2.8 → 3.5: 床感を長く持続
+    let bassGain: Float = 0.16       // pureSineは厚めに
 
-    let chordAttack: Float = 0.08
-    let chordDecay: Float = 1.8
+    let chordAttack: Float = 0.10    // 0.08 → 0.10: 中音域も滑らかに（推奨60ms+）
+    let chordDecay: Float = 2.5      // 1.8 → 2.5: 響きを長く
     let chordGain: Float = 0.06
 
     // MARK: - Data Structures
