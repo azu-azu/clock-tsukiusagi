@@ -49,7 +49,6 @@ private final class GymnoGenerator {
     // MARK: - Frequency Constants (D Major: F#, C#)
 
     // Bass
-    let C3:  Float = 130.81   // C3 (ナチュラル) - クライマックス用
     let D3:  Float = 146.83
     let E3:  Float = 164.81
     let G3:  Float = 196.00
@@ -57,7 +56,6 @@ private final class GymnoGenerator {
     // Chord
     let A3:  Float = 220.00
     let B3:  Float = 246.94
-    let C4:  Float = 261.63   // C4 (ナチュラル)
     let C_4: Float = 277.18   // C#4
     let D4:  Float = 293.66
 
@@ -288,10 +286,7 @@ private final class GymnoGenerator {
             MelodyNote(freq: D4, startBar: 37, startBeat: 1, durBeats: 1),   // D4 (Alto)
             MelodyNote(freq: G4, startBar: 37, startBeat: 2, durBeats: 1),   // G4 (Alto)
 
-            // Bar 38-39: 階段式クライマックス
-            // 同時4音ではなく、時間差で積み上げる（位相干渉を回避）
-
-            // Bar 38: Am系 - 静かな準備
+            // Bar 38: Am系 - 静かな準備（階段式レイヤー）
             MelodyNote(freq: A3, startBar: 38, startBeat: 0.00, durBeats: 3.5, customGain: 0.14),  // Bass A3
             MelodyNote(freq: E4, startBar: 38, startBeat: 0.12, durBeats: 3.3, customGain: 0.10),  // Mid E4
             MelodyNote(freq: A4, startBar: 38, startBeat: 0.24, durBeats: 3.1, customGain: 0.09),  // High A4 (揺らぎの頂点を前に出す)
