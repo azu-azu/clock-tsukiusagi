@@ -340,8 +340,11 @@ private final class GymnoGenerator {
                     attack: melodyAttack,
                     decay: effectiveDecay
                 )
-                // richSine: 奇数倍音を加えて暖かみのある音色に
-                let v = SignalEnvelopeUtils.richSine(frequency: note.freq, t: t)
+                // クライマックス和音はpureSine（倍音干渉を防ぐ）
+                // 通常メロディはrichSine（暖かみのある音色）
+                let v = isClimax
+                    ? SignalEnvelopeUtils.pureSine(frequency: note.freq, t: t)
+                    : SignalEnvelopeUtils.richSine(frequency: note.freq, t: t)
                 output += v * env * effectiveGain
             }
         }
