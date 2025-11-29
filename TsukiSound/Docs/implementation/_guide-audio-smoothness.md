@@ -351,9 +351,11 @@ private func sampleMelody(at t: Float) -> Float {
 
 ## 10. Related Documents
 
+- `_guide-chord-voicing.md` — 和音の美しい響かせ方（階段式レイヤー、デチューン）
 - `_guide-signal-envelope-utils.md` — SignalEnvelopeUtils API詳細
 - `_guide-audio-seamless-loop-generation.md` — シームレスループのゼロクロス処理
 - `_guide-audio-system-impl.md` — オーディオシステム全体の実装
+- `_guide-transpose.md` — 移調の正しい実装方法
 - `architecture/_arch-audio-parameter-safety-rules.md` — パラメータ安全ルール
 - `report/report-audio-distortion-noise.md` — 歪み・雑音のRCA
 - `runbook/_2025-11-29_audio_playback_volume_corruption_fix.md` — 音量破損問題の解決
@@ -364,6 +366,7 @@ private func sampleMelody(at t: Float) -> Float {
 
 | Date | Version | Change |
 |------|---------|--------|
+| 2025-11-30 | 1.3 | Related Documentsに_guide-chord-voicing.mdと_guide-transpose.mdを追加 |
 | 2025-11-30 | 1.2 | 高音域ゲイン調整セクション追加、Gymnopédie実装例更新 |
 | 2025-11-30 | 1.1 | 滑らかさ定義・3大ルール・ゼロクロス図・Lookup Table追加 |
 | 2025-11-30 | 1.0 | 初版作成 |
