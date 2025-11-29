@@ -74,20 +74,28 @@ struct AudioPlaybackView: View {
                 DesignTokens.SettingsColors.backgroundGradient
                     .ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
-                        bluetoothStatusIndicator
-                        soundSelectionSection
-                        controlSection
-                        statusSection
-                        volumeSection
-                        waveformSection
+                GeometryReader { geometry in
+                    ScrollView {
+                        VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
+                            // 上部コンテンツ
+                            bluetoothStatusIndicator
+                            soundSelectionSection
+                            controlSection
 
-                        Spacer(minLength: DesignTokens.SettingsSpacing.bottomSpacer)
+                            Spacer(minLength: 24)
+
+                            // 下部コンテンツ（Status〜Waveform）
+                            VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
+                                statusSection
+                                volumeSection
+                                waveformSection
+                            }
+                        }
+                        .padding(.top, 16)
+                        .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
+                        .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
+                        .frame(minHeight: geometry.size.height)
                     }
-                    .padding(.top, 16)
-                    .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
-                    .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
                 }
             }
             .navigationTitle("Audio")
@@ -153,73 +161,76 @@ struct AudioPlaybackView: View {
     }
 
     private var soundSelectionSection: some View {
-        // ✂️ Wrapper to center the narrower card
-        HStack {
-            Spacer()
-            VStack(alignment: .leading, spacing: 16) { // ✂️ Uniform spacing of 16pt between all 3 rows
-                // ✂️ Title inside card for unified appearance
-                Text("音源選択")
-                    .dynamicFont(
-                        size: DynamicTheme.AudioTestTypography.headlineSize,
-                        weight: DynamicTheme.AudioTestTypography.headlineWeight
-                    )
-                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Sound")
+                .dynamicFont(
+                    size: DynamicTheme.AudioTestTypography.headlineSize,
+                    weight: DynamicTheme.AudioTestTypography.headlineWeight
+                )
+                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-                // ✂️ Picker with centered layout
-                // ✂️ Using HStack with Spacer() instead of GeometryReader to maintain proper spacing
-                HStack {
-                    Spacer()
-                    Menu {
-                        ForEach(AudioSourcePreset.allSources) { source in
-                            Button(action: {
-                                selectedSource = source
-                            }) {
-                                Text(source.displayName)
-                            }
+            HStack {
+                Spacer()
+                Menu {
+                    ForEach(AudioSourcePreset.allSources) { source in
+                        Button(action: {
+                            selectedSource = source
+                        }) {
+                            Text(source.displayName)
                         }
-                    } label: {
-                        HStack {
-                            Text(selectedSource.displayName)
-                                .dynamicFont(
-                                    size: DynamicTheme.AudioTestTypography.soundMenuSize,
-                                    weight: DynamicTheme.AudioTestTypography.soundMenuWeight
-                                )
-                                .foregroundColor(DesignTokens.SettingsColors.accent) // ✂️ Blue for standard iOS look
-                            Spacer()
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.system(size: 14)) // ✂️ Slightly larger chevron (12 -> 14)
-                                .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
-                        }
-                        .frame(width: UIScreen.main.bounds.width * 0.49) // ✂️ 70% of card (which is 70% of screen) = 0.7 × 0.7 = 0.49
-                        .contentShape(Rectangle())
                     }
-                    Spacer()
+                } label: {
+                    HStack {
+                        Text(selectedSource.displayName)
+                            .dynamicFont(
+                                size: DynamicTheme.AudioTestTypography.soundMenuSize,
+                                weight: DynamicTheme.AudioTestTypography.soundMenuWeight
+                            )
+                            .foregroundColor(DesignTokens.SettingsColors.accent)
+                        Spacer()
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 14))
+                            .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
                 }
-
-                // ✂️ English name inside card, right-aligned
-                HStack {
-                    Spacer()
-                    Text(selectedSource.englishTitle)
-                        .dynamicFont(
-                            size: DynamicTheme.AudioTestTypography.englishTitleSize,
-                            weight: DynamicTheme.AudioTestTypography.englishTitleWeight
-                        )
-                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                }
+                Spacer()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(DesignTokens.SettingsSpacing.cardPadding)
-            .padding(.vertical, 4)
-            .background(DesignTokens.CommonBackgroundColors.cardHighlight)
-            .cornerRadius(DesignTokens.SettingsLayout.cardCornerRadius)
-            .overlay(
-                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .stroke(DesignTokens.CommonBackgroundColors.cardBorder, lineWidth: 1)
-            )
-            .shadow(color: Color.black.opacity(0.5), radius: 6, y: 2) // ✂️ Stronger shadow
-            .frame(maxWidth: UIScreen.main.bounds.width * 0.7) // ✂️ Card is 70% of screen width
-            Spacer()
+
+            HStack {
+                Spacer()
+                Text(selectedSource.englishTitle)
+                    .dynamicFont(
+                        size: DynamicTheme.AudioTestTypography.englishTitleSize,
+                        weight: DynamicTheme.AudioTestTypography.englishTitleWeight
+                    )
+                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(DesignTokens.SettingsSpacing.cardPadding)
+        .background(
+            ZStack {
+                // 背景色（cardHighlight: より濃いめ）
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
+                // 上辺ハイライト（光）
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.25),
+                                Color.white.opacity(0.02)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+            }
+        )
+        .shadow(color: Color.black.opacity(0.5), radius: 8, x: 0, y: 4)
     }
 
     private var controlSection: some View {
@@ -244,7 +255,7 @@ struct AudioPlaybackView: View {
                 )
                 .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
             }
-            .frame(maxWidth: UIScreen.main.bounds.width * 0.7)
+            .frame(maxWidth: 200)
             Spacer()
         }
     }
@@ -252,7 +263,7 @@ struct AudioPlaybackView: View {
     private var volumeSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
             HStack {
-                Text("音量（端末ボタンで制御）")
+                Text("Volume")
                     .dynamicFont(
                         size: DynamicTheme.AudioTestTypography.volumeLabelSize,
                         weight: DynamicTheme.AudioTestTypography.volumeLabelWeight
@@ -292,7 +303,36 @@ struct AudioPlaybackView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .settingsCardStyle()
+        .padding(DesignTokens.SettingsSpacing.cardPadding)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.08),
+                                Color.white.opacity(0.03)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.15),
+                                Color.white.opacity(0.02)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+            }
+        )
+        .shadow(color: Color.black.opacity(0.4), radius: 8, x: 0, y: 4)
+        .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
     }
 
     private var waveformSection: some View {
@@ -307,7 +347,7 @@ struct AudioPlaybackView: View {
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalSmall) {
-            Text("ステータス")
+            Text("Status")
                 .dynamicFont(
                     size: DynamicTheme.AudioTestTypography.statusTitleSize,
                     weight: DynamicTheme.AudioTestTypography.statusTitleWeight
@@ -365,7 +405,36 @@ struct AudioPlaybackView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .settingsCardStyle()
+        .padding(DesignTokens.SettingsSpacing.cardPadding)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.08),
+                                Color.white.opacity(0.03)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.15),
+                                Color.white.opacity(0.02)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+            }
+        )
+        .shadow(color: Color.black.opacity(0.4), radius: 8, x: 0, y: 4)
+        .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
     }
 
     // MARK: - Actions
