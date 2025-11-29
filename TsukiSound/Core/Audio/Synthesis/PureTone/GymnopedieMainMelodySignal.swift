@@ -62,25 +62,25 @@ private final class GymnoGenerator {
 
     // MARK: - Sound Parameters
     //
-    // Gain調整方針:
-    // - Melody: 主旋律を際立たせる（0.28 → 0.35）
-    // - Bass: 背景のサポート役に（0.12 → 0.08）
-    // - Chord: 響きを出す程度に抑える（0.08 → 0.06）
+    // ミックスバランス方針（Ren's review反映）:
+    // - Bass: pureSineは埋もれやすい → 厚めに（0.16）
+    // - Melody: richSineは倍音で抜けやすい → 控えめに（0.28）
+    // - Chord: 響き程度に（0.06）
     //
-    // Decay調整方針:
-    // - Melody: 音の重なり（legato）を増すため長く（2.5 → 4.0）
+    // 美学: Bass="床"、Melody="浮かぶ線"
+    // 床が厚く、線が控えめ → 静謐で詩的な響き
 
     let melodyAttack: Float = 0.08
-    let melodyDecay: Float = 4.0     // 2.5 → 4.0: legato感を強化
-    let melodyGain: Float = 0.35     // 0.28 → 0.35: 主旋律を際立たせる
+    let melodyDecay: Float = 3.5     // 4.0 → 3.5: 累積を軽減しつつlegato維持
+    let melodyGain: Float = 0.28     // 0.35 → 0.28: richSineなので控えめに
 
     let bassAttack: Float = 0.12
     let bassDecay: Float = 2.5
-    let bassGain: Float = 0.08       // 0.12 → 0.08: 背景に抑える
+    let bassGain: Float = 0.16       // 0.08 → 0.16: pureSineは厚めに
 
     let chordAttack: Float = 0.08
     let chordDecay: Float = 1.8
-    let chordGain: Float = 0.06      // 0.08 → 0.06: 響き程度に
+    let chordGain: Float = 0.06
 
     // MARK: - Data Structures
 
