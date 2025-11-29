@@ -1,6 +1,6 @@
 # Audio Smoothness Guide — 音の「滑らかさ」設計ガイド
 
-**Version**: 1.1
+**Version**: 1.2
 **Last Updated**: 2025-11-30
 **Purpose**: TsukiSoundにおける「滑らかさ」の設計ルールとベストプラクティス
 
@@ -264,7 +264,48 @@ public func play(preset: UISoundPreset) throws {
 
 ---
 
-## 8. Gymnopédie Implementation Example
+## 8. High Frequency Gain Reduction（高音域ゲイン調整）
+
+### 問題: 高音域の「キーン」
+
+デジタルシンセシスでは、高音域（700Hz以上）で倍音が強調されると「キーン」という鋭い響きが発生しやすい。特に `richSine` のような倍音を含む音色で顕著。
+
+### 解決策: 動的ゲイン減衰
+
+周波数に応じてゲインを自動的に減衰させる：
+
+```swift
+// 高音域のゲイン調整 (700Hz以上をターゲット)
+if note.freq >= 700.0 {
+    let maxFreq: Float = 1318.51  // E6
+    let minFreq: Float = 700.0
+    let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
+    // 最高音域で最大20%の減衰
+    let highFreqReduction = 1.0 - reductionRatio * 0.2
+    effectiveGain *= highFreqReduction
+}
+```
+
+**Lookup Table（高音域ゲイン減衰）**:
+```
+Frequency   | Reduction | Effective Gain (base 0.28)
+------------|-----------|---------------------------
+< 700Hz     |    0%     | 0.280
+  700Hz     |    0%     | 0.280
+  880Hz (A5)|   ~6%     | 0.263
+ 1046Hz (C6)|  ~11%     | 0.249
+ 1318Hz (E6)|   20%     | 0.224
+```
+
+### なぜこの手法が有効か
+
+1. **心理音響学**: 人間の耳は高音域に敏感（Fletcher-Munson曲線）
+2. **倍音の累積**: 高周波ほど倍音が可聴域を超え、不快な歪みに変わる
+3. **滑らかな減衰曲線**: 急に音量が変わらないため、自然な聴感を維持
+
+---
+
+## 9. Gymnopédie Implementation Example
 
 `GymnopedieMainMelodySignal.swift` での実装例：
 
@@ -274,8 +315,8 @@ public func play(preset: UISoundPreset) throws {
 // - 中音(200-500Hz): attack 60ms以上
 // - 高音(500Hz以上): attack 30ms以上
 
-let melodyAttack: Float = 0.13   // 高音メロディ用
-let melodyDecay: Float = 4.0     // legato感を強化
+let melodyAttack: Float = 0.15   // 高音メロディ用（鋭さを抑える）
+let melodyDecay: Float = 4.5     // legato感を強化、優雅な減衰
 
 let bassAttack: Float = 0.15     // 低音は長めに（推奨120ms+）
 let bassDecay: Float = 3.5       // 床感を長く持続
@@ -284,9 +325,28 @@ let chordAttack: Float = 0.10    // 中音域も滑らかに（推奨60ms+）
 let chordDecay: Float = 2.5      // 響きを長く
 ```
 
+### 高音域ゲイン調整の適用
+
+```swift
+private func sampleMelody(at t: Float) -> Float {
+    // ...
+    var effectiveGain = isClimax ? melodyGain * 1.15 : melodyGain
+
+    // 高音域のゲイン調整 (700Hz以上をターゲット)
+    if note.freq >= 700.0 {
+        let maxFreq: Float = 1318.51  // E6
+        let minFreq: Float = 700.0
+        let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
+        let highFreqReduction = 1.0 - reductionRatio * 0.2
+        effectiveGain *= highFreqReduction
+    }
+    // ...
+}
+```
+
 ---
 
-## 9. Related Documents
+## 10. Related Documents
 
 - `_guide-signal-envelope-utils.md` — SignalEnvelopeUtils API詳細
 - `_guide-audio-seamless-loop-generation.md` — シームレスループのゼロクロス処理
@@ -301,5 +361,6 @@ let chordDecay: Float = 2.5      // 響きを長く
 
 | Date | Version | Change |
 |------|---------|--------|
+| 2025-11-30 | 1.2 | 高音域ゲイン調整セクション追加、Gymnopédie実装例更新 |
 | 2025-11-30 | 1.1 | 滑らかさ定義・3大ルール・ゼロクロス図・Lookup Table追加 |
 | 2025-11-30 | 1.0 | 初版作成 |

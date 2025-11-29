@@ -84,8 +84,8 @@ private final class GymnoGenerator {
     // - 高音(500Hz以上): attack 30ms以上
     // - 急激な変化はクリックノイズの原因
 
-    let melodyAttack: Float = 0.13   // 0.11 → 0.13: より滑らかな立ち上がり
-    let melodyDecay: Float = 4.0     // 3.5 → 4.0: legato感を強化
+    let melodyAttack: Float = 0.15   // 0.13 → 0.15: 高音域の鋭さを抑え、より滑らかな立ち上がり
+    let melodyDecay: Float = 4.5     // 4.0 → 4.5: より長く、優雅に減衰させる
     let melodyGain: Float = 0.28     // richSineなので控えめに
 
     let bassAttack: Float = 0.15     // 0.12 → 0.15: 低音は長めに（推奨120ms+）
@@ -339,7 +339,18 @@ private final class GymnoGenerator {
                 // Bar 38-39: クライマックス処理（響き強化）
                 let isClimax = note.startBar >= 38
                 let effectiveDecay = isClimax ? melodyDecay * 1.5 : melodyDecay
-                let effectiveGain = isClimax ? melodyGain * 1.15 : melodyGain
+                var effectiveGain = isClimax ? melodyGain * 1.15 : melodyGain
+
+                // 高音域のゲイン調整 (700Hz以上をターゲット)
+                // 高音域の「キーン」を抑えるため、周波数に応じてゲインを減衰
+                if note.freq >= 700.0 {
+                    let maxFreq: Float = 1318.51  // E6
+                    let minFreq: Float = 700.0
+                    let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
+                    // 最高音域で最大20%の減衰
+                    let highFreqReduction = 1.0 - reductionRatio * 0.2
+                    effectiveGain *= highFreqReduction
+                }
 
                 let env = SignalEnvelopeUtils.smoothEnvelope(
                     t: dt,
