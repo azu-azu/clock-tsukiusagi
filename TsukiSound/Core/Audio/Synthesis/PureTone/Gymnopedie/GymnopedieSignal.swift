@@ -1,5 +1,5 @@
 //
-//  MainMelodySignal.swift
+//  GymnopedieSignal.swift
 //  TsukiSound/Core/Audio/Synthesis/PureTone/Gymnopedie
 //
 //  Satie - Gymnopédie No.1 (Public Domain)
