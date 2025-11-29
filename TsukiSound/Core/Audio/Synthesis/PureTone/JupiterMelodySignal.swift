@@ -48,11 +48,6 @@ private final class JupiterMelodyGenerator {
     /// Two Pi constant (cached for performance)
     private let twoPi: Float = 2.0 * Float.pi
 
-    /// Time wrap interval to prevent floating-point precision degradation
-    /// Using a large power of 2 that divides evenly into common frequencies
-    /// 65536 seconds ≈ 18 hours, plenty for any session
-    private let timeWrapInterval: Float = 65536.0
-
     // MARK: - Data Structures
 
     /// Note length abstraction to avoid magic numbers
@@ -262,12 +257,12 @@ private final class JupiterMelodyGenerator {
     /// Legato Envelope Parameters (very smooth, connected notes)
     /// - Attack: Slow rise for seamless entry
     /// - Release: Long tail extending well into next note
-    let attackTime: Float = 0.20   // 200ms: slow, gentle rise
+    let attackTime: Float = 0.40   // 400ms: slow and majestic rise for organ
     let releaseTime: Float = 0.8   // 800ms: very long tail for seamless blend
 
     /// Legato overlap: how much the release extends into next note
     /// Higher value = more blending between notes
-    let legatoOverlap: Float = 0.5  // 500ms overlap with next note
+    let legatoOverlap: Float = 0.35  // 350ms overlap - ensures sustain phase for short notes
 
     /// Master gain for balance with other layers
     let masterGain: Float = 0.22  // Reduced to compensate for added voices
@@ -275,7 +270,12 @@ private final class JupiterMelodyGenerator {
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
+        // 1. Note detection: use cycleTime (wrapped) for finding which note to play
         let cycleTime = t.truncatingRemainder(dividingBy: cycleDuration)
+
+        // 2. Wave generation: use absolute t to maintain phase continuity
+        //    (precision handled by Double conversion in generateSingleVoice)
+        let tAbsolute = t
 
         var totalSignal: Float = 0.0
 
@@ -287,7 +287,7 @@ private final class JupiterMelodyGenerator {
 
             // Current note with legato envelope
             let envelope = calculateLegatoEnvelope(time: localTime, duration: note.duration)
-            totalSignal += generateTone(freq: note.freq, t: t) * envelope
+            totalSignal += generateTone(freq: note.freq, t: tAbsolute) * envelope
 
             // Check if previous note is still releasing (legato overlap)
             if index > 0 && localTime < legatoOverlap {
@@ -297,7 +297,7 @@ private final class JupiterMelodyGenerator {
 
                 let prevEnvelope = calculateLegatoEnvelope(time: timeIntoRelease, duration: prevDuration)
                 if prevEnvelope > 0 {
-                    totalSignal += generateTone(freq: prevNote.freq, t: t) * prevEnvelope
+                    totalSignal += generateTone(freq: prevNote.freq, t: tAbsolute) * prevEnvelope
                 }
             }
         }
@@ -308,44 +308,56 @@ private final class JupiterMelodyGenerator {
     /// Generate cathedral organ tone with layered voices (stops)
     /// Combines: 8' Principal (main) + 16' Sub-octave + Quint + 4' Octave
     private func generateTone(freq: Float, t: Float) -> Float {
-        // Wrap time to prevent floating-point precision degradation
-        // This keeps t in a reasonable range where Float has good precision
-        let wrappedT = t.truncatingRemainder(dividingBy: timeWrapInterval)
-
+        // Use t directly - phase wrapping happens in generateSingleVoice
         // 8' Principal: Main melody voice
-        let mainTone = generateSingleVoice(freq: freq, t: wrappedT)
+        let mainTone = generateSingleVoice(freq: freq, t: t)
 
         // 16' Principal: Sub-octave for depth and gravitas
-        let subOctaveTone = generateSingleVoice(freq: freq * subOctaveRatio, t: wrappedT) * subOctaveGain
+        let subOctaveTone = generateSingleVoice(freq: freq * subOctaveRatio, t: t) * subOctaveGain
 
         // Quint (2-2/3'): Perfect fifth for richness
-        let quintTone = generateSingleVoice(freq: freq * quintRatio, t: wrappedT) * quintGain
+        let quintTone = generateSingleVoice(freq: freq * quintRatio, t: t) * quintGain
 
         // 4' Octave: Octave above for clarity
-        let octaveAboveTone = generateSingleVoice(freq: freq * octaveAboveRatio, t: wrappedT) * octaveAboveGain
+        let octaveAboveTone = generateSingleVoice(freq: freq * octaveAboveRatio, t: t) * octaveAboveGain
 
         // Blend all voices
         return mainTone + subOctaveTone + quintTone + octaveAboveTone
     }
 
     /// Generate a single organ voice with harmonics and vibrato
+    /// Uses Double precision internally to prevent floating-point errors over long playback
     private func generateSingleVoice(freq: Float, t: Float) -> Float {
-        // Vibrato via phase modulation (more natural than FM)
-        let vibratoPhaseOffset = sin(twoPi * vibratoRate * t) * vibratoDepth
+        // Convert to Double for precision in long playback sessions
+        let tDouble = Double(t)
+        let twoPiDouble = Double.pi * 2.0
+        let vibratoRateDouble = Double(vibratoRate)
+        let vibratoDepthDouble = Double(vibratoDepth)
 
-        var signal: Float = 0.0
+        // Vibrato: gentle phase offset (same amount for all harmonics)
+        // This prevents high harmonics from getting "buzzy" FM-like artifacts
+        let vibrato = sin(twoPiDouble * vibratoRateDouble * tDouble) * vibratoDepthDouble
+
+        var signal: Double = 0.0
 
         // Use zip to safely iterate harmonics and amplitudes together
         for (harmonicRatio, harmonicAmp) in zip(harmonics, harmonicAmps) {
-            let hFreq = freq * harmonicRatio
-            // Base phase + vibrato offset (scaled by harmonic frequency)
-            let phase = twoPi * hFreq * t + vibratoPhaseOffset * hFreq
-            signal += sin(phase) * harmonicAmp
+            let hFreqDouble = Double(freq * harmonicRatio)
+            let harmonicAmpDouble = Double(harmonicAmp)
+
+            // Calculate phase and wrap to prevent precision loss
+            let rawPhase = hFreqDouble * tDouble
+            let wrappedPhase = rawPhase - floor(rawPhase)  // Keep 0.0 to 1.0
+
+            // Add vibrato as uniform phase offset (not frequency-dependent)
+            let phase = twoPiDouble * (wrappedPhase + vibrato)
+
+            signal += sin(phase) * harmonicAmpDouble
         }
 
-        // Normalize by harmonic count
-        signal /= Float(harmonics.count)
-        return signal
+        // Normalize by harmonic count and convert back to Float
+        signal /= Double(harmonics.count)
+        return Float(signal)
     }
 
     // MARK: - Helper Methods
@@ -360,37 +372,39 @@ private final class JupiterMelodyGenerator {
         return nil
     }
 
-    /// Generates a smooth legato envelope with cosine interpolation
-    /// Release extends beyond note boundary for smooth overlap
+    /// Generates a simple ASR (Attack-Sustain-Release) envelope
+    /// Release starts at note end and goes to zero smoothly
     ///
-    /// Shape (with overlap):
+    /// Shape:
     /// ```
     /// 1.0     ╭───────────────╮
     ///        ╱                 ╲
-    ///       ╱                   ╲  (extends into next note)
+    ///       ╱                   ╲
     /// 0.0 ─╯                     ╲─────
-    ///     0   attack    release-start   release-end
+    ///     0   attack    duration   duration+release
     /// ```
     private func calculateLegatoEnvelope(time: Float, duration: Float) -> Float {
-        let releaseStart = duration - legatoOverlap
-        let totalReleaseDuration = legatoOverlap + releaseTime
+        let sustainEnd = duration
+        let releaseEnd = duration + releaseTime
 
         // Attack Phase: smooth cosine rise
         if time < attackTime {
-            let progress = time / attackTime
-            // Cosine interpolation: smoother than linear
+            let progress = max(time / attackTime, 0.0)
             return (1.0 - cos(progress * Float.pi)) * 0.5
         }
-        // Release Phase: starts before note ends, extends beyond
-        else if time > releaseStart {
-            let timeInRelease = time - releaseStart
-            let releaseProgress = min(timeInRelease / totalReleaseDuration, 1.0)
-            // Cosine interpolation for smooth fade
-            return (1.0 + cos(releaseProgress * Float.pi)) * 0.5
-        }
-        // Sustain Phase: full volume
-        else {
+        // Sustain Phase: full volume until note ends
+        else if time < sustainEnd {
             return 1.0
+        }
+        // Release Phase: smooth fade to zero after note ends
+        else if time < releaseEnd {
+            let progress = (time - sustainEnd) / releaseTime
+            let clamped = min(max(progress, 0.0), 1.0)
+            return (1.0 + cos(clamped * Float.pi)) * 0.5
+        }
+        // Fully silent
+        else {
+            return 0.0
         }
     }
 }

@@ -21,7 +21,7 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
         case .softOrgan:
             return "🪐 ジュピターの響き"
         case .moonlitGymnopedie:
-            return "🎹 月明かりのジムノペディ"
+            return "🌖 月明かりのジムノペディ"
         }
     }
 
