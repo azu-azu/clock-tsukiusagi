@@ -221,28 +221,11 @@ private final class JupiterMelodyGenerator {
     // MARK: - Sound Design (Organ Characteristics)
 
     /// Organ-style harmonics with warm foundation
-    /// Emphasizing fundamental and lower harmonics for majestic warmth
-    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    /// 6 harmonics is acceptable with single-layer voice
+    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 6.0]
 
     /// Harmonic amplitudes: warm, full organ tone
-    /// Reduced higher harmonics for smoother, more solemn character
-    let harmonicAmps: [Float] = [1.0, 0.45, 0.25, 0.12, 0.07, 0.03]
-
-    // MARK: - Cathedral Organ Stops (Layered Voices)
-
-    /// 16' Principal (Sub-octave): Deep foundation, one octave below
-    /// Creates the gravitas and depth of a cathedral organ
-    let subOctaveRatio: Float = 0.5    // freq * 0.5 = one octave down
-    let subOctaveGain: Float = 0.4     // Strong but not overpowering
-
-    /// Quint (2-2/3'): Fifth above, adds brilliance and richness
-    /// Classic organ stop for majestic sound
-    let quintRatio: Float = 1.5        // freq * 1.5 = perfect fifth above
-    let quintGain: Float = 0.15        // Subtle, blends into the sound
-
-    /// 4' Octave: One octave above for clarity and presence
-    let octaveAboveRatio: Float = 2.0  // freq * 2.0 = one octave up
-    let octaveAboveGain: Float = 0.2   // Moderate, adds brightness
+    let harmonicAmps: [Float] = [1.0, 0.45, 0.25, 0.12, 0.03]
 
     // MARK: - Tremulant (Vibrato)
 
@@ -261,11 +244,12 @@ private final class JupiterMelodyGenerator {
     let releaseTime: Float = 0.8   // 800ms: very long tail for seamless blend
 
     /// Legato overlap: how much the release extends into next note
-    /// Higher value = more blending between notes
-    let legatoOverlap: Float = 0.35  // 350ms overlap - ensures sustain phase for short notes
+    /// Reduced to 0.1s for performance (was 0.35s)
+    let legatoOverlap: Float = 0.10  // 100ms overlap - minimizes dual-note rendering
 
     /// Master gain for balance with other layers
-    let masterGain: Float = 0.22  // Reduced to compensate for added voices
+    /// Increased from 0.22 to 0.35 after removing multi-voice layering
+    let masterGain: Float = 0.35
 
     // MARK: - Sample Generation
 
@@ -305,24 +289,12 @@ private final class JupiterMelodyGenerator {
         return totalSignal * masterGain
     }
 
-    /// Generate cathedral organ tone with layered voices (stops)
-    /// Combines: 8' Principal (main) + 16' Sub-octave + Quint + 4' Octave
+    /// Generate organ tone - single voice for performance
+    /// Note: Multi-voice layering (16' Sub, Quint, 4' Oct) removed due to CPU load
+    /// causing audio glitches. See architect/todo.md for analysis.
     private func generateTone(freq: Float, t: Float) -> Float {
-        // Use t directly - phase wrapping happens in generateSingleVoice
-        // 8' Principal: Main melody voice
-        let mainTone = generateSingleVoice(freq: freq, t: t)
-
-        // 16' Principal: Sub-octave for depth and gravitas
-        let subOctaveTone = generateSingleVoice(freq: freq * subOctaveRatio, t: t) * subOctaveGain
-
-        // Quint (2-2/3'): Perfect fifth for richness
-        let quintTone = generateSingleVoice(freq: freq * quintRatio, t: t) * quintGain
-
-        // 4' Octave: Octave above for clarity
-        let octaveAboveTone = generateSingleVoice(freq: freq * octaveAboveRatio, t: t) * octaveAboveGain
-
-        // Blend all voices
-        return mainTone + subOctaveTone + quintTone + octaveAboveTone
+        // 8' Principal: Main melody voice only
+        return generateSingleVoice(freq: freq, t: t)
     }
 
     /// Generate a single organ voice with harmonics and vibrato
