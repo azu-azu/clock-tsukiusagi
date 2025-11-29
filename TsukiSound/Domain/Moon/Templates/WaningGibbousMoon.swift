@@ -12,8 +12,7 @@ enum WaningGibbousMoon {
     static func terminatorPath(center: CGPoint, radius: CGFloat) -> Path {
         let curvature: CGFloat = 0.12
         let jitter: CGFloat = 0.8
-        let isRightLit = false  // 十三夜は左が明
-        let sign: CGFloat = isRightLit ? 1 : -1
+        let sign: CGFloat = -1  // 十三夜は左が明
 
         // 凸月用: 境界が月の外側寄りなのでオフセットを調整
         let offset = radius * 0.35  // d値と同じ
