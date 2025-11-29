@@ -1,6 +1,6 @@
 //
-//  GymnopedieMainMelodySignal.swift
-//  TsukiSound
+//  MainMelodySignal.swift
+//  TsukiSound/Core/Audio/Synthesis/PureTone/Gymnopedie
 //
 //  Satie - Gymnopédie No.1 (Public Domain)
 //  楽譜に基づく3層構造: ベース + 和音 + メロディ

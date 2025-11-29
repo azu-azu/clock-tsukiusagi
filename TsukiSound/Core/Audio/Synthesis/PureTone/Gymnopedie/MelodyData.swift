@@ -1,6 +1,6 @@
 //
-//  GymnopedieMelodyData.swift
-//  TsukiSound
+//  MelodyData.swift
+//  TsukiSound/Core/Audio/Synthesis/PureTone/Gymnopedie
 //
 //  Gymnopédie No.1 メロディデータ（純データ分離）
 //  楽譜解析 (Ren's transcription - g1 to g5) に基づく
