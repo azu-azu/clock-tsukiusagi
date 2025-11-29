@@ -256,6 +256,10 @@ private final class JupiterMelodyGenerator {
     let highFreqThreshold: Float = 700.0
     let highFreqMax: Float = 1046.50  // C6
 
+    /// Transpose factor: -2 semitones for warmer, less piercing sound
+    /// 2^(-2/12) ≈ 0.8909
+    let transposeFactor: Float = pow(2.0, -2.0 / 12.0)
+
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
@@ -275,9 +279,11 @@ private final class JupiterMelodyGenerator {
             let localTime = cycleTime - noteStartTime
 
             // Current note with legato envelope and high-freq gain reduction
+            // Apply transpose factor to frequency (structure unchanged, pitch lowered)
+            let transposedFreq = note.freq * transposeFactor
             let envelope = calculateLegatoEnvelope(time: localTime, duration: note.duration)
-            let gainReduction = calculateHighFreqReduction(freq: note.freq)
-            totalSignal += generateTone(freq: note.freq, t: tAbsolute) * envelope * gainReduction
+            let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+            totalSignal += generateTone(freq: transposedFreq, t: tAbsolute) * envelope * gainReduction
 
             // Check if previous note is still releasing (legato overlap)
             if index > 0 && localTime < legatoOverlap {
@@ -287,8 +293,9 @@ private final class JupiterMelodyGenerator {
 
                 let prevEnvelope = calculateLegatoEnvelope(time: timeIntoRelease, duration: prevDuration)
                 if prevEnvelope > 0 {
-                    let prevGainReduction = calculateHighFreqReduction(freq: prevNote.freq)
-                    totalSignal += generateTone(freq: prevNote.freq, t: tAbsolute) * prevEnvelope * prevGainReduction
+                    let prevTransposedFreq = prevNote.freq * transposeFactor
+                    let prevGainReduction = calculateHighFreqReduction(freq: prevTransposedFreq)
+                    totalSignal += generateTone(freq: prevTransposedFreq, t: tAbsolute) * prevEnvelope * prevGainReduction
                 }
             }
         }
