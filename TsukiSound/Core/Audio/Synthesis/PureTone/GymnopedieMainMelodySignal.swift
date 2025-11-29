@@ -46,37 +46,9 @@ private final class GymnoGenerator {
     /// 将来richSine混在時も統一感を維持するため共通化
     private let detuneHz: Float = 0.2
 
-    // MARK: - Frequency Constants (D Major: F#, C#)
+    // MARK: - Frequency Constants (Bass/Chord用 - GymnopedieFrequencyから参照)
 
-    // Bass
-    let D3:  Float = 146.83
-    let E3:  Float = 164.81
-    let G3:  Float = 196.00
-
-    // Chord
-    let A3:  Float = 220.00
-    let B3:  Float = 246.94
-    let C_4: Float = 277.18   // C#4
-    let D4:  Float = 293.66
-
-    // Melody (wide range)
-    let E4:  Float = 329.63
-    let F_4: Float = 369.99   // F#4
-    let G4:  Float = 392.00
-    let A4:  Float = 440.00
-    let B4:  Float = 493.88
-    let C5:  Float = 523.25   // C5 (ナチュラル)
-    let C_5: Float = 554.37   // C#5
-    let D5:  Float = 587.33
-    let E5:  Float = 659.25
-    let F5:  Float = 698.46   // F5 (ナチュラル)
-    let F_5: Float = 739.99   // F#5
-    let G5:  Float = 783.99
-    let A5:  Float = 880.00
-    let B5:  Float = 987.77   // B5
-    let C6:  Float = 1046.50  // C6 (ナチュラル)
-    let D6:  Float = 1174.66  // D6
-    let E6:  Float = 1318.51  // E6
+    private typealias F = GymnopedieFrequency
 
     // MARK: - Sound Parameters
     //
@@ -108,204 +80,15 @@ private final class GymnoGenerator {
 
     // MARK: - Data Structures
 
-    struct MelodyNote {
-        let freq: Float
-        let startBar: Int      // 1-indexed
-        let startBeat: Float   // 0, 1, 2
-        let durBeats: Float
-        let customGain: Float? // nil = use default melodyGain
-        let fadeOut: Bool      // true = 後半でフェードアウト（長い持続音用）
-
-        init(
-            freq: Float,
-            startBar: Int,
-            startBeat: Float,
-            durBeats: Float,
-            customGain: Float? = nil,
-            fadeOut: Bool = false
-        ) {
-            self.freq = freq
-            self.startBar = startBar
-            self.startBeat = startBeat
-            self.durBeats = durBeats
-            self.customGain = customGain
-            self.fadeOut = fadeOut
-        }
-    }
-
     struct BassChordBar {
         let bar: Int           // 1-indexed
         let bassFreq: Float
         let chordFreqs: [Float]
     }
 
-    // MARK: - Melody Data (Ren's transcription - Full Score)
-    //
-    // 構造: 5つのセクション (g1-g5) に分割
-    // - g1: Bars 1-12 (Intro + Theme A)
-    // - g2: Bars 13-21 (Theme repeat + Development)
-    // - g3: Bars 22-26 (Development)
-    // - g4: Bars 27-31 (Ascending passage)
-    // - g5: Bars 32-39 (Final section + Climax)
+    // MARK: - Melody Data (external)
 
-    lazy var melodyNotes: [MelodyNote] = {
-        return sectionG1() + sectionG2() + sectionG3() + sectionG4() + sectionG5()
-    }()
-
-    // MARK: g1 - Bars 1-12 (Intro + Theme A)
-    private func sectionG1() -> [MelodyNote] {
-        return [
-            // Bar 1-4: Intro (No Melody)
-
-            // Bar 5 (Melody Enters - 1拍休符から)
-            MelodyNote(freq: F_5, startBar: 5, startBeat: 1, durBeats: 1),   // F#5
-            MelodyNote(freq: A5, startBar: 5, startBeat: 2, durBeats: 1),    // A5
-
-            // Bar 6
-            MelodyNote(freq: G5, startBar: 6, startBeat: 0, durBeats: 1),    // G5
-            MelodyNote(freq: F_5, startBar: 6, startBeat: 1, durBeats: 1),   // F#5
-            MelodyNote(freq: C_5, startBar: 6, startBeat: 2, durBeats: 1),   // C#5
-
-            // Bar 7
-            MelodyNote(freq: B4, startBar: 7, startBeat: 0, durBeats: 1),    // B4
-            MelodyNote(freq: C_5, startBar: 7, startBeat: 1, durBeats: 1),   // C#5
-            MelodyNote(freq: D5, startBar: 7, startBeat: 2, durBeats: 1),    // D5
-
-            // Bar 8
-            MelodyNote(freq: A4, startBar: 8, startBeat: 0, durBeats: 3),    // A4 (3拍)
-
-            // Bar 9-12: F#4 持続（フェードアウトで自然に消える）
-            MelodyNote(freq: F_4, startBar: 9, startBeat: 0, durBeats: 12, fadeOut: true),  // F#4 (12拍)
-        ]
-    }
-
-    // MARK: g2 - Bars 13-21 (Theme repeat + Development)
-    private func sectionG2() -> [MelodyNote] {
-        return [
-            // Bar 13 (Theme repeat - 1拍休符から)
-            MelodyNote(freq: F_5, startBar: 13, startBeat: 1, durBeats: 1),  // F#5
-            MelodyNote(freq: A5, startBar: 13, startBeat: 2, durBeats: 1),   // A5
-
-            // Bar 14
-            MelodyNote(freq: G5, startBar: 14, startBeat: 0, durBeats: 1),   // G5
-            MelodyNote(freq: F_5, startBar: 14, startBeat: 1, durBeats: 1),  // F#5
-            MelodyNote(freq: C_5, startBar: 14, startBeat: 2, durBeats: 1),  // C#5
-
-            // Bar 15
-            MelodyNote(freq: B4, startBar: 15, startBeat: 0, durBeats: 1),   // B4
-            MelodyNote(freq: C_5, startBar: 15, startBeat: 1, durBeats: 1),  // C#5
-            MelodyNote(freq: D5, startBar: 15, startBeat: 2, durBeats: 1),   // D5
-
-            // Bar 16
-            MelodyNote(freq: A4, startBar: 16, startBeat: 0, durBeats: 3),   // A4 (3拍)
-
-            // Bar 17
-            MelodyNote(freq: C_5, startBar: 17, startBeat: 0, durBeats: 3),  // C#5 (3拍)
-
-            // Bar 18
-            MelodyNote(freq: F_5, startBar: 18, startBeat: 0, durBeats: 3),  // F#5 (3拍)
-
-            // Bar 19-21: E5 持続（フェードアウトで自然に消える）
-            MelodyNote(freq: E5, startBar: 19, startBeat: 0, durBeats: 9, fadeOut: true),   // E5 (9拍)
-        ]
-    }
-
-    // MARK: g3 - Bars 22-26 (Development)
-    private func sectionG3() -> [MelodyNote] {
-        return [
-            // Bar 22
-            MelodyNote(freq: A4, startBar: 22, startBeat: 0, durBeats: 1),   // A4
-            MelodyNote(freq: B4, startBar: 22, startBeat: 1, durBeats: 1),   // B4
-            MelodyNote(freq: C5, startBar: 22, startBeat: 2, durBeats: 1),   // C5 (ナチュラル)
-
-            // Bar 23
-            MelodyNote(freq: E5, startBar: 23, startBeat: 0, durBeats: 1),   // E5
-            MelodyNote(freq: D5, startBar: 23, startBeat: 1, durBeats: 1),   // D5
-            MelodyNote(freq: B4, startBar: 23, startBeat: 2, durBeats: 1),   // B4
-
-            // Bar 24
-            MelodyNote(freq: D5, startBar: 24, startBeat: 0, durBeats: 1),   // D5
-            MelodyNote(freq: C5, startBar: 24, startBeat: 1, durBeats: 1),   // C5 (ナチュラル)
-            MelodyNote(freq: B4, startBar: 24, startBeat: 2, durBeats: 1),   // B4
-            MelodyNote(freq: E4, startBar: 24, startBeat: 1, durBeats: 2),   // E4 (Alto)
-
-            // Bar 25-26
-            MelodyNote(freq: D5, startBar: 25, startBeat: 0, durBeats: 5),   // D5 (5拍)
-            MelodyNote(freq: D4, startBar: 25, startBeat: 1, durBeats: 2),   // D4 (Alto)
-            MelodyNote(freq: D5, startBar: 26, startBeat: 2, durBeats: 1),   // D5
-            MelodyNote(freq: D4, startBar: 26, startBeat: 1, durBeats: 2),   // D4 (Alto)
-        ]
-    }
-
-    // MARK: g4 - Bars 27-31 (Ascending passage)
-    private func sectionG4() -> [MelodyNote] {
-        return [
-            // Bar 27
-            MelodyNote(freq: E5, startBar: 27, startBeat: 0, durBeats: 1),   // E5
-            MelodyNote(freq: F5, startBar: 27, startBeat: 1, durBeats: 1),   // F5 (ナチュラル)
-            MelodyNote(freq: G5, startBar: 27, startBeat: 2, durBeats: 1),   // G5
-
-            // Bar 28
-            MelodyNote(freq: A5, startBar: 28, startBeat: 0, durBeats: 1),   // A5
-            MelodyNote(freq: C5, startBar: 28, startBeat: 1, durBeats: 1),   // C5 (ナチュラル)
-            MelodyNote(freq: D5, startBar: 28, startBeat: 2, durBeats: 1),   // D5
-
-            // Bar 29
-            MelodyNote(freq: E5, startBar: 29, startBeat: 0, durBeats: 1),   // E5
-            MelodyNote(freq: D5, startBar: 29, startBeat: 1, durBeats: 1),   // D5
-            MelodyNote(freq: B4, startBar: 29, startBeat: 2, durBeats: 1),   // B4
-            MelodyNote(freq: E4, startBar: 29, startBeat: 1, durBeats: 2),   // E4 (Alto)
-
-            // Bar 30-31
-            MelodyNote(freq: D5, startBar: 30, startBeat: 0, durBeats: 5),   // D5 (5拍)
-            MelodyNote(freq: D4, startBar: 30, startBeat: 1, durBeats: 2),   // D4 (Alto)
-            MelodyNote(freq: D5, startBar: 31, startBeat: 2, durBeats: 1),   // D5
-            MelodyNote(freq: D4, startBar: 31, startBeat: 1, durBeats: 2),   // D4 (Alto)
-        ]
-    }
-
-    // MARK: g5 - Bars 32-39 (Final section + Climax)
-    private func sectionG5() -> [MelodyNote] {
-        return [
-            // Bar 32
-            MelodyNote(freq: G5, startBar: 32, startBeat: 0, durBeats: 3),   // G5 (3拍)
-
-            // Bar 33
-            MelodyNote(freq: F_5, startBar: 33, startBeat: 0, durBeats: 3),  // F#5 (3拍)
-
-            // Bar 34
-            MelodyNote(freq: B4, startBar: 34, startBeat: 0, durBeats: 1),   // B4
-            MelodyNote(freq: A4, startBar: 34, startBeat: 1, durBeats: 1),   // A4
-            MelodyNote(freq: B4, startBar: 34, startBeat: 2, durBeats: 1),   // B4
-
-            // Bar 35
-            MelodyNote(freq: C_5, startBar: 35, startBeat: 0, durBeats: 1),  // C#5
-            MelodyNote(freq: D5, startBar: 35, startBeat: 1, durBeats: 1),   // D5
-            MelodyNote(freq: E5, startBar: 35, startBeat: 2, durBeats: 1),   // E5
-
-            // Bar 36
-            MelodyNote(freq: C_5, startBar: 36, startBeat: 0, durBeats: 1),  // C#5
-            MelodyNote(freq: D5, startBar: 36, startBeat: 1, durBeats: 1),   // D5
-            MelodyNote(freq: E5, startBar: 36, startBeat: 2, durBeats: 1),   // E5
-
-            // Bar 37
-            MelodyNote(freq: F_4, startBar: 37, startBeat: 0, durBeats: 3),  // F#4 (3拍)
-            MelodyNote(freq: D4, startBar: 37, startBeat: 1, durBeats: 1),   // D4 (Alto)
-            MelodyNote(freq: G4, startBar: 37, startBeat: 2, durBeats: 1),   // G4 (Alto)
-
-            // Bar 38: Am系 - 静かな準備（階段式レイヤー）
-            MelodyNote(freq: A3, startBar: 38, startBeat: 0.00, durBeats: 3.5, customGain: 0.14),  // Bass A3
-            MelodyNote(freq: E4, startBar: 38, startBeat: 0.12, durBeats: 3.3, customGain: 0.10),  // Mid E4
-            MelodyNote(freq: A4, startBar: 38, startBeat: 0.24, durBeats: 3.1, customGain: 0.09),  // High A4 (揺らぎの頂点を前に出す)
-
-            // Bar 39: D Major - 最終クライマックス（階段式レイヤー）
-            // Bass → Mid → Color → High の順で積み上げ
-            MelodyNote(freq: D3, startBar: 39, startBeat: 0.00, durBeats: 6.0, customGain: 0.16),  // Bass D3
-            MelodyNote(freq: D4, startBar: 39, startBeat: 0.12, durBeats: 5.8, customGain: 0.10),  // Mid D4
-            MelodyNote(freq: A4, startBar: 39, startBeat: 0.21, durBeats: 5.5, customGain: 0.12),  // Color A4
-            MelodyNote(freq: D5, startBar: 39, startBeat: 0.30, durBeats: 5.2, customGain: 0.08),  // High D5
-        ]
-    }
+    let melodyNotes = GymnopedieMelodyData.melodyNotes
 
     // MARK: - Bass & Chord Data (per bar)
     //
@@ -324,20 +107,20 @@ private final class GymnoGenerator {
             switch bar {
             // E minor context bars (F#4 持続部分)
             case 9, 10, 11, 12:
-                bassFreq = E3
-                chordFreqs = [B3, D4]
+                bassFreq = F.E3
+                chordFreqs = [F.B3, F.D4]
             // E5 持続部分
             case 19, 20, 21:
-                bassFreq = E3
-                chordFreqs = [B3, D4]
+                bassFreq = F.E3
+                chordFreqs = [F.B3, F.D4]
             // Default pattern
             default:
                 if bar % 2 == 1 {
-                    bassFreq = G3
-                    chordFreqs = [B3, D4]
+                    bassFreq = F.G3
+                    chordFreqs = [F.B3, F.D4]
                 } else {
-                    bassFreq = D3
-                    chordFreqs = [A3, C_4]
+                    bassFreq = F.D3
+                    chordFreqs = [F.A3, F.C_4]
                 }
             }
 
@@ -388,7 +171,7 @@ private final class GymnoGenerator {
                     // 高音域の「キーン」を抑えるため、周波数に応じてゲインを減衰
                     // pureSineでも高周波は耳に刺さりやすいため、強めに減衰
                     if note.freq >= 600.0 {
-                        let maxFreq: Float = 1318.51  // E6
+                        let maxFreq: Float = F.E6
                         let minFreq: Float = 600.0
                         let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
                         // 最高音域で最大35%の減衰（20% → 35%に強化）
