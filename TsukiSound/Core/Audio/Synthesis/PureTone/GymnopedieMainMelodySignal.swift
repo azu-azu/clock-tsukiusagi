@@ -5,7 +5,7 @@
 //  Satie - Gymnopédie No.1 (Public Domain)
 //  楽譜に基づく3層構造: ベース + 和音 + メロディ
 //
-//  楽譜解析 (Ren's transcription - g1 to g4):
+//  楽譜解析 (Ren's transcription - g1 to g5):
 //  - 調号: D Major (F#, C#)
 //  - 拍子: 3/4
 //  - テンポ: 88 BPM (brisk yet relaxed)
@@ -109,7 +109,7 @@ private final class GymnoGenerator {
     lazy var melodyNotes: [MelodyNote] = {
         return [
             // ========================================
-            // MARK: g1 - Bars 1-11 (Intro + Theme A)
+            // MARK: g1 - Bars 1-12 (Intro + Theme A)
             // ========================================
 
             // Bar 1-4: Intro (No Melody)
@@ -136,7 +136,7 @@ private final class GymnoGenerator {
             MelodyNote(freq: F_4, startBar: 9, startBeat: 0, durBeats: 12),   // F#4 (12拍)
 
             // ========================================
-            // MARK: g2 - Bars 13-22 (Theme repeat + Development)
+            // MARK: g2 - Bars 13-21 (Theme repeat + Development)
             // ========================================
 
             // --- Bar 13 (Theme repeat - 1拍休符から) ---
@@ -193,7 +193,7 @@ private final class GymnoGenerator {
             MelodyNote(freq: D4, startBar: 26, startBeat: 1, durBeats: 2),   // D4 (Alto)
 
             // ========================================
-            // MARK: g4 - Bars 27-32 (Ascending passage)
+            // MARK: g4 - Bars 27-31 (Ascending passage)
             // ========================================
             // --- Bar 27 ---
             MelodyNote(freq: E5, startBar: 27, startBeat: 0, durBeats: 1),   // E5
@@ -218,7 +218,7 @@ private final class GymnoGenerator {
             MelodyNote(freq: D4, startBar: 31, startBeat: 1, durBeats: 2),   // D4 (Alto)
 
             // ========================================
-            // MARK: g5 - Bars 32-37 (Final section)
+            // MARK: g5 - Bars 32-39 (Final section)
             // ========================================
 
             // --- Bar 32 ---
