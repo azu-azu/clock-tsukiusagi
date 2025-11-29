@@ -103,6 +103,15 @@ private final class GymnoGenerator {
         let startBar: Int      // 1-indexed
         let startBeat: Float   // 0, 1, 2
         let durBeats: Float
+        let customGain: Float? // nil = use default melodyGain
+
+        init(freq: Float, startBar: Int, startBeat: Float, durBeats: Float, customGain: Float? = nil) {
+            self.freq = freq
+            self.startBar = startBar
+            self.startBeat = startBeat
+            self.durBeats = durBeats
+            self.customGain = customGain
+        }
     }
 
     struct BassChordBar {
@@ -254,18 +263,21 @@ private final class GymnoGenerator {
             MelodyNote(freq: D4, startBar: 37, startBeat: 1, durBeats: 1),   // D4 (Alto)
             MelodyNote(freq: G4, startBar: 37, startBeat: 2, durBeats: 1),   // G4 (Alto)
 
-            // --- Bar 38-39: 終止和音（同時に鳴らして一体感のある響き） ---
-            // Bar 38: Am (C-E-A-C)
-            MelodyNote(freq: C3, startBar: 38, startBeat: 0.00, durBeats: 3.5),  // C3 (Bass)
-            MelodyNote(freq: E4, startBar: 38, startBeat: 0.00, durBeats: 3.4),  // E4
-            MelodyNote(freq: A4, startBar: 38, startBeat: 0.00, durBeats: 3.3),  // A4
-            MelodyNote(freq: C5, startBar: 38, startBeat: 0.00, durBeats: 3.2),  // C5 (Top)
+            // --- Bar 38-39: 階段式クライマックス ---
+            // 同時4音ではなく、時間差で積み上げる（位相干渉を回避）
+            // delayをstartBeatに変換: 0.08秒 ≈ 0.12 beat (beat = 0.682秒)
 
-            // Bar 39: D (D-F#-A-D) - 終止和音
-            MelodyNote(freq: D3, startBar: 39, startBeat: 0.00, durBeats: 6),    // D3 (Bass)
-            MelodyNote(freq: F_4, startBar: 39, startBeat: 0.00, durBeats: 5.8), // F#4
-            MelodyNote(freq: A4, startBar: 39, startBeat: 0.00, durBeats: 5.5),  // A4
-            MelodyNote(freq: D5, startBar: 39, startBeat: 0.00, durBeats: 5.2),  // D5 (Top)
+            // Bar 38: Am系 - 静かな準備
+            MelodyNote(freq: A3, startBar: 38, startBeat: 0.00, durBeats: 3.5, customGain: 0.14),  // Bass A3
+            MelodyNote(freq: E4, startBar: 38, startBeat: 0.12, durBeats: 3.3, customGain: 0.10),  // Mid E4
+            MelodyNote(freq: A4, startBar: 38, startBeat: 0.24, durBeats: 3.1, customGain: 0.08),  // High A4
+
+            // Bar 39: D Major - 最終クライマックス（階段式レイヤー）
+            // Bass → Mid → Color → High の順で積み上げ
+            MelodyNote(freq: D3, startBar: 39, startBeat: 0.00, durBeats: 6.0, customGain: 0.16),  // Bass D3
+            MelodyNote(freq: D4, startBar: 39, startBeat: 0.12, durBeats: 5.8, customGain: 0.10),  // Mid D4
+            MelodyNote(freq: A4, startBar: 39, startBeat: 0.18, durBeats: 5.5, customGain: 0.12),  // Color A4
+            MelodyNote(freq: D5, startBar: 39, startBeat: 0.24, durBeats: 5.2, customGain: 0.08)
 
             // Bar 40-: 続きは後で追加
         ]
@@ -336,21 +348,30 @@ private final class GymnoGenerator {
             if t >= noteStart && t < noteStart + noteDur {
                 let dt = t - noteStart
 
-                // Bar 38-39: クライマックス処理（響き強化）
+                // カスタムゲインがある場合はそれを使用（階段式クライマックス用）
+                // ない場合はデフォルトのmelodyGainを使用
                 let isClimax = note.startBar >= 38
                 let effectiveDecay = isClimax ? melodyDecay * 1.5 : melodyDecay
-                var effectiveGain = isClimax ? melodyGain * 1.15 : melodyGain
 
-                // 高音域のゲイン調整 (600Hz以上をターゲット)
-                // 高音域の「キーン」を抑えるため、周波数に応じてゲインを減衰
-                // pureSineでも高周波は耳に刺さりやすいため、強めに減衰
-                if note.freq >= 600.0 {
-                    let maxFreq: Float = 1318.51  // E6
-                    let minFreq: Float = 600.0
-                    let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
-                    // 最高音域で最大35%の減衰（20% → 35%に強化）
-                    let highFreqReduction = 1.0 - reductionRatio * 0.35
-                    effectiveGain *= highFreqReduction
+                var effectiveGain: Float
+                if let custom = note.customGain {
+                    // 階段式クライマックス: カスタムゲインをそのまま使用
+                    effectiveGain = custom
+                } else {
+                    // 通常のメロディ
+                    effectiveGain = melodyGain
+
+                    // 高音域のゲイン調整 (600Hz以上をターゲット)
+                    // 高音域の「キーン」を抑えるため、周波数に応じてゲインを減衰
+                    // pureSineでも高周波は耳に刺さりやすいため、強めに減衰
+                    if note.freq >= 600.0 {
+                        let maxFreq: Float = 1318.51  // E6
+                        let minFreq: Float = 600.0
+                        let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
+                        // 最高音域で最大35%の減衰（20% → 35%に強化）
+                        let highFreqReduction = 1.0 - reductionRatio * 0.35
+                        effectiveGain *= highFreqReduction
+                    }
                 }
 
                 let env = SignalEnvelopeUtils.smoothEnvelope(
