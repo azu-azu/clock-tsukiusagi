@@ -92,7 +92,7 @@ private final class GymnoGenerator {
     let bassDecay: Float = 3.5       // 2.8 → 3.5: 床感を長く持続
     let bassGain: Float = 0.16       // pureSineは厚めに
 
-    let chordAttack: Float = 0.10    // 0.08 → 0.10: 中音域も滑らかに（推奨60ms+）
+    let chordAttack: Float = 0.05    // 0.10 → 0.05: pureSineなら短くてもノイズ出にくい、パッと開く響き
     let chordDecay: Float = 2.5      // 1.8 → 2.5: 響きを長く
     let chordGain: Float = 0.06
 
@@ -342,6 +342,9 @@ private final class GymnoGenerator {
     private func sampleMelody(at t: Float) -> Float {
         var output: Float = 0
 
+        // デチューン幅: 0.5Hz（耳でほぼ聞き分けられないレベルのズレで豊かさを出す）
+        let detuneHz: Float = 0.5
+
         for note in melodyNotes {
             let noteStart = Float(note.startBar - 1) * barDuration + note.startBeat * beat
             let noteDur = note.durBeats * beat
@@ -352,7 +355,8 @@ private final class GymnoGenerator {
                 // カスタムゲインがある場合はそれを使用（階段式クライマックス用）
                 // ない場合はデフォルトのmelodyGainを使用
                 let isClimax = note.startBar >= 38
-                let effectiveDecay = isClimax ? melodyDecay * 1.5 : melodyDecay
+                // クライマックスは余韻を長く（1.5倍 → 2.0倍に延長）
+                let effectiveDecay = isClimax ? melodyDecay * 2.0 : melodyDecay
 
                 var effectiveGain: Float
                 if let custom = note.customGain {
@@ -381,9 +385,15 @@ private final class GymnoGenerator {
                     attack: melodyAttack,
                     decay: effectiveDecay
                 )
-                // pureSine: 伴奏と同じ純粋なサイン波で統一
-                let v = SignalEnvelopeUtils.pureSine(frequency: note.freq, t: t)
-                output += v * env * effectiveGain
+
+                // デチューン・レイヤー: 3つのサイン波を重ねてコーラスのような深みを出す
+                // pureSineベースなので高次倍音は発生せず、刺さる問題を回避
+                let v1 = SignalEnvelopeUtils.pureSine(frequency: note.freq, t: t)           // Center
+                let v2 = SignalEnvelopeUtils.pureSine(frequency: note.freq + detuneHz, t: t) // +Detune
+                let v3 = SignalEnvelopeUtils.pureSine(frequency: note.freq - detuneHz, t: t) // -Detune
+                let layeredV = (v1 + v2 + v3) / 3.0
+
+                output += layeredV * env * effectiveGain
             }
         }
 
