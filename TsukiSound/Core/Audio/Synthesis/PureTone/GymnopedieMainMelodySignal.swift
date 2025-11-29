@@ -31,7 +31,7 @@ private final class GymnoGenerator {
 
     let beat: Float = 0.682        // 1拍 = 0.682秒 (88 BPM)
     lazy var barDuration: Float = beat * 3  // 1小節 = 3拍
-    let totalBars: Int = 37       // 現在のメロディ範囲
+    let totalBars: Int = 39       // 現在のメロディ範囲
     lazy var cycleDuration: Float = Float(totalBars) * barDuration
 
     // MARK: - Frequency Constants (D Major: F#, C#)
@@ -44,6 +44,7 @@ private final class GymnoGenerator {
     // Chord
     let A3:  Float = 220.00
     let B3:  Float = 246.94
+    let C4:  Float = 261.63   // C4 (ナチュラル)
     let C_4: Float = 277.18   // C#4
     let D4:  Float = 293.66
 
@@ -238,7 +239,19 @@ private final class GymnoGenerator {
             // --- Bar 37 ---
             MelodyNote(freq: F_4, startBar: 37, startBeat: 0, durBeats: 3),  // F#4 (3拍)
 
-            // Bar 38-: 続きは後で追加
+            // --- Bar 38 (4連符: C-E-A-C) ---
+            MelodyNote(freq: C4, startBar: 38, startBeat: 0, durBeats: 0.75),      // C4 (ナチュラル)
+            MelodyNote(freq: E4, startBar: 38, startBeat: 0.75, durBeats: 0.75),   // E4
+            MelodyNote(freq: A4, startBar: 38, startBeat: 1.5, durBeats: 0.75),    // A4
+            MelodyNote(freq: C5, startBar: 38, startBeat: 2.25, durBeats: 0.75),   // C5 (ナチュラル)
+
+            // --- Bar 39 (4連符: D-F#-A-D) ---
+            MelodyNote(freq: D4, startBar: 39, startBeat: 0, durBeats: 0.75),      // D4
+            MelodyNote(freq: F_4, startBar: 39, startBeat: 0.75, durBeats: 0.75),  // F#4
+            MelodyNote(freq: A4, startBar: 39, startBeat: 1.5, durBeats: 0.75),    // A4
+            MelodyNote(freq: D5, startBar: 39, startBeat: 2.25, durBeats: 0.75),   // D5
+
+            // Bar 40-: 続きは後で追加
         ]
     }()
 
