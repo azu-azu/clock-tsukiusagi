@@ -34,6 +34,13 @@ private final class GymnoGenerator {
     let totalBars: Int = 41       // Bar 39 + 余韻2小節
     lazy var cycleDuration: Float = Float(totalBars) * barDuration
 
+    // MARK: - Structure Constants
+
+    /// クライマックス開始小節（階段式レイヤーの開始点）
+    private let climaxStartBar: Int = 38
+    /// 真のクライマックス小節（余韻延長の対象）
+    private let peakClimaxBar: Int = 39
+
     // MARK: - Frequency Constants (D Major: F#, C#)
 
     // Bass
@@ -342,8 +349,8 @@ private final class GymnoGenerator {
     private func sampleMelody(at t: Float) -> Float {
         var output: Float = 0
 
-        // デチューン幅: 0.5Hz（耳でほぼ聞き分けられないレベルのズレで豊かさを出す）
-        let detuneHz: Float = 0.5
+        // デチューン幅: 0.2Hz（揺らぎを控えめに、厚みだけ追加）
+        let detuneHz: Float = 0.2
 
         for note in melodyNotes {
             let noteStart = Float(note.startBar - 1) * barDuration + note.startBeat * beat
@@ -354,9 +361,11 @@ private final class GymnoGenerator {
 
                 // カスタムゲインがある場合はそれを使用（階段式クライマックス用）
                 // ない場合はデフォルトのmelodyGainを使用
-                let isClimax = note.startBar >= 38
-                // クライマックスは余韻を長く（1.5倍 → 2.0倍に延長）
-                let effectiveDecay = isClimax ? melodyDecay * 2.0 : melodyDecay
+                let isClimaxSection = note.startBar >= climaxStartBar
+                // Bar 39のみ余韻を長く（真のクライマックス）
+                // Bar 38は準備パートなので通常の余韻
+                let isPeakClimax = note.startBar >= peakClimaxBar
+                let effectiveDecay = isPeakClimax ? melodyDecay * 2.0 : melodyDecay
 
                 var effectiveGain: Float
                 if let custom = note.customGain {
@@ -427,8 +436,8 @@ private final class GymnoGenerator {
 
     // MARK: - Chord Sampling
 
-    // デチューン幅（和音用）: メロディと同じ0.5Hzで統一感を出す
-    private let chordDetuneHz: Float = 0.5
+    // デチューン幅（和音用）: メロディと同じ0.2Hzで統一感を出す
+    private let chordDetuneHz: Float = 0.2
 
     private func sampleChords(at t: Float) -> Float {
         var output: Float = 0
