@@ -45,6 +45,32 @@ private final class JupiterMelodyGenerator {
     /// Quarter note = 1.2s (60.0 / 50.0 = 1.2)
     private static let beatDuration: Float = 1.2
 
+    /// Sample rate for phase accumulator calculations
+    private let sampleRate: Float = 48000.0
+
+    /// Two Pi constant (cached for performance)
+    private let twoPi: Float = 2.0 * Float.pi
+
+    // MARK: - Phase Accumulators (prevent floating-point precision degradation)
+
+    /// Phase accumulators for each harmonic (0.0 to 1.0 range)
+    /// Using separate accumulators for each organ stop layer
+    private var mainPhases: [Float]
+    private var subOctavePhases: [Float]
+    private var quintPhases: [Float]
+    private var octaveAbovePhases: [Float]
+
+    /// Previous time for calculating delta
+    private var previousTime: Float = 0.0
+
+    init() {
+        // Initialize phase accumulators for 6 harmonics per layer
+        mainPhases = Array(repeating: 0.0, count: 6)
+        subOctavePhases = Array(repeating: 0.0, count: 6)
+        quintPhases = Array(repeating: 0.0, count: 6)
+        octaveAbovePhases = Array(repeating: 0.0, count: 6)
+    }
+
     // MARK: - Data Structures
 
     /// Note length abstraction to avoid magic numbers
@@ -300,35 +326,75 @@ private final class JupiterMelodyGenerator {
     /// Generate cathedral organ tone with layered voices (stops)
     /// Combines: 8' Principal (main) + 16' Sub-octave + Quint + 4' Octave
     private func generateTone(freq: Float, t: Float) -> Float {
+        // Calculate time delta for phase accumulator updates
+        let deltaTime = t - previousTime
+        previousTime = t
+
+        // Vibrato (using t for LFO - low frequency, so precision is OK)
+        let vibratoPhaseOffset = sin(twoPi * vibratoRate * t) * vibratoDepth
+
         // 8' Principal: Main melody voice
-        let mainTone = generateSingleVoice(freq: freq, t: t)
+        let mainTone = generateVoiceWithAccumulator(
+            freq: freq,
+            phases: &mainPhases,
+            deltaTime: deltaTime,
+            vibratoOffset: vibratoPhaseOffset
+        )
 
         // 16' Principal: Sub-octave for depth and gravitas
-        let subOctaveTone = generateSingleVoice(freq: freq * subOctaveRatio, t: t) * subOctaveGain
+        let subOctaveTone = generateVoiceWithAccumulator(
+            freq: freq * subOctaveRatio,
+            phases: &subOctavePhases,
+            deltaTime: deltaTime,
+            vibratoOffset: vibratoPhaseOffset
+        ) * subOctaveGain
 
         // Quint (2-2/3'): Perfect fifth for richness
-        let quintTone = generateSingleVoice(freq: freq * quintRatio, t: t) * quintGain
+        let quintTone = generateVoiceWithAccumulator(
+            freq: freq * quintRatio,
+            phases: &quintPhases,
+            deltaTime: deltaTime,
+            vibratoOffset: vibratoPhaseOffset
+        ) * quintGain
 
         // 4' Octave: Octave above for clarity
-        let octaveAboveTone = generateSingleVoice(freq: freq * octaveAboveRatio, t: t) * octaveAboveGain
+        let octaveAboveTone = generateVoiceWithAccumulator(
+            freq: freq * octaveAboveRatio,
+            phases: &octaveAbovePhases,
+            deltaTime: deltaTime,
+            vibratoOffset: vibratoPhaseOffset
+        ) * octaveAboveGain
 
         // Blend all voices
         return mainTone + subOctaveTone + quintTone + octaveAboveTone
     }
 
-    /// Generate a single organ voice with harmonics and vibrato
-    private func generateSingleVoice(freq: Float, t: Float) -> Float {
-        // Vibrato via phase modulation (more natural than FM)
-        let vibratoPhaseOffset = sin(2.0 * Float.pi * vibratoRate * t) * vibratoDepth
-
+    /// Generate a single organ voice using phase accumulators
+    /// This prevents floating-point precision degradation over long playback times
+    private func generateVoiceWithAccumulator(
+        freq: Float,
+        phases: inout [Float],
+        deltaTime: Float,
+        vibratoOffset: Float
+    ) -> Float {
         var signal: Float = 0.0
 
-        // Use zip to safely iterate harmonics and amplitudes together
-        // If counts differ, loop stops at the shorter array (safe, no crash)
-        for (harmonicRatio, harmonicAmp) in zip(harmonics, harmonicAmps) {
+        // Use zip with enumerated to get index for phase accumulator
+        for (i, (harmonicRatio, harmonicAmp)) in zip(harmonics, harmonicAmps).enumerated() {
             let hFreq = freq * harmonicRatio
-            // Base phase + vibrato offset (scaled by harmonic frequency)
-            let phase = 2.0 * Float.pi * hFreq * t + vibratoPhaseOffset * hFreq
+
+            // Calculate phase delta (how much phase advances per sample)
+            // phaseDelta = freq / sampleRate, but we have deltaTime instead of 1/sampleRate
+            let phaseDelta = hFreq * deltaTime
+
+            // Update phase accumulator (wrap at 1.0 to prevent overflow)
+            phases[i] += phaseDelta
+            if phases[i] >= 1.0 {
+                phases[i] -= floor(phases[i])  // Keep fractional part only
+            }
+
+            // Convert to radians and apply vibrato
+            let phase = phases[i] * twoPi + vibratoOffset * hFreq
             signal += sin(phase) * harmonicAmp
         }
 
