@@ -1,6 +1,6 @@
 //
-//  JupiterMelodySignal.swift
-//  TsukiSound
+//  MelodySignal.swift
+//  TsukiSound/Core/Audio/Synthesis/PureTone/Jupiter
 //
 //  Jupiter Melody - Holst's "The Planets" Jupiter theme in C Major
 //  Organ-style melody with ASR envelope for cathedral atmosphere
