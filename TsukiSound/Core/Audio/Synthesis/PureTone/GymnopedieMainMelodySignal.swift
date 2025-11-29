@@ -239,17 +239,17 @@ private final class GymnoGenerator {
             // --- Bar 37 ---
             MelodyNote(freq: F_4, startBar: 37, startBeat: 0, durBeats: 3),  // F#4 (3拍)
 
-            // --- Bar 38 (4連符: C-E-A-C) ---
-            MelodyNote(freq: C4, startBar: 38, startBeat: 0, durBeats: 0.75),      // C4 (ナチュラル)
-            MelodyNote(freq: E4, startBar: 38, startBeat: 0.75, durBeats: 0.75),   // E4
-            MelodyNote(freq: A4, startBar: 38, startBeat: 1.5, durBeats: 0.75),    // A4
-            MelodyNote(freq: C5, startBar: 38, startBeat: 2.25, durBeats: 0.75),   // C5 (ナチュラル)
+            // --- Bar 38 (4声同時: C-E-A-C 和音) ---
+            MelodyNote(freq: C4, startBar: 38, startBeat: 0, durBeats: 3),   // C4 (ナチュラル)
+            MelodyNote(freq: E4, startBar: 38, startBeat: 0, durBeats: 3),   // E4
+            MelodyNote(freq: A4, startBar: 38, startBeat: 0, durBeats: 3),   // A4
+            MelodyNote(freq: C5, startBar: 38, startBeat: 0, durBeats: 3),   // C5 (ナチュラル)
 
-            // --- Bar 39 (4連符: D-F#-A-D) ---
-            MelodyNote(freq: D4, startBar: 39, startBeat: 0, durBeats: 0.75),      // D4
-            MelodyNote(freq: F_4, startBar: 39, startBeat: 0.75, durBeats: 0.75),  // F#4
-            MelodyNote(freq: A4, startBar: 39, startBeat: 1.5, durBeats: 0.75),    // A4
-            MelodyNote(freq: D5, startBar: 39, startBeat: 2.25, durBeats: 0.75),   // D5
+            // --- Bar 39 (4声同時: D-F#-A-D 和音) ---
+            MelodyNote(freq: D4, startBar: 39, startBeat: 0, durBeats: 3),   // D4
+            MelodyNote(freq: F_4, startBar: 39, startBeat: 0, durBeats: 3),  // F#4
+            MelodyNote(freq: A4, startBar: 39, startBeat: 0, durBeats: 3),   // A4
+            MelodyNote(freq: D5, startBar: 39, startBeat: 0, durBeats: 3),   // D5
 
             // Bar 40-: 続きは後で追加
         ]
