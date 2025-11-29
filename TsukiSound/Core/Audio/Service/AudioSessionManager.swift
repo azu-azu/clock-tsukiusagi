@@ -71,6 +71,14 @@ public final class AudioSessionManager {
             throw error
         }
 
+        // サンプルレートを44100Hzに固定（再生ごとの変動を防ぐ）
+        do {
+            try session.setPreferredSampleRate(44100)
+            print("AudioSessionManager: Sample rate set to 44100Hz")
+        } catch {
+            print("AudioSessionManager: Could not set sample rate: \(error)")
+        }
+
         // セッションをアクティブ化
         do {
             print("AudioSessionManager: Activating session...")

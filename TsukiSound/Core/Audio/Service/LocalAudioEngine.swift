@@ -81,7 +81,8 @@ public final class LocalAudioEngine {
     /// 音源を登録
     /// - Parameter source: 登録する音源
     public func register(_ source: AudioSource) {
-        let format = engine.outputNode.inputFormat(forBus: 0)
+        // 固定フォーマットを使用（44100Hz, 2ch）してサンプルレート変動を防ぐ
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
 
         do {
             try source.attachAndConnect(to: engine, format: format)
@@ -100,10 +101,7 @@ public final class LocalAudioEngine {
     /// エンジンを開始
     /// - Parameter startSources: 登録済み音源を起動するかどうか（デフォルト: true）
     public func start(startSources: Bool = true) throws {
-        guard !isRunning else {
-            return
-        }
-
+        guard !isRunning else { return }
 
         // エンジンを開始
         if !engine.isRunning {
@@ -121,7 +119,6 @@ public final class LocalAudioEngine {
             } catch {
                 throw error
             }
-        } else {
         }
 
         isRunning = true
