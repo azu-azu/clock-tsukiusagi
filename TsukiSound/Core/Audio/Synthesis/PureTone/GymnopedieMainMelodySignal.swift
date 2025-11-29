@@ -36,10 +36,14 @@ private final class GymnoGenerator {
 
     // MARK: - Structure Constants
 
-    /// 真のクライマックス小節（余韻延長の対象）
-    private let peakClimaxBar: Int = 39
+    /// クライマックス小節（余韻延長の対象）
+    /// Bar 38は準備、Bar 39が頂点だが、余韻延長は39から適用
+    private let climaxBar: Int = 39
 
-    /// デチューン幅（メロディ・和音共通）: 揺らぎを控えめに、厚みだけ追加
+    /// デチューン幅（メロディ・和音共通）
+    /// - メロディ: 細かな揺らぎで生命感を出す
+    /// - 和音: 均質な厚みでコーラス感を出す
+    /// 将来richSine混在時も統一感を維持するため共通化
     private let detuneHz: Float = 0.2
 
     // MARK: - Frequency Constants (D Major: F#, C#)
@@ -290,7 +294,7 @@ private final class GymnoGenerator {
             // Bar 38: Am系 - 静かな準備
             MelodyNote(freq: A3, startBar: 38, startBeat: 0.00, durBeats: 3.5, customGain: 0.14),  // Bass A3
             MelodyNote(freq: E4, startBar: 38, startBeat: 0.12, durBeats: 3.3, customGain: 0.10),  // Mid E4
-            MelodyNote(freq: A4, startBar: 38, startBeat: 0.24, durBeats: 3.1, customGain: 0.08),  // High A4
+            MelodyNote(freq: A4, startBar: 38, startBeat: 0.24, durBeats: 3.1, customGain: 0.09),  // High A4 (揺らぎの頂点を前に出す)
 
             // Bar 39: D Major - 最終クライマックス（階段式レイヤー）
             // Bass → Mid → Color → High の順で積み上げ
@@ -367,8 +371,8 @@ private final class GymnoGenerator {
                 let dt = t - noteStart
 
                 // Bar 39のみ余韻を長く（真のクライマックス）
-                let isPeakClimax = note.startBar >= peakClimaxBar
-                let effectiveDecay = isPeakClimax ? melodyDecay * 2.0 : melodyDecay
+                let isClimax = note.startBar >= climaxBar
+                let effectiveDecay = isClimax ? melodyDecay * 2.0 : melodyDecay
 
                 var effectiveGain: Float
                 if let custom = note.customGain {
