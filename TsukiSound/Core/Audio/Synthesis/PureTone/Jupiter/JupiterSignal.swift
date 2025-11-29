@@ -39,169 +39,9 @@ public struct JupiterMelodySignal {
 
 private final class JupiterMelodyGenerator {
 
-    // MARK: - Constants & Configuration
+    // MARK: - Melody Data (external)
 
-    /// BPM Control: 50 BPM (slower, more majestic tempo)
-    /// Quarter note = 1.2s (60.0 / 50.0 = 1.2)
-    private static let beatDuration: Float = 1.2
-
-    /// Two Pi constant (cached for performance)
-    private let twoPi: Float = 2.0 * Float.pi
-
-    // MARK: - Data Structures
-
-    /// Note length abstraction to avoid magic numbers
-    /// All values are multiplied by beatDuration (1.1s)
-    enum Duration: Float {
-        case thirtySecond  = 0.125 // 32分音符
-        case sixteenth     = 0.25  // 16分音符
-        case eighth        = 0.5   // 8分音符
-        case dottedEighth  = 0.75  // 付点8分
-        case quarter       = 1.0   // 4分音符
-        case dottedQuarter = 1.5   // 付点4分
-        case half          = 2.0   // 2分音符
-        case dottedHalf    = 3.0   // 付点2分
-        case whole         = 4.0   // 全音符
-
-        var seconds: Float { self.rawValue * JupiterMelodyGenerator.beatDuration }
-    }
-
-    /// Note pitch abstraction with frequency values
-    enum Pitch: Float {
-        case E4 = 329.63
-        case G4 = 392.00
-        case A4 = 440.00
-        case B4 = 493.88
-        case C5 = 523.25
-        case D5 = 587.33
-        case E5 = 659.25
-        case F5 = 698.46
-        case G5 = 783.99
-        case A5 = 880.00
-        case B5 = 987.77
-        case C6 = 1046.50
-    }
-
-    /// Single note with frequency and duration
-    struct Note {
-        let freq: Float
-        let duration: Float
-
-        /// Create note with Pitch and Duration enums
-        init(_ pitch: Pitch, _ len: Duration) {
-            self.freq = pitch.rawValue
-            self.duration = len.seconds
-        }
-
-        /// Create note with manual duration (for special cases like final note)
-        init(_ pitch: Pitch, seconds: Float) {
-            self.freq = pitch.rawValue
-            self.duration = seconds
-        }
-    }
-
-    // MARK: - Melody Definition
-
-    /// Jupiter chorale melody (25 measures, 3/4 time)
-    ///
-    /// Based on Holst's Jupiter theme from the score (pianojuku.info).
-    /// Transposed to C Major. 3/4 time signature.
-    let melody: [Note] = [
-
-        // === 1小節目 ===
-        Note(.E4, .eighth),           // ミ (8分)
-        Note(.G4, .eighth),           // ソ (8分)
-        Note(.A4, .quarter),          // ラ (4分)
-
-        // === 2小節目 ===
-        Note(.A4, .eighth),           // ラ (8分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.B4, .dottedEighth),     // シ (付点8分)
-        Note(.G4, .sixteenth),        // ソ (16分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.C5, .quarter),          // ド (4分)
-
-        // === 3小節目 ===
-        Note(.B4, .quarter),          // シ (4分)
-        Note(.A4, .eighth),           // ラ (8分)
-        Note(.B4, .eighth),           // シ (8分)
-        Note(.A4, .quarter),          // ラ (4分)
-
-        // === 4小節目 ===
-        Note(.G4, .quarter),          // ソ (4分)
-        Note(.E4, .half),             // ミ (2分)
-
-        // === 5小節目 ===
-        Note(.E4, .eighth),           // ミ (8分)
-        Note(.G4, .eighth),           // ソ (8分)
-        Note(.A4, .quarter),          // ラ (4分)
-
-        // === 6小節目 ===
-        Note(.A4, .eighth),           // ラ (8分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.B4, .dottedEighth),     // シ (付点8分)
-        Note(.G4, .sixteenth),        // ソ (16分)
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.E5, .quarter),          // ミ (4分)
-
-        // === 7小節目 ===
-        Note(.E5, .quarter),          // ミ (4分)
-        Note(.E5, .eighth),           // ミ (8分)
-        Note(.D5, .eighth),           // レ (8分)
-        Note(.C5, .quarter),          // ド (4分)
-        Note(.D5, .quarter),          // レ (4分)
-        Note(.C5, .half),             // ド (2分)
-
-        // === 8小節目 ===
-        Note(.G5, .eighth),           // ソ (8分) 上
-        Note(.E5, .eighth),           // ミ (8分) 上
-        Note(.D5, .quarter),          // レ (4分) 上
-
-        // === 9小節目 ===
-        Note(.D5, .quarter),          // レ (4分) 上
-        Note(.C5, .eighth),           // ド (8分)
-        Note(.E5, .eighth),           // ミ (8分) 上
-        Note(.D5, .quarter),          // レ (4分) 上
-        Note(.G4, .quarter),          // ソ (4分) 下
-
-        // === 10小節目 ===
-        Note(.G5, .eighth),           // ソ (8分) 上
-        Note(.E5, .eighth),           // ミ (8分) 上
-        Note(.D5, .quarter),          // レ (4分) 上
-
-        // === 11小節目 ===
-        Note(.D5, .quarter),          // レ (4分) 上
-        Note(.E5, .eighth),           // ミ (8分) 上
-        Note(.G5, .eighth),           // ソ (8分) 上
-        Note(.A5, .half),             // ラ (2分) 上
-
-        // === 12小節目 ===
-        Note(.A5, .eighth),           // ラ (8分) 上
-        Note(.B5, .eighth),           // シ (8分) 上
-        Note(.C6, .quarter),          // ド (4分) 上
-        Note(.B5, .quarter),          // シ (4分) 上
-
-        // === 13小節目 ===
-        Note(.A5, .quarter),          // ラ (4分) 上
-        Note(.G5, .quarter),          // ソ (4分) 上
-        Note(.C6, .quarter),          // ド (4分) 上
-        Note(.E5, .quarter),          // ミ (4分) 上
-
-        // === 14小節目 ===
-        Note(.D5, .eighth),           // レ (8分) 上
-        Note(.C5, .eighth),           // ド (8分) 上
-        Note(.D5, .quarter),          // レ (4分) 上
-        Note(.E5, .quarter),          // ミ (4分) 上
-
-        // === 15小節目 ===
-        Note(.G5, .half),             // ソ (2分) 上
-        Note(.E5, .quarter),          // ミ (4分) - 終止へ
-
-        // === 終止 ===
-        Note(.C5, .dottedHalf)        // ド (付点2分)
-    ]
+    let melody = JupiterMelodyData.melody
 
     // MARK: - Timing & Optimization
 
@@ -255,7 +95,7 @@ private final class JupiterMelodyGenerator {
     /// Frequencies above this will be progressively reduced
     /// Gymnopédieと同じ設定: 600Hz以上で最大35%減衰
     let highFreqThreshold: Float = 600.0
-    let highFreqMax: Float = 1046.50  // C6
+    let highFreqMax: Float = JupiterPitch.C6.rawValue
 
     /// Transpose factor: -2 semitones for warmer, less piercing sound
     /// 2^(-2/12) ≈ 0.8909
@@ -443,13 +283,6 @@ private final class JupiterMelodyGenerator {
 // Source: Holst's "Thaxted" chorale from Jupiter (1918, public domain)
 // Key: C Major (fits CathedralStillness C/G drone)
 // Phrasing: Syllabic rhythm for natural vocal flow
-//
-// MELODIC STRUCTURE:
-//
-// Phrase 1-2: Introduction and Response
-// Phrase 3:   Development (ascending to E5)
-// Phrase 4:   Bridge to Climax
-// Phrase 5:   THE CLIMAX (G5 peak) → Descent → Resolution (C5)
 //
 // INTEGRATION WITH CATHEDRALSTILLNESS:
 //
