@@ -202,6 +202,8 @@ print("🎵 [FinalMixerOutputNode] attachAndConnect() sampleRate=\(sr), time=\(s
 
 → **結論**: 希望したサンプルレートと実際のハードウェア/セッションレートが異なる可能性があるため、固定フォーマットを使用する設計は理にかなっている。
 
+> **補足**: AppleはAVAudioEngineの動作を「決定論的」とは定義していないため、ハードウェア変更やセッション再構成に依存する挙動は仕様内である。サンプルレート変動はバグではなく、想定された動作である。
+
 ### タスクキャンセル・世代管理について
 
 **Task | Apple Developer Documentation**:
