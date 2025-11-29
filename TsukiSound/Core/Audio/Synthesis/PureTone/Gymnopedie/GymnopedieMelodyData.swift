@@ -1,5 +1,5 @@
 //
-//  MelodyData.swift
+//  GymnopedieMelodyData.swift
 //  TsukiSound/Core/Audio/Synthesis/PureTone/Gymnopedie
 //
 //  Gymnopédie No.1 メロディデータ（純データ分離）
