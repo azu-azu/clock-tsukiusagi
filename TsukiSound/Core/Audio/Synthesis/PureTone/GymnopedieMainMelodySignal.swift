@@ -31,7 +31,7 @@ private final class GymnoGenerator {
 
     let beat: Float = 0.682        // 1拍 = 0.682秒 (88 BPM)
     lazy var barDuration: Float = beat * 3  // 1小節 = 3拍
-    let totalBars: Int = 39       // 現在のメロディ範囲
+    let totalBars: Int = 41       // Bar 39 + 余韻2小節
     lazy var cycleDuration: Float = Float(totalBars) * barDuration
 
     // MARK: - Frequency Constants (D Major: F#, C#)
@@ -247,17 +247,18 @@ private final class GymnoGenerator {
             MelodyNote(freq: D4, startBar: 37, startBeat: 1, durBeats: 1),   // D4 (Alto)
             MelodyNote(freq: G4, startBar: 37, startBeat: 2, durBeats: 1),   // G4 (Alto)
 
-            // --- Bar 38 (4声同時: C-E-A-C 和音) ---
-            MelodyNote(freq: C4, startBar: 38, startBeat: 0, durBeats: 3),   // C4 (ナチュラル)
-            MelodyNote(freq: E4, startBar: 38, startBeat: 0, durBeats: 3),   // E4
-            MelodyNote(freq: A4, startBar: 38, startBeat: 0, durBeats: 3),   // A4
-            MelodyNote(freq: C5, startBar: 38, startBeat: 0, durBeats: 3),   // C5 (ナチュラル)
+            // --- Bar 38-39: Climax (アルペジオ風の揺らぎ + 余韻) ---
+            // Bar 38: Am7 (C-E-A-C) - 下から順にわずかにずらして響きを作る
+            MelodyNote(freq: C4, startBar: 38, startBeat: 0.00, durBeats: 3.5),  // C4 (Bass)
+            MelodyNote(freq: E4, startBar: 38, startBeat: 0.05, durBeats: 3.4),  // E4
+            MelodyNote(freq: A4, startBar: 38, startBeat: 0.10, durBeats: 3.3),  // A4
+            MelodyNote(freq: C5, startBar: 38, startBeat: 0.15, durBeats: 3.2),  // C5 (Top)
 
-            // --- Bar 39 (4声同時: D-F#-A-D 和音) ---
-            MelodyNote(freq: D4, startBar: 39, startBeat: 0, durBeats: 3),   // D4
-            MelodyNote(freq: F_4, startBar: 39, startBeat: 0, durBeats: 3),  // F#4
-            MelodyNote(freq: A4, startBar: 39, startBeat: 0, durBeats: 3),   // A4
-            MelodyNote(freq: D5, startBar: 39, startBeat: 0, durBeats: 3),   // D5
+            // Bar 39: D (D-F#-A-D) - 終止和音、長い余韻でフェードアウト
+            MelodyNote(freq: D4, startBar: 39, startBeat: 0.00, durBeats: 6),    // D4 (Bass) - 6拍で余韻
+            MelodyNote(freq: F_4, startBar: 39, startBeat: 0.05, durBeats: 5.8), // F#4
+            MelodyNote(freq: A4, startBar: 39, startBeat: 0.10, durBeats: 5.5),  // A4
+            MelodyNote(freq: D5, startBar: 39, startBeat: 0.15, durBeats: 5.2),  // D5 (Top) - 少し早く消える
 
             // Bar 40-: 続きは後で追加
         ]
@@ -327,15 +328,21 @@ private final class GymnoGenerator {
 
             if t >= noteStart && t < noteStart + noteDur {
                 let dt = t - noteStart
+
+                // Bar 38-39: クライマックス処理（響き強化）
+                let isClimax = note.startBar >= 38
+                let effectiveDecay = isClimax ? melodyDecay * 1.5 : melodyDecay
+                let effectiveGain = isClimax ? melodyGain * 1.15 : melodyGain
+
                 let env = SignalEnvelopeUtils.smoothEnvelope(
                     t: dt,
                     duration: noteDur,
                     attack: melodyAttack,
-                    decay: melodyDecay
+                    decay: effectiveDecay
                 )
                 // richSine: 奇数倍音を加えて暖かみのある音色に
                 let v = SignalEnvelopeUtils.richSine(frequency: note.freq, t: t)
-                output += v * env * melodyGain
+                output += v * env * effectiveGain
             }
         }
 
