@@ -254,18 +254,18 @@ private final class GymnoGenerator {
             MelodyNote(freq: D4, startBar: 37, startBeat: 1, durBeats: 1),   // D4 (Alto)
             MelodyNote(freq: G4, startBar: 37, startBeat: 2, durBeats: 1),   // G4 (Alto)
 
-            // --- Bar 38-39: Climax (オープンボイシング + 余韻) ---
-            // Bar 38: Am (C-E-A-C) - 広い音域で濁りを防ぐ
-            MelodyNote(freq: C3, startBar: 38, startBeat: 0.00, durBeats: 3.5),  // C3 (Bass - 1オクターブ下)
-            MelodyNote(freq: E4, startBar: 38, startBeat: 0.05, durBeats: 3.4),  // E4
-            MelodyNote(freq: A4, startBar: 38, startBeat: 0.10, durBeats: 3.3),  // A4
-            MelodyNote(freq: C5, startBar: 38, startBeat: 0.15, durBeats: 3.2),  // C5 (Top)
+            // --- Bar 38-39: 終止和音（同時に鳴らして一体感のある響き） ---
+            // Bar 38: Am (C-E-A-C)
+            MelodyNote(freq: C3, startBar: 38, startBeat: 0.00, durBeats: 3.5),  // C3 (Bass)
+            MelodyNote(freq: E4, startBar: 38, startBeat: 0.00, durBeats: 3.4),  // E4
+            MelodyNote(freq: A4, startBar: 38, startBeat: 0.00, durBeats: 3.3),  // A4
+            MelodyNote(freq: C5, startBar: 38, startBeat: 0.00, durBeats: 3.2),  // C5 (Top)
 
-            // Bar 39: D (D-F#-A-D) - 終止和音、広い音域で余韻
-            MelodyNote(freq: D3, startBar: 39, startBeat: 0.00, durBeats: 6),    // D3 (Bass - 1オクターブ下)
-            MelodyNote(freq: F_4, startBar: 39, startBeat: 0.05, durBeats: 5.8), // F#4
-            MelodyNote(freq: A4, startBar: 39, startBeat: 0.10, durBeats: 5.5),  // A4
-            MelodyNote(freq: D5, startBar: 39, startBeat: 0.15, durBeats: 5.2),  // D5 (Top)
+            // Bar 39: D (D-F#-A-D) - 終止和音
+            MelodyNote(freq: D3, startBar: 39, startBeat: 0.00, durBeats: 6),    // D3 (Bass)
+            MelodyNote(freq: F_4, startBar: 39, startBeat: 0.00, durBeats: 5.8), // F#4
+            MelodyNote(freq: A4, startBar: 39, startBeat: 0.00, durBeats: 5.5),  // A4
+            MelodyNote(freq: D5, startBar: 39, startBeat: 0.00, durBeats: 5.2),  // D5 (Top)
 
             // Bar 40-: 続きは後で追加
         ]
@@ -358,8 +358,8 @@ private final class GymnoGenerator {
                     attack: melodyAttack,
                     decay: effectiveDecay
                 )
-                // richSine: 奇数倍音を加えて暖かみのある音色に
-                let v = SignalEnvelopeUtils.richSine(frequency: note.freq, t: t)
+                // pureSine: 伴奏と同じ純粋なサイン波で統一
+                let v = SignalEnvelopeUtils.pureSine(frequency: note.freq, t: t)
                 output += v * env * effectiveGain
             }
         }
