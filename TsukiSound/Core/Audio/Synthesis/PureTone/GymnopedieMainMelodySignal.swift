@@ -274,10 +274,11 @@ private final class GymnoGenerator {
 
             // Bar 39: D Major - 最終クライマックス（階段式レイヤー）
             // Bass → Mid → Color → High の順で積み上げ
+            // 位相干渉を避けるため、A4-D5間を広めに（0.08 beat ≈ 55ms）
             MelodyNote(freq: D3, startBar: 39, startBeat: 0.00, durBeats: 6.0, customGain: 0.16),  // Bass D3
             MelodyNote(freq: D4, startBar: 39, startBeat: 0.12, durBeats: 5.8, customGain: 0.10),  // Mid D4
-            MelodyNote(freq: A4, startBar: 39, startBeat: 0.18, durBeats: 5.5, customGain: 0.12),  // Color A4
-            MelodyNote(freq: D5, startBar: 39, startBeat: 0.24, durBeats: 5.2, customGain: 0.08)
+            MelodyNote(freq: A4, startBar: 39, startBeat: 0.20, durBeats: 5.5, customGain: 0.12),  // Color A4
+            MelodyNote(freq: D5, startBar: 39, startBeat: 0.28, durBeats: 5.2, customGain: 0.08)
 
             // Bar 40-: 続きは後で追加
         ]
