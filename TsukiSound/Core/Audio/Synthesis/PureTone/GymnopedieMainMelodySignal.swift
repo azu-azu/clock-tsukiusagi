@@ -61,18 +61,26 @@ private final class GymnoGenerator {
     let A5:  Float = 880.00
 
     // MARK: - Sound Parameters
+    //
+    // Gain調整方針:
+    // - Melody: 主旋律を際立たせる（0.28 → 0.35）
+    // - Bass: 背景のサポート役に（0.12 → 0.08）
+    // - Chord: 響きを出す程度に抑える（0.08 → 0.06）
+    //
+    // Decay調整方針:
+    // - Melody: 音の重なり（legato）を増すため長く（2.5 → 4.0）
 
     let melodyAttack: Float = 0.08
-    let melodyDecay: Float = 2.5
-    let melodyGain: Float = 0.28
+    let melodyDecay: Float = 4.0     // 2.5 → 4.0: legato感を強化
+    let melodyGain: Float = 0.35     // 0.28 → 0.35: 主旋律を際立たせる
 
     let bassAttack: Float = 0.12
     let bassDecay: Float = 2.5
-    let bassGain: Float = 0.12
+    let bassGain: Float = 0.08       // 0.12 → 0.08: 背景に抑える
 
     let chordAttack: Float = 0.08
     let chordDecay: Float = 1.8
-    let chordGain: Float = 0.08
+    let chordGain: Float = 0.06      // 0.08 → 0.06: 響き程度に
 
     // MARK: - Data Structures
 
@@ -343,7 +351,8 @@ private final class GymnoGenerator {
                     attack: melodyAttack,
                     decay: melodyDecay
                 )
-                let v = SignalEnvelopeUtils.pureSine(frequency: note.freq, t: t)
+                // richSine: 奇数倍音を加えて暖かみのある音色に
+                let v = SignalEnvelopeUtils.richSine(frequency: note.freq, t: t)
                 output += v * env * melodyGain
             }
         }
