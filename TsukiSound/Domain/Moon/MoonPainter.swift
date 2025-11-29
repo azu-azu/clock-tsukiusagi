@@ -168,6 +168,24 @@ enum MoonPainter {
             )
         )
 
+        // ターミネーターの柔らか化
+        let terminatorPath = WaxingGibbousMoon.terminatorPath(center: center, radius: radius)
+        ctx.drawLayer { layer in
+            layer.clip(to: gibbousPath)
+            layer.blendMode = .normal
+            layer.addFilter(.blur(radius: 3.0))
+
+            let passes = 20
+            for p in 0..<passes {
+                let w = 3.0 * (1.6 - 0.25 * CGFloat(p))
+                layer.stroke(
+                    terminatorPath,
+                    with: .color(Color.black.opacity(0.6)),
+                    lineWidth: max(1, w)
+                )
+            }
+        }
+
         // グロー効果（右側中心）
         let glowArc = Path { path in
             path.addArc(
@@ -244,6 +262,24 @@ enum MoonPainter {
                 endRadius: radius
             )
         )
+
+        // ターミネーターの柔らか化
+        let terminatorPath = WaningGibbousMoon.terminatorPath(center: center, radius: radius)
+        ctx.drawLayer { layer in
+            layer.clip(to: gibbousPath)
+            layer.blendMode = .normal
+            layer.addFilter(.blur(radius: 3.0))
+
+            let passes = 20
+            for p in 0..<passes {
+                let w = 3.0 * (1.6 - 0.25 * CGFloat(p))
+                layer.stroke(
+                    terminatorPath,
+                    with: .color(Color.black.opacity(0.6)),
+                    lineWidth: max(1, w)
+                )
+            }
+        }
 
         // グロー効果（左側中心）
         let glowArc = Path { path in

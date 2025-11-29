@@ -8,6 +8,31 @@ enum WaningGibbousMoon {
     ///   - center: 月の中心座標
     ///   - radius: 月の半径
     /// - Returns: 十三夜の形状を示すPath
+    /// ターミネーターの柔らか化パス（凸月の境界線に曲率を加える）
+    static func terminatorPath(center: CGPoint, radius: CGFloat) -> Path {
+        let curvature: CGFloat = 0.12
+        let jitter: CGFloat = 0.8
+        let isRightLit = false  // 十三夜は左が明
+        let sign: CGFloat = isRightLit ? 1 : -1
+
+        // 凸月用: 境界が月の外側寄りなのでオフセットを調整
+        let offset = radius * 0.35  // d値と同じ
+
+        let steps = 96
+        var terminator = Path()
+        for i in 0...steps {
+            let t = CGFloat(i) / CGFloat(steps)
+            let yy = (t * 2 - 1) * radius
+            let xr = curvature * sqrt(max(0, radius*radius - yy*yy))
+            let j = (jitter > 0) ? CGFloat.random(in: -jitter...jitter) : 0
+            let x = center.x + sign * (xr - offset) + j
+            let y = center.y + yy
+            (i == 0) ? terminator.move(to: CGPoint(x: x, y: y))
+                     : terminator.addLine(to: CGPoint(x: x, y: y))
+        }
+        return terminator
+    }
+
     static func shape(center: CGPoint, radius: CGFloat) -> Path {
         // 2円法の交点計算
         // 十日夜の左右反転版
