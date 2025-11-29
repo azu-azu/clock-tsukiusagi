@@ -70,12 +70,12 @@ private final class GymnoGenerator {
     // 美学: Bass="床"、Melody="浮かぶ線"
     // 床が厚く、線が控えめ → 静謐で詩的な響き
 
-    let melodyAttack: Float = 0.08
+    let melodyAttack: Float = 0.11   // 0.08 → 0.11: ふわっと入る"サティ感"
     let melodyDecay: Float = 3.5     // 4.0 → 3.5: 累積を軽減しつつlegato維持
     let melodyGain: Float = 0.28     // 0.35 → 0.28: richSineなので控えめに
 
     let bassAttack: Float = 0.12
-    let bassDecay: Float = 2.5
+    let bassDecay: Float = 2.8       // 2.5 → 2.8: 鳴り止まない床感
     let bassGain: Float = 0.16       // 0.08 → 0.16: pureSineは厚めに
 
     let chordAttack: Float = 0.08
