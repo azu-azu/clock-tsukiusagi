@@ -219,11 +219,11 @@ private final class JupiterMelodyGenerator {
 
     /// Organ-style harmonics with warm foundation
     /// Emphasizing fundamental and lower harmonics for majestic warmth
-    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 6.0]
+    let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 
     /// Harmonic amplitudes: warm, full organ tone
     /// Reduced higher harmonics for smoother, more solemn character
-    let harmonicAmps: [Float] = [1.0, 0.45, 0.25, 0.12, 0.03]
+    let harmonicAmps: [Float] = [1.0, 0.45, 0.25, 0.12, 0.07, 0.03]
 
     // MARK: - Cathedral Organ Stops (Layered Voices)
 
@@ -319,17 +319,20 @@ private final class JupiterMelodyGenerator {
     /// Generate a single organ voice with harmonics and vibrato
     private func generateSingleVoice(freq: Float, t: Float) -> Float {
         // Vibrato via phase modulation (more natural than FM)
-        // Add a small oscillating offset to the phase
         let vibratoPhaseOffset = sin(2.0 * Float.pi * vibratoRate * t) * vibratoDepth
 
         var signal: Float = 0.0
-        for i in 0..<harmonics.count {
-            let hFreq = freq * harmonics[i]
+
+        // Use zip to safely iterate harmonics and amplitudes together
+        // If counts differ, loop stops at the shorter array (safe, no crash)
+        for (harmonicRatio, harmonicAmp) in zip(harmonics, harmonicAmps) {
+            let hFreq = freq * harmonicRatio
             // Base phase + vibrato offset (scaled by harmonic frequency)
             let phase = 2.0 * Float.pi * hFreq * t + vibratoPhaseOffset * hFreq
-            signal += sin(phase) * harmonicAmps[i]
+            signal += sin(phase) * harmonicAmp
         }
-        // Normalize
+
+        // Normalize by harmonic count
         signal /= Float(harmonics.count)
         return signal
     }
