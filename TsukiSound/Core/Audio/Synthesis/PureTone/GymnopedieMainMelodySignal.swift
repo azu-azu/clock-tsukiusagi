@@ -36,10 +36,11 @@ private final class GymnoGenerator {
 
     // MARK: - Structure Constants
 
-    /// クライマックス開始小節（階段式レイヤーの開始点）
-    private let climaxStartBar: Int = 38
     /// 真のクライマックス小節（余韻延長の対象）
     private let peakClimaxBar: Int = 39
+
+    /// デチューン幅（メロディ・和音共通）: 揺らぎを控えめに、厚みだけ追加
+    private let detuneHz: Float = 0.2
 
     // MARK: - Frequency Constants (D Major: F#, C#)
 
@@ -95,11 +96,11 @@ private final class GymnoGenerator {
     let melodyDecay: Float = 4.5     // 4.0 → 4.5: より長く、優雅に減衰させる
     let melodyGain: Float = 0.28     // richSineなので控えめに
 
-    let bassAttack: Float = 0.15     // 0.12 → 0.15: 低音は長めに（推奨120ms+）
+    let bassAttack: Float = 0.20     // 0.15 → 0.20: 低音のノイズ抑制（200Hz以下は長めに）
     let bassDecay: Float = 3.5       // 2.8 → 3.5: 床感を長く持続
     let bassGain: Float = 0.16       // pureSineは厚めに
 
-    let chordAttack: Float = 0.05    // 0.10 → 0.05: pureSineなら短くてもノイズ出にくい、パッと開く響き
+    let chordAttack: Float = 0.08    // 0.05 → 0.08: ノイズ抑制のため60ms以上を推奨
     let chordDecay: Float = 2.5      // 1.8 → 2.5: 響きを長く
     let chordGain: Float = 0.06
 
@@ -111,13 +112,15 @@ private final class GymnoGenerator {
         let startBeat: Float   // 0, 1, 2
         let durBeats: Float
         let customGain: Float? // nil = use default melodyGain
+        let fadeOut: Bool      // true = 後半でフェードアウト（長い持続音用）
 
-        init(freq: Float, startBar: Int, startBeat: Float, durBeats: Float, customGain: Float? = nil) {
+        init(freq: Float, startBar: Int, startBeat: Float, durBeats: Float, customGain: Float? = nil, fadeOut: Bool = false) {
             self.freq = freq
             self.startBar = startBar
             self.startBeat = startBeat
             self.durBeats = durBeats
             self.customGain = customGain
+            self.fadeOut = fadeOut
         }
     }
 
@@ -162,8 +165,8 @@ private final class GymnoGenerator {
             // Bar 8
             MelodyNote(freq: A4, startBar: 8, startBeat: 0, durBeats: 3),    // A4 (3拍)
 
-            // Bar 9-12: F#4 持続
-            MelodyNote(freq: F_4, startBar: 9, startBeat: 0, durBeats: 12),  // F#4 (12拍)
+            // Bar 9-12: F#4 持続（フェードアウトで自然に消える）
+            MelodyNote(freq: F_4, startBar: 9, startBeat: 0, durBeats: 12, fadeOut: true),  // F#4 (12拍)
         ]
     }
 
@@ -193,8 +196,8 @@ private final class GymnoGenerator {
             // Bar 18
             MelodyNote(freq: F_5, startBar: 18, startBeat: 0, durBeats: 3),  // F#5 (3拍)
 
-            // Bar 19-21: E5 持続
-            MelodyNote(freq: E5, startBar: 19, startBeat: 0, durBeats: 9),   // E5 (9拍)
+            // Bar 19-21: E5 持続（フェードアウトで自然に消える）
+            MelodyNote(freq: E5, startBar: 19, startBeat: 0, durBeats: 9, fadeOut: true),   // E5 (9拍)
         ]
     }
 
@@ -356,9 +359,6 @@ private final class GymnoGenerator {
     private func sampleMelody(at t: Float) -> Float {
         var output: Float = 0
 
-        // デチューン幅: 0.2Hz（揺らぎを控えめに、厚みだけ追加）
-        let detuneHz: Float = 0.2
-
         for note in melodyNotes {
             let noteStart = Float(note.startBar - 1) * barDuration + note.startBeat * beat
             let noteDur = note.durBeats * beat
@@ -366,11 +366,7 @@ private final class GymnoGenerator {
             if t >= noteStart && t < noteStart + noteDur {
                 let dt = t - noteStart
 
-                // カスタムゲインがある場合はそれを使用（階段式クライマックス用）
-                // ない場合はデフォルトのmelodyGainを使用
-                let isClimaxSection = note.startBar >= climaxStartBar
                 // Bar 39のみ余韻を長く（真のクライマックス）
-                // Bar 38は準備パートなので通常の余韻
                 let isPeakClimax = note.startBar >= peakClimaxBar
                 let effectiveDecay = isPeakClimax ? melodyDecay * 2.0 : melodyDecay
 
@@ -395,12 +391,25 @@ private final class GymnoGenerator {
                     }
                 }
 
-                let env = SignalEnvelopeUtils.smoothEnvelope(
+                var env = SignalEnvelopeUtils.smoothEnvelope(
                     t: dt,
                     duration: noteDur,
                     attack: melodyAttack,
                     decay: effectiveDecay
                 )
+
+                // フェードアウト: 長い持続音の後半で徐々に音量を下げる
+                // 50%地点から開始し、終点で30%まで減衰（自然な消え方）
+                if note.fadeOut {
+                    let progress = dt / noteDur  // 0.0 ~ 1.0
+                    if progress > 0.5 {
+                        // 0.5→1.0 の進行を 0.0→1.0 にマッピング
+                        let fadeProgress = (progress - 0.5) * 2.0
+                        // 1.0 → 0.3 へ滑らかに減衰（コサインカーブ）
+                        let fadeMultiplier = 0.3 + 0.7 * (1.0 + cos(fadeProgress * .pi)) / 2.0
+                        env *= fadeMultiplier
+                    }
+                }
 
                 // デチューン・レイヤー: 3つのサイン波を重ねてコーラスのような深みを出す
                 // pureSineベースなので高次倍音は発生せず、刺さる問題を回避
@@ -443,9 +452,6 @@ private final class GymnoGenerator {
 
     // MARK: - Chord Sampling
 
-    // デチューン幅（和音用）: メロディと同じ0.2Hzで統一感を出す
-    private let chordDetuneHz: Float = 0.2
-
     private func sampleChords(at t: Float) -> Float {
         var output: Float = 0
 
@@ -467,8 +473,8 @@ private final class GymnoGenerator {
                 var chordVal: Float = 0
                 for freq in data.chordFreqs {
                     let v1 = SignalEnvelopeUtils.pureSine(frequency: freq, t: t)
-                    let v2 = SignalEnvelopeUtils.pureSine(frequency: freq + chordDetuneHz, t: t)
-                    let v3 = SignalEnvelopeUtils.pureSine(frequency: freq - chordDetuneHz, t: t)
+                    let v2 = SignalEnvelopeUtils.pureSine(frequency: freq + detuneHz, t: t)
+                    let v3 = SignalEnvelopeUtils.pureSine(frequency: freq - detuneHz, t: t)
                     chordVal += (v1 + v2 + v3) / 3.0
                 }
                 chordVal /= Float(data.chordFreqs.count)
