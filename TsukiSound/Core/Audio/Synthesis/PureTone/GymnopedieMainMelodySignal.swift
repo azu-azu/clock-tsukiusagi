@@ -341,14 +341,15 @@ private final class GymnoGenerator {
                 let effectiveDecay = isClimax ? melodyDecay * 1.5 : melodyDecay
                 var effectiveGain = isClimax ? melodyGain * 1.15 : melodyGain
 
-                // 高音域のゲイン調整 (700Hz以上をターゲット)
+                // 高音域のゲイン調整 (600Hz以上をターゲット)
                 // 高音域の「キーン」を抑えるため、周波数に応じてゲインを減衰
-                if note.freq >= 700.0 {
+                // pureSineでも高周波は耳に刺さりやすいため、強めに減衰
+                if note.freq >= 600.0 {
                     let maxFreq: Float = 1318.51  // E6
-                    let minFreq: Float = 700.0
+                    let minFreq: Float = 600.0
                     let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
-                    // 最高音域で最大20%の減衰
-                    let highFreqReduction = 1.0 - reductionRatio * 0.2
+                    // 最高音域で最大35%の減衰（20% → 35%に強化）
+                    let highFreqReduction = 1.0 - reductionRatio * 0.35
                     effectiveGain *= highFreqReduction
                 }
 

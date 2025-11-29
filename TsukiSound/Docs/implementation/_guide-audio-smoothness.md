@@ -275,13 +275,14 @@ public func play(preset: UISoundPreset) throws {
 周波数に応じてゲインを自動的に減衰させる：
 
 ```swift
-// 高音域のゲイン調整 (700Hz以上をターゲット)
-if note.freq >= 700.0 {
+// 高音域のゲイン調整 (600Hz以上をターゲット)
+// pureSineでも高周波は耳に刺さりやすいため、強めに減衰
+if note.freq >= 600.0 {
     let maxFreq: Float = 1318.51  // E6
-    let minFreq: Float = 700.0
+    let minFreq: Float = 600.0
     let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
-    // 最高音域で最大20%の減衰
-    let highFreqReduction = 1.0 - reductionRatio * 0.2
+    // 最高音域で最大35%の減衰
+    let highFreqReduction = 1.0 - reductionRatio * 0.35
     effectiveGain *= highFreqReduction
 }
 ```
@@ -290,11 +291,12 @@ if note.freq >= 700.0 {
 ```
 Frequency   | Reduction | Effective Gain (base 0.28)
 ------------|-----------|---------------------------
-< 700Hz     |    0%     | 0.280
-  700Hz     |    0%     | 0.280
-  880Hz (A5)|   ~6%     | 0.263
- 1046Hz (C6)|  ~11%     | 0.249
- 1318Hz (E6)|   20%     | 0.224
+< 600Hz     |    0%     | 0.280
+  600Hz     |    0%     | 0.280
+  700Hz     |   ~5%     | 0.266
+  880Hz (A5)|  ~14%     | 0.241
+ 1046Hz (C6)|  ~22%     | 0.218
+ 1318Hz (E6)|   35%     | 0.182
 ```
 
 ### なぜこの手法が有効か
@@ -332,12 +334,13 @@ private func sampleMelody(at t: Float) -> Float {
     // ...
     var effectiveGain = isClimax ? melodyGain * 1.15 : melodyGain
 
-    // 高音域のゲイン調整 (700Hz以上をターゲット)
-    if note.freq >= 700.0 {
+    // 高音域のゲイン調整 (600Hz以上をターゲット)
+    // pureSineでも高周波は耳に刺さりやすいため、強めに減衰
+    if note.freq >= 600.0 {
         let maxFreq: Float = 1318.51  // E6
-        let minFreq: Float = 700.0
+        let minFreq: Float = 600.0
         let reductionRatio = min(1.0, (note.freq - minFreq) / (maxFreq - minFreq))
-        let highFreqReduction = 1.0 - reductionRatio * 0.2
+        let highFreqReduction = 1.0 - reductionRatio * 0.35
         effectiveGain *= highFreqReduction
     }
     // ...
