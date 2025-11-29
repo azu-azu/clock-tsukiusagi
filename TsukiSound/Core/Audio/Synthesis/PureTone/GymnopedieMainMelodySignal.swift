@@ -116,7 +116,14 @@ private final class GymnoGenerator {
         let customGain: Float? // nil = use default melodyGain
         let fadeOut: Bool      // true = 後半でフェードアウト（長い持続音用）
 
-        init(freq: Float, startBar: Int, startBeat: Float, durBeats: Float, customGain: Float? = nil, fadeOut: Bool = false) {
+        init(
+            freq: Float,
+            startBar: Int,
+            startBeat: Float,
+            durBeats: Float,
+            customGain: Float? = nil,
+            fadeOut: Bool = false
+        ) {
             self.freq = freq
             self.startBar = startBar
             self.startBeat = startBeat
