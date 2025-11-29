@@ -427,6 +427,9 @@ private final class GymnoGenerator {
 
     // MARK: - Chord Sampling
 
+    // デチューン幅（和音用）: メロディと同じ0.5Hzで統一感を出す
+    private let chordDetuneHz: Float = 0.5
+
     private func sampleChords(at t: Float) -> Float {
         var output: Float = 0
 
@@ -443,9 +446,14 @@ private final class GymnoGenerator {
                     decay: chordDecay
                 )
 
+                // デチューン・レイヤー適用: 各音を3レイヤーで重ねる
+                // 2音 × 3レイヤー = 6音になるため、平均化で音量バランスを維持
                 var chordVal: Float = 0
                 for freq in data.chordFreqs {
-                    chordVal += SignalEnvelopeUtils.pureSine(frequency: freq, t: t)
+                    let v1 = SignalEnvelopeUtils.pureSine(frequency: freq, t: t)
+                    let v2 = SignalEnvelopeUtils.pureSine(frequency: freq + chordDetuneHz, t: t)
+                    let v3 = SignalEnvelopeUtils.pureSine(frequency: freq - chordDetuneHz, t: t)
+                    chordVal += (v1 + v2 + v3) / 3.0
                 }
                 chordVal /= Float(data.chordFreqs.count)
 
