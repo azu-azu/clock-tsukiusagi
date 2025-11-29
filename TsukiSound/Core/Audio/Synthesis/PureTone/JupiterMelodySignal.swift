@@ -253,7 +253,8 @@ private final class JupiterMelodyGenerator {
 
     /// High frequency gain reduction threshold (Hz)
     /// Frequencies above this will be progressively reduced
-    let highFreqThreshold: Float = 700.0
+    /// Gymnopédieと同じ設定: 600Hz以上で最大35%減衰
+    let highFreqThreshold: Float = 600.0
     let highFreqMax: Float = 1046.50  // C6
 
     /// Transpose factor: -2 semitones for warmer, less piercing sound
@@ -359,14 +360,14 @@ private final class JupiterMelodyGenerator {
         return nil
     }
 
-    /// Calculate high frequency gain reduction (700Hz - C6)
-    /// Reduces "ringing" sound in high frequency notes by up to 20%
+    /// Calculate high frequency gain reduction (600Hz - C6)
+    /// Reduces "ringing" sound in high frequency notes by up to 35%
     private func calculateHighFreqReduction(freq: Float) -> Float {
         guard freq >= highFreqThreshold else { return 1.0 }
 
         let reductionRatio = min(1.0, (freq - highFreqThreshold) / (highFreqMax - highFreqThreshold))
-        // Maximum 20% reduction at highest frequency
-        return 1.0 - reductionRatio * 0.2
+        // Maximum 35% reduction at highest frequency (Gymnopédieと同じ)
+        return 1.0 - reductionRatio * 0.35
     }
 
     /// Generates a simple ASR (Attack-Sustain-Release) envelope
