@@ -248,8 +248,8 @@ private final class JupiterMelodyGenerator {
     let vibratoRate: Float = 4.0      // 4Hz
 
     /// Vibrato depth: amount of pitch variation
-    /// ±5 cents ≈ 0.003 (subtle, natural)
-    let vibratoDepth: Float = 0.003
+    /// Very subtle for stable, gentle warmth
+    let vibratoDepth: Float = 0.001
 
     /// Legato Envelope Parameters (very smooth, connected notes)
     /// - Attack: Slow rise for seamless entry
@@ -318,14 +318,15 @@ private final class JupiterMelodyGenerator {
 
     /// Generate a single organ voice with harmonics and vibrato
     private func generateSingleVoice(freq: Float, t: Float) -> Float {
-        // Apply vibrato (frequency modulation) - Tremulant stop
-        let vibrato = 1.0 + sin(2.0 * Float.pi * vibratoRate * t) * vibratoDepth
-        let modulatedFreq = freq * vibrato
+        // Vibrato via phase modulation (more natural than FM)
+        // Add a small oscillating offset to the phase
+        let vibratoPhaseOffset = sin(2.0 * Float.pi * vibratoRate * t) * vibratoDepth
 
         var signal: Float = 0.0
         for i in 0..<harmonics.count {
-            let hFreq = modulatedFreq * harmonics[i]
-            let phase = 2.0 * Float.pi * hFreq * t
+            let hFreq = freq * harmonics[i]
+            // Base phase + vibrato offset (scaled by harmonic frequency)
+            let phase = 2.0 * Float.pi * hFreq * t + vibratoPhaseOffset * hFreq
             signal += sin(phase) * harmonicAmps[i]
         }
         // Normalize
