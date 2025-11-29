@@ -37,9 +37,10 @@ private final class GymnoGenerator {
     // MARK: - Frequency Constants (D Major: F#, C#)
 
     // Bass
-    let G3:  Float = 196.00
+    let C3:  Float = 130.81   // C3 (ナチュラル) - クライマックス用
     let D3:  Float = 146.83
     let E3:  Float = 164.81
+    let G3:  Float = 196.00
 
     // Chord
     let A3:  Float = 220.00
@@ -247,18 +248,18 @@ private final class GymnoGenerator {
             MelodyNote(freq: D4, startBar: 37, startBeat: 1, durBeats: 1),   // D4 (Alto)
             MelodyNote(freq: G4, startBar: 37, startBeat: 2, durBeats: 1),   // G4 (Alto)
 
-            // --- Bar 38-39: Climax (アルペジオ風の揺らぎ + 余韻) ---
-            // Bar 38: Am7 (C-E-A-C) - 下から順にわずかにずらして響きを作る
-            MelodyNote(freq: C4, startBar: 38, startBeat: 0.00, durBeats: 3.5),  // C4 (Bass)
+            // --- Bar 38-39: Climax (オープンボイシング + 余韻) ---
+            // Bar 38: Am (C-E-A-C) - 広い音域で濁りを防ぐ
+            MelodyNote(freq: C3, startBar: 38, startBeat: 0.00, durBeats: 3.5),  // C3 (Bass - 1オクターブ下)
             MelodyNote(freq: E4, startBar: 38, startBeat: 0.05, durBeats: 3.4),  // E4
             MelodyNote(freq: A4, startBar: 38, startBeat: 0.10, durBeats: 3.3),  // A4
             MelodyNote(freq: C5, startBar: 38, startBeat: 0.15, durBeats: 3.2),  // C5 (Top)
 
-            // Bar 39: D (D-F#-A-D) - 終止和音、長い余韻でフェードアウト
-            MelodyNote(freq: D4, startBar: 39, startBeat: 0.00, durBeats: 6),    // D4 (Bass) - 6拍で余韻
+            // Bar 39: D (D-F#-A-D) - 終止和音、広い音域で余韻
+            MelodyNote(freq: D3, startBar: 39, startBeat: 0.00, durBeats: 6),    // D3 (Bass - 1オクターブ下)
             MelodyNote(freq: F_4, startBar: 39, startBeat: 0.05, durBeats: 5.8), // F#4
             MelodyNote(freq: A4, startBar: 39, startBeat: 0.10, durBeats: 5.5),  // A4
-            MelodyNote(freq: D5, startBar: 39, startBeat: 0.15, durBeats: 5.2),  // D5 (Top) - 少し早く消える
+            MelodyNote(freq: D5, startBar: 39, startBeat: 0.15, durBeats: 5.2),  // D5 (Top)
 
             // Bar 40-: 続きは後で追加
         ]
@@ -340,11 +341,8 @@ private final class GymnoGenerator {
                     attack: melodyAttack,
                     decay: effectiveDecay
                 )
-                // クライマックス和音はpureSine（倍音干渉を防ぐ）
-                // 通常メロディはrichSine（暖かみのある音色）
-                let v = isClimax
-                    ? SignalEnvelopeUtils.pureSine(frequency: note.freq, t: t)
-                    : SignalEnvelopeUtils.richSine(frequency: note.freq, t: t)
+                // richSine: 奇数倍音を加えて暖かみのある音色に
+                let v = SignalEnvelopeUtils.richSine(frequency: note.freq, t: t)
                 output += v * env * effectiveGain
             }
         }
