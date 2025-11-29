@@ -31,7 +31,7 @@ private final class GymnoGenerator {
 
     let beat: Float = 0.682        // 1拍 = 0.682秒 (88 BPM)
     lazy var barDuration: Float = beat * 3  // 1小節 = 3拍
-    let totalBars: Int = 41       // 全曲（g1-g4）
+    let totalBars: Int = 21       // 現在のメロディ範囲
     lazy var cycleDuration: Float = Float(totalBars) * barDuration
 
     // MARK: - Frequency Constants (D Major: F#, C#)
@@ -132,121 +132,39 @@ private final class GymnoGenerator {
             MelodyNote(freq: F_4, startBar: 12, startBeat: 0, durBeats: 3),  // F#4 (3拍)
 
             // ========================================
-            // MARK: g2 - Bars 13- (Development)
+            // MARK: g2 - Bars 13-22 (Theme repeat + Development)
             // ========================================
 
-            // --- Bar 13 ---
-            MelodyNote(freq: A4, startBar: 13, startBeat: 0, durBeats: 3),   // A4 (Dotted Half)
+            // --- Bar 13 (Theme repeat - 1拍休符から) ---
+            // Beat 0: 休符
+            MelodyNote(freq: F_5, startBar: 13, startBeat: 1, durBeats: 1),  // F#5
+            MelodyNote(freq: A5, startBar: 13, startBeat: 2, durBeats: 1),   // A5
 
             // --- Bar 14 ---
-            MelodyNote(freq: F_5, startBar: 14, startBeat: 0, durBeats: 1),  // F#5
-            MelodyNote(freq: E5, startBar: 14, startBeat: 1, durBeats: 1),   // E5
-            MelodyNote(freq: D5, startBar: 14, startBeat: 2, durBeats: 1),   // D5
+            MelodyNote(freq: G5, startBar: 14, startBeat: 0, durBeats: 1),   // G5
+            MelodyNote(freq: F_5, startBar: 14, startBeat: 1, durBeats: 1),  // F#5
+            MelodyNote(freq: C_5, startBar: 14, startBeat: 2, durBeats: 1),  // C#5
 
             // --- Bar 15 ---
-            MelodyNote(freq: C_5, startBar: 15, startBeat: 0, durBeats: 1),  // C#5
-            MelodyNote(freq: B4, startBar: 15, startBeat: 1, durBeats: 1),   // B4
-            MelodyNote(freq: C_5, startBar: 15, startBeat: 2, durBeats: 1),  // C#5
+            MelodyNote(freq: B4, startBar: 15, startBeat: 0, durBeats: 1),   // B4
+            MelodyNote(freq: C_5, startBar: 15, startBeat: 1, durBeats: 1),  // C#5
+            MelodyNote(freq: D5, startBar: 15, startBeat: 2, durBeats: 1),   // D5
 
             // --- Bar 16 ---
-            MelodyNote(freq: D5, startBar: 16, startBeat: 0, durBeats: 1),   // D5
-            MelodyNote(freq: C_5, startBar: 16, startBeat: 1, durBeats: 1),  // C#5
-            MelodyNote(freq: B4, startBar: 16, startBeat: 2, durBeats: 1),   // B4
+            MelodyNote(freq: A4, startBar: 16, startBeat: 0, durBeats: 3),   // A4 (3拍)
 
             // --- Bar 17 ---
-            MelodyNote(freq: C_5, startBar: 17, startBeat: 0, durBeats: 1),  // C#5
-            MelodyNote(freq: B4, startBar: 17, startBeat: 1, durBeats: 1),   // B4
-            MelodyNote(freq: A4, startBar: 17, startBeat: 2, durBeats: 1),   // A4
+            MelodyNote(freq: C_5, startBar: 17, startBeat: 0, durBeats: 3),  // C#5 (3拍)
 
             // --- Bar 18 ---
-            MelodyNote(freq: B4, startBar: 18, startBeat: 0, durBeats: 1),   // B4
-            MelodyNote(freq: A4, startBar: 18, startBeat: 1, durBeats: 1),   // A4
-            MelodyNote(freq: G4, startBar: 18, startBeat: 2, durBeats: 1),   // G4
+            MelodyNote(freq: F_5, startBar: 18, startBeat: 0, durBeats: 3),  // F#5 (3拍)
 
-            // --- Bar 19 ---
-            MelodyNote(freq: F_4, startBar: 19, startBeat: 0, durBeats: 3),  // F#4 (Dotted Half)
+            // --- Bar 19-21: E5 持続 (Mi 3拍 x3) ---
+            MelodyNote(freq: E5, startBar: 19, startBeat: 0, durBeats: 3),   // E5 (3拍)
+            MelodyNote(freq: E5, startBar: 20, startBeat: 0, durBeats: 3),   // E5 (3拍)
+            MelodyNote(freq: E5, startBar: 21, startBeat: 0, durBeats: 3),   // E5 (3拍)
 
-            // --- Bar 20 ---
-            MelodyNote(freq: F_4, startBar: 20, startBeat: 0, durBeats: 1),  // F#4
-            MelodyNote(freq: A4, startBar: 20, startBeat: 1, durBeats: 1),   // A4
-            MelodyNote(freq: G4, startBar: 20, startBeat: 2, durBeats: 1),   // G4
-
-            // --- Bar 21 (Melody goes low) ---
-            MelodyNote(freq: F_4, startBar: 21, startBeat: 0, durBeats: 1),  // F#4
-            MelodyNote(freq: C_4, startBar: 21, startBeat: 1, durBeats: 1),  // C#4
-            MelodyNote(freq: B3, startBar: 21, startBeat: 2, durBeats: 1),   // B3
-
-            // --- Bar 22 ---
-            MelodyNote(freq: C_4, startBar: 22, startBeat: 0, durBeats: 2),  // C#4 (Half)
-            MelodyNote(freq: D4, startBar: 22, startBeat: 2, durBeats: 1),   // D4
-
-            // --- Bar 23 ---
-            MelodyNote(freq: A3, startBar: 23, startBeat: 0, durBeats: 3),   // A3 (Dotted Half - Very low)
-
-            // ========================================
-            // MARK: g3 - Bars 24-34 (Theme Return)
-            // ========================================
-
-            // --- Bar 24 (Theme Return - same as Bar 5) ---
-            MelodyNote(freq: F_5, startBar: 24, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: A5, startBar: 24, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: G5, startBar: 24, startBeat: 2, durBeats: 1),
-
-            // --- Bar 25 ---
-            MelodyNote(freq: F_5, startBar: 25, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: C_5, startBar: 25, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: B4, startBar: 25, startBeat: 2, durBeats: 1),
-
-            // --- Bar 26 ---
-            MelodyNote(freq: C_5, startBar: 26, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: D5, startBar: 26, startBeat: 2, durBeats: 1),
-
-            // --- Bar 27 ---
-            MelodyNote(freq: A4, startBar: 27, startBeat: 0, durBeats: 3),
-
-            // --- Bar 28 ---
-            MelodyNote(freq: A4, startBar: 28, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: F_5, startBar: 28, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: E5, startBar: 28, startBeat: 2, durBeats: 1),
-
-            // --- Bar 29 ---
-            MelodyNote(freq: D5, startBar: 29, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: A4, startBar: 29, startBeat: 1, durBeats: 2),
-
-            // --- Bar 30 ---
-            MelodyNote(freq: F_4, startBar: 30, startBeat: 0, durBeats: 3),  // F#4 (Dotted Half)
-
-            // --- Bar 31 ---
-            MelodyNote(freq: F_4, startBar: 31, startBeat: 0, durBeats: 3),  // F#4 (Tied/Held)
-
-            // --- Bar 32 (Descent starts - Ostinato D5) ---
-            MelodyNote(freq: D5, startBar: 32, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: A4, startBar: 32, startBeat: 2, durBeats: 1),
-
-            // --- Bar 33 ---
-            MelodyNote(freq: D5, startBar: 33, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: G4, startBar: 33, startBeat: 2, durBeats: 1),
-
-            // --- Bar 34 ---
-            MelodyNote(freq: D5, startBar: 34, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: F_4, startBar: 34, startBeat: 2, durBeats: 1),
-
-            // ========================================
-            // MARK: g4 - Bars 35-41 (Ending)
-            // ========================================
-
-            // --- Bar 35 ---
-            MelodyNote(freq: D5, startBar: 35, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: E4, startBar: 35, startBeat: 2, durBeats: 1),
-
-            // --- Bar 36 ---
-            MelodyNote(freq: D5, startBar: 36, startBeat: 0, durBeats: 2),
-            MelodyNote(freq: D4, startBar: 36, startBeat: 2, durBeats: 1),
-
-            // --- Bar 37 (Final melody note) ---
-            MelodyNote(freq: E4, startBar: 37, startBeat: 0, durBeats: 3),   // E4 (Dotted Half)
-
-            // Bar 38-41: Postlude (No Melody - LH only)
+            // Bar 22-: 続きは後で追加
         ]
     }()
 
@@ -265,34 +183,14 @@ private final class GymnoGenerator {
             let chordFreqs: [Float]
 
             switch bar {
-            // E minor context bars
-            case 9, 10:
+            // E minor context bars (F#4 持続部分)
+            case 9, 10, 11, 12:
                 bassFreq = E3
                 chordFreqs = [B3, D4]
-            case 14, 15:
+            // E5 持続部分
+            case 19, 20, 21:
                 bassFreq = E3
                 chordFreqs = [B3, D4]
-            case 18, 19, 20:
-                bassFreq = E3
-                chordFreqs = [B3, D4]
-            case 28:
-                bassFreq = E3
-                chordFreqs = [B3, D4]
-            // Suspended chord bars (A3+D4)
-            case 29, 30, 31:
-                bassFreq = E3
-                chordFreqs = [A3, D4]
-            // D pedal point (ending)
-            case 32, 33, 34, 35, 36, 37, 38, 39:
-                bassFreq = D3
-                chordFreqs = [A3, D4]
-            // pp ending
-            case 40:
-                bassFreq = G3
-                chordFreqs = [B3, D4]
-            case 41:
-                bassFreq = D3
-                chordFreqs = [A3, C_4]
             // Default pattern
             default:
                 if bar % 2 == 1 {
