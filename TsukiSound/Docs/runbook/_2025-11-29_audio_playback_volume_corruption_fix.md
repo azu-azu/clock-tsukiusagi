@@ -111,15 +111,14 @@ private func fadeOut(duration: TimeInterval) {
 }
 ```
 
-### 修正4: 遅延音量復元
+### 修正4: 遅延フェード再有効化
 
 ```swift
-// 0.6秒後に音量を強制再設定（念のため）
+// 0.6秒後にfadeEnabledを再有効化
 let currentSessionId = playbackSessionId
 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
     guard let self = self, currentSessionId == self.playbackSessionId else { return }
     self.fadeEnabled = true
-    self.applyDynamicGainCompensation()
 }
 ```
 
@@ -182,3 +181,41 @@ print("🎵 [FinalMixerOutputNode] attachAndConnect() sampleRate=\(sr), time=\(s
 - `TsukiSound/Core/Audio/Service/LocalAudioEngine.swift`
 - `TsukiSound/Core/Audio/Mixing/FinalMixerOutputNode.swift`
 - `TsukiSound/Core/Audio/Service/AudioSessionManager.swift`
+
+---
+
+## 公式ドキュメントによる裏付け
+
+今回の修正アプローチは、Apple公式ドキュメントに基づいた設計判断である。
+
+### サンプルレート変動について
+
+**Technical Q&A QA1631 "Requesting Audio Session Preferences"**:
+> "These preferred values are simply hints to the operating system, the actual buffer duration or sample rate may be different once the `AVAudioSession` has been activated."
+
+- 参照: [AVAudioSession - Requesting Audio Session Preferences](https://developer.apple.com/library/archive/qa/qa1631/_index.html)
+
+**AVAudioEngineConfigurationChangeNotification ドキュメント**:
+> "When the audio engine's I/O unit observes a change to the audio input or output hardware's channel count or sample rate, the audio engine stops, uninitializes …"
+
+- 参照: [AVAudioEngineConfigurationChangeNotification](https://developer.apple.com/documentation/avfaudio/avaudioengineconfigurationchangenotification)
+
+→ **結論**: 希望したサンプルレートと実際のハードウェア/セッションレートが異なる可能性があるため、固定フォーマットを使用する設計は理にかなっている。
+
+### タスクキャンセル・世代管理について
+
+**Task | Apple Developer Documentation**:
+> "Tasks include a shared mechanism for indicating cancellation, but not a shared implementation for how to handle cancellation."
+
+- 参照: [Task | Apple Developer Documentation](https://developer.apple.com/documentation/swift/task)
+
+**WWDC 2023 "Beyond the basics of structured concurrency"**:
+> "automatic task cancellation, task priority propagation and useful task-local value patterns"
+
+- 参照: [Beyond the basics of structured concurrency - WWDC23](https://developer.apple.com/videos/play/wwdc2023/10170/)
+
+→ **結論**: タスクは自動で止まるわけではなく、明示的なキャンセルや設計が必要。`fadeEnabled` フラグと `playbackSessionId` による世代管理は、公式が推奨する構造化並行処理の考え方に沿った設計である。
+
+### 注意事項
+
+公式ドキュメントで「44100Hz固定にしろ」「SessionIDを使え」と明記されているわけではない。今回の修正は公式の設計思想に基づいた**現場のベストプラクティス**である。
