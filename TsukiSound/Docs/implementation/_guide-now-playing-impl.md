@@ -1024,8 +1024,8 @@ private func setupNowPlayingCommands() {
 - [Phase 3 Integration Report](../report/report-audio-phase3-integration.md) - Phase 3実装の完全レポート
 
 ### トラブルシューティング
-- [Audio Distortion/Noise Troubleshooting](../trouble-audio-distortion-noise.md) - 音声品質問題
-- [Silent Switch Issues](../trouble-audio-no-sound-silent-switch.md) - 消音スイッチ問題
+- [Audio Distortion/Noise Troubleshooting](../report/report-audio-distortion-noise.md) - 音声品質問題
+- [Silent Switch Issues](../report/report-audio-no-sound-silent-switch.md) - 消音スイッチ問題
 
 ### 廃止された機能
 - [Live Activity Setup Guide (DEPRECATED)](../../../docs/LiveActivity-Setup-Guide.md) - Live Activity実装ガイド（参考用）

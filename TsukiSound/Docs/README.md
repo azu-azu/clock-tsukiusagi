@@ -21,8 +21,7 @@
 | `structure-` | 設計構造層    | フォルダ構成・設計ルール・命名体系 | `structure-directory.md`, `structure-guidelines.md` |
 | `changelog-` | 変更履歴層    | 機能別・モジュール別の変更履歴   | `changelog-audio.md`                                |
 | `lint-`      | 例外・ルール層  | コード規約や例外設定        | `lint-exceptions.md`                                |
-| `report-`    | 報告層      | 作業記録・移行レポート・結果報告  | `report-task-terminology-migration.md`              |
-| `trouble-`   | 対応層      | 不具合・検証・原因分析       | `trouble-cursor-swift.md`                           |
+| `report-`    | 報告層      | 作業記録・移行レポート・不具合分析  | `report-audio-distortion-noise.md`              |
 | `README.md`  | 説明層（特例）  | フォルダ全体の概要         | `README.md`（プレフィックスなし）                              |
 
 ---
@@ -95,11 +94,11 @@
 ### 🎧 リファレンス音声
 - [`reference-audio/_guide-reference-audio.md`](./reference-audio/_guide-reference-audio.md) - 解析専用の音声ファイル置き場（アプリには同梱しない）
 
-### 🔧 トラブルシューティング
-- [`trouble-audio-distortion-noise.md`](./trouble-audio-distortion-noise.md) - AVAudioUnitDistortion雑音問題RCA（最重要）★CRITICAL
-- [`trouble-audio-no-sound-silent-switch.md`](./trouble-audio-no-sound-silent-switch.md) - オーディオ無音問題（サイレントスイッチ）RCA
-- [`trouble-audio-sample-rate-mismatch.md`](./trouble-audio-sample-rate-mismatch.md) - サンプルレート不一致によるノイズ問題RCA（パチパチ音）
-- [`trouble-cursor-swift.md`](./trouble-cursor-swift.md) - Cursor Swift拡張のトラブルシューティング
+### 🔧 トラブルシューティング・問題分析
+- [`report/report-audio-distortion-noise.md`](./report/report-audio-distortion-noise.md) - AVAudioUnitDistortion雑音問題RCA（最重要）★CRITICAL
+- [`report/report-audio-no-sound-silent-switch.md`](./report/report-audio-no-sound-silent-switch.md) - オーディオ無音問題（サイレントスイッチ）RCA
+- [`report/report-audio-sample-rate-mismatch.md`](./report/report-audio-sample-rate-mismatch.md) - サンプルレート不一致によるノイズ問題RCA（パチパチ音）
+- [`report/report-jupiter-melody-optimization.md`](./report/report-jupiter-melody-optimization.md) - Jupiter Melody パフォーマンス最適化
 
 ## 📝 ドキュメント作成・更新ルール
 
@@ -111,8 +110,7 @@
 - `structure-*.md` - 構造・設計ルール
 - `changelog-*.md` - 機能別・モジュール別の変更履歴
 - `lint-*.md` - コード規約・例外設定
-- `report-*.md` - 作業記録・移行レポート
-- `trouble-*.md` - トラブルシューティング
+- `report-*.md` - 作業記録・移行レポート・不具合分析
 - `README.md` - フォルダ概要（プレフィックスなし）
 
 ### **更新時の注意**

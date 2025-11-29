@@ -291,7 +291,7 @@ private final class JupiterMelodyGenerator {
 
     /// Generate organ tone - single voice for performance
     /// Note: Multi-voice layering (16' Sub, Quint, 4' Oct) removed due to CPU load
-    /// causing audio glitches. See architect/todo.md for analysis.
+    /// causing audio glitches. See report/report-jupiter-melody-optimization.md for analysis.
     private func generateTone(freq: Float, t: Float) -> Float {
         // 8' Principal: Main melody voice only
         return generateSingleVoice(freq: freq, t: t)

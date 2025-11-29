@@ -376,7 +376,7 @@ All 14 presets tested:
 ## Related Documentation
 
 - **Reference**: Vadim Zavalishin, "The Art of VA Filter Design" (2019)
-- **Previous issue**: `trouble-audio-distortion-noise.md` (misdiagnosed as AVAudioEngine issue)
+- **Previous issue**: `report/report-audio-distortion-noise.md` (misdiagnosed as AVAudioEngine issue)
 - **Architecture**: `architecture/audio-system-spec.md` (FinalMixer effects chain)
 
 ## Future Considerations

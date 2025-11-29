@@ -279,7 +279,7 @@ public final class AirLayerSource: AudioSource {
   - `ClickMaskingDrone.swift`: 44100 → 48000 Hz (including diagnostic interval)
 - **Result**: All 16 AudioSource files now use 48 kHz consistently
 - **Impact**: Eliminated all clicking/crackling noise, improved audio quality
-- **Documentation**: See [trouble-audio-sample-rate-mismatch.md](../trouble-audio-sample-rate-mismatch.md)
+- **Documentation**: See [report/report-audio-sample-rate-mismatch.md](../report/report-audio-sample-rate-mismatch.md)
 
 ### Removed
 
@@ -305,7 +305,7 @@ public final class AirLayerSource: AudioSource {
 
 ### Documentation
 
-- **New**: [trouble-audio-sample-rate-mismatch.md](../trouble-audio-sample-rate-mismatch.md) - RCA and fix for sample rate issues
+- **New**: [report/report-audio-sample-rate-mismatch.md](../report/report-audio-sample-rate-mismatch.md) - RCA and fix for sample rate issues
 - **Updated**: [_guide-audio-system-impl.md](../implementation/_guide-audio-system-impl.md) - Added Section 5.8: Sample Rate Mismatch Issues
 
 ---

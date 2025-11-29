@@ -369,7 +369,7 @@ print("   Format: \(format.commonFormat.rawValue)")
 ## 🔗 関連ドキュメント
 
 - [Audio System Implementation Guide](./implementation/_guide-audio-system-impl.md)
-- [AVAudioUnitDistortion雑音問題](./trouble-audio-distortion-noise.md)
+- [AVAudioUnitDistortion雑音問題](./report/report-audio-distortion-noise.md)
 - `TsukiSound/Core/Audio/Sources/*.swift` - AudioSource実装
 
 ---

@@ -127,7 +127,7 @@ xcodebuild test -project TsukiSound.xcodeproj -scheme TsukiSound
 * `architecture/` — アーキテクチャ仕様
 * `audio-system-spec.md` — Audioエンジン仕様
 * `implementation/` — 実装ガイド
-* `trouble-*.md` — トラブルシュート
+* `report/` — レポート・トラブルシュート
 
 ---
 

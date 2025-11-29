@@ -725,7 +725,7 @@ grep -rn "44100\|48000" TsukiSound/Core/Audio/Sources/
 
 **Rule**: **Always use 48000.0 Hz for iOS AudioSource implementations.**
 
-See [trouble-audio-sample-rate-mismatch.md](../trouble-audio-sample-rate-mismatch.md) for detailed RCA.
+See [report/report-audio-sample-rate-mismatch.md](../report/report-audio-sample-rate-mismatch.md) for detailed RCA.
 
 ---
 

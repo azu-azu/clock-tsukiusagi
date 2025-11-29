@@ -674,7 +674,7 @@ After fixing the volume issues and stateful Signal bugs, inconsistencies remaine
 - Inconsistent file structure and documentation
 - No clear standards for future presets
 
-**Priority 2 from architect/todo.md**: Unify structure across all Signal presets.
+**Priority 2**: Unify structure across all Signal presets.
 
 ### Goals
 

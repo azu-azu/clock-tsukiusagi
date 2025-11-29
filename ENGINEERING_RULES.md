@@ -37,7 +37,7 @@ Define feature intent, scope, and implementation approach before coding.
 Document in relevant places:
 - Architecture decisions → `Docs/architecture/`
 - Implementation guides → `Docs/implementation/`
-- Troubleshooting → `Docs/trouble-*.md`
+- Troubleshooting → `Docs/report/report-*.md`
 
 ### 2. Implementation Flow
 
@@ -51,7 +51,7 @@ Document in relevant places:
 ### 3. When Stuck (After 3 Attempts)
 
 Stop.
-Document the issue in appropriate `Docs/trouble-*.md` or create new guide.
+Document the issue in `Docs/report/report-*.md` or create new guide.
 
 Then:
 * Study at least 2 external references (Apple docs, WWDC sessions)
@@ -303,7 +303,7 @@ TsukiSound/
     ├── implementation/           # Guides
     ├── runbook/                  # Procedures
     ├── changelog/                # Change logs
-    └── trouble-*.md              # Troubleshooting
+    └── report/                   # Reports & Troubleshooting
 ```
 
 **Rules:**
@@ -350,8 +350,7 @@ TsukiSound/
 * `_runbook-*.md` — Operational procedures
 * `structure-*.md` — Structure and organization
 * `changelog-*.md` — Change history
-* `trouble-*.md` — Troubleshooting guides
-* `report-*.md` — Task reports
+* `report-*.md` — Task reports & Troubleshooting
 
 **Key documents:**
 * `Docs/README.md` — Documentation index
@@ -362,7 +361,7 @@ TsukiSound/
 **Update requirements:**
 * Document architecture decisions in relevant `_adr-*.md`
 * Create implementation guides for complex features
-* Document all troubleshooting in `trouble-*.md`
+* Document all troubleshooting in `report/report-*.md`
 * Update `Docs/README.md` when adding new docs
 
 ---
@@ -472,8 +471,8 @@ TsukiSound/
 * `Docs/implementation/natural-sound-presets-restoration.md` — Sound preset restoration
 
 ### Troubleshooting
-* `Docs/trouble-audio-distortion-noise.md` — Audio distortion RCA
-* `Docs/trouble-audio-no-sound-silent-switch.md` — Silent switch issues
+* `Docs/report/report-audio-distortion-noise.md` — Audio distortion RCA
+* `Docs/report/report-audio-no-sound-silent-switch.md` — Silent switch issues
 * `Docs/_guide-error-resolution.md` — General error resolution
 
 ---

@@ -165,4 +165,3 @@ let phase = 2π * modulatedFreq * t
 - 実装: `TsukiSound/Core/Audio/Synthesis/PureTone/JupiterMelodySignal.swift`
 - ビブラート詳細: `_guide-vibrato-implementation.md`
 - 配列イテレーション: `_guide-zip-safe-iteration.md`
-- 問題分析: `architect/todo.md`

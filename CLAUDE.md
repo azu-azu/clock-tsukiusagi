@@ -267,7 +267,7 @@ See: `TsukiSound/Docs/implementation/audio-parameter-safety-rules.md`
 3. Check for AVAudioUnitDistortion — remove if not needed
 4. Force audio graph rebuild if switching between sources
 
-See: `TsukiSound/Docs/trouble-audio-distortion-noise.md`
+See: `TsukiSound/Docs/report/report-audio-distortion-noise.md`
 
 ---
 
@@ -285,8 +285,8 @@ See: `TsukiSound/Docs/trouble-audio-distortion-noise.md`
 * `TsukiSound/Docs/implementation/comment-log-standards.md` — Comment and log standards
 
 ### Troubleshooting
-* `TsukiSound/Docs/trouble-audio-distortion-noise.md` — Audio distortion RCA
-* `TsukiSound/Docs/trouble-audio-no-sound-silent-switch.md` — Silent switch issues
+* `TsukiSound/Docs/report/report-audio-distortion-noise.md` — Audio distortion RCA
+* `TsukiSound/Docs/report/report-audio-no-sound-silent-switch.md` — Silent switch issues
 * `TsukiSound/Docs/_guide-error-resolution.md` — General error resolution checklist
 
 ### Other
