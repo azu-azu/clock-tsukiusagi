@@ -107,44 +107,33 @@ private final class GymnoGenerator {
 
             // Bar 1-4: Intro (No Melody)
 
-            // --- Bar 5 (Melody Enters) ---
-            MelodyNote(freq: F_5, startBar: 5, startBeat: 0, durBeats: 1),   // F#5
-            MelodyNote(freq: A5, startBar: 5, startBeat: 1, durBeats: 1),    // A5
-            MelodyNote(freq: G5, startBar: 5, startBeat: 2, durBeats: 1),    // G5
+            // --- Bar 5 (Melody Enters - 1拍休符から) ---
+            // Beat 0: 休符
+            MelodyNote(freq: F_5, startBar: 5, startBeat: 1, durBeats: 1),   // F#5
+            MelodyNote(freq: A5, startBar: 5, startBeat: 2, durBeats: 1),    // A5
 
             // --- Bar 6 ---
-            MelodyNote(freq: F_5, startBar: 6, startBeat: 0, durBeats: 1),   // F#5
-            MelodyNote(freq: C_5, startBar: 6, startBeat: 1, durBeats: 1),   // C#5
-            MelodyNote(freq: B4, startBar: 6, startBeat: 2, durBeats: 1),    // B4
+            MelodyNote(freq: G5, startBar: 6, startBeat: 0, durBeats: 1),    // G5
+            MelodyNote(freq: F_5, startBar: 6, startBeat: 1, durBeats: 1),   // F#5
+            MelodyNote(freq: C_5, startBar: 6, startBeat: 2, durBeats: 1),   // C#5
 
             // --- Bar 7 ---
-            MelodyNote(freq: C_5, startBar: 7, startBeat: 0, durBeats: 2),   // C#5 (Half)
+            MelodyNote(freq: B4, startBar: 7, startBeat: 0, durBeats: 1),    // B4
+            MelodyNote(freq: C_5, startBar: 7, startBeat: 1, durBeats: 1),   // C#5
             MelodyNote(freq: D5, startBar: 7, startBeat: 2, durBeats: 1),    // D5
 
             // --- Bar 8 ---
-            MelodyNote(freq: A4, startBar: 8, startBeat: 0, durBeats: 3),    // A4 (Dotted Half)
+            MelodyNote(freq: A4, startBar: 8, startBeat: 0, durBeats: 3),    // A4 (3拍)
 
-            // --- Bar 9 ---
-            MelodyNote(freq: A4, startBar: 9, startBeat: 0, durBeats: 1),    // A4
-            MelodyNote(freq: F_5, startBar: 9, startBeat: 1, durBeats: 1),   // F#5
-            MelodyNote(freq: E5, startBar: 9, startBeat: 2, durBeats: 1),    // E5
-
-            // --- Bar 10 ---
-            MelodyNote(freq: D5, startBar: 10, startBeat: 0, durBeats: 1),   // D5
-            MelodyNote(freq: A4, startBar: 10, startBeat: 1, durBeats: 2),   // A4 (Half)
-
-            // --- Bar 11 (Repeat pattern) ---
-            MelodyNote(freq: F_5, startBar: 11, startBeat: 0, durBeats: 1),
-            MelodyNote(freq: A5, startBar: 11, startBeat: 1, durBeats: 1),
-            MelodyNote(freq: G5, startBar: 11, startBeat: 2, durBeats: 1),
+            // --- Bar 9-12: F#4 持続 (Fa 3拍 x4) ---
+            MelodyNote(freq: F_4, startBar: 9, startBeat: 0, durBeats: 3),   // F#4 (3拍)
+            MelodyNote(freq: F_4, startBar: 10, startBeat: 0, durBeats: 3),  // F#4 (3拍)
+            MelodyNote(freq: F_4, startBar: 11, startBeat: 0, durBeats: 3),  // F#4 (3拍)
+            MelodyNote(freq: F_4, startBar: 12, startBeat: 0, durBeats: 3),  // F#4 (3拍)
 
             // ========================================
-            // MARK: g2 - Bars 12-23 (Development)
+            // MARK: g2 - Bars 13- (Development)
             // ========================================
-
-            // --- Bar 12 ---
-            MelodyNote(freq: F_5, startBar: 12, startBeat: 0, durBeats: 2),  // F#5 (Half)
-            MelodyNote(freq: D5, startBar: 12, startBeat: 2, durBeats: 1),   // D5
 
             // --- Bar 13 ---
             MelodyNote(freq: A4, startBar: 13, startBeat: 0, durBeats: 3),   // A4 (Dotted Half)
