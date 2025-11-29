@@ -286,18 +286,11 @@ public final class AudioService: ObservableObject {
         // ✂️ ボリューム確認用ログ（本番前に削除）
         print("🎵 [AudioService] after applyDynamicGainCompensation() mainMixerVolume=\(engine.engine.mainMixerNode.outputVolume)")
 
-        // CRITICAL: 前回のフェードアウトの影響を完全に排除
-        // フェードアウトタイマーがまだ動いている可能性があるため、再度キャンセル
-        fadeTimer?.invalidate()
-        fadeTimer = nil
-
-        // 遅延後に音量を強制再設定（pending fade Taskの影響を上書き）
+        // 遅延後にfadeEnabledを再有効化（stopAndWait→play の流れで無効化されているため）
         let currentSessionId = playbackSessionId
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
             guard let self = self, currentSessionId == self.playbackSessionId else { return }
             self.fadeEnabled = true
-            // フェードアウトが完了した後でも音量を正しい値に戻す
-            self.applyDynamicGainCompensation()
         }
 
         // 経路監視は既に起動時に開始済み（init()で実行）
@@ -799,7 +792,6 @@ public final class AudioService: ObservableObject {
         let startVolume = engine.engine.mainMixerNode.outputVolume
         targetVolume = startVolume  // 元の音量を記憶
         let fadeSessionId = playbackSessionId  // Capture session ID for stale check
-
 
         let steps = 60  // 60ステップ（60fps想定）
         let stepDuration = duration / Double(steps)

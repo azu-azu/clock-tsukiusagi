@@ -63,9 +63,6 @@ public final class FinalMixerOutputNode: AudioSource {
 
             let frames = Int(frameCount)
 
-            // 最初の1秒だけログを出力（デバッグ用）
-            // ログ削除予定
-
             // Render mono block
             state.mixer.outputBlock(
                 startTime: state.time,
