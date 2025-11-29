@@ -184,10 +184,13 @@ private final class GymnoGenerator {
             MelodyNote(freq: D5, startBar: 24, startBeat: 0, durBeats: 1),   // D5
             MelodyNote(freq: C5, startBar: 24, startBeat: 1, durBeats: 1),   // C5 (ナチュラル)
             MelodyNote(freq: B4, startBar: 24, startBeat: 2, durBeats: 1),   // B4
+            MelodyNote(freq: E4, startBar: 24, startBeat: 1, durBeats: 2),   // E4 (Alto)
 
             // --- Bar 25-26 ---
             MelodyNote(freq: D5, startBar: 25, startBeat: 0, durBeats: 5),   // D5 (5拍)
+            MelodyNote(freq: D4, startBar: 25, startBeat: 1, durBeats: 2),   // D4 (Alto)
             MelodyNote(freq: D5, startBar: 26, startBeat: 2, durBeats: 1),   // D5
+            MelodyNote(freq: D4, startBar: 26, startBeat: 1, durBeats: 2),   // D4 (Alto)
 
             // ========================================
             // MARK: g4 - Bars 27-32 (Ascending passage)
@@ -206,10 +209,13 @@ private final class GymnoGenerator {
             MelodyNote(freq: E5, startBar: 29, startBeat: 0, durBeats: 1),   // E5
             MelodyNote(freq: D5, startBar: 29, startBeat: 1, durBeats: 1),   // D5
             MelodyNote(freq: B4, startBar: 29, startBeat: 2, durBeats: 1),   // B4
+            MelodyNote(freq: E4, startBar: 29, startBeat: 1, durBeats: 2),   // E4 (Alto)
 
             // --- Bar 30-31 ---
             MelodyNote(freq: D5, startBar: 30, startBeat: 0, durBeats: 5),   // D5 (5拍)
+            MelodyNote(freq: D4, startBar: 30, startBeat: 1, durBeats: 2),   // D4 (Alto)
             MelodyNote(freq: D5, startBar: 31, startBeat: 2, durBeats: 1),   // D5
+            MelodyNote(freq: D4, startBar: 31, startBeat: 1, durBeats: 2),   // D4 (Alto)
 
             // ========================================
             // MARK: g5 - Bars 32-37 (Final section)
@@ -238,6 +244,8 @@ private final class GymnoGenerator {
 
             // --- Bar 37 ---
             MelodyNote(freq: F_4, startBar: 37, startBeat: 0, durBeats: 3),  // F#4 (3拍)
+            MelodyNote(freq: D4, startBar: 37, startBeat: 1, durBeats: 1),   // D4 (Alto)
+            MelodyNote(freq: G4, startBar: 37, startBeat: 2, durBeats: 1),   // G4 (Alto)
 
             // --- Bar 38 (4声同時: C-E-A-C 和音) ---
             MelodyNote(freq: C4, startBar: 38, startBeat: 0, durBeats: 3),   // C4 (ナチュラル)
