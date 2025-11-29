@@ -31,7 +31,7 @@ private final class GymnoGenerator {
 
     let beat: Float = 0.682        // 1拍 = 0.682秒 (88 BPM)
     lazy var barDuration: Float = beat * 3  // 1小節 = 3拍
-    let totalBars: Int = 32       // 現在のメロディ範囲
+    let totalBars: Int = 37       // 現在のメロディ範囲
     lazy var cycleDuration: Float = Float(totalBars) * barDuration
 
     // MARK: - Frequency Constants (D Major: F#, C#)
@@ -186,33 +186,59 @@ private final class GymnoGenerator {
 
             // --- Bar 25-26 ---
             MelodyNote(freq: D5, startBar: 25, startBeat: 0, durBeats: 5),   // D5 (5拍)
+            MelodyNote(freq: D5, startBar: 26, startBeat: 2, durBeats: 1),   // D5
 
             // ========================================
             // MARK: g4 - Bars 27-32 (Ascending passage)
             // ========================================
-
             // --- Bar 27 ---
-            MelodyNote(freq: D5, startBar: 27, startBeat: 0, durBeats: 1),   // D5
-            MelodyNote(freq: E5, startBar: 27, startBeat: 1, durBeats: 1),   // E5
-            MelodyNote(freq: F5, startBar: 27, startBeat: 2, durBeats: 1),   // F5 (ナチュラル)
+            MelodyNote(freq: E5, startBar: 27, startBeat: 0, durBeats: 1),   // E5
+            MelodyNote(freq: F5, startBar: 27, startBeat: 1, durBeats: 1),   // F5 (ナチュラル)
+            MelodyNote(freq: G5, startBar: 27, startBeat: 2, durBeats: 1),   // G5
 
             // --- Bar 28 ---
-            MelodyNote(freq: G5, startBar: 28, startBeat: 0, durBeats: 1),   // G5
-            MelodyNote(freq: A5, startBar: 28, startBeat: 1, durBeats: 1),   // A5
-            MelodyNote(freq: C6, startBar: 28, startBeat: 2, durBeats: 1),   // C6 (ナチュラル)
+            MelodyNote(freq: A5, startBar: 28, startBeat: 0, durBeats: 1),   // A5
+            MelodyNote(freq: C5, startBar: 28, startBeat: 1, durBeats: 1),   // C5 (ナチュラル)
+            MelodyNote(freq: D5, startBar: 28, startBeat: 2, durBeats: 1),   // D5
 
             // --- Bar 29 ---
-            MelodyNote(freq: D6, startBar: 29, startBeat: 0, durBeats: 1),   // D6
-            MelodyNote(freq: E6, startBar: 29, startBeat: 1, durBeats: 1),   // E6
-            MelodyNote(freq: D6, startBar: 29, startBeat: 2, durBeats: 1),   // D6
-
-            // --- Bar 30 ---
-            MelodyNote(freq: B5, startBar: 30, startBeat: 0, durBeats: 1),   // B5
+            MelodyNote(freq: E5, startBar: 29, startBeat: 0, durBeats: 1),   // E5
+            MelodyNote(freq: D5, startBar: 29, startBeat: 1, durBeats: 1),   // D5
+            MelodyNote(freq: B4, startBar: 29, startBeat: 2, durBeats: 1),   // B4
 
             // --- Bar 30-31 ---
-            MelodyNote(freq: D6, startBar: 30, startBeat: 1, durBeats: 5),   // D6 (5拍)
+            MelodyNote(freq: D5, startBar: 30, startBeat: 0, durBeats: 5),   // D5 (5拍)
+            MelodyNote(freq: D5, startBar: 31, startBeat: 2, durBeats: 1),   // D5
 
-            // Bar 32-: 続きは後で追加
+            // ========================================
+            // MARK: g5 - Bars 32-37 (Final section)
+            // ========================================
+
+            // --- Bar 32 ---
+            MelodyNote(freq: G5, startBar: 32, startBeat: 0, durBeats: 3),   // G5 (3拍)
+
+            // --- Bar 33 ---
+            MelodyNote(freq: F_5, startBar: 33, startBeat: 0, durBeats: 3),  // F#5 (3拍)
+
+            // --- Bar 34 ---
+            MelodyNote(freq: B4, startBar: 34, startBeat: 0, durBeats: 1),   // B4
+            MelodyNote(freq: A4, startBar: 34, startBeat: 1, durBeats: 1),   // A4
+            MelodyNote(freq: B4, startBar: 34, startBeat: 2, durBeats: 1),   // B4
+
+            // --- Bar 35 ---
+            MelodyNote(freq: C_5, startBar: 35, startBeat: 0, durBeats: 1),  // C#5
+            MelodyNote(freq: D5, startBar: 35, startBeat: 1, durBeats: 1),   // D5
+            MelodyNote(freq: E5, startBar: 35, startBeat: 2, durBeats: 1),   // E5
+
+            // --- Bar 36 ---
+            MelodyNote(freq: C_5, startBar: 36, startBeat: 0, durBeats: 1),  // C#5
+            MelodyNote(freq: D5, startBar: 36, startBeat: 1, durBeats: 1),   // D5
+            MelodyNote(freq: E5, startBar: 36, startBeat: 2, durBeats: 1),   // E5
+
+            // --- Bar 37 ---
+            MelodyNote(freq: F_4, startBar: 37, startBeat: 0, durBeats: 3),  // F#4 (3拍)
+
+            // Bar 38-: 続きは後で追加
         ]
     }()
 
