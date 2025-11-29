@@ -57,7 +57,7 @@ struct AudioPlaybackView: View {
     @EnvironmentObject var audioService: AudioService
     @Binding var selectedTab: Tab
 
-    @State private var selectedSource: AudioSourcePreset = .synthesis(.softOrgan)
+    @State private var selectedSource: AudioSourcePreset = .synthesis(.jupiter)
 
     @State private var errorMessage: String?
     @State private var showError = false

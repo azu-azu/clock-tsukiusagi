@@ -251,6 +251,15 @@ private final class JupiterMelodyGenerator {
     /// Increased from 0.22 to 0.35 after removing multi-voice layering
     let masterGain: Float = 0.35
 
+    /// High frequency gain reduction threshold (Hz)
+    /// Frequencies above this will be progressively reduced
+    let highFreqThreshold: Float = 700.0
+    let highFreqMax: Float = 1046.50  // C6
+
+    /// Transpose factor: -2 semitones for warmer, less piercing sound
+    /// 2^(-2/12) ≈ 0.8909
+    let transposeFactor: Float = pow(2.0, -2.0 / 12.0)
+
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
@@ -269,9 +278,12 @@ private final class JupiterMelodyGenerator {
             let noteStartTime = cumulativeTimes[index]
             let localTime = cycleTime - noteStartTime
 
-            // Current note with legato envelope
+            // Current note with legato envelope and high-freq gain reduction
+            // Apply transpose factor to frequency (structure unchanged, pitch lowered)
+            let transposedFreq = note.freq * transposeFactor
             let envelope = calculateLegatoEnvelope(time: localTime, duration: note.duration)
-            totalSignal += generateTone(freq: note.freq, t: tAbsolute) * envelope
+            let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+            totalSignal += generateTone(freq: transposedFreq, t: tAbsolute) * envelope * gainReduction
 
             // Check if previous note is still releasing (legato overlap)
             if index > 0 && localTime < legatoOverlap {
@@ -281,12 +293,15 @@ private final class JupiterMelodyGenerator {
 
                 let prevEnvelope = calculateLegatoEnvelope(time: timeIntoRelease, duration: prevDuration)
                 if prevEnvelope > 0 {
-                    totalSignal += generateTone(freq: prevNote.freq, t: tAbsolute) * prevEnvelope
+                    let prevTransposedFreq = prevNote.freq * transposeFactor
+                    let prevGainReduction = calculateHighFreqReduction(freq: prevTransposedFreq)
+                    totalSignal += generateTone(freq: prevTransposedFreq, t: tAbsolute) * prevEnvelope * prevGainReduction
                 }
             }
         }
 
-        return totalSignal * masterGain
+        let output = totalSignal * masterGain
+        return SignalEnvelopeUtils.softClip(output)
     }
 
     /// Generate organ tone - single voice for performance
@@ -342,6 +357,16 @@ private final class JupiterMelodyGenerator {
             }
         }
         return nil
+    }
+
+    /// Calculate high frequency gain reduction (700Hz - C6)
+    /// Reduces "ringing" sound in high frequency notes by up to 20%
+    private func calculateHighFreqReduction(freq: Float) -> Float {
+        guard freq >= highFreqThreshold else { return 1.0 }
+
+        let reductionRatio = min(1.0, (freq - highFreqThreshold) / (highFreqMax - highFreqThreshold))
+        // Maximum 20% reduction at highest frequency
+        return 1.0 - reductionRatio * 0.2
     }
 
     /// Generates a simple ASR (Attack-Sustain-Release) envelope

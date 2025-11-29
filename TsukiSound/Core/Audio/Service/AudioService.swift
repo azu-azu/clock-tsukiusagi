@@ -216,6 +216,11 @@ public final class AudioService: ObservableObject {
     /// 音声再生を開始
     /// - Parameter preset: 再生するプリセット
     public func play(preset: UISoundPreset) throws {
+        // CRITICAL: 前のセッションのフェードアウトを即座に無効化
+        // これにより stopAndWait → play の流れでも前のフェードが新しい再生を邪魔しない
+        fadeEnabled = false
+        fadeTimer?.invalidate()
+        fadeTimer = nil
 
         // Wrap entire method in do-catch to ensure state cleanup on error
         do {
@@ -230,11 +235,10 @@ public final class AudioService: ObservableObject {
 
     /// Internal play implementation (allows proper error handling)
     private func _playInternal(preset: UISoundPreset) throws {
-        // Cancel any pending stop/fade tasks from previous session
+        // Cancel any pending stop tasks from previous session
+        // Note: fadeTimer は play() で既にキャンセル済み
         engineStopWorkItem?.cancel()
-        fadeTimer?.invalidate()
         engineStopWorkItem = nil
-        fadeTimer = nil
 
         // Generate new playback session ID
         playbackSessionId = UUID()
@@ -278,6 +282,16 @@ public final class AudioService: ObservableObject {
 
         // 音量は動的ゲイン補正で自動設定される（システム音量に基づく）
         applyDynamicGainCompensation()
+
+        // ✂️ ボリューム確認用ログ（本番前に削除）
+        print("🎵 [AudioService] after applyDynamicGainCompensation() mainMixerVolume=\(engine.engine.mainMixerNode.outputVolume)")
+
+        // 遅延後にfadeEnabledを再有効化（stopAndWait→play の流れで無効化されているため）
+        let currentSessionId = playbackSessionId
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            guard let self = self, currentSessionId == self.playbackSessionId else { return }
+            self.fadeEnabled = true
+        }
 
         // 経路監視は既に起動時に開始済み（init()で実行）
 
@@ -600,7 +614,7 @@ public final class AudioService: ObservableObject {
     /// Map UISoundPreset to PureTonePreset (if applicable)
     private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
         switch uiPreset {
-        case .softOrgan:
+        case .jupiter:
             return .cathedralStillness
         case .moonlitGymnopedie:
             return .moonlitGymnopedie
@@ -765,15 +779,19 @@ public final class AudioService: ObservableObject {
 
     private var fadeTimer: Timer?
     private var targetVolume: Float = 0.5
+    private var fadeEnabled: Bool = true  // フェードを許可するかどうか
 
     /// 音量をフェードアウト
     /// - Parameter duration: フェード時間（秒）
     private func fadeOut(duration: TimeInterval) {
+        // フェードが無効化されている場合は何もしない
+        guard fadeEnabled else { return }
+
         fadeTimer?.invalidate()
 
         let startVolume = engine.engine.mainMixerNode.outputVolume
         targetVolume = startVolume  // 元の音量を記憶
-
+        let fadeSessionId = playbackSessionId  // Capture session ID for stale check
 
         let steps = 60  // 60ステップ（60fps想定）
         let stepDuration = duration / Double(steps)
@@ -789,6 +807,13 @@ public final class AudioService: ObservableObject {
 
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
+
+                // fadeEnabled と session ID をチェック
+                guard self.fadeEnabled, fadeSessionId == self.playbackSessionId else {
+                    timer.invalidate()
+                    self.fadeTimer = nil
+                    return
+                }
 
                 currentStep += 1
                 let newVolume = max(0.0, startVolume - (volumeStep * Float(currentStep)))
@@ -808,7 +833,6 @@ public final class AudioService: ObservableObject {
         fadeTimer?.invalidate()
 
         let endVolume = targetVolume  // 記憶した音量に戻す
-
 
         let steps = 60  // 60ステップ
         let stepDuration = duration / Double(steps)
@@ -952,7 +976,6 @@ public final class AudioService: ObservableObject {
 
         // Apply to main mixer
         engine.setMasterVolume(compensatedGain)
-
     }
 
 }

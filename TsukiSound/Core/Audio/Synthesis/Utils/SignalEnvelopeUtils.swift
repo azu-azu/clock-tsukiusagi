@@ -125,6 +125,23 @@ public struct SignalEnvelopeUtils {
         return sin(2 * Float.pi * frequency * t)
     }
 
+    /// 暖かみのあるサイン波（奇数倍音ブレンド）
+    ///
+    /// ピアノや弦楽器のような豊かな音色を実現
+    /// 奇数倍音（3倍、5倍）を控えめに加えることで
+    /// 機械的な純音から有機的な響きへ変換
+    ///
+    /// - Parameters:
+    ///   - frequency: 基音の周波数（Hz）
+    ///   - t: 時間（秒）
+    /// - Returns: 倍音合成波の値（-1.0〜1.0程度）
+    public static func richSine(frequency: Float, t: Float) -> Float {
+        let fundamental = pureSine(frequency: frequency, t: t)
+        let thirdHarmonic = pureSine(frequency: frequency * 3.0, t: t) * 0.35
+        let fifthHarmonic = pureSine(frequency: frequency * 5.0, t: t) * 0.15
+        return (fundamental + thirdHarmonic + fifthHarmonic) * 0.8
+    }
+
     /// 倍音付きサイン波（音色を豊かにする場合）
     ///
     /// 倍音を加える場合は音量を十分下げること

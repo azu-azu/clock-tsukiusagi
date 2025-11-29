@@ -93,6 +93,11 @@ public final class FinalMixerOutputNode: AudioSource {
     public func attachAndConnect(to engine: AVAudioEngine, format: AVAudioFormat) throws {
         let sr = format.sampleRate > 0 ? Float(format.sampleRate) : 48000
         state.sampleRate = sr
+        state.time = 0  // 確実にリセット
+        state.mixer.resetEffectsState()  // エフェクト状態もリセット
+        state.fadeEnvelope = nil
+        // ✂️ 状態確認用ログ（本番前に削除）
+        print("🎵 [FinalMixerOutputNode] attachAndConnect() sampleRate=\(sr), time=\(state.time), volume=\(state.volume)")
         engine.attach(_sourceNode)
         engine.connect(_sourceNode, to: engine.mainMixerNode, format: format)
     }
