@@ -813,20 +813,24 @@ public final class AudioService: ObservableObject {
                 return
             }
 
-            // CRITICAL: fadeEnabled チェックは Task の外で行う
-            // Task 内だと既に dispatch されたものは止められない
-            guard self.fadeEnabled, fadeSessionId == self.playbackSessionId else {
-                timer.invalidate()
-                return
-            }
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
 
-            currentStep += 1
-            let newVolume = max(0.0, startVolume - (volumeStep * Float(currentStep)))
-            self.engine.setMasterVolume(newVolume)
+                // fadeEnabled と session ID をチェック
+                guard self.fadeEnabled, fadeSessionId == self.playbackSessionId else {
+                    timer.invalidate()
+                    self.fadeTimer = nil
+                    return
+                }
 
-            if currentStep >= steps {
-                timer.invalidate()
-                self.fadeTimer = nil
+                currentStep += 1
+                let newVolume = max(0.0, startVolume - (volumeStep * Float(currentStep)))
+                self.engine.setMasterVolume(newVolume)
+
+                if currentStep >= steps {
+                    timer.invalidate()
+                    self.fadeTimer = nil
+                }
             }
         }
     }
@@ -850,13 +854,17 @@ public final class AudioService: ObservableObject {
                 return
             }
 
-            currentStep += 1
-            let newVolume = min(endVolume, volumeStep * Float(currentStep))
-            self.engine.setMasterVolume(newVolume)
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
 
-            if currentStep >= steps {
-                timer.invalidate()
-                self.fadeTimer = nil
+                currentStep += 1
+                let newVolume = min(endVolume, volumeStep * Float(currentStep))
+                self.engine.setMasterVolume(newVolume)
+
+                if currentStep >= steps {
+                    timer.invalidate()
+                    self.fadeTimer = nil
+                }
             }
         }
     }
