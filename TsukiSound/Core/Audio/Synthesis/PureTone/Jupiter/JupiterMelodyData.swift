@@ -109,7 +109,7 @@ enum JupiterMelodyData {
     static let melody: [JupiterMelodyNote] = [
 
         // === Bar 1 === 休符(2拍) + ミソ(8分+8分)
-        // 🌠 0 アカペラ
+        // 🌠 sec0 アカペラ
         // Note: 楽譜通り beat 2.0 から開始。休符分は JupiterTiming.introSkip でスキップ
         JupiterMelodyNote(.E4, bar: 1, beat: 2.0, dur: .eighth),                 // ミ
         JupiterMelodyNote(.G4, bar: 1, beat: 2.5, dur: .eighth),                 // ソ
@@ -139,9 +139,9 @@ enum JupiterMelodyData {
         // === Bar 5 === ミ(2分) ミソ
         // ミ(2分) ミ(8分)ソ(8分) → 2+0.5+0.5 = 3拍 ✓
         JupiterMelodyNote(.E4, bar: 5, beat: 0.0, dur: .half),                    // ミ
-        // 🌠 1 Organ drone が静かに登場
+        // 🌠 sec1 Organ drone が静かに登場
         JupiterMelodyNote(.E4, bar: 5, beat: 2.0, dur: .eighth),                  // ミ
-        JupiterMelodyNote(.G4, bar: 5, beat: 2.5, dur: .eighth, breath: .short),  // ソ 🫧
+        JupiterMelodyNote(.G4, bar: 5, beat: 2.5, dur: .eighth),  // ソ
 
         // === Bar 6 === ラ ラドシ.ソ (Bar 2と同じパターン)
         JupiterMelodyNote(.A4, bar: 6, beat: 0.0, dur: .quarter, breath: .short), // ラ 🫧
@@ -167,7 +167,7 @@ enum JupiterMelodyData {
         // === Bar 9 === ド(2分) ソミ
         // ド(2分) ソ(8分)ミ(8分) → 2+0.5+0.5 = 3拍 ✓
         JupiterMelodyNote(.C5, bar: 9, beat: 0.0, dur: .half, breath: .long), // ド 🫧🫧
-        // 🌠 2 TreeChime がキラキラと加わる
+        // 🌠 sec2 TreeChime がキラキラと加わる
         JupiterMelodyNote(.G5, bar: 9, beat: 2.0, dur: .eighth),              // ソ
         JupiterMelodyNote(.E5, bar: 9, beat: 2.5, dur: .eighth),              // ミ
 
@@ -194,7 +194,7 @@ enum JupiterMelodyData {
 
         // === Bar 13 === ラ(2分) ラシ
         JupiterMelodyNote(.A5, bar: 13, beat: 0.0, dur: .half, breath: .long),     // ラ 🫧🫧
-        // 🌠 3 安定した厚み
+        // 🌠 sec3 安定した厚み
         JupiterMelodyNote(.A5, bar: 13, beat: 2.0, dur: .eighth),                  // ラ
         JupiterMelodyNote(.B5, bar: 13, beat: 2.5, dur: .eighth),                  // シ
 
@@ -216,7 +216,7 @@ enum JupiterMelodyData {
 
         // === Bar 17 === ソ(2分) ミソ
         JupiterMelodyNote(.G5, bar: 17, beat: 0.0, dur: .half, breath: .long),    // ソ 🫧🫧
-        // 🌠 4 さらに展開
+        // 🌠 sec4 さらに展開
         JupiterMelodyNote(.E5, bar: 17, beat: 2.0, dur: .eighth),                 // ミ
         JupiterMelodyNote(.G5, bar: 17, beat: 2.5, dur: .eighth, breath: .short), // ソ 🫧
 
@@ -241,7 +241,7 @@ enum JupiterMelodyData {
 
         // === Bar 21 === ミ(2分) ミソ (Bar 5と同じパターン)
         JupiterMelodyNote(.E5, bar: 21, beat: 0.0, dur: .half, breath: .long),     // ミ 🫧🫧
-        // 🌠 5 クライマックス（チャイム頻度UP）
+        // 🌠 sec5 クライマックス（チャイム頻度UP）
         JupiterMelodyNote(.E5, bar: 21, beat: 2.0, dur: .eighth),                  // ミ
         JupiterMelodyNote(.G5, bar: 21, beat: 2.5, dur: .eighth, breath: .short),  // ソ 🫧
 

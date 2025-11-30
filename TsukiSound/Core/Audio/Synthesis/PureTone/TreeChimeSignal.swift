@@ -42,6 +42,10 @@ public struct TreeChimeSignal {
             return brightness * (0.8 + ratio * 0.5)      // 0.8x → 1.3x
         }
 
+        // Section 2の開始時刻を事前計算（Bar 9 = Section 2）
+        let section2StartMusical = Float(JupiterTiming.sectionBars[2] - 1) * JupiterTiming.barDuration
+        let section2StartReal = JupiterTiming.musicalToRealTime(section2StartMusical)
+
         return Signal { t in
             // セクションベースのゲインと間隔計算
             let section = JupiterTiming.currentSection(at: t)
@@ -75,8 +79,11 @@ public struct TreeChimeSignal {
                 maxInterval = 12.0
             }
 
-            // シード値を時間ベースで生成（安定したランダム性）
-            let chimeIndex = Int(t / minInterval)
+            // Section 2開始からの相対時間を使用（セクション開始時にすぐ鳴るように）
+            let timeInActiveSection = t - section2StartReal
+
+            // シード値を相対時間ベースで生成（安定したランダム性）
+            let chimeIndex = Int(timeInActiveSection / minInterval)
 
             // この時点でのランダムシード
             var randomState = UInt64(chimeIndex * 7919)
@@ -90,12 +97,12 @@ public struct TreeChimeSignal {
             let chimeStartTime = Float(chimeIndex) * minInterval + randomOffset
 
             // このチャイムがまだ始まっていない場合は無音
-            guard t >= chimeStartTime else {
+            guard timeInActiveSection >= chimeStartTime else {
                 return 0.0
             }
 
             // チャイムからの経過時間
-            let timeSinceChime = t - chimeStartTime
+            let timeSinceChime = timeInActiveSection - chimeStartTime
 
             // チャイム全体の長さを超えたら無音
             let maxChimeLength = Float(numGrains) * cascadeInterval + grainDuration * 3.0

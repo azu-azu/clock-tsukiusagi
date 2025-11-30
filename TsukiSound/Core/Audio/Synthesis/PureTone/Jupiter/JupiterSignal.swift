@@ -173,8 +173,15 @@ private final class JupiterMelodyGenerator {
 
                     output += gymnoV * gymnoEnv * gymnoGain * gymnoFade
                     output += organV * organEnv * gainReduction * masterGain * organFade
+                } else if section == 3 {
+                    // Section 3 (Bar 13-16): オルガン + デチューンコーラス
+                    let env = calculateASREnvelope(time: dt, duration: effectiveDur)
+                    let transposedFreq = note.freq * transposeFactor
+                    let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+                    let v = generateSingleVoiceWithChorus(freq: transposedFreq, t: t, detuneHz: 0.3)
+                    output += v * env * gainReduction * masterGain
                 } else {
-                    // Section 2以降: 通常のオルガン音色
+                    // Section 2, 4, 5: 通常のオルガン音色
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur)
                     let transposedFreq = note.freq * transposeFactor
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
@@ -249,6 +256,18 @@ private final class JupiterMelodyGenerator {
 
         signal /= Double(harmonics.count)
         return Float(signal)
+    }
+
+    /// Generate organ voice with detune chorus (center + detuned layers)
+    /// Used for Section 3 to add thickness
+    private func generateSingleVoiceWithChorus(freq: Float, t: Float, detuneHz: Float) -> Float {
+        // Center voice
+        let center = generateSingleVoice(freq: freq, t: t)
+        // Detuned voices (±detuneHz)
+        let high = generateSingleVoice(freq: freq + detuneHz, t: t)
+        let low = generateSingleVoice(freq: freq - detuneHz, t: t)
+        // Mix: center is prominent, detuned layers are supporting
+        return (center * 0.6 + high * 0.2 + low * 0.2)
     }
 
     // MARK: - Gymnopédie Envelope & Voice (Section 0)
