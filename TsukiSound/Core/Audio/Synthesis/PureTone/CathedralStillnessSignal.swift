@@ -5,6 +5,12 @@
 //  大聖堂の静寂 - 和音ドローンオルガン
 //  Signal-based implementation with chord harmony and slow LFO breathing
 //
+//  ## セクション対応
+//  JupiterTimingを参照し、楽曲の進行に合わせてフェードイン
+//  - Section 0 (Bar 1-4): 無音（アカペラ風）
+//  - Section 1 (Bar 5-8): フェードイン開始
+//  - Section 2以降: フル音量
+//
 
 import Foundation
 
@@ -14,7 +20,7 @@ import Foundation
 /// - 和音（C + G の完全5度）で厚みのある響き
 /// - 超低速LFO（0.02Hz）で音量がゆっくり呼吸するように変化
 /// - 2倍音までの加算合成（Jupiterメロディとの干渉を避けるため）
-/// - ほぼ静止したドローンとして機能
+/// - Jupiterの進行に合わせて段階的にフェードイン
 public struct CathedralStillnessSignal {
 
     /// Create Cathedral Stillness signal
@@ -28,12 +34,34 @@ public struct CathedralStillnessSignal {
         let lfoFrequency: Float = 0.02  // Hz
 
         return Signal { t in
+            // セクションベースのゲイン計算
+            let section = JupiterTiming.currentSection(at: t)
+            let sectionProgress = JupiterTiming.sectionProgress(at: t)
+
+            // Section 0: 無音（アカペラ風）
+            // Section 1: フェードイン（0→1）
+            // Section 2以降: フル音量
+            let sectionGain: Float
+            switch section {
+            case 0:
+                sectionGain = 0.0
+            case 1:
+                // スムーズなフェードイン（cos²カーブ）
+                let fadeProgress = sectionProgress
+                let c = cos((1.0 - fadeProgress) * Float.pi * 0.5)
+                sectionGain = c * c
+            default:
+                sectionGain = 1.0
+            }
+
+            // 無音なら早期リターン
+            guard sectionGain > 0.001 else { return 0.0 }
+
             // LFOで音量を 0.4 〜 0.8 の範囲でゆっくり変化
             let lfoPhase = 2.0 * Float.pi * lfoFrequency * t
             let lfoValue = 0.6 + 0.2 * sin(lfoPhase)  // 0.4 〜 0.8
 
             // 倍音設定（Jupiterメロディとの干渉を避けるため、2倍音以上を大幅カット）
-            // C3の4倍音(523Hz)がC5、G3の2倍音(392Hz)がG4と干渉するため
             let harmonics: [Float] = [1.0, 2.0]
             let amps: [Float] = [1.0, 0.15]
 
@@ -53,8 +81,8 @@ public struct CathedralStillnessSignal {
                 value += amps[i] * 0.35 * sin(phase)
             }
 
-            // LFOで音量変調
-            return value * lfoValue * 0.12  // 全体音量は控えめ
+            // LFOで音量変調 + セクションゲイン適用
+            return value * lfoValue * 0.12 * sectionGain
         }
     }
 }

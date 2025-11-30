@@ -5,6 +5,13 @@
 //  木漏れ日のツリーチャイム - 高周波メタリック粒の「シャラララ」
 //  Signal-based implementation with cascading grain triggers
 //
+//  ## セクション対応
+//  JupiterTimingを参照し、楽曲の進行に合わせて登場
+//  - Section 0-1 (Bar 1-8): 無音
+//  - Section 2 (Bar 9-12): 初登場（控えめ）
+//  - Section 3-4 (Bar 13-20): 通常
+//  - Section 5 (Bar 21-25): より活発
+//
 
 import Foundation
 
@@ -13,7 +20,7 @@ import Foundation
 /// 特徴：
 /// - 高周波メタリック粒が連鎖的に鳴る「シャラララ」効果
 /// - 低→高のグリッサンド配置で自然な響き
-/// - 10〜20秒のランダム間隔で稀に鳴る
+/// - セクションに応じて出現頻度と音量が変化
 /// - 各粒は1.2秒の exponential decay
 public struct TreeChimeSignal {
 
@@ -26,10 +33,6 @@ public struct TreeChimeSignal {
         let grainDuration: Float = 1.2      // 各粒の余韻
         let brightness: Float = 6000.0      // 基音周波数（Hz）
 
-        // トリガー間隔設定
-        let minInterval: Float = 10.0   // 最短10秒
-        let maxInterval: Float = 20.0   // 最長20秒
-
         // 全体音量（かすかに鳴る程度）
         let masterGain: Float = 0.03
 
@@ -40,6 +43,38 @@ public struct TreeChimeSignal {
         }
 
         return Signal { t in
+            // セクションベースのゲインと間隔計算
+            let section = JupiterTiming.currentSection(at: t)
+
+            // Section 0-1: 無音
+            // Section 2: 初登場（控えめ、間隔長め）
+            // Section 3-4: 通常
+            // Section 5: より活発（間隔短め、音量大きめ）
+            let sectionGain: Float
+            let minInterval: Float
+            let maxInterval: Float
+
+            switch section {
+            case 0, 1:
+                // 無音
+                return 0.0
+            case 2:
+                // 初登場（控えめ）
+                sectionGain = 0.6
+                minInterval = 12.0
+                maxInterval = 20.0
+            case 3, 4:
+                // 通常
+                sectionGain = 0.8
+                minInterval = 10.0
+                maxInterval = 18.0
+            default:
+                // クライマックス（活発）
+                sectionGain = 1.0
+                minInterval = 6.0
+                maxInterval = 12.0
+            }
+
             // シード値を時間ベースで生成（安定したランダム性）
             let chimeIndex = Int(t / minInterval)
 
@@ -90,8 +125,8 @@ public struct TreeChimeSignal {
                 value += sin(phase) * envelope
             }
 
-            // 粒数で正規化して音量調整
-            return value / Float(numGrains) * masterGain
+            // 粒数で正規化して音量調整 + セクションゲイン
+            return value / Float(numGrains) * masterGain * sectionGain
         }
     }
 }
