@@ -5,6 +5,11 @@
 //  Jupiter楽曲のタイミングとセクション管理
 //  他のSignal（OrganDrone, TreeChime）がJupiterの進行度を参照するために使用
 //
+//  ## ループ境目を隠す技術（ふじこ式）
+//  1. 最後の音のリリース中に次サイクルを開始（オーバーラップ）
+//  2. 周回ごとに1-3%のランダムタイミング揺らぎ
+//  これにより脳が「ループ」を検出できなくなる
+//
 
 import Foundation
 
@@ -22,6 +27,32 @@ public enum JupiterTiming {
 
     /// 総小節数
     public static let totalBars: Int = 25
+
+    // MARK: - Loop Overlap (ふじこ式①: 音が重なった状態で次周回開始)
+
+    /// 次サイクル開始の遅延量（秒）
+    /// 最後の音（C6 付点2分）のリリース中に次サイクルが始まる
+    /// 0.2秒 = 最後の音が余韻を残しているうちに次のE4が立ち上がる
+    public static let loopOverlapDelay: Float = 0.2
+
+    // MARK: - Random Timing Variation (ふじこ式③: 周回ごとのタイミング揺らぎ)
+
+    /// タイミング揺らぎの範囲（0.98〜1.02 = ±2%）
+    /// 音程は固定、時間だけが微妙に伸縮する
+    private static let timingVariationMin: Float = 0.98
+    private static let timingVariationMax: Float = 1.02
+
+    /// 周回番号からタイミング係数を計算（決定論的ランダム）
+    /// - Parameter cycleIndex: 何周目か（0, 1, 2, ...）
+    /// - Returns: 0.98〜1.02 の範囲のタイミング係数
+    private static func timingVariation(for cycleIndex: Int) -> Float {
+        // LCG (Linear Congruential Generator) で決定論的な疑似乱数を生成
+        // 同じ cycleIndex なら常に同じ値を返す（再現性）
+        var state = UInt64(cycleIndex &* 2654435761)  // Knuth の乗数
+        state = state &* 6364136223846793005 &+ 1442695040888963407
+        let normalized = Float(state % 10000) / 10000.0  // 0.0 〜 1.0
+        return timingVariationMin + normalized * (timingVariationMax - timingVariationMin)
+    }
 
     // MARK: - Intro Skip (Bar 1 の休符をスキップ)
 
@@ -103,15 +134,30 @@ public enum JupiterTiming {
 
     // MARK: - Time Mapping (Real Time ↔ Musical Time)
 
-    /// 実時間から楽譜時間へ変換
-    /// - イントロ（ミソラ）: 1.5倍遅い
+    /// 実時間から楽譜時間へ変換（ふじこ式オーバーラップ + ランダム揺らぎ適用）
+    /// - イントロ（ミソラ）: 2.0倍遅い
     /// - Section 0 残り: 1.25倍遅い
     /// - Section 1以降: 通常テンポ
+    /// - ループ境界: オーバーラップで音が重なる
+    /// - 周回ごと: 1-2%のタイミング揺らぎ
     public static func realToMusicalTime(_ realTime: Float) -> Float {
-        let localReal = realTime.truncatingRemainder(dividingBy: cycleDuration)
+        // 実効サイクル長（オーバーラップ分を引く）
+        // これにより次サイクルが早めに始まり、前サイクルの余韻と重なる
+        let effectiveCycleDuration = cycleDuration - loopOverlapDelay
 
+        // 現在の周回番号を計算
+        let cycleIndex = Int(realTime / effectiveCycleDuration)
+
+        // この周回のタイミング係数（0.98〜1.02）
+        let variation = timingVariation(for: cycleIndex)
+
+        // 周回内のローカル時間（揺らぎ適用）
+        let rawLocalReal = realTime.truncatingRemainder(dividingBy: effectiveCycleDuration)
+        let localReal = rawLocalReal * variation
+
+        // 以下は従来のテンポ変換ロジック
         if localReal < introRealDuration {
-            // イントロ部分（ミソラ）: 1.5倍遅い
+            // イントロ部分（ミソラ）: 2.0倍遅い
             return introSkipMusical + localReal / introStretch
         } else if localReal < section0RealDuration {
             // Section 0 残り: 1.25倍遅い
@@ -122,6 +168,14 @@ public enum JupiterTiming {
             let section0MusicalEnd = Float(section0Bars) * barDuration
             return section0MusicalEnd + (localReal - section0RealDuration)
         }
+    }
+
+    /// 現在の周回番号を取得
+    /// - Parameter time: 実時間（秒）
+    /// - Returns: 周回番号（0, 1, 2, ...）
+    public static func currentCycleIndex(at time: Float) -> Int {
+        let effectiveCycleDuration = cycleDuration - loopOverlapDelay
+        return Int(time / effectiveCycleDuration)
     }
 
     /// 楽譜時間から実時間へ変換（逆変換）
@@ -205,7 +259,8 @@ public enum JupiterTiming {
     /// - Parameter time: 絶対時間（秒）
     /// - Returns: サイクル全体の進行度
     public static func overallProgress(at time: Float) -> Float {
-        let localTime = time.truncatingRemainder(dividingBy: cycleDuration)
-        return localTime / cycleDuration
+        let effectiveCycleDuration = cycleDuration - loopOverlapDelay
+        let localTime = time.truncatingRemainder(dividingBy: effectiveCycleDuration)
+        return localTime / effectiveCycleDuration
     }
 }
