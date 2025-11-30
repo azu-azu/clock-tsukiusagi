@@ -67,13 +67,13 @@ private final class JupiterMelodyGenerator {
     /// Vibrato depth: very subtle for stable, gentle warmth
     let vibratoDepth: Float = 0.001
 
-    // MARK: - Envelope Parameters
+    // MARK: - Envelope Parameters (ASR - Attack-Sustain-Release)
 
     /// Attack time: fast enough for 16th notes while still smooth
-    let attackTime: Float = 0.10   // 100ms
+    let attackTime: Float = 0.15   // 150ms
 
-    /// Decay time: natural fade after sustain
-    let decayTime: Float = 2.5     // 2.5s decay
+    /// Release time: natural fade after note ends
+    let releaseTime: Float = 0.80  // 800ms release
 
     /// Master gain for balance with other layers
     let masterGain: Float = 0.35
@@ -98,15 +98,12 @@ private final class JupiterMelodyGenerator {
             let noteStart = Float(note.startBar - 1) * barDuration + note.startBeat * beat
             let noteDur = note.durBeats * beat
 
-            if local >= noteStart && local < noteStart + noteDur + decayTime {
+            // Note is active during its duration + release tail
+            if local >= noteStart && local < noteStart + noteDur + releaseTime {
                 let dt = local - noteStart
 
-                let env = SignalEnvelopeUtils.smoothEnvelope(
-                    t: dt,
-                    duration: noteDur,
-                    attack: attackTime,
-                    decay: decayTime
-                )
+                // ASR Envelope: Attack → Sustain → Release
+                let env = calculateASREnvelope(time: dt, duration: noteDur)
 
                 // Apply transpose and high-freq reduction
                 let transposedFreq = note.freq * transposeFactor
@@ -118,6 +115,34 @@ private final class JupiterMelodyGenerator {
         }
 
         return SignalEnvelopeUtils.softClip(output)
+    }
+
+    // MARK: - ASR Envelope
+
+    /// Calculate ASR (Attack-Sustain-Release) envelope for organ-style sound
+    /// - Parameters:
+    ///   - time: Time since note start
+    ///   - duration: Note duration in seconds
+    /// - Returns: Envelope value (0.0 to 1.0)
+    private func calculateASREnvelope(time: Float, duration: Float) -> Float {
+        // Attack phase: smooth cosine rise
+        if time < attackTime {
+            let progress = time / attackTime
+            return (1.0 - cos(progress * Float.pi)) * 0.5
+        }
+
+        // Sustain phase: full volume until note ends
+        if time < duration {
+            return 1.0
+        }
+
+        // Release phase: smooth cosine fade
+        let releaseProgress = (time - duration) / releaseTime
+        if releaseProgress < 1.0 {
+            return (1.0 + cos(releaseProgress * Float.pi)) * 0.5
+        }
+
+        return 0.0
     }
 
     // MARK: - Tone Generation
@@ -177,11 +202,12 @@ private final class JupiterMelodyGenerator {
 // 2. Melody rewritten from pianojuku.info score
 //    - Original: F Major
 //    - Transposed: C Major (for CathedralStillness compatibility)
-//    - BPM: 75 (as indicated in score)
+//    - BPM: 60 (slower for majestic feel)
 //
-// 3. Uses SignalEnvelopeUtils.smoothEnvelope for consistency
-//    - Same envelope system as Gymnopédie
-//    - Avoids click noise through smooth attack/decay
+// 3. ASR Envelope (Attack-Sustain-Release)
+//    - Organ-style: maintains full volume during note duration
+//    - Smooth cosine curves for attack and release
+//    - Different from Gymnopédie's AD (Attack-Decay) envelope
 //
 // COPYRIGHT:
 //
