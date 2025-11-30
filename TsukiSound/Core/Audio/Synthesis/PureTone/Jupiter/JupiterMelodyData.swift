@@ -102,6 +102,7 @@ enum JupiterMelodyData {
         // === Bar 2 === ラ(4分) ラドシ.ソ(8+8+付点8+16)
         // ラ=1拍, ラ=0.5, ド=0.5, シ.=0.75, ソ=0.25 → 合計3拍 ✓
         JupiterMelodyNote(.A4, bar: 2, beat: 0.0, dur: .quarter),  // ラ (1拍)
+        // 🫧
         JupiterMelodyNote(.A4, bar: 2, beat: 1.0, dur: .eighth),   // ラ (0.5拍)
         JupiterMelodyNote(.C5, bar: 2, beat: 1.5, dur: .eighth),   // ド (0.5拍)
         JupiterMelodyNote(.B4, bar: 2, beat: 2.0, dur: .dottedEighth), // シ (0.75拍)
@@ -112,6 +113,7 @@ enum JupiterMelodyData {
         JupiterMelodyNote(.C5, bar: 3, beat: 0.0, dur: .eighth),   // ド
         JupiterMelodyNote(.D5, bar: 3, beat: 0.5, dur: .eighth),   // レ
         JupiterMelodyNote(.C5, bar: 3, beat: 1.0, dur: .quarter),  // ド
+        // 🫧
         JupiterMelodyNote(.B4, bar: 3, beat: 2.0, dur: .quarter),  // シ
 
         // === Bar 4 === ラシラ ソ
@@ -124,11 +126,13 @@ enum JupiterMelodyData {
         // === Bar 5 === ミ(2分) ミソ
         // ミ(2分) ミ(8分)ソ(8分) → 2+0.5+0.5 = 3拍 ✓
         JupiterMelodyNote(.E4, bar: 5, beat: 0.0, dur: .half),     // ミ
+        // 🫧
         JupiterMelodyNote(.E4, bar: 5, beat: 2.0, dur: .eighth),   // ミ
         JupiterMelodyNote(.G4, bar: 5, beat: 2.5, dur: .eighth),   // ソ
 
         // === Bar 6 === ラ ラドシ.ソ (Bar 2と同じパターン)
         JupiterMelodyNote(.A4, bar: 6, beat: 0.0, dur: .quarter),  // ラ
+        // 🫧
         JupiterMelodyNote(.A4, bar: 6, beat: 1.0, dur: .eighth),   // ラ
         JupiterMelodyNote(.C5, bar: 6, beat: 1.5, dur: .eighth),   // ド
         JupiterMelodyNote(.B4, bar: 6, beat: 2.0, dur: .dottedEighth), // シ
@@ -139,6 +143,7 @@ enum JupiterMelodyData {
         JupiterMelodyNote(.C5, bar: 7, beat: 0.0, dur: .eighth),   // ド
         JupiterMelodyNote(.D5, bar: 7, beat: 0.5, dur: .eighth),   // レ
         JupiterMelodyNote(.E5, bar: 7, beat: 1.0, dur: .quarter),  // ミ
+        // 🫧
         JupiterMelodyNote(.E5, bar: 7, beat: 2.0, dur: .quarter),  // ミ
 
         // === Bar 8 === ミレド レ
@@ -151,8 +156,9 @@ enum JupiterMelodyData {
         // === Bar 9 === ド(2分) ソミ
         // ド(2分) ソ(8分)ミ(8分) → 2+0.5+0.5 = 3拍 ✓
         JupiterMelodyNote(.C5, bar: 9, beat: 0.0, dur: .half),     // ド
-        JupiterMelodyNote(.G4, bar: 9, beat: 2.0, dur: .eighth),   // ソ
-        JupiterMelodyNote(.E4, bar: 9, beat: 2.5, dur: .eighth),   // ミ
+        // 🫧
+        JupiterMelodyNote(.G5, bar: 9, beat: 2.0, dur: .eighth),   // ソ
+        JupiterMelodyNote(.E5, bar: 9, beat: 2.5, dur: .eighth),   // ミ
 
         // === Bar 10 === レ レ ドミ
         // レ(4分) レ(4分) ド(8分)ミ(8分) → 1+1+0.5+0.5 = 3拍 ✓
@@ -164,19 +170,21 @@ enum JupiterMelodyData {
         // === Bar 11 === レ ソソミ
         // 楽譜確認: レ(4分) ソ(8分)ソ(8分)ミ(4分) → 1+0.5+0.5+1 = 3拍 ✓
         JupiterMelodyNote(.D5, bar: 11, beat: 0.0, dur: .quarter), // レ
-        JupiterMelodyNote(.G5, bar: 11, beat: 1.0, dur: .eighth),  // ソ (上)
-        JupiterMelodyNote(.G5, bar: 11, beat: 1.5, dur: .eighth),  // ソ
-        JupiterMelodyNote(.E5, bar: 11, beat: 2.0, dur: .quarter), // ミ
+        JupiterMelodyNote(.G4, bar: 11, beat: 1.0, dur: .quarter),  // ソ
+        // 🫧
+        JupiterMelodyNote(.G5, bar: 11, beat: 2.0, dur: .eighth),  // ソ 上
+        JupiterMelodyNote(.E5, bar: 11, beat: 2.5, dur: .eighth), // ミ
 
         // === Bar 12 === レ レミソ
         // レ(4分) レ(8分)ミ(8分)ソ(4分) → 1+0.5+0.5+1 = 3拍 ✓
         JupiterMelodyNote(.D5, bar: 12, beat: 0.0, dur: .quarter), // レ
-        JupiterMelodyNote(.D5, bar: 12, beat: 1.0, dur: .eighth),  // レ
-        JupiterMelodyNote(.E5, bar: 12, beat: 1.5, dur: .eighth),  // ミ
-        JupiterMelodyNote(.G5, bar: 12, beat: 2.0, dur: .quarter), // ソ
+        JupiterMelodyNote(.D5, bar: 12, beat: 1.0, dur: .quarter),  // レ
+        JupiterMelodyNote(.E5, bar: 12, beat: 2.0, dur: .eighth),  // ミ
+        JupiterMelodyNote(.G5, bar: 12, beat: 2.5, dur: .eighth), // ソ
 
         // === Bar 13 === ラ(2分) ラシ
         JupiterMelodyNote(.A5, bar: 13, beat: 0.0, dur: .half),    // ラ
+        // 🫧
         JupiterMelodyNote(.A5, bar: 13, beat: 2.0, dur: .eighth),  // ラ
         JupiterMelodyNote(.B5, bar: 13, beat: 2.5, dur: .eighth),  // シ
 
@@ -198,11 +206,13 @@ enum JupiterMelodyData {
 
         // === Bar 17 === ソ(2分) ミソ
         JupiterMelodyNote(.G5, bar: 17, beat: 0.0, dur: .half),    // ソ
+        // 🫧
         JupiterMelodyNote(.E5, bar: 17, beat: 2.0, dur: .eighth),  // ミ
         JupiterMelodyNote(.G5, bar: 17, beat: 2.5, dur: .eighth),  // ソ
 
         // === Bar 18 === ラ ラドシ.ソ (Bar 2, 6と同じパターン)
         JupiterMelodyNote(.A5, bar: 18, beat: 0.0, dur: .quarter), // ラ
+        // 🫧
         JupiterMelodyNote(.A5, bar: 18, beat: 1.0, dur: .eighth),  // ラ
         JupiterMelodyNote(.C6, bar: 18, beat: 1.5, dur: .eighth),  // ド
         JupiterMelodyNote(.B5, bar: 18, beat: 2.0, dur: .dottedEighth), // シ
@@ -212,6 +222,7 @@ enum JupiterMelodyData {
         JupiterMelodyNote(.C6, bar: 19, beat: 0.0, dur: .eighth),  // ド
         JupiterMelodyNote(.D6, bar: 19, beat: 0.5, dur: .eighth),  // レ
         JupiterMelodyNote(.C6, bar: 19, beat: 1.0, dur: .quarter), // ド
+        // 🫧
         JupiterMelodyNote(.B5, bar: 19, beat: 2.0, dur: .quarter), // シ
 
         // === Bar 20 === ラシラ ソ (Bar 4と同じパターン)
@@ -222,11 +233,13 @@ enum JupiterMelodyData {
 
         // === Bar 21 === ミ(2分) ミソ (Bar 5と同じパターン)
         JupiterMelodyNote(.E5, bar: 21, beat: 0.0, dur: .half),    // ミ
+        // 🫧
         JupiterMelodyNote(.E5, bar: 21, beat: 2.0, dur: .eighth),  // ミ
         JupiterMelodyNote(.G5, bar: 21, beat: 2.5, dur: .eighth),  // ソ
 
         // === Bar 22 === ラ ラドシ.ソ (Bar 2, 6, 18と同じパターン)
         JupiterMelodyNote(.A5, bar: 22, beat: 0.0, dur: .quarter), // ラ
+        // 🫧
         JupiterMelodyNote(.A5, bar: 22, beat: 1.0, dur: .eighth),  // ラ
         JupiterMelodyNote(.C6, bar: 22, beat: 1.5, dur: .eighth),  // ド
         JupiterMelodyNote(.B5, bar: 22, beat: 2.0, dur: .dottedEighth), // シ
@@ -236,6 +249,7 @@ enum JupiterMelodyData {
         JupiterMelodyNote(.C6, bar: 23, beat: 0.0, dur: .eighth),  // ド
         JupiterMelodyNote(.D6, bar: 23, beat: 0.5, dur: .eighth),  // レ
         JupiterMelodyNote(.E6, bar: 23, beat: 1.0, dur: .quarter), // ミ
+        // 🫧
         JupiterMelodyNote(.E6, bar: 23, beat: 2.0, dur: .quarter), // ミ
 
         // === Bar 24 === ミレド レ (Bar 8と同じパターン)
