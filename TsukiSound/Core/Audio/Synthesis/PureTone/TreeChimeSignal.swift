@@ -63,10 +63,10 @@ public struct TreeChimeSignal {
                 // 無音
                 return 0.0
             case 2:
-                // 初登場（控えめ）
+                // 初登場（控えめだが複数回鳴る）
                 sectionGain = 0.6
-                minInterval = 12.0
-                maxInterval = 20.0
+                minInterval = 4.0
+                maxInterval = 7.0
             case 3, 4:
                 // 通常
                 sectionGain = 0.8

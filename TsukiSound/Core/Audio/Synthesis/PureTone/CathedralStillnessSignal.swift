@@ -9,7 +9,8 @@
 //  JupiterTimingを参照し、楽曲の進行に合わせて音色が変化
 //  - Section 0 (Bar 1-4): 無音（メロディはJupiterSignalでGymnopédie風に演奏）
 //  - Section 1 (Bar 5-8): オルガンドローンがフェードイン
-//  - Section 2以降: オルガンドローン
+//  - Section 2: オルガンドローン（通常）
+//  - Section 3以降: オルガンドローン（厚み増加）
 //
 
 import Foundation
@@ -49,16 +50,23 @@ public struct CathedralStillnessSignal {
             // === Section 1: オルガンドローンのフェードイン ===
             if section == 1 {
                 let organFade = sectionProgress
-                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue) * organFade
+                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.0) * organFade
             }
 
-            // === Section 2以降: オルガンドローン ===
-            return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue)
+            // === Section 2: オルガンドローン（通常）===
+            if section == 2 {
+                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.0)
+            }
+
+            // === Section 3以降: オルガンドローン（厚み増加）===
+            return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.4)
         }
     }
 
     /// オルガンドローン生成（C3 + G3 の完全5度）
-    private static func generateOrganDrone(t: Float, rootFreq: Float, fifthFreq: Float, lfoValue: Float) -> Float {
+    /// - Parameters:
+    ///   - gain: セクションに応じた音量倍率（Section 3以降は厚みを増す）
+    private static func generateOrganDrone(t: Float, rootFreq: Float, fifthFreq: Float, lfoValue: Float, gain: Float) -> Float {
         // 倍音設定（Jupiterメロディとの干渉を避けるため、2倍音以上を大幅カット）
         let harmonics: [Float] = [1.0, 2.0]
         let amps: [Float] = [1.0, 0.15]
@@ -79,6 +87,6 @@ public struct CathedralStillnessSignal {
             value += amps[i] * 0.35 * sin(phase)
         }
 
-        return value * lfoValue * 0.12
+        return value * lfoValue * 0.12 * gain
     }
 }
