@@ -5,13 +5,10 @@
 //  大聖堂の静寂 - 和音ドローンオルガン
 //  Signal-based implementation with chord harmony and slow LFO breathing
 //
-//  ## セクション対応
-//  JupiterTimingを参照し、楽曲の進行に合わせて音色が変化
-//  - Section 0 (Bar 1-4): 超薄いドローン（-16dB相当）で「無重力の静けさ」
-//  - Section 1 (Bar 5-8): オルガンドローンがフェードイン
-//  - Section 2: オルガンドローン（通常）
-//  - Section 3-4: オルガンドローン（厚み増加）
-//  - Section 5: クライマックス → 終盤でSection 0レベルへフェードダウン
+//  ## 「ボワーン」がぐるぐる回る仕組み
+//  - LFOが音量を0.4〜0.8で呼吸させる（50秒周期）
+//  - メロディとは無関係に回り続ける
+//  - セクションで全体ボリュームだけ調整（ちょっとずつ聞こえてくる）
 //
 
 import Foundation
@@ -19,99 +16,70 @@ import Foundation
 /// Cathedral Stillness: Ambient organ drone with chord harmony
 ///
 /// 特徴：
-/// - Section 0: 超薄いドローン（-16dB相当）- メロディが前に出つつ伴奏は存在
-/// - Section 1: オルガンドローンがフェードイン
-/// - Section 2以降: 和音（C + G の完全5度）で厚みのある響き
-/// - 超低速LFO（0.02Hz）で音量がゆっくり呼吸するように変化
-/// - ループ時: クライマックス→導入が薄い伴奏で自然に繋がる
+/// - 和音（C + G の完全5度）で厚みのある響き
+/// - 超低速LFO（0.02Hz = 50秒周期）で音量がゆっくり呼吸
+/// - 4倍音までの加算合成で「ボワーン」という透明な音色
+/// - Section 0から徐々に聞こえてきて、いつの間にか厚くなる
 public struct CathedralStillnessSignal {
 
     /// Create Cathedral Stillness signal
     /// - Returns: Signal generating ambient organ drone
     public static func makeSignal() -> Signal {
-        // === Organ Drone 設定 ===
-        let organRootFreq: Float = 130.81   // C3
-        let organFifthFreq: Float = 196.00  // G3
+        // 和音設定: C3 + G3（完全5度）
+        let rootFreq: Float = 130.81   // C3
+        let fifthFreq: Float = 196.00  // G3
 
         // LFO設定: 超低速の呼吸（50秒で1周期）
         let lfoFrequency: Float = 0.02  // Hz
 
-        // Section 0 の薄いドローン: -16dB ≈ 0.16 (10^(-16/20))
-        // 通常の gain 1.0 に対して 0.16 倍
-        let section0Gain: Float = 0.16
+        // セクションごとの全体ボリューム（LFOの「ボワーン」はそのまま）
+        let section0Volume: Float = 0.3   // 控えめに聞こえる
+        let section2Volume: Float = 1.0   // フル
 
         return Signal { t in
             let section = JupiterTiming.currentSection(at: t)
+            let sectionProgress = JupiterTiming.sectionProgress(at: t)
 
-            // LFOで音量を 0.4 〜 0.8 の範囲でゆっくり変化
+            // LFOで音量を 0.4 〜 0.8 の範囲でゆっくり変化（ぐるぐる）
             let lfoPhase = 2.0 * Float.pi * lfoFrequency * t
             let lfoValue = 0.6 + 0.2 * sin(lfoPhase)
 
-            // === Section 0: 超薄いドローン（-16dB相当）===
-            // メロディが前に出つつ、伴奏の存在感を維持
-            if section == 0 {
-                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: section0Gain)
+            // セクションに応じた全体ボリューム（ちょっとずつ聞こえてくる）
+            let volume: Float
+            switch section {
+            case 0:
+                // 控えめに聞こえる
+                volume = section0Volume
+            case 1:
+                // ちょっとずつ聞こえてくる
+                volume = section0Volume + (section2Volume - section0Volume) * sectionProgress
+            default:
+                // フルで鳴る
+                volume = section2Volume
             }
 
-            // === Section 1: Section 0レベルから通常レベルへフェードイン ===
-            if section == 1 {
-                let progress = JupiterTiming.sectionProgress(at: t)
-                // section0Gain → 1.0 へスムーズに遷移
-                let gain = section0Gain + (1.0 - section0Gain) * progress
-                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: gain)
+            // 倍音設定（オルガンらしい柔らかめ）
+            let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0]
+            let amps: [Float] = [0.9, 0.4, 0.25, 0.15]
+
+            var value: Float = 0.0
+
+            // Root note (C3) の倍音合成
+            for i in 0..<harmonics.count {
+                let freq = rootFreq * harmonics[i]
+                let phase = 2.0 * Float.pi * freq * t
+                value += amps[i] * 0.5 * sin(phase)
             }
 
-            // === Section 2: オルガンドローン（通常）===
-            if section == 2 {
-                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.0)
+            // Fifth note (G3) の倍音合成（少し控えめ）
+            for i in 0..<harmonics.count {
+                let freq = fifthFreq * harmonics[i]
+                let phase = 2.0 * Float.pi * freq * t
+                value += amps[i] * 0.35 * sin(phase)
             }
 
-            // === Section 3-4: オルガンドローン（厚み増加）===
-            if section == 3 || section == 4 {
-                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.4)
-            }
-
-            // === Section 5: クライマックス → Section 0レベルへフェードダウン ===
-            let sectionProgress = JupiterTiming.sectionProgress(at: t)
-            let climaxGain: Float
-            if sectionProgress < 0.8 {
-                // 前半80%はクライマックス（gain 1.7）
-                climaxGain = 1.7
-            } else {
-                // 後半20%で Section 0 レベル（0.16）へフェードダウン
-                let fadeProgress = (sectionProgress - 0.8) / 0.2
-                let c = cos(fadeProgress * Float.pi * 0.5)
-                // 1.7 → section0Gain へ cos² でスムーズに遷移
-                climaxGain = section0Gain + (1.7 - section0Gain) * c * c
-            }
-            return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: climaxGain)
+            // LFOで音量変調 × セクションボリューム
+            return value * lfoValue * 0.12 * volume
         }
-    }
-
-    /// オルガンドローン生成（C3 + G3 の完全5度）
-    /// - Parameters:
-    ///   - gain: セクションに応じた音量倍率（Section 3以降は厚みを増す）
-    private static func generateOrganDrone(t: Float, rootFreq: Float, fifthFreq: Float, lfoValue: Float, gain: Float) -> Float {
-        // 倍音設定（Jupiterメロディとの干渉を避けるため、2倍音以上を大幅カット）
-        let harmonics: [Float] = [1.0, 2.0]
-        let amps: [Float] = [1.0, 0.15]
-
-        var value: Float = 0.0
-
-        // Root note (C3) の倍音合成
-        for i in 0..<harmonics.count {
-            let freq = rootFreq * harmonics[i]
-            let phase = 2.0 * Float.pi * freq * t
-            value += amps[i] * 0.5 * sin(phase)
-        }
-
-        // Fifth note (G3) の倍音合成（少し控えめ）
-        for i in 0..<harmonics.count {
-            let freq = fifthFreq * harmonics[i]
-            let phase = 2.0 * Float.pi * freq * t
-            value += amps[i] * 0.35 * sin(phase)
-        }
-
-        return value * lfoValue * 0.12 * gain
     }
 }

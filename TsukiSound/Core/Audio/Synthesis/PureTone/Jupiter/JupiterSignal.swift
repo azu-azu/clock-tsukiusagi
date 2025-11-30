@@ -56,12 +56,9 @@ private final class JupiterMelodyGenerator {
     /// Bar duration (3/4 time = 3 beats per bar)
     lazy var barDuration: Float = beat * 3
 
-    /// Musical cycle duration (楽譜上の全長、イントロスキップなし)
+    /// Musical cycle duration (楽譜上の全長 = 25小節 × 3拍)
     /// ノート位置計算に使用（楽譜ベース）
     lazy var fullMusicalCycleDuration: Float = Float(totalBars) * barDuration
-
-    /// Real cycle duration (実際の再生時間、テンポ変化あり)
-    var cycleDuration: Float { JupiterTiming.cycleDuration }
 
     // MARK: - Sound Design (Organ Characteristics)
 
