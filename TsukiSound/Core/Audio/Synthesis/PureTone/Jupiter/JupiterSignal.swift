@@ -84,9 +84,9 @@ private final class JupiterMelodyGenerator {
     let releaseTime: Float = 0.8   // 800ms: very long tail for seamless blend
 
     /// Legato overlap: how much the release extends into next note
-    /// 700ms to cover most of releaseTime (0.8s) for smooth note transitions
+    /// Must equal releaseTime to prevent abrupt cutoff of release envelope
     /// Prevents click noise at note boundaries (see architect/todo.md analysis)
-    let legatoOverlap: Float = 0.70  // 700ms overlap - covers release for smooth blend
+    let legatoOverlap: Float = 0.80  // 800ms overlap = releaseTime for complete coverage
 
     /// Master gain for balance with other layers
     /// Increased from 0.22 to 0.35 after removing multi-voice layering
