@@ -104,19 +104,21 @@ private final class JupiterMelodyGenerator {
     /// 2^(-2/12) ≈ 0.8909
     let transposeFactor: Float = pow(2.0, -2.0 / 12.0)
 
-    // MARK: - Gymnopédie Bass Sound Parameters (Section 0)
+    // MARK: - Gymnopédie Melody Sound Parameters (Section 0)
+    //
+    // Gymnopédieのメロディパラメータを使用（ベースではなく）
+    // 控えめなデチューンで微かな揺らぎを追加
 
-    /// Gymnopédie-style attack: long for deep, soft entrance
-    let gymnoAttackTime: Float = 0.20   // 200ms (like Gymnopédie bass)
+    /// Gymnopédie-style attack: smooth entrance like Gymnopédie melody
+    let gymnoAttackTime: Float = 0.15   // 150ms (like Gymnopédie melody)
 
-    /// Gymnopédie-style decay: long for sustained resonance
-    let gymnoDecayTime: Float = 3.5     // 3.5s decay
+    /// Gymnopédie-style decay: long, elegant decay
+    let gymnoDecayTime: Float = 4.5     // 4.5s decay (like Gymnopédie melody)
 
-    /// Transpose factor for Section 0: -12 semitones (1 octave down) for deep bass feel
-    /// 2^(-12/12) = 0.5
-    let gymnoTransposeFactor: Float = 0.5
+    /// Subtle detune for gentle warmth (Gymnopédie uses 0.2Hz, this is half)
+    let gymnoDetuneHz: Float = 0.1
 
-    /// Gymnopédie bass gain (slightly higher due to pure sine)
+    /// Gymnopédie melody gain
     let gymnoGain: Float = 0.28
 
     // MARK: - Sample Generation
@@ -148,9 +150,9 @@ private final class JupiterMelodyGenerator {
 
                 // === Section-based sound generation ===
                 if section == 0 {
-                    // Section 0: Gymnopédie風ベース音色（深く響く低音）
+                    // Section 0: Gymnopédie風メロディ音色（クリーンで響く）
                     let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
-                    let gymnoFreq = note.freq * gymnoTransposeFactor  // 1オクターブ下
+                    let gymnoFreq = note.freq * transposeFactor  // 通常のトランスポーズ（-2半音）
                     let v = generateGymnopedieVoice(freq: gymnoFreq, t: t)
                     output += v * gymnoEnv * gymnoGain
                 } else if section == 1 {
@@ -160,7 +162,7 @@ private final class JupiterMelodyGenerator {
 
                     // Gymnopédie voice (fading out)
                     let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
-                    let gymnoFreq = note.freq * gymnoTransposeFactor
+                    let gymnoFreq = note.freq * transposeFactor  // 通常のトランスポーズ
                     let gymnoV = generateGymnopedieVoice(freq: gymnoFreq, t: t)
 
                     // Organ voice (fading in)
@@ -251,26 +253,42 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Gymnopédie Envelope & Voice (Section 0)
 
-    /// Calculate Gymnopédie-style AD envelope (Attack-Decay)
-    /// Deep, resonant tone with long attack and natural decay
+    /// Calculate Gymnopédie-style ADR envelope (Attack-Decay-Release)
+    /// Smooth attack, natural decay, and clean release to prevent clicks
     private func calculateGymnopedieEnvelope(time: Float, duration: Float) -> Float {
-        // Attack phase: sin² curve (longer than organ for soft entrance)
+        // Attack phase: sin² curve for smooth entrance
         if time < gymnoAttackTime {
             let progress = time / gymnoAttackTime
             let s = sin(progress * Float.pi * 0.5)
             return s * s
         }
 
-        // Decay phase: exponential decay for natural resonance
-        let decayProgress = (time - gymnoAttackTime)
-        return exp(-decayProgress / gymnoDecayTime)
+        // Sustain/Decay phase: exponential decay during note duration
+        if time < duration {
+            let decayProgress = (time - gymnoAttackTime)
+            return exp(-decayProgress / gymnoDecayTime)
+        }
+
+        // Release phase: cos² curve for clean ending (same as organ)
+        let releaseProgress = (time - duration) / releaseTime
+        if releaseProgress < 1.0 {
+            // Get the envelope value at the end of the note
+            let envAtEnd = exp(-(duration - gymnoAttackTime) / gymnoDecayTime)
+            let c = cos(releaseProgress * Float.pi * 0.5)
+            return envAtEnd * c * c
+        }
+
+        return 0.0
     }
 
-    /// Generate Gymnopédie-style voice (pure sine, no harmonics)
-    /// Deep, clean bass tone like Gymnopédie accompaniment
+    /// Generate Gymnopédie-style voice with subtle detune
+    /// Gentle warmth with minimal vibrato for a cappella feel
     private func generateGymnopedieVoice(freq: Float, t: Float) -> Float {
-        // Pure sine wave (no harmonics for clean bass)
-        return SignalEnvelopeUtils.pureSine(frequency: freq, t: t)
+        // 控えめなデチューン・レイヤー（3つのサイン波）
+        let v1 = SignalEnvelopeUtils.pureSine(frequency: freq, t: t)                  // Center
+        let v2 = SignalEnvelopeUtils.pureSine(frequency: freq + gymnoDetuneHz, t: t)  // +Detune
+        let v3 = SignalEnvelopeUtils.pureSine(frequency: freq - gymnoDetuneHz, t: t)  // -Detune
+        return (v1 + v2 + v3) / 3.0
     }
 
     // MARK: - Helper Methods
