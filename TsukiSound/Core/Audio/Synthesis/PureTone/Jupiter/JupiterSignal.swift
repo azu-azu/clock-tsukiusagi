@@ -78,9 +78,9 @@ private final class JupiterMelodyGenerator {
     let vibratoDepth: Float = 0.001
 
     /// Legato Envelope Parameters (very smooth, connected notes)
-    /// - Attack: Slow rise for seamless entry
+    /// - Attack: Fast enough for 16th notes (0.3s) while still smooth
     /// - Release: Long tail extending well into next note
-    let attackTime: Float = 0.40   // 400ms: slow and majestic rise for organ
+    let attackTime: Float = 0.15   // 150ms: smooth but fast enough for short notes
     let releaseTime: Float = 0.8   // 800ms: very long tail for seamless blend
 
     /// Legato overlap: how much the release extends into next note
