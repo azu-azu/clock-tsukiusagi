@@ -48,8 +48,9 @@ private final class JupiterMelodyGenerator {
     /// Bar duration (3/4 time = 3 beats per bar)
     lazy var barDuration: Float = beat * 3
 
-    /// Musical cycle duration (楽譜上の長さ、テンポ変化なし)
-    lazy var musicalCycleDuration: Float = Float(totalBars) * barDuration
+    /// Musical cycle duration (楽譜上の全長、イントロスキップなし)
+    /// ノート位置計算に使用（楽譜ベース）
+    lazy var fullMusicalCycleDuration: Float = Float(totalBars) * barDuration
 
     /// Real cycle duration (実際の再生時間、テンポ変化あり)
     var cycleDuration: Float { JupiterTiming.cycleDuration }
@@ -99,9 +100,9 @@ private final class JupiterMelodyGenerator {
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
-        // 実時間を楽譜時間に変換（Section 0のテンポ伸縮を反映）
+        // 実時間を楽譜時間に変換（Section 0のテンポ伸縮 + イントロスキップを反映）
         let musicalTime = JupiterTiming.realToMusicalTime(t)
-        let local = musicalTime.truncatingRemainder(dividingBy: musicalCycleDuration)
+        let local = musicalTime.truncatingRemainder(dividingBy: fullMusicalCycleDuration)
 
         var output: Float = 0
 

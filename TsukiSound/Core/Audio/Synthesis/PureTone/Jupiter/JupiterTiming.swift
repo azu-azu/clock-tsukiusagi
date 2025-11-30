@@ -23,17 +23,55 @@ public enum JupiterTiming {
     /// 総小節数
     public static let totalBars: Int = 25
 
-    // MARK: - Tempo Stretch for Section 0
+    // MARK: - Intro Skip (Bar 1 の休符をスキップ)
 
-    /// Section 0 のテンポ倍率（1.5 = 1.5倍遅い = 約40BPM相当）
-    public static let section0TempoStretch: Float = 1.5
+    /// Bar 1 の休符分をスキップ（楽譜時間で2拍 = 2.0秒）
+    /// 楽譜では Bar 1 beat 2.0 から始まるが、再生時は即座に音が出るようにする
+    public static let introSkipBeats: Float = 2.0
+
+    /// イントロスキップ量（楽譜時間）
+    private static var introSkipMusical: Float { introSkipBeats * beatDuration }
+
+    // MARK: - Tempo Stretch
+
+    /// イントロ部分（ミソラ = Bar 1 beat 2.0 〜 Bar 2 beat 1.0）のテンポ倍率
+    /// 2.0 = 2.0倍遅い = 約40BPM相当
+    public static let introStretch: Float = 2.0
+
+    /// イントロ部分の楽譜上の長さ（ミソラ = 1.5拍）
+    /// Bar 1 beat 2.0, 2.5 (ミソ) + Bar 2 beat 0.0 (ラ) = 1.5拍分
+    private static let introMusicalBeats: Float = 1.5
+    private static var introMusicalDuration: Float { introMusicalBeats * beatDuration }
+
+    /// Section 0 の残り部分のテンポ倍率（1.25 = 約48BPM相当）
+    public static let section0Stretch: Float = 1.25
 
     /// Section 0 の小節数（Bar 1-4 = 4小節）
     private static let section0Bars: Int = 4
 
-    /// Section 0 の実際の長さ（テンポ伸縮後）
+    /// Section 0 の楽譜上の長さ（イントロスキップ後）
+    private static var section0MusicalDuration: Float {
+        Float(section0Bars) * barDuration - introSkipMusical
+    }
+
+    /// イントロ部分の実際の長さ
+    private static var introRealDuration: Float {
+        introMusicalDuration * introStretch
+    }
+
+    /// Section 0 の残り部分（イントロ後〜Bar 4末）の楽譜上の長さ
+    private static var section0RestMusicalDuration: Float {
+        section0MusicalDuration - introMusicalDuration
+    }
+
+    /// Section 0 の残り部分の実際の長さ
+    private static var section0RestRealDuration: Float {
+        section0RestMusicalDuration * section0Stretch
+    }
+
+    /// Section 0 全体の実際の長さ
     private static var section0RealDuration: Float {
-        Float(section0Bars) * barDuration * section0TempoStretch
+        introRealDuration + section0RestRealDuration
     }
 
     /// Section 1以降の長さ（通常テンポ）
@@ -46,8 +84,10 @@ public enum JupiterTiming {
         section0RealDuration + section1PlusDuration
     }
 
-    /// 楽譜上の1サイクルの長さ（テンポ伸縮なし、内部計算用）
-    public static let musicalCycleDuration: Float = Float(totalBars) * barDuration
+    /// 楽譜上の1サイクルの長さ（イントロスキップ後）
+    public static var musicalCycleDuration: Float {
+        Float(totalBars) * barDuration - introSkipMusical
+    }
 
     // MARK: - Section Boundaries (🌠 markers)
 
@@ -64,15 +104,19 @@ public enum JupiterTiming {
     // MARK: - Time Mapping (Real Time ↔ Musical Time)
 
     /// 実時間から楽譜時間へ変換
-    /// Section 0 はテンポが遅いため、楽譜時間は圧縮される
-    /// - Parameter realTime: 実際の経過時間（秒）
-    /// - Returns: 楽譜上の時間（秒）
+    /// - イントロ（ミソラ）: 1.5倍遅い
+    /// - Section 0 残り: 1.25倍遅い
+    /// - Section 1以降: 通常テンポ
     public static func realToMusicalTime(_ realTime: Float) -> Float {
         let localReal = realTime.truncatingRemainder(dividingBy: cycleDuration)
 
-        if localReal < section0RealDuration {
-            // Section 0: テンポが遅いので、楽譜時間は圧縮される
-            return localReal / section0TempoStretch
+        if localReal < introRealDuration {
+            // イントロ部分（ミソラ）: 1.5倍遅い
+            return introSkipMusical + localReal / introStretch
+        } else if localReal < section0RealDuration {
+            // Section 0 残り: 1.25倍遅い
+            let introMusicalEnd = introSkipMusical + introMusicalDuration
+            return introMusicalEnd + (localReal - introRealDuration) / section0Stretch
         } else {
             // Section 1以降: 通常テンポ
             let section0MusicalEnd = Float(section0Bars) * barDuration
@@ -81,18 +125,27 @@ public enum JupiterTiming {
     }
 
     /// 楽譜時間から実時間へ変換（逆変換）
-    /// - Parameter musicalTime: 楽譜上の時間（秒）
-    /// - Returns: 実際の経過時間（秒）
     public static func musicalToRealTime(_ musicalTime: Float) -> Float {
-        let localMusical = musicalTime.truncatingRemainder(dividingBy: musicalCycleDuration)
+        let introMusicalEnd = introSkipMusical + introMusicalDuration
         let section0MusicalEnd = Float(section0Bars) * barDuration
 
-        if localMusical < section0MusicalEnd {
-            // Section 0: テンポが遅いので、実時間は伸びる
-            return localMusical * section0TempoStretch
+        // イントロスキップ前の時間は存在しない
+        let adjustedMusical: Float
+        if musicalTime < introSkipMusical {
+            adjustedMusical = musicalTime + musicalCycleDuration
         } else {
-            // Section 1以降: 通常テンポ
-            return section0RealDuration + (localMusical - section0MusicalEnd)
+            adjustedMusical = musicalTime
+        }
+
+        if adjustedMusical < introMusicalEnd {
+            // イントロ部分
+            return (adjustedMusical - introSkipMusical) * introStretch
+        } else if adjustedMusical < section0MusicalEnd {
+            // Section 0 残り
+            return introRealDuration + (adjustedMusical - introMusicalEnd) * section0Stretch
+        } else {
+            // Section 1以降
+            return section0RealDuration + (adjustedMusical - section0MusicalEnd)
         }
     }
 

@@ -108,10 +108,11 @@ enum JupiterMelodyData {
 
     static let melody: [JupiterMelodyNote] = [
 
-        // === Bar 1 === ミソ(8分+8分) - 休符なしで即開始
+        // === Bar 1 === 休符(2拍) + ミソ(8分+8分)
         // 🌠 0 アカペラ
-        JupiterMelodyNote(.E4, bar: 1, beat: 0.0, dur: .eighth),                 // ミ
-        JupiterMelodyNote(.G4, bar: 1, beat: 0.5, dur: .eighth, breath: .short), // ソ 🫧
+        // Note: 楽譜通り beat 2.0 から開始。休符分は JupiterTiming.introSkip でスキップ
+        JupiterMelodyNote(.E4, bar: 1, beat: 2.0, dur: .eighth),                 // ミ
+        JupiterMelodyNote(.G4, bar: 1, beat: 2.5, dur: .eighth, breath: .short), // ソ 🫧
 
         // === Bar 2 === ラ(4分) ラドシ.ソ(8+8+付点8+16)
         // ラ=1拍, ラ=0.5, ド=0.5, シ.=0.75, ソ=0.25 → 合計3拍 ✓
