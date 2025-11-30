@@ -106,14 +106,17 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Gymnopédie Melody Sound Parameters (Section 0)
     //
-    // Gymnopédieのメロディパラメータを使用（ベースではなく）
     // 控えめなデチューンで微かな揺らぎを追加
+    // 長いアタック・リリースで音が柔らかくつながる（うねりを軽減）
 
-    /// Gymnopédie-style attack: smooth entrance like Gymnopédie melody
-    let gymnoAttackTime: Float = 0.15   // 150ms (like Gymnopédie melody)
+    /// Gymnopédie-style attack: longer for smooth note transitions
+    let gymnoAttackTime: Float = 0.35   // 350ms (longer to reduce beat at transitions)
 
     /// Gymnopédie-style decay: long, elegant decay
     let gymnoDecayTime: Float = 4.5     // 4.5s decay (like Gymnopédie melody)
+
+    /// Gymnopédie release: longer than organ for smooth legato connection
+    let gymnoReleaseTime: Float = 0.5   // 500ms release (organ is 180ms)
 
     /// Subtle detune for gentle warmth (Gymnopédie uses 0.2Hz, this is half)
     let gymnoDetuneHz: Float = 0.1
@@ -144,8 +147,9 @@ private final class JupiterMelodyGenerator {
             let effectiveDur = breathAmount > 0 ? max(noteDur - breathAmount, attackTime) : noteDur
 
             // Note is active during its effective duration + release tail
-            // Using effectiveDur (not noteDur) ensures consistency
-            if local >= noteStart && local < noteStart + effectiveDur + releaseTime {
+            // Section 0/1 uses longer release for legato connection
+            let activeReleaseTime = (section <= 1) ? gymnoReleaseTime : releaseTime
+            if local >= noteStart && local < noteStart + effectiveDur + activeReleaseTime {
                 let dt = local - noteStart
 
                 // === Section-based sound generation ===
@@ -173,15 +177,8 @@ private final class JupiterMelodyGenerator {
 
                     output += gymnoV * gymnoEnv * gymnoGain * gymnoFade
                     output += organV * organEnv * gainReduction * masterGain * organFade
-                } else if section == 3 {
-                    // Section 3 (Bar 13-16): オルガン + 微細デチューン（厚み追加）
-                    let env = calculateASREnvelope(time: dt, duration: effectiveDur)
-                    let transposedFreq = note.freq * transposeFactor
-                    let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
-                    let v = generateSingleVoiceWithSubtleChorus(freq: transposedFreq, t: t)
-                    output += v * env * gainReduction * masterGain
                 } else {
-                    // Section 2, 4, 5: 通常のオルガン音色
+                    // Section 2以降: 通常のオルガン音色
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur)
                     let transposedFreq = note.freq * transposeFactor
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
@@ -258,21 +255,10 @@ private final class JupiterMelodyGenerator {
         return Float(signal)
     }
 
-    /// Generate organ voice with subtle chorus (2 layers, tiny detune)
-    /// Very subtle thickness for Section 3 - almost imperceptible but adds warmth
-    private func generateSingleVoiceWithSubtleChorus(freq: Float, t: Float) -> Float {
-        // 微細デチューン: ±0.08Hz（0.05〜0.12の中間）
-        // 2本のみ、片側に少し寄せる（センター + 少し上）
-        let center = generateSingleVoice(freq: freq, t: t)
-        let detuned = generateSingleVoice(freq: freq + 0.08, t: t)
-        // センター主体、デチューンは控えめに混ぜる
-        return center * 0.85 + detuned * 0.15
-    }
-
     // MARK: - Gymnopédie Envelope & Voice (Section 0)
 
     /// Calculate Gymnopédie-style ADR envelope (Attack-Decay-Release)
-    /// Smooth attack, natural decay, and clean release to prevent clicks
+    /// Smooth attack, natural decay, and long release for legato connection
     private func calculateGymnopedieEnvelope(time: Float, duration: Float) -> Float {
         // Attack phase: sin² curve for smooth entrance
         if time < gymnoAttackTime {
@@ -287,8 +273,8 @@ private final class JupiterMelodyGenerator {
             return exp(-decayProgress / gymnoDecayTime)
         }
 
-        // Release phase: cos² curve for clean ending (same as organ)
-        let releaseProgress = (time - duration) / releaseTime
+        // Release phase: long cos² curve for smooth legato connection
+        let releaseProgress = (time - duration) / gymnoReleaseTime
         if releaseProgress < 1.0 {
             // Get the envelope value at the end of the note
             let envAtEnd = exp(-(duration - gymnoAttackTime) / gymnoDecayTime)
