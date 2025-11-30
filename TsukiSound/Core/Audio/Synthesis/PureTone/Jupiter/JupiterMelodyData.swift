@@ -6,14 +6,36 @@
 //  Holst's "The Planets" Jupiter theme (Public Domain)
 //  楽譜: pianojuku.info (F Major → C Major に移調)
 //
+//  ## ブレス（息継ぎ）の扱い
+//
+//  フレーズの切れ目で自然な息継ぎを作るため、`.withBreath()` ファクトリを使用。
+//  durBeats は自動的に breathFactor (0.85) 倍に短縮される。
+//
+//  - ブレス付きノート: `.withBreath(.A4, bar: 2, beat: 0.0, dur: .quarter)`
+//  - 通常ノート: `JupiterMelodyNote(.A4, bar: 2, beat: 1.0, dur: .eighth)`
+//  - コメントで `🫧→` を付与して視覚的に識別可能
+//
+//  breathFactor を変更すれば全ブレス箇所の長さを一括調整可能。
+//  releaseTime(0.18s) との組み合わせで「すっ…」と自然に減衰。
+//
+//  エンベロープ方式（Signal側で動的に短縮）も検討したが、
+//  ノイズが発生したため、安定性を優先してこの方式を採用。
+//
 
 import Foundation
 
-// MARK: - Data Structures
+// MARK: - Constants
 
 /// BPM Control: 60 BPM (slower, more majestic)
 /// Quarter note = 1.0s (60.0 / 60.0 = 1.0)
 let jupiterBeatDuration: Float = 1.0
+
+/// ブレス係数: フレーズの切れ目で durBeats を短縮する割合
+/// 0.85 = 15%短縮（150ms のブレス + 180ms のリリース余韻）
+/// 調整する場合: 0.9 に近づけると息継ぎが短く、0.8 に近づけると長くなる
+private let breathFactor: Float = 0.9
+
+// MARK: - Data Structures
 
 /// メロディの1音を表す構造体（Gymnopédie方式）
 struct JupiterMelodyNote {
@@ -22,6 +44,7 @@ struct JupiterMelodyNote {
     let startBeat: Float   // 0, 1, 2 (3/4拍子)
     let durBeats: Float
 
+    /// 通常のノート
     init(
         _ pitch: JupiterPitch,
         bar: Int,
@@ -34,15 +57,27 @@ struct JupiterMelodyNote {
         self.durBeats = dur.rawValue
     }
 
-    init(
+    /// ブレス付きノート（次のノートの前に息継ぎを作る）
+    /// durBeats は自動的に breathFactor 倍に短縮される
+    static func withBreath(
         _ pitch: JupiterPitch,
         bar: Int,
         beat: Float,
-        durBeats: Float
-    ) {
-        self.freq = pitch.rawValue
-        self.startBar = bar
-        self.startBeat = beat
+        dur: JupiterDuration
+    ) -> JupiterMelodyNote {
+        JupiterMelodyNote(
+            freq: pitch.rawValue,
+            startBar: bar,
+            startBeat: beat,
+            durBeats: dur.rawValue * breathFactor
+        )
+    }
+
+    /// 内部用イニシャライザ
+    private init(freq: Float, startBar: Int, startBeat: Float, durBeats: Float) {
+        self.freq = freq
+        self.startBar = startBar
+        self.startBeat = startBeat
         self.durBeats = durBeats
     }
 }
@@ -96,170 +131,156 @@ enum JupiterMelodyData {
     static let melody: [JupiterMelodyNote] = [
 
         // === Bar 1 === 休符(2拍) + ミソ(8分+8分)
-        JupiterMelodyNote(.E4, bar: 1, beat: 2.0, dur: .eighth),   // ミ
-        JupiterMelodyNote(.G4, bar: 1, beat: 2.5, dur: .eighth),   // ソ
+        JupiterMelodyNote(.E4, bar: 1, beat: 2.0, dur: .eighth),         // ミ
+        .withBreath(.G4, bar: 1, beat: 2.5, dur: .eighth),               // ソ 🫧→
 
         // === Bar 2 === ラ(4分) ラドシ.ソ(8+8+付点8+16)
         // ラ=1拍, ラ=0.5, ド=0.5, シ.=0.75, ソ=0.25 → 合計3拍 ✓
-        JupiterMelodyNote(.A4, bar: 2, beat: 0.0, dur: .quarter),  // ラ (1拍)
-        // 🫧
-        JupiterMelodyNote(.A4, bar: 2, beat: 1.0, dur: .eighth),   // ラ (0.5拍)
-        JupiterMelodyNote(.C5, bar: 2, beat: 1.5, dur: .eighth),   // ド (0.5拍)
-        JupiterMelodyNote(.B4, bar: 2, beat: 2.0, dur: .dottedEighth), // シ (0.75拍)
-        JupiterMelodyNote(.G4, bar: 2, beat: 2.75, dur: .sixteenth),   // ソ (0.25拍)
+        .withBreath(.A4, bar: 2, beat: 0.0, dur: .quarter),              // ラ 🫧→
+        JupiterMelodyNote(.A4, bar: 2, beat: 1.0, dur: .eighth),         // ラ
+        JupiterMelodyNote(.C5, bar: 2, beat: 1.5, dur: .eighth),         // ド
+        JupiterMelodyNote(.B4, bar: 2, beat: 2.0, dur: .dottedEighth),   // シ
+        JupiterMelodyNote(.G4, bar: 2, beat: 2.75, dur: .sixteenth),     // ソ
 
         // === Bar 3 === ドレド シ
         // 楽譜: ド(8分)レ(8分)ド(4分) シ(4分) → 0.5+0.5+1+1 = 3拍 ✓
-        JupiterMelodyNote(.C5, bar: 3, beat: 0.0, dur: .eighth),   // ド
-        JupiterMelodyNote(.D5, bar: 3, beat: 0.5, dur: .eighth),   // レ
-        JupiterMelodyNote(.C5, bar: 3, beat: 1.0, dur: .quarter),  // ド
-        // 🫧
-        JupiterMelodyNote(.B4, bar: 3, beat: 2.0, dur: .quarter),  // シ
+        JupiterMelodyNote(.C5, bar: 3, beat: 0.0, dur: .eighth),         // ド
+        JupiterMelodyNote(.D5, bar: 3, beat: 0.5, dur: .eighth),         // レ
+        .withBreath(.C5, bar: 3, beat: 1.0, dur: .quarter),              // ド 🫧→
+        JupiterMelodyNote(.B4, bar: 3, beat: 2.0, dur: .quarter),        // シ
 
         // === Bar 4 === ラシラ ソ
         // ラ(8分)シ(8分)ラ(4分) ソ(4分) → 0.5+0.5+1+1 = 3拍 ✓
-        JupiterMelodyNote(.A4, bar: 4, beat: 0.0, dur: .eighth),   // ラ
-        JupiterMelodyNote(.B4, bar: 4, beat: 0.5, dur: .eighth),   // シ
-        JupiterMelodyNote(.A4, bar: 4, beat: 1.0, dur: .quarter),  // ラ
-        JupiterMelodyNote(.G4, bar: 4, beat: 2.0, dur: .quarter),  // ソ
+        JupiterMelodyNote(.A4, bar: 4, beat: 0.0, dur: .eighth),         // ラ
+        JupiterMelodyNote(.B4, bar: 4, beat: 0.5, dur: .eighth),         // シ
+        JupiterMelodyNote(.A4, bar: 4, beat: 1.0, dur: .quarter),        // ラ
+        JupiterMelodyNote(.G4, bar: 4, beat: 2.0, dur: .quarter),        // ソ
 
         // === Bar 5 === ミ(2分) ミソ
         // ミ(2分) ミ(8分)ソ(8分) → 2+0.5+0.5 = 3拍 ✓
-        JupiterMelodyNote(.E4, bar: 5, beat: 0.0, dur: .half),     // ミ
-        // 🫧
-        JupiterMelodyNote(.E4, bar: 5, beat: 2.0, dur: .eighth),   // ミ
-        JupiterMelodyNote(.G4, bar: 5, beat: 2.5, dur: .eighth),   // ソ
+        .withBreath(.E4, bar: 5, beat: 0.0, dur: .half),                 // ミ 🫧→
+        JupiterMelodyNote(.E4, bar: 5, beat: 2.0, dur: .eighth),         // ミ
+        .withBreath(.G4, bar: 5, beat: 2.5, dur: .eighth),               // ソ 🫧→
 
         // === Bar 6 === ラ ラドシ.ソ (Bar 2と同じパターン)
-        JupiterMelodyNote(.A4, bar: 6, beat: 0.0, dur: .quarter),  // ラ
-        // 🫧
-        JupiterMelodyNote(.A4, bar: 6, beat: 1.0, dur: .eighth),   // ラ
-        JupiterMelodyNote(.C5, bar: 6, beat: 1.5, dur: .eighth),   // ド
-        JupiterMelodyNote(.B4, bar: 6, beat: 2.0, dur: .dottedEighth), // シ
-        JupiterMelodyNote(.G4, bar: 6, beat: 2.75, dur: .sixteenth),   // ソ
+        .withBreath(.A4, bar: 6, beat: 0.0, dur: .quarter),              // ラ 🫧→
+        JupiterMelodyNote(.A4, bar: 6, beat: 1.0, dur: .eighth),         // ラ
+        JupiterMelodyNote(.C5, bar: 6, beat: 1.5, dur: .eighth),         // ド
+        JupiterMelodyNote(.B4, bar: 6, beat: 2.0, dur: .dottedEighth),   // シ
+        JupiterMelodyNote(.G4, bar: 6, beat: 2.75, dur: .sixteenth),     // ソ
 
         // === Bar 7 === ドレ ミ ミ
         // ド(8分)レ(8分) ミ(4分) ミ(4分) → 0.5+0.5+1+1 = 3拍 ✓
-        JupiterMelodyNote(.C5, bar: 7, beat: 0.0, dur: .eighth),   // ド
-        JupiterMelodyNote(.D5, bar: 7, beat: 0.5, dur: .eighth),   // レ
-        JupiterMelodyNote(.E5, bar: 7, beat: 1.0, dur: .quarter),  // ミ
-        // 🫧
-        JupiterMelodyNote(.E5, bar: 7, beat: 2.0, dur: .quarter),  // ミ
+        JupiterMelodyNote(.C5, bar: 7, beat: 0.0, dur: .eighth),         // ド
+        JupiterMelodyNote(.D5, bar: 7, beat: 0.5, dur: .eighth),         // レ
+        .withBreath(.E5, bar: 7, beat: 1.0, dur: .quarter),              // ミ 🫧→
+        JupiterMelodyNote(.E5, bar: 7, beat: 2.0, dur: .quarter),        // ミ
 
         // === Bar 8 === ミレド レ
         // ミ(8分)レ(8分)ド(4分) レ(4分) → 0.5+0.5+1+1 = 3拍 ✓
-        JupiterMelodyNote(.E5, bar: 8, beat: 0.0, dur: .eighth),   // ミ
-        JupiterMelodyNote(.D5, bar: 8, beat: 0.5, dur: .eighth),   // レ
-        JupiterMelodyNote(.C5, bar: 8, beat: 1.0, dur: .quarter),  // ド
-        JupiterMelodyNote(.D5, bar: 8, beat: 2.0, dur: .quarter),  // レ
+        JupiterMelodyNote(.E5, bar: 8, beat: 0.0, dur: .eighth),         // ミ
+        JupiterMelodyNote(.D5, bar: 8, beat: 0.5, dur: .eighth),         // レ
+        JupiterMelodyNote(.C5, bar: 8, beat: 1.0, dur: .quarter),        // ド
+        JupiterMelodyNote(.D5, bar: 8, beat: 2.0, dur: .quarter),        // レ
 
         // === Bar 9 === ド(2分) ソミ
         // ド(2分) ソ(8分)ミ(8分) → 2+0.5+0.5 = 3拍 ✓
-        JupiterMelodyNote(.C5, bar: 9, beat: 0.0, dur: .half),     // ド
-        // 🫧
-        JupiterMelodyNote(.G5, bar: 9, beat: 2.0, dur: .eighth),   // ソ
-        JupiterMelodyNote(.E5, bar: 9, beat: 2.5, dur: .eighth),   // ミ
+        .withBreath(.C5, bar: 9, beat: 0.0, dur: .half),                 // ド 🫧→
+        JupiterMelodyNote(.G5, bar: 9, beat: 2.0, dur: .eighth),         // ソ
+        JupiterMelodyNote(.E5, bar: 9, beat: 2.5, dur: .eighth),         // ミ
 
         // === Bar 10 === レ レ ドミ
         // レ(4分) レ(4分) ド(8分)ミ(8分) → 1+1+0.5+0.5 = 3拍 ✓
-        JupiterMelodyNote(.D5, bar: 10, beat: 0.0, dur: .quarter), // レ
-        JupiterMelodyNote(.D5, bar: 10, beat: 1.0, dur: .quarter), // レ
-        JupiterMelodyNote(.C5, bar: 10, beat: 2.0, dur: .eighth),  // ド
-        JupiterMelodyNote(.E5, bar: 10, beat: 2.5, dur: .eighth),  // ミ
+        JupiterMelodyNote(.D5, bar: 10, beat: 0.0, dur: .quarter),       // レ
+        JupiterMelodyNote(.D5, bar: 10, beat: 1.0, dur: .quarter),       // レ
+        JupiterMelodyNote(.C5, bar: 10, beat: 2.0, dur: .eighth),        // ド
+        JupiterMelodyNote(.E5, bar: 10, beat: 2.5, dur: .eighth),        // ミ
 
         // === Bar 11 === レ ソソミ
-        // 楽譜確認: レ(4分) ソ(8分)ソ(8分)ミ(4分) → 1+0.5+0.5+1 = 3拍 ✓
-        JupiterMelodyNote(.D5, bar: 11, beat: 0.0, dur: .quarter), // レ
-        JupiterMelodyNote(.G4, bar: 11, beat: 1.0, dur: .quarter),  // ソ
-        // 🫧
-        JupiterMelodyNote(.G5, bar: 11, beat: 2.0, dur: .eighth),  // ソ 上
-        JupiterMelodyNote(.E5, bar: 11, beat: 2.5, dur: .eighth), // ミ
+        // 楽譜確認: レ(4分) ソ(4分) ソ(8分)ミ(8分) → 1+1+0.5+0.5 = 3拍 ✓
+        JupiterMelodyNote(.D5, bar: 11, beat: 0.0, dur: .quarter),       // レ
+        .withBreath(.G4, bar: 11, beat: 1.0, dur: .quarter),             // ソ 🫧→
+        JupiterMelodyNote(.G5, bar: 11, beat: 2.0, dur: .eighth),        // ソ(上)
+        JupiterMelodyNote(.E5, bar: 11, beat: 2.5, dur: .eighth),        // ミ
 
         // === Bar 12 === レ レミソ
-        // レ(4分) レ(8分)ミ(8分)ソ(4分) → 1+0.5+0.5+1 = 3拍 ✓
-        JupiterMelodyNote(.D5, bar: 12, beat: 0.0, dur: .quarter), // レ
-        JupiterMelodyNote(.D5, bar: 12, beat: 1.0, dur: .quarter),  // レ
-        JupiterMelodyNote(.E5, bar: 12, beat: 2.0, dur: .eighth),  // ミ
-        JupiterMelodyNote(.G5, bar: 12, beat: 2.5, dur: .eighth), // ソ
+        // レ(4分) レ(4分) ミ(8分)ソ(8分) → 1+1+0.5+0.5 = 3拍 ✓
+        JupiterMelodyNote(.D5, bar: 12, beat: 0.0, dur: .quarter),       // レ
+        JupiterMelodyNote(.D5, bar: 12, beat: 1.0, dur: .quarter),       // レ
+        JupiterMelodyNote(.E5, bar: 12, beat: 2.0, dur: .eighth),        // ミ
+        .withBreath(.G5, bar: 12, beat: 2.5, dur: .eighth),              // ソ 🫧→
 
         // === Bar 13 === ラ(2分) ラシ
-        JupiterMelodyNote(.A5, bar: 13, beat: 0.0, dur: .half),    // ラ
-        // 🫧
-        JupiterMelodyNote(.A5, bar: 13, beat: 2.0, dur: .eighth),  // ラ
-        JupiterMelodyNote(.B5, bar: 13, beat: 2.5, dur: .eighth),  // シ
+        .withBreath(.A5, bar: 13, beat: 0.0, dur: .half),                // ラ 🫧→
+        JupiterMelodyNote(.A5, bar: 13, beat: 2.0, dur: .eighth),        // ラ
+        JupiterMelodyNote(.B5, bar: 13, beat: 2.5, dur: .eighth),        // シ
 
         // === Bar 14 === ド シ ラ
-        JupiterMelodyNote(.C6, bar: 14, beat: 0.0, dur: .quarter), // ド
-        JupiterMelodyNote(.B5, bar: 14, beat: 1.0, dur: .quarter), // シ
-        JupiterMelodyNote(.A5, bar: 14, beat: 2.0, dur: .quarter), // ラ
+        JupiterMelodyNote(.C6, bar: 14, beat: 0.0, dur: .quarter),       // ド
+        JupiterMelodyNote(.B5, bar: 14, beat: 1.0, dur: .quarter),       // シ
+        JupiterMelodyNote(.A5, bar: 14, beat: 2.0, dur: .quarter),       // ラ
 
         // === Bar 15 === ソ ド ミ
-        JupiterMelodyNote(.G5, bar: 15, beat: 0.0, dur: .quarter), // ソ
-        JupiterMelodyNote(.C6, bar: 15, beat: 1.0, dur: .quarter), // ド (高)
-        JupiterMelodyNote(.E5, bar: 15, beat: 2.0, dur: .quarter), // ミ
+        JupiterMelodyNote(.G5, bar: 15, beat: 0.0, dur: .quarter),       // ソ
+        JupiterMelodyNote(.C6, bar: 15, beat: 1.0, dur: .quarter),       // ド(高)
+        JupiterMelodyNote(.E5, bar: 15, beat: 2.0, dur: .quarter),       // ミ
 
         // === Bar 16 === レド レ ミ
-        JupiterMelodyNote(.D5, bar: 16, beat: 0.0, dur: .eighth),  // レ
-        JupiterMelodyNote(.C5, bar: 16, beat: 0.5, dur: .eighth),  // ド
-        JupiterMelodyNote(.D5, bar: 16, beat: 1.0, dur: .quarter), // レ
-        JupiterMelodyNote(.E5, bar: 16, beat: 2.0, dur: .quarter), // ミ
+        JupiterMelodyNote(.D5, bar: 16, beat: 0.0, dur: .eighth),        // レ
+        JupiterMelodyNote(.C5, bar: 16, beat: 0.5, dur: .eighth),        // ド
+        JupiterMelodyNote(.D5, bar: 16, beat: 1.0, dur: .quarter),       // レ
+        JupiterMelodyNote(.E5, bar: 16, beat: 2.0, dur: .quarter),       // ミ
 
         // === Bar 17 === ソ(2分) ミソ
-        JupiterMelodyNote(.G5, bar: 17, beat: 0.0, dur: .half),    // ソ
-        // 🫧
-        JupiterMelodyNote(.E5, bar: 17, beat: 2.0, dur: .eighth),  // ミ
-        JupiterMelodyNote(.G5, bar: 17, beat: 2.5, dur: .eighth),  // ソ
+        .withBreath(.G5, bar: 17, beat: 0.0, dur: .half),                // ソ 🫧→
+        JupiterMelodyNote(.E5, bar: 17, beat: 2.0, dur: .eighth),        // ミ
+        .withBreath(.G5, bar: 17, beat: 2.5, dur: .eighth),              // ソ 🫧→
 
         // === Bar 18 === ラ ラドシ.ソ (Bar 2, 6と同じパターン)
-        JupiterMelodyNote(.A5, bar: 18, beat: 0.0, dur: .quarter), // ラ
-        // 🫧
-        JupiterMelodyNote(.A5, bar: 18, beat: 1.0, dur: .eighth),  // ラ
-        JupiterMelodyNote(.C6, bar: 18, beat: 1.5, dur: .eighth),  // ド
-        JupiterMelodyNote(.B5, bar: 18, beat: 2.0, dur: .dottedEighth), // シ
-        JupiterMelodyNote(.G5, bar: 18, beat: 2.75, dur: .sixteenth),   // ソ
+        .withBreath(.A5, bar: 18, beat: 0.0, dur: .quarter),             // ラ 🫧→
+        JupiterMelodyNote(.A5, bar: 18, beat: 1.0, dur: .eighth),        // ラ
+        JupiterMelodyNote(.C6, bar: 18, beat: 1.5, dur: .eighth),        // ド
+        JupiterMelodyNote(.B5, bar: 18, beat: 2.0, dur: .dottedEighth),  // シ
+        JupiterMelodyNote(.G5, bar: 18, beat: 2.75, dur: .sixteenth),    // ソ
 
         // === Bar 19 === ドレド シ (Bar 3と同じパターン)
-        JupiterMelodyNote(.C6, bar: 19, beat: 0.0, dur: .eighth),  // ド
-        JupiterMelodyNote(.D6, bar: 19, beat: 0.5, dur: .eighth),  // レ
-        JupiterMelodyNote(.C6, bar: 19, beat: 1.0, dur: .quarter), // ド
-        // 🫧
-        JupiterMelodyNote(.B5, bar: 19, beat: 2.0, dur: .quarter), // シ
+        JupiterMelodyNote(.C6, bar: 19, beat: 0.0, dur: .eighth),        // ド
+        JupiterMelodyNote(.D6, bar: 19, beat: 0.5, dur: .eighth),        // レ
+        .withBreath(.C6, bar: 19, beat: 1.0, dur: .quarter),             // ド 🫧→
+        JupiterMelodyNote(.B5, bar: 19, beat: 2.0, dur: .quarter),       // シ
 
         // === Bar 20 === ラシラ ソ (Bar 4と同じパターン)
-        JupiterMelodyNote(.A5, bar: 20, beat: 0.0, dur: .eighth),  // ラ
-        JupiterMelodyNote(.B5, bar: 20, beat: 0.5, dur: .eighth),  // シ
-        JupiterMelodyNote(.A5, bar: 20, beat: 1.0, dur: .quarter), // ラ
-        JupiterMelodyNote(.G5, bar: 20, beat: 2.0, dur: .quarter), // ソ
+        JupiterMelodyNote(.A5, bar: 20, beat: 0.0, dur: .eighth),        // ラ
+        JupiterMelodyNote(.B5, bar: 20, beat: 0.5, dur: .eighth),        // シ
+        JupiterMelodyNote(.A5, bar: 20, beat: 1.0, dur: .quarter),       // ラ
+        JupiterMelodyNote(.G5, bar: 20, beat: 2.0, dur: .quarter),       // ソ
 
         // === Bar 21 === ミ(2分) ミソ (Bar 5と同じパターン)
-        JupiterMelodyNote(.E5, bar: 21, beat: 0.0, dur: .half),    // ミ
-        // 🫧
-        JupiterMelodyNote(.E5, bar: 21, beat: 2.0, dur: .eighth),  // ミ
-        JupiterMelodyNote(.G5, bar: 21, beat: 2.5, dur: .eighth),  // ソ
+        .withBreath(.E5, bar: 21, beat: 0.0, dur: .half),                // ミ 🫧→
+        JupiterMelodyNote(.E5, bar: 21, beat: 2.0, dur: .eighth),        // ミ
+        .withBreath(.G5, bar: 21, beat: 2.5, dur: .eighth),              // ソ 🫧→
 
         // === Bar 22 === ラ ラドシ.ソ (Bar 2, 6, 18と同じパターン)
-        JupiterMelodyNote(.A5, bar: 22, beat: 0.0, dur: .quarter), // ラ
-        // 🫧
-        JupiterMelodyNote(.A5, bar: 22, beat: 1.0, dur: .eighth),  // ラ
-        JupiterMelodyNote(.C6, bar: 22, beat: 1.5, dur: .eighth),  // ド
-        JupiterMelodyNote(.B5, bar: 22, beat: 2.0, dur: .dottedEighth), // シ
-        JupiterMelodyNote(.G5, bar: 22, beat: 2.75, dur: .sixteenth),   // ソ
+        .withBreath(.A5, bar: 22, beat: 0.0, dur: .quarter),             // ラ 🫧→
+        JupiterMelodyNote(.A5, bar: 22, beat: 1.0, dur: .eighth),        // ラ
+        JupiterMelodyNote(.C6, bar: 22, beat: 1.5, dur: .eighth),        // ド
+        JupiterMelodyNote(.B5, bar: 22, beat: 2.0, dur: .dottedEighth),  // シ
+        .withBreath(.G5, bar: 22, beat: 2.75, dur: .sixteenth),          // ソ 🫧→
 
         // === Bar 23 === ドレ ミ ミ (Bar 7と同じパターン)
-        JupiterMelodyNote(.C6, bar: 23, beat: 0.0, dur: .eighth),  // ド
-        JupiterMelodyNote(.D6, bar: 23, beat: 0.5, dur: .eighth),  // レ
-        JupiterMelodyNote(.E6, bar: 23, beat: 1.0, dur: .quarter), // ミ
-        // 🫧
-        JupiterMelodyNote(.E6, bar: 23, beat: 2.0, dur: .quarter), // ミ
+        JupiterMelodyNote(.C6, bar: 23, beat: 0.0, dur: .eighth),        // ド
+        JupiterMelodyNote(.D6, bar: 23, beat: 0.5, dur: .eighth),        // レ
+        .withBreath(.E6, bar: 23, beat: 1.0, dur: .quarter),             // ミ 🫧→
+        JupiterMelodyNote(.E6, bar: 23, beat: 2.0, dur: .quarter),       // ミ
 
         // === Bar 24 === ミレド レ (Bar 8と同じパターン)
-        JupiterMelodyNote(.E6, bar: 24, beat: 0.0, dur: .eighth),  // ミ
-        JupiterMelodyNote(.D6, bar: 24, beat: 0.5, dur: .eighth),  // レ
-        JupiterMelodyNote(.C6, bar: 24, beat: 1.0, dur: .quarter), // ド
-        JupiterMelodyNote(.D6, bar: 24, beat: 2.0, dur: .quarter), // レ
+        JupiterMelodyNote(.E6, bar: 24, beat: 0.0, dur: .eighth),        // ミ
+        JupiterMelodyNote(.D6, bar: 24, beat: 0.5, dur: .eighth),        // レ
+        JupiterMelodyNote(.C6, bar: 24, beat: 1.0, dur: .quarter),       // ド
+        JupiterMelodyNote(.D6, bar: 24, beat: 2.0, dur: .quarter),       // レ
 
         // === Bar 25 === ド (付点2分 = 終止)
-        JupiterMelodyNote(.C6, bar: 25, beat: 0.0, dur: .dottedHalf), // ド
+        JupiterMelodyNote(.C6, bar: 25, beat: 0.0, dur: .dottedHalf),    // ド
     ]
 
     /// Total number of bars
