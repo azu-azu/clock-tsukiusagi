@@ -10,7 +10,8 @@
 //  - Section 0 (Bar 1-4): 無音（メロディはJupiterSignalでGymnopédie風に演奏）
 //  - Section 1 (Bar 5-8): オルガンドローンがフェードイン
 //  - Section 2: オルガンドローン（通常）
-//  - Section 3以降: オルガンドローン（厚み増加）
+//  - Section 3-4: オルガンドローン（厚み増加）
+//  - Section 5: クライマックス（さらに厚み）→ 終盤でフェードアウト
 //
 
 import Foundation
@@ -36,7 +37,6 @@ public struct CathedralStillnessSignal {
 
         return Signal { t in
             let section = JupiterTiming.currentSection(at: t)
-            let sectionProgress = JupiterTiming.sectionProgress(at: t)
 
             // LFOで音量を 0.4 〜 0.8 の範囲でゆっくり変化
             let lfoPhase = 2.0 * Float.pi * lfoFrequency * t
@@ -49,7 +49,7 @@ public struct CathedralStillnessSignal {
 
             // === Section 1: オルガンドローンのフェードイン ===
             if section == 1 {
-                let organFade = sectionProgress
+                let organFade = JupiterTiming.sectionProgress(at: t)
                 return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.0) * organFade
             }
 
@@ -58,8 +58,24 @@ public struct CathedralStillnessSignal {
                 return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.0)
             }
 
-            // === Section 3以降: オルガンドローン（厚み増加）===
-            return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.4)
+            // === Section 3-4: オルガンドローン（厚み増加）===
+            if section == 3 || section == 4 {
+                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.4)
+            }
+
+            // === Section 5: クライマックス → フェードアウト ===
+            let sectionProgress = JupiterTiming.sectionProgress(at: t)
+            // 前半80%はクライマックス（gain 1.7）、後半20%でフェードアウト
+            let climaxGain: Float
+            if sectionProgress < 0.8 {
+                climaxGain = 1.7
+            } else {
+                // 0.8→1.0 を 1.0→0.0 にマッピング（cos²でスムーズに）
+                let fadeProgress = (sectionProgress - 0.8) / 0.2
+                let c = cos(fadeProgress * Float.pi * 0.5)
+                climaxGain = 1.7 * c * c
+            }
+            return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: climaxGain)
         }
     }
 

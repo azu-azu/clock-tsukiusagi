@@ -10,7 +10,7 @@
 //  - Section 0-1 (Bar 1-8): 無音
 //  - Section 2 (Bar 9-12): 初登場（控えめ）
 //  - Section 3-4 (Bar 13-20): 通常
-//  - Section 5 (Bar 21-25): より活発
+//  - Section 5 (Bar 21-25): クライマックス → 終盤でフェードアウト
 //
 
 import Foundation
@@ -58,6 +58,9 @@ public struct TreeChimeSignal {
             let minInterval: Float
             let maxInterval: Float
 
+            // Section 5のフェードアウト用
+            var section5FadeOut: Float = 1.0
+
             switch section {
             case 0, 1:
                 // 無音
@@ -73,10 +76,17 @@ public struct TreeChimeSignal {
                 minInterval = 10.0
                 maxInterval = 18.0
             default:
-                // クライマックス（活発）
+                // クライマックス（活発）→ 終盤でフェードアウト
                 sectionGain = 1.0
                 minInterval = 6.0
                 maxInterval = 12.0
+                // Section 5 の終盤20%でフェードアウト
+                let sectionProgress = JupiterTiming.sectionProgress(at: t)
+                if sectionProgress > 0.8 {
+                    let fadeProgress = (sectionProgress - 0.8) / 0.2
+                    let c = cos(fadeProgress * Float.pi * 0.5)
+                    section5FadeOut = c * c
+                }
             }
 
             // Section 2開始からの相対時間を使用（セクション開始時にすぐ鳴るように）
@@ -132,8 +142,8 @@ public struct TreeChimeSignal {
                 value += sin(phase) * envelope
             }
 
-            // 粒数で正規化して音量調整 + セクションゲイン
-            return value / Float(numGrains) * masterGain * sectionGain
+            // 粒数で正規化して音量調整 + セクションゲイン + フェードアウト
+            return value / Float(numGrains) * masterGain * sectionGain * section5FadeOut
         }
     }
 }
