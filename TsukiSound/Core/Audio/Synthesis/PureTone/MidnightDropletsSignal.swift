@@ -12,10 +12,10 @@ import Foundation
 ///
 /// 特徴：
 /// - 2〜4音の上昇アルペジオパターン
-/// - ペンタトニックスケール（C4, D4, E4, G4, A4）
+/// - ペンタトニックスケール（C5, D5, E5, G5, A5）- Jupiterの上で透明感を保つ
 /// - 6〜15秒のランダム間隔で稀に鳴る
-/// - 各音は2〜3秒の exponential decay
-/// - 音と音の間隔は100〜150ms
+/// - 各音は5秒の exponential decay
+/// - 音と音の間隔は120ms
 public struct MidnightDropletsSignal {
 
     /// Create Midnight Droplets signal

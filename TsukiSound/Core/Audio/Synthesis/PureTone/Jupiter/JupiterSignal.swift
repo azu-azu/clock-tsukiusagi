@@ -105,19 +105,14 @@ private final class JupiterMelodyGenerator {
                 let dt = local - noteStart
 
                 // ASR Envelope: Attack → Sustain → Release
-                let envResult = calculateASREnvelope(time: dt, duration: noteDur)
+                let env = calculateASREnvelope(time: dt, duration: noteDur)
 
                 // Apply transpose and high-freq reduction
                 let transposedFreq = note.freq * transposeFactor
                 let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
 
-                // Generate voice with harmonic decay during release
-                let v = generateSingleVoice(
-                    freq: transposedFreq,
-                    t: t,
-                    releaseProgress: envResult.releaseProgress
-                )
-                output += v * envResult.gain * gainReduction * masterGain
+                let v = generateSingleVoice(freq: transposedFreq, t: t)
+                output += v * env * gainReduction * masterGain
             }
         }
 
@@ -126,47 +121,40 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - ASR Envelope
 
-    /// Envelope result containing both gain and release progress
-    struct EnvelopeResult {
-        let gain: Float           // 0.0 to 1.0
-        let releaseProgress: Float // 0.0 during attack/sustain, 0.0-1.0 during release
-    }
-
     /// Calculate ASR (Attack-Sustain-Release) envelope for organ-style sound
     /// Uses sin² for attack and cos² for release (per _guide-audio-smoothness.md)
     /// - Parameters:
     ///   - time: Time since note start
     ///   - duration: Note duration in seconds
-    /// - Returns: EnvelopeResult with gain and release progress
-    private func calculateASREnvelope(time: Float, duration: Float) -> EnvelopeResult {
+    /// - Returns: Envelope value (0.0 to 1.0)
+    private func calculateASREnvelope(time: Float, duration: Float) -> Float {
         // Attack phase: sin² curve
         if time < attackTime {
             let progress = time / attackTime
             let s = sin(progress * Float.pi * 0.5)
-            return EnvelopeResult(gain: s * s, releaseProgress: 0.0)
+            return s * s
         }
 
         // Sustain phase: full volume until note ends
         if time < duration {
-            return EnvelopeResult(gain: 1.0, releaseProgress: 0.0)
+            return 1.0
         }
 
         // Release phase: cos² curve
         let releaseProgress = (time - duration) / releaseTime
         if releaseProgress < 1.0 {
             let c = cos(releaseProgress * Float.pi * 0.5)
-            return EnvelopeResult(gain: c * c, releaseProgress: releaseProgress)
+            return c * c
         }
 
-        return EnvelopeResult(gain: 0.0, releaseProgress: 1.0)
+        return 0.0
     }
 
     // MARK: - Tone Generation
 
     /// Generate a single organ voice with harmonics and vibrato
     /// Uses Double precision internally to prevent floating-point errors
-    /// During release phase, higher harmonics are progressively reduced to avoid interference
-    private func generateSingleVoice(freq: Float, t: Float, releaseProgress: Float) -> Float {
+    private func generateSingleVoice(freq: Float, t: Float) -> Float {
         let tDouble = Double(t)
         let twoPiDouble = Double.pi * 2.0
         let vibratoRateDouble = Double(vibratoRate)
@@ -176,19 +164,10 @@ private final class JupiterMelodyGenerator {
         let vibrato = sin(twoPiDouble * vibratoRateDouble * tDouble) * vibratoDepthDouble
 
         var signal: Double = 0.0
-        let releaseProgressDouble = Double(releaseProgress)
 
-        for (index, (harmonicRatio, harmonicAmp)) in zip(harmonics.indices, zip(harmonics, harmonicAmps)) {
+        for (harmonicRatio, harmonicAmp) in zip(harmonics, harmonicAmps) {
             let hFreqDouble = Double(freq * harmonicRatio)
-            var harmonicAmpDouble = Double(harmonicAmp)
-
-            // During release: decay higher harmonics (index > 0) to reduce interference
-            // Fundamental (index 0) keeps full amplitude
-            if releaseProgressDouble > 0.0 && index > 0 {
-                // Exponential decay: (1 - progress)^2
-                let decayFactor = pow(1.0 - releaseProgressDouble, 2.0)
-                harmonicAmpDouble *= decayFactor
-            }
+            let harmonicAmpDouble = Double(harmonicAmp)
 
             // Calculate phase and wrap to prevent precision loss
             let rawPhase = hFreqDouble * tDouble

@@ -13,7 +13,7 @@ import Foundation
 /// 特徴：
 /// - 和音（C + G の完全5度）で厚みのある響き
 /// - 超低速LFO（0.02Hz）で音量がゆっくり呼吸するように変化
-/// - 4倍音までの加算合成で透明な音色
+/// - 2倍音までの加算合成（Jupiterメロディとの干渉を避けるため）
 /// - ほぼ静止したドローンとして機能
 public struct CathedralStillnessSignal {
 

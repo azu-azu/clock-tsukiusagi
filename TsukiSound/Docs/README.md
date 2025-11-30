@@ -100,6 +100,7 @@
 - [`report/report-audio-no-sound-silent-switch.md`](./report/report-audio-no-sound-silent-switch.md) - オーディオ無音問題（サイレントスイッチ）RCA
 - [`report/report-audio-sample-rate-mismatch.md`](./report/report-audio-sample-rate-mismatch.md) - サンプルレート不一致によるノイズ問題RCA（パチパチ音）
 - [`report/report-jupiter-melody-optimization.md`](./report/report-jupiter-melody-optimization.md) - Jupiter Melody パフォーマンス最適化
+- [`report/report-jupiter-harp-interference-fix.md`](./report/report-jupiter-harp-interference-fix.md) - Jupiter-Harp 周波数干渉問題の修正
 
 ## 📝 ドキュメント作成・更新ルール
 
