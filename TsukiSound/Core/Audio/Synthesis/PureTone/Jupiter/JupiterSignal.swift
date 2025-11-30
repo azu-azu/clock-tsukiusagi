@@ -72,11 +72,13 @@ private final class JupiterMelodyGenerator {
     /// Attack time: fast enough for 16th notes while still smooth
     let attackTime: Float = 0.15   // 150ms
 
-    /// Release time: natural fade after note ends
-    let releaseTime: Float = 0.80  // 800ms release
+    /// Release time: melody-style (per _guide-audio-smoothness.md)
+    let releaseTime: Float = 0.18  // 180ms release (within 0.1-0.2s recommendation)
 
     /// Master gain for balance with other layers
-    let masterGain: Float = 0.35
+    /// Reduced to prevent clipping when notes overlap
+    /// At most 2 notes overlap, so 0.22 * 2 = 0.44 < 0.8 (softClip threshold)
+    let masterGain: Float = 0.22
 
     /// High frequency gain reduction threshold (Hz)
     /// Frequencies above this will be progressively reduced
@@ -103,14 +105,19 @@ private final class JupiterMelodyGenerator {
                 let dt = local - noteStart
 
                 // ASR Envelope: Attack → Sustain → Release
-                let env = calculateASREnvelope(time: dt, duration: noteDur)
+                let envResult = calculateASREnvelope(time: dt, duration: noteDur)
 
                 // Apply transpose and high-freq reduction
                 let transposedFreq = note.freq * transposeFactor
                 let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
 
-                let v = generateSingleVoice(freq: transposedFreq, t: t)
-                output += v * env * gainReduction * masterGain
+                // Generate voice with harmonic decay during release
+                let v = generateSingleVoice(
+                    freq: transposedFreq,
+                    t: t,
+                    releaseProgress: envResult.releaseProgress
+                )
+                output += v * envResult.gain * gainReduction * masterGain
             }
         }
 
@@ -119,37 +126,47 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - ASR Envelope
 
+    /// Envelope result containing both gain and release progress
+    struct EnvelopeResult {
+        let gain: Float           // 0.0 to 1.0
+        let releaseProgress: Float // 0.0 during attack/sustain, 0.0-1.0 during release
+    }
+
     /// Calculate ASR (Attack-Sustain-Release) envelope for organ-style sound
+    /// Uses sin² for attack and cos² for release (per _guide-audio-smoothness.md)
     /// - Parameters:
     ///   - time: Time since note start
     ///   - duration: Note duration in seconds
-    /// - Returns: Envelope value (0.0 to 1.0)
-    private func calculateASREnvelope(time: Float, duration: Float) -> Float {
-        // Attack phase: smooth cosine rise
+    /// - Returns: EnvelopeResult with gain and release progress
+    private func calculateASREnvelope(time: Float, duration: Float) -> EnvelopeResult {
+        // Attack phase: sin² curve
         if time < attackTime {
             let progress = time / attackTime
-            return (1.0 - cos(progress * Float.pi)) * 0.5
+            let s = sin(progress * Float.pi * 0.5)
+            return EnvelopeResult(gain: s * s, releaseProgress: 0.0)
         }
 
         // Sustain phase: full volume until note ends
         if time < duration {
-            return 1.0
+            return EnvelopeResult(gain: 1.0, releaseProgress: 0.0)
         }
 
-        // Release phase: smooth cosine fade
+        // Release phase: cos² curve
         let releaseProgress = (time - duration) / releaseTime
         if releaseProgress < 1.0 {
-            return (1.0 + cos(releaseProgress * Float.pi)) * 0.5
+            let c = cos(releaseProgress * Float.pi * 0.5)
+            return EnvelopeResult(gain: c * c, releaseProgress: releaseProgress)
         }
 
-        return 0.0
+        return EnvelopeResult(gain: 0.0, releaseProgress: 1.0)
     }
 
     // MARK: - Tone Generation
 
     /// Generate a single organ voice with harmonics and vibrato
     /// Uses Double precision internally to prevent floating-point errors
-    private func generateSingleVoice(freq: Float, t: Float) -> Float {
+    /// During release phase, higher harmonics are progressively reduced to avoid interference
+    private func generateSingleVoice(freq: Float, t: Float, releaseProgress: Float) -> Float {
         let tDouble = Double(t)
         let twoPiDouble = Double.pi * 2.0
         let vibratoRateDouble = Double(vibratoRate)
@@ -159,10 +176,19 @@ private final class JupiterMelodyGenerator {
         let vibrato = sin(twoPiDouble * vibratoRateDouble * tDouble) * vibratoDepthDouble
 
         var signal: Double = 0.0
+        let releaseProgressDouble = Double(releaseProgress)
 
-        for (harmonicRatio, harmonicAmp) in zip(harmonics, harmonicAmps) {
+        for (index, (harmonicRatio, harmonicAmp)) in zip(harmonics.indices, zip(harmonics, harmonicAmps)) {
             let hFreqDouble = Double(freq * harmonicRatio)
-            let harmonicAmpDouble = Double(harmonicAmp)
+            var harmonicAmpDouble = Double(harmonicAmp)
+
+            // During release: decay higher harmonics (index > 0) to reduce interference
+            // Fundamental (index 0) keeps full amplitude
+            if releaseProgressDouble > 0.0 && index > 0 {
+                // Exponential decay: (1 - progress)^2
+                let decayFactor = pow(1.0 - releaseProgressDouble, 2.0)
+                harmonicAmpDouble *= decayFactor
+            }
 
             // Calculate phase and wrap to prevent precision loss
             let rawPhase = hFreqDouble * tDouble

@@ -21,13 +21,14 @@ public struct MidnightDropletsSignal {
     /// Create Midnight Droplets signal
     /// - Returns: Signal generating sparse arpeggio harp
     public static func makeSignal() -> Signal {
-        // ペンタトニックスケール（C4ベース）
+        // ペンタトニックスケール（C5ベース）
+        // Jupiterメロディ（E4〜E6）の上に逃がして透明感を保つ
         let scale: [Float] = [
-            261.63,  // C4
-            293.66,  // D4
-            329.63,  // E4
-            392.00,  // G4
-            440.00   // A4
+            523.25,  // C5
+            587.33,  // D5
+            659.25,  // E5
+            783.99,  // G5
+            880.00   // A5
         ]
 
         // 次のアルペジオまでの間隔設定
@@ -37,6 +38,9 @@ public struct MidnightDropletsSignal {
         // 各音の減衰時間
         let noteDecay: Float = 5.0      // 5.0秒で減衰（長い余韻）
         let fadeOutStart: Float = 4.2   // 4.2秒からさらにフェードアウト開始
+
+        // 全体音量（かすかに鳴る程度）
+        let masterGain: Float = 0.02
 
         // アルペジオ内の音の間隔
         let noteSpacing: Float = 0.12   // 120ms
@@ -121,8 +125,7 @@ public struct MidnightDropletsSignal {
                 value += noteValue * envelope * finalFade
             }
 
-            // 全体音量（リバーブで響くため少し控えめ）
-            return value * 0.22
+            return value * masterGain
         }
     }
 }

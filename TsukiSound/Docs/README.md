@@ -64,6 +64,7 @@
 - [`implementation/_guide-audio-system-impl.md`](./implementation/_guide-audio-system-impl.md) - オーディオシステム実装ガイド（Phase 2 + 3層アーキテクチャ）★主要リファレンス
 - [`implementation/_guide-audio-seamless-loop-generation.md`](./implementation/_guide-audio-seamless-loop-generation.md) - シームレスループ音声ファイル生成ガイド
 - [`implementation/_guide-audio-presets-restoration.md`](./implementation/_guide-audio-presets-restoration.md) - ナチュラルサウンドプリセット復元ガイド（⚠️ 一部非推奨：3層アーキテクチャ移行済み）
+- [`implementation/_guide-organ-envelope-asr.md`](./implementation/_guide-organ-envelope-asr.md) - オルガン音色のASRエンベロープ設計ガイド（ASR vs AD、Legato Crossfade）
 - [`implementation/_guide-navigation-back-gesture.md`](./implementation/_guide-navigation-back-gesture.md) - カスタム戻る操作実装ガイド
 - [`implementation/_guide-design-tokens.md`](./implementation/_guide-design-tokens.md) - デザイントークン統一ガイド
 - [`implementation/navigation-design.md`](./implementation/navigation-design.md) - ナビゲーションバー・タブ統合設計

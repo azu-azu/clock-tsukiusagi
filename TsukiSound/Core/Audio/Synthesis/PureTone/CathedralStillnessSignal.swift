@@ -32,9 +32,10 @@ public struct CathedralStillnessSignal {
             let lfoPhase = 2.0 * Float.pi * lfoFrequency * t
             let lfoValue = 0.6 + 0.2 * sin(lfoPhase)  // 0.4 〜 0.8
 
-            // 倍音設定（オルガンらしい柔らかめ）
-            let harmonics: [Float] = [1.0, 2.0, 3.0, 4.0]
-            let amps: [Float] = [0.9, 0.4, 0.25, 0.15]
+            // 倍音設定（Jupiterメロディとの干渉を避けるため、2倍音以上を大幅カット）
+            // C3の4倍音(523Hz)がC5、G3の2倍音(392Hz)がG4と干渉するため
+            let harmonics: [Float] = [1.0, 2.0]
+            let amps: [Float] = [1.0, 0.15]
 
             var value: Float = 0.0
 
