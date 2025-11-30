@@ -75,9 +75,9 @@ private final class JupiterMelodyGenerator {
     /// Release time: melody-style (per _guide-audio-smoothness.md)
     let releaseTime: Float = 0.18  // 180ms release (within 0.1-0.2s recommendation)
 
-    /// Breath duration: how much to shorten note when breathAfter is true
-    /// This creates a natural "breathing" gap between phrases
-    let breathDuration: Float = 0.10  // 100ms breath gap
+    // Note: Breath duration is now defined in JupiterBreath enum
+    // - .short = 80ms (フレーズ内の軽い息継ぎ)
+    // - .long  = 150ms (フレーズ間のしっかりした息継ぎ)
 
     /// Master gain for balance with other layers
     /// Reduced to prevent clipping when notes overlap
@@ -104,9 +104,10 @@ private final class JupiterMelodyGenerator {
             let noteStart = Float(note.startBar - 1) * barDuration + note.startBeat * beat
             let noteDur = note.durBeats * beat
 
-            // Calculate effective duration (shortened if breathAfter)
+            // Calculate effective duration (shortened by breath amount)
             // Key insight: both active window AND envelope must use the same effectiveDur
-            let effectiveDur = note.breathAfter ? max(noteDur - breathDuration, attackTime) : noteDur
+            let breathAmount = note.breath.rawValue
+            let effectiveDur = breathAmount > 0 ? max(noteDur - breathAmount, attackTime) : noteDur
 
             // Note is active during its effective duration + release tail
             // Using effectiveDur (not noteDur) ensures consistency
