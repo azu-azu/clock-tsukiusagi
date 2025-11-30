@@ -42,14 +42,17 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Timing Constants
 
-    /// Beat duration from melody data (75 BPM = 0.8s per beat)
+    /// Beat duration from melody data (60 BPM = 1.0s per beat)
     let beat: Float = jupiterBeatDuration
 
     /// Bar duration (3/4 time = 3 beats per bar)
     lazy var barDuration: Float = beat * 3
 
-    /// Total cycle duration
-    lazy var cycleDuration: Float = Float(totalBars) * barDuration
+    /// Musical cycle duration (楽譜上の長さ、テンポ変化なし)
+    lazy var musicalCycleDuration: Float = Float(totalBars) * barDuration
+
+    /// Real cycle duration (実際の再生時間、テンポ変化あり)
+    var cycleDuration: Float { JupiterTiming.cycleDuration }
 
     // MARK: - Sound Design (Organ Characteristics)
 
@@ -96,7 +99,9 @@ private final class JupiterMelodyGenerator {
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
-        let local = t.truncatingRemainder(dividingBy: cycleDuration)
+        // 実時間を楽譜時間に変換（Section 0のテンポ伸縮を反映）
+        let musicalTime = JupiterTiming.realToMusicalTime(t)
+        let local = musicalTime.truncatingRemainder(dividingBy: musicalCycleDuration)
 
         var output: Float = 0
 
