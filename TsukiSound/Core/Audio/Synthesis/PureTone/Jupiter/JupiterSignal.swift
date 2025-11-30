@@ -174,11 +174,11 @@ private final class JupiterMelodyGenerator {
                     output += gymnoV * gymnoEnv * gymnoGain * gymnoFade
                     output += organV * organEnv * gainReduction * masterGain * organFade
                 } else if section == 3 {
-                    // Section 3 (Bar 13-16): オルガン + デチューンコーラス
+                    // Section 3 (Bar 13-16): オルガン + 微細デチューン（厚み追加）
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur)
                     let transposedFreq = note.freq * transposeFactor
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
-                    let v = generateSingleVoiceWithChorus(freq: transposedFreq, t: t, detuneHz: 0.3)
+                    let v = generateSingleVoiceWithSubtleChorus(freq: transposedFreq, t: t)
                     output += v * env * gainReduction * masterGain
                 } else {
                     // Section 2, 4, 5: 通常のオルガン音色
@@ -258,16 +258,15 @@ private final class JupiterMelodyGenerator {
         return Float(signal)
     }
 
-    /// Generate organ voice with detune chorus (center + detuned layers)
-    /// Used for Section 3 to add thickness
-    private func generateSingleVoiceWithChorus(freq: Float, t: Float, detuneHz: Float) -> Float {
-        // Center voice
+    /// Generate organ voice with subtle chorus (2 layers, tiny detune)
+    /// Very subtle thickness for Section 3 - almost imperceptible but adds warmth
+    private func generateSingleVoiceWithSubtleChorus(freq: Float, t: Float) -> Float {
+        // 微細デチューン: ±0.08Hz（0.05〜0.12の中間）
+        // 2本のみ、片側に少し寄せる（センター + 少し上）
         let center = generateSingleVoice(freq: freq, t: t)
-        // Detuned voices (±detuneHz)
-        let high = generateSingleVoice(freq: freq + detuneHz, t: t)
-        let low = generateSingleVoice(freq: freq - detuneHz, t: t)
-        // Mix: center is prominent, detuned layers are supporting
-        return (center * 0.6 + high * 0.2 + low * 0.2)
+        let detuned = generateSingleVoice(freq: freq + 0.08, t: t)
+        // センター主体、デチューンは控えめに混ぜる
+        return center * 0.85 + detuned * 0.15
     }
 
     // MARK: - Gymnopédie Envelope & Voice (Section 0)
