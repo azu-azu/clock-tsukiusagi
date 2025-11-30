@@ -7,6 +7,12 @@
 //
 //  Refactored to Gymnopédie-style (startBar/startBeat) for consistency
 //
+//  ## セクション対応
+//  JupiterTimingを参照し、楽曲の進行に合わせて音色が変化
+//  - Section 0 (Bar 1-4): Gymnopédie風ベース音色（深く響く低音）
+//  - Section 1 (Bar 5-8): ベースからオルガンへクロスフェード
+//  - Section 2以降: オルガン音色
+//
 
 import Foundation
 
@@ -17,8 +23,9 @@ import Foundation
 ///
 /// Characteristics:
 /// - Gymnopédie-style note positioning (startBar/startBeat)
-/// - Organ-style ASR envelope (Attack-Sustain-Release)
-/// - Rich harmonics with 6th overtone
+/// - Section 0: Gymnopédie-style bass tone (deep, resonant)
+/// - Section 1+: Organ-style ASR envelope (Attack-Sustain-Release)
+/// - Rich harmonics with 6th overtone (organ sections)
 ///
 /// Legal: Holst's "The Planets" (1918) is public domain (composer died 1934, >70 years).
 public struct JupiterMelodySignal {
@@ -97,12 +104,31 @@ private final class JupiterMelodyGenerator {
     /// 2^(-2/12) ≈ 0.8909
     let transposeFactor: Float = pow(2.0, -2.0 / 12.0)
 
+    // MARK: - Gymnopédie Bass Sound Parameters (Section 0)
+
+    /// Gymnopédie-style attack: long for deep, soft entrance
+    let gymnoAttackTime: Float = 0.20   // 200ms (like Gymnopédie bass)
+
+    /// Gymnopédie-style decay: long for sustained resonance
+    let gymnoDecayTime: Float = 3.5     // 3.5s decay
+
+    /// Transpose factor for Section 0: -12 semitones (1 octave down) for deep bass feel
+    /// 2^(-12/12) = 0.5
+    let gymnoTransposeFactor: Float = 0.5
+
+    /// Gymnopédie bass gain (slightly higher due to pure sine)
+    let gymnoGain: Float = 0.28
+
     // MARK: - Sample Generation
 
     func sample(at t: Float) -> Float {
         // 実時間を楽譜時間に変換（Section 0のテンポ伸縮 + イントロスキップを反映）
         let musicalTime = JupiterTiming.realToMusicalTime(t)
         let local = musicalTime.truncatingRemainder(dividingBy: fullMusicalCycleDuration)
+
+        // セクションとクロスフェード用の進行度を取得
+        let section = JupiterTiming.currentSection(at: t)
+        let sectionProgress = JupiterTiming.sectionProgress(at: t)
 
         var output: Float = 0
 
@@ -120,16 +146,39 @@ private final class JupiterMelodyGenerator {
             if local >= noteStart && local < noteStart + effectiveDur + releaseTime {
                 let dt = local - noteStart
 
-                // ASR Envelope: Attack → Sustain → Release
-                // Uses effectiveDur so envelope matches the active window
-                let env = calculateASREnvelope(time: dt, duration: effectiveDur)
+                // === Section-based sound generation ===
+                if section == 0 {
+                    // Section 0: Gymnopédie風ベース音色（深く響く低音）
+                    let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
+                    let gymnoFreq = note.freq * gymnoTransposeFactor  // 1オクターブ下
+                    let v = generateGymnopedieVoice(freq: gymnoFreq, t: t)
+                    output += v * gymnoEnv * gymnoGain
+                } else if section == 1 {
+                    // Section 1: クロスフェード（Gymnopédie → Organ）
+                    let gymnoFade = 1.0 - sectionProgress
+                    let organFade = sectionProgress
 
-                // Apply transpose and high-freq reduction
-                let transposedFreq = note.freq * transposeFactor
-                let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+                    // Gymnopédie voice (fading out)
+                    let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
+                    let gymnoFreq = note.freq * gymnoTransposeFactor
+                    let gymnoV = generateGymnopedieVoice(freq: gymnoFreq, t: t)
 
-                let v = generateSingleVoice(freq: transposedFreq, t: t)
-                output += v * env * gainReduction * masterGain
+                    // Organ voice (fading in)
+                    let organEnv = calculateASREnvelope(time: dt, duration: effectiveDur)
+                    let organFreq = note.freq * transposeFactor
+                    let gainReduction = calculateHighFreqReduction(freq: organFreq)
+                    let organV = generateSingleVoice(freq: organFreq, t: t)
+
+                    output += gymnoV * gymnoEnv * gymnoGain * gymnoFade
+                    output += organV * organEnv * gainReduction * masterGain * organFade
+                } else {
+                    // Section 2以降: 通常のオルガン音色
+                    let env = calculateASREnvelope(time: dt, duration: effectiveDur)
+                    let transposedFreq = note.freq * transposeFactor
+                    let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+                    let v = generateSingleVoice(freq: transposedFreq, t: t)
+                    output += v * env * gainReduction * masterGain
+                }
             }
         }
 
@@ -198,6 +247,30 @@ private final class JupiterMelodyGenerator {
 
         signal /= Double(harmonics.count)
         return Float(signal)
+    }
+
+    // MARK: - Gymnopédie Envelope & Voice (Section 0)
+
+    /// Calculate Gymnopédie-style AD envelope (Attack-Decay)
+    /// Deep, resonant tone with long attack and natural decay
+    private func calculateGymnopedieEnvelope(time: Float, duration: Float) -> Float {
+        // Attack phase: sin² curve (longer than organ for soft entrance)
+        if time < gymnoAttackTime {
+            let progress = time / gymnoAttackTime
+            let s = sin(progress * Float.pi * 0.5)
+            return s * s
+        }
+
+        // Decay phase: exponential decay for natural resonance
+        let decayProgress = (time - gymnoAttackTime)
+        return exp(-decayProgress / gymnoDecayTime)
+    }
+
+    /// Generate Gymnopédie-style voice (pure sine, no harmonics)
+    /// Deep, clean bass tone like Gymnopédie accompaniment
+    private func generateGymnopedieVoice(freq: Float, t: Float) -> Float {
+        // Pure sine wave (no harmonics for clean bass)
+        return SignalEnvelopeUtils.pureSine(frequency: freq, t: t)
     }
 
     // MARK: - Helper Methods
