@@ -7,12 +7,11 @@
 //
 //  Refactored to Gymnopédie-style (startBar/startBeat) for consistency
 //
-//  ## セクション対応
-//  JupiterTimingを参照し、楽曲の進行に合わせて音色が変化
-//  - Section 0 (Bar 1-4): Gymnopédie風メロディ音色（純粋サイン波 + 微細デチューン）
-//  - Section 1 (Bar 5-8): Gymnopédieからオルガンへクロスフェード
-//  - Section 2-4: オルガン音色（倍音 + ビブラート）
-//  - Section 5: クライマックス（厚み増加）→ 終盤でGymnopédieへフェード
+//  ## 音色変化
+//  楽譜位置に基づいて音色が変化
+//  - Bar 1 (beat 0-1): Gymnopédie風メロディ音色（純粋サイン波 + 微細デチューン）
+//  - Bar 2 beat 1.0〜: オルガン音色（倍音 + ビブラート）へクロスフェード
+//  - Section 5: クライマックス（厚み増加）→ 終盤でフェードアウト
 //
 
 import Foundation
@@ -24,9 +23,9 @@ import Foundation
 ///
 /// Characteristics:
 /// - Gymnopédie-style note positioning (startBar/startBeat)
-/// - Section 0: Gymnopédie-style melody (pure sine + subtle detune, long attack/release)
-/// - Section 1: Crossfade from Gymnopédie to organ
-/// - Section 2+: Organ-style ASR envelope with rich harmonics
+/// - Bar 1: Gymnopédie-style melody (pure sine + subtle detune, long attack/release)
+/// - Bar 2+: Crossfade to organ, then full organ sound
+/// - Section 5: Climax with enhanced volume
 ///
 /// Legal: Holst's "The Planets" (1918) is public domain (composer died 1934, >70 years).
 public struct JupiterMelodySignal {
@@ -124,14 +123,40 @@ private final class JupiterMelodyGenerator {
 
     // MARK: - Sample Generation
 
+    // MARK: - Timbre Transition Constants
+
+    /// クロスフェード開始位置（楽譜時間）: Bar 2, Beat 1.0
+    let crossfadeStartBar: Int = 2
+    let crossfadeStartBeat: Float = 1.0
+
+    /// クロスフェード期間（拍数）: 2拍かけて徐々に変化
+    let crossfadeDurationBeats: Float = 2.0
+
     func sample(at t: Float) -> Float {
-        // 実時間を楽譜時間に変換（Section 0のテンポ伸縮 + イントロスキップを反映）
+        // 実時間を楽譜時間に変換（イントロスキップを反映）
         let musicalTime = JupiterTiming.realToMusicalTime(t)
         let local = musicalTime.truncatingRemainder(dividingBy: fullMusicalCycleDuration)
 
-        // セクションとクロスフェード用の進行度を取得
+        // セクション情報（クライマックス判定用）
         let section = JupiterTiming.currentSection(at: t)
         let sectionProgress = JupiterTiming.sectionProgress(at: t)
+
+        // クロスフェード開始時刻（楽譜時間）
+        let crossfadeStartTime = Float(crossfadeStartBar - 1) * barDuration + crossfadeStartBeat * beat
+        let crossfadeEndTime = crossfadeStartTime + crossfadeDurationBeats * beat
+
+        // 現在の音色ブレンド比率を計算（楽譜位置ベース）
+        let organBlend: Float
+        if local < crossfadeStartTime {
+            // Bar 1: 純粋Gymnopédie
+            organBlend = 0.0
+        } else if local < crossfadeEndTime {
+            // クロスフェード中
+            organBlend = (local - crossfadeStartTime) / (crossfadeDurationBeats * beat)
+        } else {
+            // Bar 2 beat 3.0以降: 純粋オルガン
+            organBlend = 1.0
+        }
 
         var output: Float = 0
 
@@ -140,52 +165,47 @@ private final class JupiterMelodyGenerator {
             let noteDur = note.durBeats * beat
 
             // Calculate effective duration (shortened by breath amount)
-            // Key insight: both active window AND envelope must use the same effectiveDur
             let breathAmount = note.breath.rawValue
             let effectiveDur = breathAmount > 0 ? max(noteDur - breathAmount, attackTime) : noteDur
 
             // Note is active during its effective duration + release tail
-            // Section 0/1 uses longer release for legato connection
-            let activeReleaseTime = (section <= 1) ? gymnoReleaseTime : releaseTime
+            // Gymnopédieが混じっている間は長いリリース
+            let activeReleaseTime = (organBlend < 1.0) ? gymnoReleaseTime : releaseTime
             if local >= noteStart && local < noteStart + effectiveDur + activeReleaseTime {
                 let dt = local - noteStart
+                let transposedFreq = note.freq * transposeFactor
 
-                // === Section-based sound generation ===
-                if section == 0 {
-                    // Section 0: Gymnopédie風メロディ音色（クリーンで響く）
+                // === 楽譜位置ベースの音色ブレンド ===
+                if organBlend == 0.0 {
+                    // 純粋Gymnopédie（Bar 1）
                     let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
-                    let gymnoFreq = note.freq * transposeFactor  // 通常のトランスポーズ（-2半音）
-                    let v = generateGymnopedieVoice(freq: gymnoFreq, t: t)
+                    let v = generateGymnopedieVoice(freq: transposedFreq, t: t)
                     output += v * gymnoEnv * gymnoGain
-                } else if section == 1 {
-                    // Section 1: クロスフェード（Gymnopédie → Organ）
-                    let gymnoFade = 1.0 - sectionProgress
-                    let organFade = sectionProgress
+                } else if organBlend < 1.0 {
+                    // クロスフェード中
+                    let gymnoFade = 1.0 - organBlend
+                    let organFade = organBlend
 
-                    // Gymnopédie voice (fading out)
+                    // Gymnopédie voice
                     let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
-                    let gymnoFreq = note.freq * transposeFactor  // 通常のトランスポーズ
-                    let gymnoV = generateGymnopedieVoice(freq: gymnoFreq, t: t)
+                    let gymnoV = generateGymnopedieVoice(freq: transposedFreq, t: t)
 
-                    // Organ voice (fading in)
+                    // Organ voice
                     let organEnv = calculateASREnvelope(time: dt, duration: effectiveDur)
-                    let organFreq = note.freq * transposeFactor
-                    let gainReduction = calculateHighFreqReduction(freq: organFreq)
-                    let organV = generateSingleVoice(freq: organFreq, t: t)
+                    let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+                    let organV = generateSingleVoice(freq: transposedFreq, t: t)
 
                     output += gymnoV * gymnoEnv * gymnoGain * gymnoFade
                     output += organV * organEnv * gainReduction * masterGain * organFade
                 } else if section <= 4 {
-                    // Section 2-4: 通常のオルガン音色
+                    // 通常のオルガン音色（Section 2-4）
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur)
-                    let transposedFreq = note.freq * transposeFactor
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
                     let v = generateSingleVoice(freq: transposedFreq, t: t)
                     output += v * env * gainReduction * masterGain
                 } else {
-                    // Section 5: クライマックス → 終盤でフェードアウト
+                    // Section 5: クライマックス
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur)
-                    let transposedFreq = note.freq * transposeFactor
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
                     let v = generateSingleVoice(freq: transposedFreq, t: t)
 
@@ -194,7 +214,6 @@ private final class JupiterMelodyGenerator {
                     if sectionProgress < 0.8 {
                         climaxGain = 1.1
                     } else {
-                        // cos²カーブでスムーズにフェードアウト
                         let fadeProgress = (sectionProgress - 0.8) / 0.2
                         let c = cos(fadeProgress * Float.pi * 0.5)
                         climaxGain = 1.1 * c * c
