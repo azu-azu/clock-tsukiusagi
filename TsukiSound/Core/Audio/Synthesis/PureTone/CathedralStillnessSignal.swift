@@ -7,11 +7,11 @@
 //
 //  ## セクション対応
 //  JupiterTimingを参照し、楽曲の進行に合わせて音色が変化
-//  - Section 0 (Bar 1-4): 無音（メロディはJupiterSignalでGymnopédie風に演奏）
+//  - Section 0 (Bar 1-4): 超薄いドローン（-16dB相当）で「無重力の静けさ」
 //  - Section 1 (Bar 5-8): オルガンドローンがフェードイン
 //  - Section 2: オルガンドローン（通常）
 //  - Section 3-4: オルガンドローン（厚み増加）
-//  - Section 5: クライマックス（さらに厚み）→ 終盤でフェードアウト
+//  - Section 5: クライマックス → 終盤でSection 0レベルへフェードダウン
 //
 
 import Foundation
@@ -19,10 +19,11 @@ import Foundation
 /// Cathedral Stillness: Ambient organ drone with chord harmony
 ///
 /// 特徴：
-/// - Section 0: 無音（JupiterSignalがGymnopédie風ベース音色でメロディを演奏）
+/// - Section 0: 超薄いドローン（-16dB相当）- メロディが前に出つつ伴奏は存在
 /// - Section 1: オルガンドローンがフェードイン
 /// - Section 2以降: 和音（C + G の完全5度）で厚みのある響き
 /// - 超低速LFO（0.02Hz）で音量がゆっくり呼吸するように変化
+/// - ループ時: クライマックス→導入が薄い伴奏で自然に繋がる
 public struct CathedralStillnessSignal {
 
     /// Create Cathedral Stillness signal
@@ -35,6 +36,10 @@ public struct CathedralStillnessSignal {
         // LFO設定: 超低速の呼吸（50秒で1周期）
         let lfoFrequency: Float = 0.02  // Hz
 
+        // Section 0 の薄いドローン: -16dB ≈ 0.16 (10^(-16/20))
+        // 通常の gain 1.0 に対して 0.16 倍
+        let section0Gain: Float = 0.16
+
         return Signal { t in
             let section = JupiterTiming.currentSection(at: t)
 
@@ -42,15 +47,18 @@ public struct CathedralStillnessSignal {
             let lfoPhase = 2.0 * Float.pi * lfoFrequency * t
             let lfoValue = 0.6 + 0.2 * sin(lfoPhase)
 
-            // === Section 0: 無音（メロディはJupiterSignalで処理）===
+            // === Section 0: 超薄いドローン（-16dB相当）===
+            // メロディが前に出つつ、伴奏の存在感を維持
             if section == 0 {
-                return 0.0
+                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: section0Gain)
             }
 
-            // === Section 1: オルガンドローンのフェードイン ===
+            // === Section 1: Section 0レベルから通常レベルへフェードイン ===
             if section == 1 {
-                let organFade = JupiterTiming.sectionProgress(at: t)
-                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.0) * organFade
+                let progress = JupiterTiming.sectionProgress(at: t)
+                // section0Gain → 1.0 へスムーズに遷移
+                let gain = section0Gain + (1.0 - section0Gain) * progress
+                return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: gain)
             }
 
             // === Section 2: オルガンドローン（通常）===
@@ -63,17 +71,18 @@ public struct CathedralStillnessSignal {
                 return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: 1.4)
             }
 
-            // === Section 5: クライマックス → フェードアウト ===
+            // === Section 5: クライマックス → Section 0レベルへフェードダウン ===
             let sectionProgress = JupiterTiming.sectionProgress(at: t)
-            // 前半80%はクライマックス（gain 1.7）、後半20%でフェードアウト
             let climaxGain: Float
             if sectionProgress < 0.8 {
+                // 前半80%はクライマックス（gain 1.7）
                 climaxGain = 1.7
             } else {
-                // 0.8→1.0 を 1.0→0.0 にマッピング（cos²でスムーズに）
+                // 後半20%で Section 0 レベル（0.16）へフェードダウン
                 let fadeProgress = (sectionProgress - 0.8) / 0.2
                 let c = cos(fadeProgress * Float.pi * 0.5)
-                climaxGain = 1.7 * c * c
+                // 1.7 → section0Gain へ cos² でスムーズに遷移
+                climaxGain = section0Gain + (1.7 - section0Gain) * c * c
             }
             return generateOrganDrone(t: t, rootFreq: organRootFreq, fifthFreq: organFifthFreq, lfoValue: lfoValue, gain: climaxGain)
         }

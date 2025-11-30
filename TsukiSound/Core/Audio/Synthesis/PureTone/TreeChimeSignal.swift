@@ -7,10 +7,10 @@
 //
 //  ## セクション対応
 //  JupiterTimingを参照し、楽曲の進行に合わせて登場
-//  - Section 0-1 (Bar 1-8): 無音
+//  - Section 0-1 (Bar 1-8): 遠くで微かにチリン（20-40秒間隔、-20dB相当）
 //  - Section 2 (Bar 9-12): 初登場（控えめ）
 //  - Section 3-4 (Bar 13-20): 通常
-//  - Section 5 (Bar 21-25): クライマックス → 終盤でフェードアウト
+//  - Section 5 (Bar 21-25): クライマックス → 終盤でSection 0レベルへフェードダウン
 //
 
 import Foundation
@@ -22,6 +22,7 @@ import Foundation
 /// - 低→高のグリッサンド配置で自然な響き
 /// - セクションに応じて出現頻度と音量が変化
 /// - 各粒は1.2秒の exponential decay
+/// - ループ時: クライマックス→導入が薄いチャイムで自然に繋がる
 public struct TreeChimeSignal {
 
     /// Create Tree Chime signal
@@ -36,35 +37,33 @@ public struct TreeChimeSignal {
         // 全体音量（かすかに鳴る程度）
         let masterGain: Float = 0.03
 
+        // Section 0-1 の遠いチャイム: -20dB ≈ 0.1 (10^(-20/20))
+        let section0Gain: Float = 0.1
+
         // 各粒の周波数（低→高のグリッサンド）
         let freqs: [Float] = (0..<numGrains).map { i in
             let ratio = Float(i) / Float(numGrains - 1)  // 0.0 → 1.0
             return brightness * (0.8 + ratio * 0.5)      // 0.8x → 1.3x
         }
 
-        // Section 2の開始時刻を事前計算（Bar 9 = Section 2）
-        let section2StartMusical = Float(JupiterTiming.sectionBars[2] - 1) * JupiterTiming.barDuration
-        let section2StartReal = JupiterTiming.musicalToRealTime(section2StartMusical)
-
         return Signal { t in
             // セクションベースのゲインと間隔計算
             let section = JupiterTiming.currentSection(at: t)
 
-            // Section 0-1: 無音
+            // Section 0-1: 遠くで微かにチリン（20-40秒間隔）
             // Section 2: 初登場（控えめ、間隔長め）
             // Section 3-4: 通常
-            // Section 5: より活発（間隔短め、音量大きめ）
+            // Section 5: クライマックス → Section 0レベルへフェードダウン
             let sectionGain: Float
             let minInterval: Float
             let maxInterval: Float
 
-            // Section 5のフェードアウト用
-            var section5FadeOut: Float = 1.0
-
             switch section {
             case 0, 1:
-                // 無音
-                return 0.0
+                // 遠くで微かにチリン（ほぼ聞こえないレベル）
+                sectionGain = section0Gain
+                minInterval = 20.0
+                maxInterval = 40.0
             case 2:
                 // 初登場（控えめだが複数回鳴る）
                 sectionGain = 0.6
@@ -76,21 +75,24 @@ public struct TreeChimeSignal {
                 minInterval = 10.0
                 maxInterval = 18.0
             default:
-                // クライマックス（活発）→ 終盤でフェードアウト
-                sectionGain = 1.0
+                // クライマックス → Section 0レベルへフェードダウン
+                let sectionProgress = JupiterTiming.sectionProgress(at: t)
                 minInterval = 6.0
                 maxInterval = 12.0
-                // Section 5 の終盤20%でフェードアウト
-                let sectionProgress = JupiterTiming.sectionProgress(at: t)
-                if sectionProgress > 0.8 {
+                if sectionProgress < 0.8 {
+                    // 前半80%はクライマックス
+                    sectionGain = 1.0
+                } else {
+                    // 後半20%で Section 0 レベルへフェードダウン
                     let fadeProgress = (sectionProgress - 0.8) / 0.2
                     let c = cos(fadeProgress * Float.pi * 0.5)
-                    section5FadeOut = c * c
+                    // 1.0 → section0Gain へ cos² でスムーズに遷移
+                    sectionGain = section0Gain + (1.0 - section0Gain) * c * c
                 }
             }
 
-            // Section 2開始からの相対時間を使用（セクション開始時にすぐ鳴るように）
-            let timeInActiveSection = t - section2StartReal
+            // 絶対時間ベースで計算（全セクションで動作するように）
+            let timeInActiveSection = t
 
             // シード値を相対時間ベースで生成（安定したランダム性）
             let chimeIndex = Int(timeInActiveSection / minInterval)
@@ -142,8 +144,8 @@ public struct TreeChimeSignal {
                 value += sin(phase) * envelope
             }
 
-            // 粒数で正規化して音量調整 + セクションゲイン + フェードアウト
-            return value / Float(numGrains) * masterGain * sectionGain * section5FadeOut
+            // 粒数で正規化して音量調整 + セクションゲイン
+            return value / Float(numGrains) * masterGain * sectionGain
         }
     }
 }
