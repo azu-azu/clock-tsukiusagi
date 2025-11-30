@@ -75,6 +75,10 @@ private final class JupiterMelodyGenerator {
     /// Release time: melody-style (per _guide-audio-smoothness.md)
     let releaseTime: Float = 0.18  // 180ms release (within 0.1-0.2s recommendation)
 
+    /// Breath duration: how much to shorten note when breathAfter is true
+    /// This creates a natural "breathing" gap between phrases
+    let breathDuration: Float = 0.10  // 100ms breath gap
+
     /// Master gain for balance with other layers
     /// Reduced to prevent clipping when notes overlap
     /// At most 2 notes overlap, so 0.22 * 2 = 0.44 < 0.8 (softClip threshold)
@@ -100,12 +104,18 @@ private final class JupiterMelodyGenerator {
             let noteStart = Float(note.startBar - 1) * barDuration + note.startBeat * beat
             let noteDur = note.durBeats * beat
 
-            // Note is active during its duration + release tail
-            if local >= noteStart && local < noteStart + noteDur + releaseTime {
+            // Calculate effective duration (shortened if breathAfter)
+            // Key insight: both active window AND envelope must use the same effectiveDur
+            let effectiveDur = note.breathAfter ? max(noteDur - breathDuration, attackTime) : noteDur
+
+            // Note is active during its effective duration + release tail
+            // Using effectiveDur (not noteDur) ensures consistency
+            if local >= noteStart && local < noteStart + effectiveDur + releaseTime {
                 let dt = local - noteStart
 
                 // ASR Envelope: Attack → Sustain → Release
-                let env = calculateASREnvelope(time: dt, duration: noteDur)
+                // Uses effectiveDur so envelope matches the active window
+                let env = calculateASREnvelope(time: dt, duration: effectiveDur)
 
                 // Apply transpose and high-freq reduction
                 let transposedFreq = note.freq * transposeFactor
