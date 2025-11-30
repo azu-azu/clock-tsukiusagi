@@ -186,32 +186,23 @@ private final class JupiterMelodyGenerator {
                     let v = generateSingleVoice(freq: transposedFreq, t: t)
                     output += v * env * gainReduction * masterGain
                 } else {
-                    // Section 5: クライマックス → 終盤でGymnopédieへクロスフェード
+                    // Section 5: クライマックス → 終盤でフェードアウト
+                    let env = calculateASREnvelope(time: dt, duration: effectiveDur)
                     let transposedFreq = note.freq * transposeFactor
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+                    let v = generateSingleVoice(freq: transposedFreq, t: t)
 
-                    // 前半80%はクライマックス、後半20%でGymnopédieへフェード
+                    // 前半80%はクライマックス（1.1倍）、後半20%でフェードアウト
+                    let climaxGain: Float
                     if sectionProgress < 0.8 {
-                        // クライマックス: オルガン音色を少し強め
-                        let env = calculateASREnvelope(time: dt, duration: effectiveDur)
-                        let v = generateSingleVoice(freq: transposedFreq, t: t)
-                        output += v * env * gainReduction * masterGain * 1.1
+                        climaxGain = 1.1
                     } else {
-                        // フェードアウト: オルガン→Gymnopédieへクロスフェード
+                        // cos²カーブでスムーズにフェードアウト
                         let fadeProgress = (sectionProgress - 0.8) / 0.2
-                        let organFade = 1.0 - fadeProgress
-                        let gymnoFade = fadeProgress
-
-                        // オルガン (fading out)
-                        let organEnv = calculateASREnvelope(time: dt, duration: effectiveDur)
-                        let organV = generateSingleVoice(freq: transposedFreq, t: t)
-                        output += organV * organEnv * gainReduction * masterGain * 1.1 * organFade
-
-                        // Gymnopédie (fading in for next cycle)
-                        let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
-                        let gymnoV = generateGymnopedieVoice(freq: transposedFreq, t: t)
-                        output += gymnoV * gymnoEnv * gymnoGain * gymnoFade
+                        let c = cos(fadeProgress * Float.pi * 0.5)
+                        climaxGain = 1.1 * c * c
                     }
+                    output += v * env * gainReduction * masterGain * climaxGain
                 }
             }
         }
