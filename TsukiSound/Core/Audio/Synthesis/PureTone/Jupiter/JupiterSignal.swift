@@ -85,11 +85,11 @@ private final class JupiterMelodyGenerator {
     // トランペットの特徴: 全ての倍音が存在し、高次倍音が強い（輝かしい音色）
     // クラリネット（奇数のみ）やオルガン（低次中心）と異なる
 
-    /// Trumpet harmonics: all harmonics present (brass instrument characteristic)
-    let trumpetHarmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+    /// Trumpet harmonics: 1-6倍音（7-8倍音は干渉ノイズの原因になるため除外）
+    let trumpetHarmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
 
-    /// Trumpet harmonic amplitudes: slower rolloff for bright, brassy tone
-    let trumpetHarmonicAmps: [Float] = [1.0, 0.7, 0.5, 0.35, 0.25, 0.18, 0.13, 0.1]
+    /// Trumpet harmonic amplitudes: オルガンより少し明るめ（ただし控えめ）
+    let trumpetHarmonicAmps: [Float] = [1.0, 0.55, 0.35, 0.2, 0.12, 0.06]
 
     // MARK: - Tremulant (Vibrato)
 
@@ -179,10 +179,9 @@ private final class JupiterMelodyGenerator {
     let clarinetStartBar: Int = 21
     let clarinetStartBeat: Float = 2.0
 
-    // MARK: - Trumpet → Clarinet Crossfade
-
-    /// クロスフェード期間（拍数）: clarinetStart の前から開始
-    let trumpetClarinetCrossfadeBeats: Float = 3.0
+    // MARK: - Trumpet → Clarinet Crossfade (無効化)
+    // NOTE: 高次倍音の干渉ノイズ問題のため一時的に無効化
+    // let trumpetClarinetCrossfadeBeats: Float = 2.5
 
     func sample(at t: Float) -> Float {
         // 実時間を楽譜時間に変換（イントロスキップを反映）
@@ -206,9 +205,9 @@ private final class JupiterMelodyGenerator {
         // クラリネット開始位置（楽譜時間）: Bar 21 beat 2.0
         let clarinetStart = Float(clarinetStartBar - 1) * barDuration + clarinetStartBeat * beat
 
-        // Trumpet → Clarinet クロスフェード範囲
-        let trumpetClarinetCrossfadeStart = clarinetStart - trumpetClarinetCrossfadeBeats * beat
-        let trumpetClarinetCrossfadeEnd = clarinetStart
+        // Trumpet → Clarinet クロスフェード範囲（無効化）
+        // let trumpetClarinetCrossfadeStart = clarinetStart - trumpetClarinetCrossfadeBeats * beat
+        // let trumpetClarinetCrossfadeEnd = clarinetStart
 
         // 現在の音色ブレンド比率を計算（楽譜位置ベース）
         let organBlend: Float
@@ -277,28 +276,29 @@ private final class JupiterMelodyGenerator {
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
                     let v = generateSingleVoice(freq: transposedFreq, t: t)
                     output += v * env * gainReduction * masterGain
-                } else if noteStart < trumpetClarinetCrossfadeStart {
-                    // トランペット音色（Bar 17 beat 2.0 〜 クロスフェード開始前）
+                } else if noteStart < clarinetStart {
+                    // トランペット音色（Bar 17 beat 2.0 〜 Bar 21 beat 2.0）
+                    // NOTE: クロスフェードは一時的に無効化（雑音調査のため）
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
                     let v = generateTrumpetVoice(freq: transposedFreq, t: t)
                     output += v * env * gainReduction * masterGain
-                } else if noteStart < clarinetStart {
-                    // Trumpet → Clarinet クロスフェード中
-                    let env = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
-                    let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
-
-                    // クロスフェード比率を計算（cos²でスムーズに）
-                    let crossfadeProgress = (noteStart - trumpetClarinetCrossfadeStart) / (trumpetClarinetCrossfadeBeats * beat)
-                    let clarinetBlend = sin(crossfadeProgress * Float.pi * 0.5)
-                    let clarinetFade = clarinetBlend * clarinetBlend
-                    let trumpetFade = 1.0 - clarinetFade
-
-                    let trumpetV = generateTrumpetVoice(freq: transposedFreq, t: t)
-                    let clarinetV = generateClarinetVoice(freq: transposedFreq, t: t)
-
-                    output += trumpetV * env * gainReduction * masterGain * trumpetFade
-                    output += clarinetV * env * gainReduction * masterGain * clarinetFade
+                // } else if noteStart < clarinetStart {
+                //     // Trumpet → Clarinet クロスフェード中
+                //     let env = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
+                //     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+                //
+                //     // クロスフェード比率を計算（cos²でスムーズに）
+                //     let crossfadeProgress = (noteStart - trumpetClarinetCrossfadeStart) / (trumpetClarinetCrossfadeBeats * beat)
+                //     let clarinetBlend = sin(crossfadeProgress * Float.pi * 0.5)
+                //     let clarinetFade = clarinetBlend * clarinetBlend
+                //     let trumpetFade = 1.0 - clarinetFade
+                //
+                //     let trumpetV = generateTrumpetVoice(freq: transposedFreq, t: t)
+                //     let clarinetV = generateClarinetVoice(freq: transposedFreq, t: t)
+                //
+                //     output += trumpetV * env * gainReduction * masterGain * trumpetFade
+                //     output += clarinetV * env * gainReduction * masterGain * clarinetFade
                 } else {
                     // クラリネット音色（Bar 21 beat 2.0 から）
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
