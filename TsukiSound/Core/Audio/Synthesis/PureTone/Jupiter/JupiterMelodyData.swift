@@ -116,7 +116,7 @@ enum JupiterMelodyData {
 
         // === Bar 2 === ラ(4分) ラドシ.ソ(8+8+付点8+16)
         // ラ=1拍, ラ=0.5, ド=0.5, シ.=0.75, ソ=0.25 → 合計3拍 ✓
-        JupiterMelodyNote(.A4, bar: 2, beat: 0.0, dur: .quarter, breath: .short),    // ラ 🫧
+        JupiterMelodyNote(.A4, bar: 2, beat: 0.0, dur: .quarter),    // ラ 🫧
         JupiterMelodyNote(.A4, bar: 2, beat: 1.0, dur: .eighth),                     // ラ
         JupiterMelodyNote(.C5, bar: 2, beat: 1.5, dur: .eighth),                     // ド
         JupiterMelodyNote(.B4, bar: 2, beat: 2.0, dur: .dottedEighth),               // シ
@@ -137,14 +137,14 @@ enum JupiterMelodyData {
         JupiterMelodyNote(.G4, bar: 4, beat: 2.0, dur: .quarter),                    // ソ
 
         // === Bar 5 === ミ(2分) ミソ
-        // ミ(2分) ミ(8分)ソ(8分) → 2+0.5+0.5 = 3拍 ✓
-        JupiterMelodyNote(.E4, bar: 5, beat: 0.0, dur: .half),                    // ミ
+        // ミ(2分、長い余韻) + ミ(8分)ソ(8分)
+        JupiterMelodyNote(.E4, bar: 5, beat: 0.0, dur: .half),                    // ミ（Organ、長い余韻でGymnopédieへ橋渡し）
         // 🌠 sec1 Organ drone が静かに登場
-        JupiterMelodyNote(.E4, bar: 5, beat: 2.0, dur: .eighth),                  // ミ
-        JupiterMelodyNote(.G4, bar: 5, beat: 2.5, dur: .eighth),  // ソ
+        JupiterMelodyNote(.E4, bar: 5, beat: 2.0, dur: .eighth),                  // ミ（Gymnopédie Echo）
+        JupiterMelodyNote(.G4, bar: 5, beat: 2.5, dur: .eighth),                 // ソ（1拍でBar 6につなげる）
 
         // === Bar 6 === ラ ラドシ.ソ (Bar 2と同じパターン)
-        JupiterMelodyNote(.A4, bar: 6, beat: 0.0, dur: .quarter, breath: .short), // ラ 🫧
+        JupiterMelodyNote(.A4, bar: 6, beat: 0.0, dur: .quarter, breath: .long), // ラ 🫧
         JupiterMelodyNote(.A4, bar: 6, beat: 1.0, dur: .eighth),                     // ラ
         JupiterMelodyNote(.C5, bar: 6, beat: 1.5, dur: .eighth),                     // ド
         JupiterMelodyNote(.B4, bar: 6, beat: 2.0, dur: .dottedEighth),               // シ

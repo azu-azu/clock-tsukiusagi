@@ -11,7 +11,7 @@
 //  楽譜位置に基づいて音色が変化
 //  - Bar 1 (beat 0-1): Gymnopédie風メロディ音色（純粋サイン波 + 微細デチューン）
 //  - Bar 2 beat 1.0〜: オルガン音色（倍音 + ビブラート）へクロスフェード
-//  - Section 5: クラリネット音色（奇数倍音）
+//  - Bar 21 beat 2.0〜: クラリネット音色（奇数倍音）
 //
 
 import Foundation
@@ -25,7 +25,7 @@ import Foundation
 /// - Gymnopédie-style note positioning (startBar/startBeat)
 /// - Bar 1: Gymnopédie-style melody (pure sine + subtle detune, long attack/release)
 /// - Bar 2+: Crossfade to organ, then full organ sound
-/// - Section 5: Climax with enhanced volume
+/// - Bar 21 beat 2.0+: Clarinet timbre (odd harmonics) for climax
 ///
 /// Legal: Holst's "The Planets" (1918) is public domain (composer died 1934, >70 years).
 public struct JupiterMelodySignal {
@@ -143,6 +143,22 @@ private final class JupiterMelodyGenerator {
     /// クロスフェード期間（拍数）: 2拍かけて徐々に変化
     let crossfadeDurationBeats: Float = 2.0
 
+    // MARK: - Section 1 Gymnopédie Echo (無効化)
+
+    /// Section 1でGymnopédie音色に戻る範囲（現在無効化：全てOrgan）
+    /// 範囲を0にしてGymnopédie Echoを無効化
+    let gymnoEchoStartBar: Int = 0
+    let gymnoEchoStartBeat: Float = 0.0
+    let gymnoEchoEndBar: Int = 0
+    let gymnoEchoEndBeat: Float = 0.0
+
+    // MARK: - Clarinet Start (Section 5)
+
+    /// クラリネット音色の開始位置
+    /// Bar 21 beat 2.0 から（🌠 sec5 マーカーの後）
+    let clarinetStartBar: Int = 21
+    let clarinetStartBeat: Float = 2.0
+
     func sample(at t: Float) -> Float {
         // 実時間を楽譜時間に変換（イントロスキップを反映）
         let musicalTime = JupiterTiming.realToMusicalTime(t)
@@ -155,6 +171,13 @@ private final class JupiterMelodyGenerator {
         // クロスフェード開始時刻（楽譜時間）
         let crossfadeStartTime = Float(crossfadeStartBar - 1) * barDuration + crossfadeStartBeat * beat
         let crossfadeEndTime = crossfadeStartTime + crossfadeDurationBeats * beat
+
+        // Gymnopédie Echo範囲（現在無効化）
+        let gymnoEchoStart = Float(gymnoEchoStartBar - 1) * barDuration + gymnoEchoStartBeat * beat
+        let gymnoEchoEnd = Float(gymnoEchoEndBar - 1) * barDuration + gymnoEchoEndBeat * beat
+
+        // クラリネット開始位置（楽譜時間）: Bar 21 beat 2.0
+        let clarinetStart = Float(clarinetStartBar - 1) * barDuration + clarinetStartBeat * beat
 
         // 現在の音色ブレンド比率を計算（楽譜位置ベース）
         let organBlend: Float
@@ -180,14 +203,23 @@ private final class JupiterMelodyGenerator {
             let effectiveDur = breathAmount > 0 ? max(noteDur - breathAmount, attackTime) : noteDur
 
             // Note is active during its effective duration + release tail
-            // Gymnopédieが混じっている間は長いリリース
-            let activeReleaseTime = (organBlend < 1.0) ? gymnoReleaseTime : releaseTime
+            // Gymnopédie Echo判定（activeReleaseTime計算用）
+            let isGymnoEchoNote = noteStart >= gymnoEchoStart && noteStart < gymnoEchoEnd
+            // Gymno Echo直前のノート判定（Organだが長いリリースで余韻を残す）
+            let noteEnd = noteStart + noteDur
+            let isPreGymnoEchoNote = noteEnd > gymnoEchoStart && noteStart < gymnoEchoStart
+            // Gymnopédieが混じっている間、Gymno Echoノート、またはその直前のノートは長いリリース
+            let activeReleaseTime = (organBlend < 1.0 || isGymnoEchoNote || isPreGymnoEchoNote) ? gymnoReleaseTime : releaseTime
             if local >= noteStart && local < noteStart + effectiveDur + activeReleaseTime {
                 let dt = local - noteStart
                 let transposedFreq = note.freq * transposeFactor
 
                 // === 楽譜位置ベースの音色ブレンド ===
-                if organBlend == 0.0 {
+
+                // Gymnopédie Echo判定（現在無効化）
+                let isGymnoEcho = noteStart >= gymnoEchoStart && noteStart < gymnoEchoEnd
+
+                if organBlend == 0.0 || isGymnoEcho {
                     // 純粋Gymnopédie（Bar 1）
                     let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
                     let v = generateGymnopedieVoice(freq: transposedFreq, t: t)
@@ -202,21 +234,21 @@ private final class JupiterMelodyGenerator {
                     let gymnoV = generateGymnopedieVoice(freq: transposedFreq, t: t)
 
                     // Organ voice
-                    let organEnv = calculateASREnvelope(time: dt, duration: effectiveDur)
+                    let organEnv = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
                     let organV = generateSingleVoice(freq: transposedFreq, t: t)
 
                     output += gymnoV * gymnoEnv * gymnoGain * gymnoFade
                     output += organV * organEnv * gainReduction * masterGain * organFade
-                } else if section <= 4 {
-                    // 通常のオルガン音色（Section 2-4）
-                    let env = calculateASREnvelope(time: dt, duration: effectiveDur)
+                } else if noteStart < clarinetStart {
+                    // 通常のオルガン音色（Bar 21 beat 2.0 まで）
+                    let env = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
                     let v = generateSingleVoice(freq: transposedFreq, t: t)
                     output += v * env * gainReduction * masterGain
                 } else {
-                    // Section 5: クラリネット音色（奇数倍音で空洞感のある音）
-                    let env = calculateASREnvelope(time: dt, duration: effectiveDur)
+                    // クラリネット音色（Bar 21 beat 2.0 から）
+                    let env = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
                     let v = generateClarinetVoice(freq: transposedFreq, t: t)
 
@@ -244,8 +276,11 @@ private final class JupiterMelodyGenerator {
     /// - Parameters:
     ///   - time: Time since note start
     ///   - duration: Note duration in seconds
+    ///   - release: Release time in seconds (defaults to releaseTime)
     /// - Returns: Envelope value (0.0 to 1.0)
-    private func calculateASREnvelope(time: Float, duration: Float) -> Float {
+    private func calculateASREnvelope(time: Float, duration: Float, release: Float? = nil) -> Float {
+        let actualRelease = release ?? releaseTime
+
         // Attack phase: sin² curve
         if time < attackTime {
             let progress = time / attackTime
@@ -259,7 +294,7 @@ private final class JupiterMelodyGenerator {
         }
 
         // Release phase: cos² curve
-        let releaseProgress = (time - duration) / releaseTime
+        let releaseProgress = (time - duration) / actualRelease
         if releaseProgress < 1.0 {
             let c = cos(releaseProgress * Float.pi * 0.5)
             return c * c
