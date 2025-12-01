@@ -216,7 +216,7 @@ enum JupiterMelodyData {
 
         // === Bar 17 === ソ(2分) ミソ
         JupiterMelodyNote(.G5, bar: 17, beat: 0.0, dur: .half, breath: .long),    // ソ 🫧🫧
-        // 🌠 sec4 さらに展開
+        // 🌠 sec4 さらに展開 / トランペット
         JupiterMelodyNote(.E5, bar: 17, beat: 2.0, dur: .eighth),                 // ミ
         JupiterMelodyNote(.G5, bar: 17, beat: 2.5, dur: .eighth, breath: .short), // ソ 🫧
 
@@ -241,7 +241,7 @@ enum JupiterMelodyData {
 
         // === Bar 21 === ミ(2分) ミソ (Bar 5と同じパターン)
         JupiterMelodyNote(.E5, bar: 21, beat: 0.0, dur: .half, breath: .long),     // ミ 🫧🫧
-        // 🌠 sec5 クライマックス（チャイム頻度UP）
+        // 🌠 sec5 クライマックス（チャイム頻度UP / クラリネット）
         JupiterMelodyNote(.E5, bar: 21, beat: 2.0, dur: .eighth),                  // ミ
         JupiterMelodyNote(.G5, bar: 21, beat: 2.5, dur: .eighth, breath: .short),  // ソ 🫧
 

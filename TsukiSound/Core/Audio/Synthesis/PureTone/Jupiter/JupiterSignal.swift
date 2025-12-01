@@ -11,6 +11,7 @@
 //  楽譜位置に基づいて音色が変化
 //  - Bar 1 (beat 0-1): Gymnopédie風メロディ音色（純粋サイン波 + 微細デチューン）
 //  - Bar 2 beat 1.0〜: オルガン音色（倍音 + ビブラート）へクロスフェード
+//  - Bar 17 beat 2.0〜: トランペット音色（全倍音、輝かしい）
 //  - Bar 21 beat 2.0〜: クラリネット音色（奇数倍音）
 //
 
@@ -25,6 +26,7 @@ import Foundation
 /// - Gymnopédie-style note positioning (startBar/startBeat)
 /// - Bar 1: Gymnopédie-style melody (pure sine + subtle detune, long attack/release)
 /// - Bar 2+: Crossfade to organ, then full organ sound
+/// - Bar 17 beat 2.0+: Trumpet timbre (all harmonics, bright) for section 4
 /// - Bar 21 beat 2.0+: Clarinet timbre (odd harmonics) for climax
 ///
 /// Legal: Holst's "The Planets" (1918) is public domain (composer died 1934, >70 years).
@@ -77,6 +79,17 @@ private final class JupiterMelodyGenerator {
 
     /// Clarinet harmonic amplitudes: 1/n rolloff for natural clarinet tone
     let clarinetHarmonicAmps: [Float] = [1.0, 0.33, 0.2, 0.14, 0.11]
+
+    // MARK: - Trumpet Sound Parameters (Section 4)
+    //
+    // トランペットの特徴: 全ての倍音が存在し、高次倍音が強い（輝かしい音色）
+    // クラリネット（奇数のみ）やオルガン（低次中心）と異なる
+
+    /// Trumpet harmonics: all harmonics present (brass instrument characteristic)
+    let trumpetHarmonics: [Float] = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+
+    /// Trumpet harmonic amplitudes: slower rolloff for bright, brassy tone
+    let trumpetHarmonicAmps: [Float] = [1.0, 0.7, 0.5, 0.35, 0.25, 0.18, 0.13, 0.1]
 
     // MARK: - Tremulant (Vibrato)
 
@@ -152,6 +165,13 @@ private final class JupiterMelodyGenerator {
     let gymnoEchoEndBar: Int = 0
     let gymnoEchoEndBeat: Float = 0.0
 
+    // MARK: - Trumpet Start (Section 4)
+
+    /// トランペット音色の開始位置
+    /// Bar 17 beat 2.0 から（🌠 sec4 マーカーの後）
+    let trumpetStartBar: Int = 17
+    let trumpetStartBeat: Float = 2.0
+
     // MARK: - Clarinet Start (Section 5)
 
     /// クラリネット音色の開始位置
@@ -174,6 +194,9 @@ private final class JupiterMelodyGenerator {
         // Gymnopédie Echo範囲（現在無効化）
         let gymnoEchoStart = Float(gymnoEchoStartBar - 1) * barDuration + gymnoEchoStartBeat * beat
         let gymnoEchoEnd = Float(gymnoEchoEndBar - 1) * barDuration + gymnoEchoEndBeat * beat
+
+        // トランペット開始位置（楽譜時間）: Bar 17 beat 2.0
+        let trumpetStart = Float(trumpetStartBar - 1) * barDuration + trumpetStartBeat * beat
 
         // クラリネット開始位置（楽譜時間）: Bar 21 beat 2.0
         let clarinetStart = Float(clarinetStartBar - 1) * barDuration + clarinetStartBeat * beat
@@ -239,11 +262,17 @@ private final class JupiterMelodyGenerator {
 
                     output += gymnoV * gymnoEnv * gymnoGain * gymnoFade
                     output += organV * organEnv * gainReduction * masterGain * organFade
-                } else if noteStart < clarinetStart {
-                    // 通常のオルガン音色（Bar 21 beat 2.0 まで）
+                } else if noteStart < trumpetStart {
+                    // 通常のオルガン音色（Bar 17 beat 2.0 まで）
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
                     let v = generateSingleVoice(freq: transposedFreq, t: t)
+                    output += v * env * gainReduction * masterGain
+                } else if noteStart < clarinetStart {
+                    // トランペット音色（Bar 17 beat 2.0 〜 Bar 21 beat 2.0）
+                    let env = calculateASREnvelope(time: dt, duration: effectiveDur, release: activeReleaseTime)
+                    let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
+                    let v = generateTrumpetVoice(freq: transposedFreq, t: t)
                     output += v * env * gainReduction * masterGain
                 } else {
                     // クラリネット音色（Bar 21 beat 2.0 から）
@@ -363,6 +392,37 @@ private final class JupiterMelodyGenerator {
         }
 
         signal /= Double(clarinetHarmonics.count)
+        return Float(signal)
+    }
+
+    /// Generate trumpet voice with all harmonics for bright, brassy tone
+    private func generateTrumpetVoice(freq: Float, t: Float) -> Float {
+        let tDouble = Double(t)
+        let twoPiDouble = Double.pi * 2.0
+        let vibratoRateDouble = Double(vibratoRate)
+        // トランペットはビブラートがやや強め
+        let trumpetVibratoDepth = Double(vibratoDepth) * 1.5
+
+        // Vibrato: slightly stronger for brass character
+        let vibrato = sin(twoPiDouble * vibratoRateDouble * tDouble) * trumpetVibratoDepth
+
+        var signal: Double = 0.0
+
+        for (harmonicRatio, harmonicAmp) in zip(trumpetHarmonics, trumpetHarmonicAmps) {
+            let hFreqDouble = Double(freq * harmonicRatio)
+            let harmonicAmpDouble = Double(harmonicAmp)
+
+            // Calculate phase and wrap to prevent precision loss
+            let rawPhase = hFreqDouble * tDouble
+            let wrappedPhase = rawPhase - floor(rawPhase)
+
+            // Add vibrato as uniform phase offset
+            let phase = twoPiDouble * (wrappedPhase + vibrato)
+
+            signal += sin(phase) * harmonicAmpDouble
+        }
+
+        signal /= Double(trumpetHarmonics.count)
         return Float(signal)
     }
 
