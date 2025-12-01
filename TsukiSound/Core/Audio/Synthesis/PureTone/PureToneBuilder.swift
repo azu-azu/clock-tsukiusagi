@@ -22,12 +22,12 @@ public struct PureToneBuilder {
         case .cathedralStillness:
             // Signal-based organ drone + tree chime + Jupiter melody with large reverb
             let organSignal = CathedralStillnessSignal.makeSignal()
-            let chimeSignal = TreeChimeSignal.makeSignal()
+            // let chimeSignal = TreeChimeSignal.makeSignal()  // 🔇 一時的にオフ（音飛び調査）
             let jupiterSignal = JupiterMelodySignal.makeSignal()
 
             let mixer = FinalMixer()
             mixer.add(organSignal, gain: 1.0)     // オルガンドローン（ベース）
-            mixer.add(chimeSignal, gain: 0.8)     // ツリーチャイム（高周波アクセント）
+            // mixer.add(chimeSignal, gain: 0.8)     // 🔇 ツリーチャイム（一時的にオフ）
             mixer.add(jupiterSignal, gain: 0.7)   // Jupiterメロディ（メインテーマ）
 
             // Large reverb for cathedral atmosphere (3s decay)

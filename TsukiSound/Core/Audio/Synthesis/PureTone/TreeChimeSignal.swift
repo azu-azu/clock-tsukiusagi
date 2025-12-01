@@ -5,6 +5,10 @@
 //  木漏れ日のツリーチャイム - 高周波メタリック粒の「シャラララ」
 //  Signal-based implementation with cascading grain triggers
 //
+//  ## 自然さの改善
+//  - ランダム位相オフセット: 粒ごとに位相がずれ、人工的な統一感を解消
+//  - 微小デチューン: ±20Hz のランダムで、サイン波の人工さを軽減
+//
 //  ## セクション対応
 //  JupiterTimingを参照し、楽曲の進行に合わせて登場
 //  - Section 0-1 (Bar 1-8): 遠くで微かにチリン（20-40秒間隔、-20dB相当）
@@ -20,6 +24,7 @@ import Foundation
 /// 特徴：
 /// - 高周波メタリック粒が連鎖的に鳴る「シャラララ」効果
 /// - 低→高のグリッサンド配置で自然な響き
+/// - ランダム位相オフセット + 微小デチューンで自然なキラキラ感
 /// - セクションに応じて出現頻度と音量が変化
 /// - 各粒は1.2秒の exponential decay
 /// - ループ時: クライマックス→導入が薄いチャイムで自然に繋がる
@@ -40,8 +45,11 @@ public struct TreeChimeSignal {
         // Section 0-1 の遠いチャイム: -20dB ≈ 0.1 (10^(-20/20))
         let section0Gain: Float = 0.1
 
-        // 各粒の周波数（低→高のグリッサンド）
-        let freqs: [Float] = (0..<numGrains).map { i in
+        // 微小デチューンの振れ幅（±20Hz）
+        let detuneRange: Float = 40.0
+
+        // 各粒のベース周波数（低→高のグリッサンド）
+        let baseFreqs: [Float] = (0..<numGrains).map { i in
             let ratio = Float(i) / Float(numGrains - 1)  // 0.0 → 1.0
             return brightness * (0.8 + ratio * 0.5)      // 0.8x → 1.3x
         }
@@ -124,23 +132,46 @@ public struct TreeChimeSignal {
 
             var value: Float = 0.0
 
+            // 粒ごとのランダム値を生成するためのシード（チャイムごとに固定）
+            var grainRng = UInt64(chimeIndex * 13331)
+
+            func nextGrainRandom() -> Float {
+                grainRng = grainRng &* 6364136223846793005 &+ 1442695040888963407
+                return Float(grainRng % 10000) / 10000.0
+            }
+
             // 各粒を生成
             for i in 0..<numGrains {
                 let grainStartTime = Float(i) * cascadeInterval
                 let timeSinceGrain = timeSinceChime - grainStartTime
 
                 // この粒がまだ始まっていない、または減衰し終わった場合はスキップ
-                guard timeSinceGrain >= 0.0 else { continue }
+                guard timeSinceGrain >= 0.0 else {
+                    // スキップしてもRNGは進める（一貫性のため）
+                    _ = nextGrainRandom()  // detune用
+                    _ = nextGrainRandom()  // phase用
+                    continue
+                }
 
                 // エンベロープ（exponential decay）
                 let envelope = exp(-timeSinceGrain / grainDuration)
 
                 // 十分減衰したらスキップ（-60dB = 0.001）
-                guard envelope > 0.001 else { continue }
+                guard envelope > 0.001 else {
+                    _ = nextGrainRandom()
+                    _ = nextGrainRandom()
+                    continue
+                }
 
-                // メタリックな高周波サイン波
-                let freq = freqs[i]
-                let phase = 2.0 * Float.pi * freq * t
+                // ① 微小デチューン: ±20Hz のランダム
+                let detune = (nextGrainRandom() - 0.5) * detuneRange
+                let freq = baseFreqs[i] + detune
+
+                // ② ランダム位相オフセット: 粒ごとに位相がずれる
+                let phaseOffset = nextGrainRandom() * Float.pi * 2.0
+
+                // メタリックな高周波サイン波（位相オフセット付き）
+                let phase = 2.0 * Float.pi * freq * t + phaseOffset
                 value += sin(phase) * envelope
             }
 
