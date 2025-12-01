@@ -13,7 +13,9 @@
 //  ## テンポ伸縮（段階的に加速）
 //  - Section 0 (Bar 1-4): テンポ0.7倍（ゆったりアカペラ風）
 //  - Section 1 (Bar 5-8): テンポ0.9倍（中間速度）
-//  - Section 2以降: 通常テンポ
+//  - Section 2-3 (Bar 9-16): 通常テンポ
+//  - Section 4 (Bar 17-20): テンポ1.05倍（トランペット、やや速め）
+//  - Section 5 (Bar 21-25): テンポ1.1倍（クラリネット、盛り上がり）
 //
 
 import Foundation
@@ -41,6 +43,12 @@ public enum JupiterTiming {
     /// Section 1のテンポ倍率（0.9 = 10%遅い、中間速度）
     public static let section1TempoRatio: Float = 0.9
 
+    /// Section 4のテンポ倍率（1.05 = 5%速い、トランペット）
+    public static let section4TempoRatio: Float = 1.05
+
+    /// Section 5のテンポ倍率（1.1 = 10%速い、クライマックス）
+    public static let section5TempoRatio: Float = 1.1
+
     /// Section 0の楽譜上の長さ（Bar 1-4 = 4小節 × 3拍）
     private static var section0MusicalDuration: Float {
         Float(sectionBars[1] - sectionBars[0]) * barDuration  // 12拍
@@ -58,7 +66,32 @@ public enum JupiterTiming {
 
     /// Section 1の実時間での長さ（テンポ伸縮後）
     private static var section1RealDuration: Float {
-        section1MusicalDuration / section1TempoRatio  // 12 / 0.85 ≈ 14.12秒
+        section1MusicalDuration / section1TempoRatio  // 12 / 0.9 ≈ 13.33秒
+    }
+
+    /// Section 2-3の楽譜上の長さ（Bar 9-16 = 8小節 × 3拍）
+    private static var section2_3MusicalDuration: Float {
+        Float(sectionBars[4] - sectionBars[2]) * barDuration  // 24拍
+    }
+
+    /// Section 4の楽譜上の長さ（Bar 17-20 = 4小節 × 3拍）
+    private static var section4MusicalDuration: Float {
+        Float(sectionBars[5] - sectionBars[4]) * barDuration  // 12拍
+    }
+
+    /// Section 4の実時間での長さ（テンポ伸縮後）
+    private static var section4RealDuration: Float {
+        section4MusicalDuration / section4TempoRatio  // 12 / 1.05 ≈ 11.43秒
+    }
+
+    /// Section 5の楽譜上の長さ（Bar 21-25 = 5小節 × 3拍）
+    private static var section5MusicalDuration: Float {
+        Float(totalBars - sectionBars[5] + 1) * barDuration  // 15拍
+    }
+
+    /// Section 5の実時間での長さ（テンポ伸縮後）
+    private static var section5RealDuration: Float {
+        section5MusicalDuration / section5TempoRatio  // 15 / 1.1 ≈ 13.64秒
     }
 
     // MARK: - Intro Skip (1回目だけ適用)
@@ -78,11 +111,13 @@ public enum JupiterTiming {
         Float(totalBars) * barDuration  // 25 * 3 = 75秒
     }
 
-    /// テンポ伸縮による追加時間（Section 0, 1が遅くなる分）
+    /// テンポ伸縮による時間変化（遅いセクションで増加、速いセクションで減少）
     private static var tempoStretchExtra: Float {
-        let section0Extra = section0RealDuration - section0MusicalDuration
-        let section1Extra = section1RealDuration - section1MusicalDuration
-        return section0Extra + section1Extra
+        let section0Extra = section0RealDuration - section0MusicalDuration  // +5.14秒（遅い）
+        let section1Extra = section1RealDuration - section1MusicalDuration  // +1.33秒（遅い）
+        let section4Extra = section4RealDuration - section4MusicalDuration  // -0.57秒（速い）
+        let section5Extra = section5RealDuration - section5MusicalDuration  // -1.36秒（速い）
+        return section0Extra + section1Extra + section4Extra + section5Extra
     }
 
     /// 1回目のサイクル長（イントロ休符をスキップ + テンポ伸縮）
@@ -131,35 +166,52 @@ public enum JupiterTiming {
     ///   - realTimeInCycle: サイクル内の実時間
     ///   - introSkipped: イントロ休符がスキップされているか（1回目のみtrue）
     private static func convertWithTempoStretch(_ realTimeInCycle: Float, introSkipped: Bool) -> Float {
-        // Section 0の楽譜上の開始位置
+        // 各セクションの楽譜上の境界位置
         let section0MusicalStart: Float = introSkipped ? introRestMusical : 0.0
-        // Section 0の楽譜上の終了位置（Bar 5の開始 = 楽譜時間12.0）
-        let section0MusicalEnd: Float = Float(sectionBars[1] - 1) * barDuration
-        // Section 1の楽譜上の終了位置（Bar 9の開始 = 楽譜時間24.0）
-        let section1MusicalEnd: Float = Float(sectionBars[2] - 1) * barDuration
+        let section0MusicalEnd: Float = Float(sectionBars[1] - 1) * barDuration   // Bar 5 = 12.0
+        let section1MusicalEnd: Float = Float(sectionBars[2] - 1) * barDuration   // Bar 9 = 24.0
+        let section4MusicalStart: Float = Float(sectionBars[4] - 1) * barDuration // Bar 17 = 48.0
+        let section4MusicalEnd: Float = Float(sectionBars[5] - 1) * barDuration   // Bar 21 = 60.0
+        let section5MusicalEnd: Float = fullMusicalCycleDuration                   // 75.0
 
         // 1回目はイントロ休符分だけSection 0が短い
         let section0RealEndForCycle: Float = introSkipped
             ? (section0MusicalEnd - section0MusicalStart) / section0TempoRatio
             : section0RealDuration
 
-        // Section 1の実時間での終了位置（Section 0終了後からの相対位置）
-        let section1RealEndForCycle: Float = section0RealEndForCycle + section1RealDuration
+        // 各セクションの実時間での累積終了位置
+        let section1RealEnd: Float = section0RealEndForCycle + section1RealDuration
+        let section2_3RealEnd: Float = section1RealEnd + section2_3MusicalDuration  // Section 2-3は通常テンポ
+        let section4RealEnd: Float = section2_3RealEnd + section4RealDuration
+        let section5RealEnd: Float = section4RealEnd + section5RealDuration
 
         if realTimeInCycle < section0RealEndForCycle {
-            // Section 0内: テンポ0.7倍
+            // Section 0内: テンポ0.7倍（遅い）
             let realProgress = realTimeInCycle / section0RealEndForCycle
             let musicalDuration = section0MusicalEnd - section0MusicalStart
             return section0MusicalStart + realProgress * musicalDuration
-        } else if realTimeInCycle < section1RealEndForCycle {
-            // Section 1内: テンポ0.85倍（中間速度）
-            let timeInSection1 = realTimeInCycle - section0RealEndForCycle
-            let realProgress = timeInSection1 / section1RealDuration
+        } else if realTimeInCycle < section1RealEnd {
+            // Section 1内: テンポ0.9倍（やや遅い）
+            let timeInSection = realTimeInCycle - section0RealEndForCycle
+            let realProgress = timeInSection / section1RealDuration
             return section0MusicalEnd + realProgress * section1MusicalDuration
+        } else if realTimeInCycle < section2_3RealEnd {
+            // Section 2-3内: 通常テンポ
+            let timeInSection = realTimeInCycle - section1RealEnd
+            return section1MusicalEnd + timeInSection
+        } else if realTimeInCycle < section4RealEnd {
+            // Section 4内: テンポ1.05倍（やや速い）
+            let timeInSection = realTimeInCycle - section2_3RealEnd
+            let realProgress = timeInSection / section4RealDuration
+            return section4MusicalStart + realProgress * section4MusicalDuration
+        } else if realTimeInCycle < section5RealEnd {
+            // Section 5内: テンポ1.1倍（速い）
+            let timeInSection = realTimeInCycle - section4RealEnd
+            let realProgress = timeInSection / section5RealDuration
+            return section4MusicalEnd + realProgress * section5MusicalDuration
         } else {
-            // Section 2以降: 通常テンポ
-            let timeAfterSection1 = realTimeInCycle - section1RealEndForCycle
-            return section1MusicalEnd + timeAfterSection1
+            // サイクル終了後（念のため）
+            return section5MusicalEnd
         }
     }
 

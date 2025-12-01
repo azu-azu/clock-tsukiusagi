@@ -156,15 +156,6 @@ private final class JupiterMelodyGenerator {
     /// クロスフェード期間（拍数）: 2拍かけて徐々に変化
     let crossfadeDurationBeats: Float = 2.0
 
-    // MARK: - Section 1 Gymnopédie Echo (無効化)
-
-    /// Section 1でGymnopédie音色に戻る範囲（現在無効化：全てOrgan）
-    /// 範囲を0にしてGymnopédie Echoを無効化
-    let gymnoEchoStartBar: Int = 0
-    let gymnoEchoStartBeat: Float = 0.0
-    let gymnoEchoEndBar: Int = 0
-    let gymnoEchoEndBeat: Float = 0.0
-
     // MARK: - Trumpet Start (Section 4)
 
     /// トランペット音色の開始位置
@@ -195,16 +186,11 @@ private final class JupiterMelodyGenerator {
         let crossfadeStartTime = Float(crossfadeStartBar - 1) * barDuration + crossfadeStartBeat * beat
         let crossfadeEndTime = crossfadeStartTime + crossfadeDurationBeats * beat
 
-        // Gymnopédie Echo範囲（現在無効化）
-        let gymnoEchoStart = Float(gymnoEchoStartBar - 1) * barDuration + gymnoEchoStartBeat * beat
-        let gymnoEchoEnd = Float(gymnoEchoEndBar - 1) * barDuration + gymnoEchoEndBeat * beat
-
         // トランペット開始位置（楽譜時間）: Bar 17 beat 2.0
         let trumpetStart = Float(trumpetStartBar - 1) * barDuration + trumpetStartBeat * beat
 
         // クラリネット開始位置（楽譜時間）: Bar 21 beat 2.0
         let clarinetStart = Float(clarinetStartBar - 1) * barDuration + clarinetStartBeat * beat
-
 
         // 現在の音色ブレンド比率を計算（楽譜位置ベース）
         let organBlend: Float
@@ -229,24 +215,15 @@ private final class JupiterMelodyGenerator {
             let breathAmount = note.breath.rawValue
             let effectiveDur = breathAmount > 0 ? max(noteDur - breathAmount, attackTime) : noteDur
 
-            // Note is active during its effective duration + release tail
-            // Gymnopédie Echo判定（activeReleaseTime計算用）
-            let isGymnoEchoNote = noteStart >= gymnoEchoStart && noteStart < gymnoEchoEnd
-            // Gymno Echo直前のノート判定（Organだが長いリリースで余韻を残す）
-            let noteEnd = noteStart + noteDur
-            let isPreGymnoEchoNote = noteEnd > gymnoEchoStart && noteStart < gymnoEchoStart
-            // Gymnopédieが混じっている間、Gymno Echoノート、またはその直前のノートは長いリリース
-            let activeReleaseTime = (organBlend < 1.0 || isGymnoEchoNote || isPreGymnoEchoNote) ? gymnoReleaseTime : releaseTime
+            // Gymnopédieが混じっている間は長いリリースで余韻を残す
+            let activeReleaseTime = organBlend < 1.0 ? gymnoReleaseTime : releaseTime
             if local >= noteStart && local < noteStart + effectiveDur + activeReleaseTime {
                 let dt = local - noteStart
                 let transposedFreq = note.freq * transposeFactor
 
                 // === 楽譜位置ベースの音色ブレンド ===
 
-                // Gymnopédie Echo判定（現在無効化）
-                let isGymnoEcho = noteStart >= gymnoEchoStart && noteStart < gymnoEchoEnd
-
-                if organBlend == 0.0 || isGymnoEcho {
+                if organBlend == 0.0 {
                     // 純粋Gymnopédie（Bar 1）
                     let gymnoEnv = calculateGymnopedieEnvelope(time: dt, duration: effectiveDur)
                     let v = generateGymnopedieVoice(freq: transposedFreq, t: t)
