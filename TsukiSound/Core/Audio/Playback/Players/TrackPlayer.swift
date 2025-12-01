@@ -80,11 +80,6 @@ public final class TrackPlayer: TrackPlaying {
         // NOTE: Mixer will automatically convert format if needed
         let targetNode = destination ?? engine.mainMixerNode
         engine.connect(playerNode, to: targetNode, format: format)
-
-        print("""
-            Connection format: \(format.commonFormat.rawValue), \
-            \(format.sampleRate) Hz, \(format.channelCount) ch
-            """)
     }
 
     // MARK: - Public Methods
@@ -102,23 +97,9 @@ public final class TrackPlayer: TrackPlaying {
         buffer = nil
         audioFile = nil
 
-        print("   Full path: \(url.path)")
-
         // CRITICAL: Force fresh AVAudioFile instance to avoid decode cache
         // Create new file handle each time to prevent iOS from reusing cached decoder
         let file = try AVAudioFile(forReading: url)
-
-        // Verify we're reading the correct file
-        print("   File length: \(file.length) frames")
-        print("""
-            File format: \(file.fileFormat.commonFormat.rawValue), \
-            \(file.fileFormat.sampleRate) Hz, \(file.fileFormat.channelCount) ch
-            """)
-        print("""
-            Processing format: \(file.processingFormat.commonFormat.rawValue), \
-            \(file.processingFormat.sampleRate) Hz, \
-            \(file.processingFormat.channelCount) ch
-            """)
 
         // バッファを作成（ファイルのprocessingFormatをそのまま使用）
         // AVAudioEngine's mixer will handle format conversion automatically
@@ -132,37 +113,9 @@ public final class TrackPlayer: TrackPlaying {
         // ファイル全体をバッファに読み込み
         try file.read(into: buffer)
 
-        print("   ✓ Buffer created with \(buffer.frameLength) frames")
-
-        // Verify buffer format
-        print("""
-            Buffer format: \(buffer.format.commonFormat.rawValue), \
-            \(buffer.format.sampleRate) Hz, \(buffer.format.channelCount) ch
-        """)
-
-        // Sample first 10 samples to verify audio data
-        if buffer.format.commonFormat == .pcmFormatFloat32 {
-            if let floatChannelData = buffer.floatChannelData {
-                let firstSamples = (0..<min(10, Int(buffer.frameLength))).map {
-                    floatChannelData[0][$0]
-                }
-                print("   First 10 samples: \(firstSamples.map { String(format: "%.4f", $0) }.joined(separator: ", "))")
-            }
-        } else if buffer.format.commonFormat == .pcmFormatInt16 {
-            if let int16ChannelData = buffer.int16ChannelData {
-                let firstSamples = (0..<min(10, Int(buffer.frameLength))).map {
-                    int16ChannelData[0][$0]
-                }
-                print("   First 10 samples (int16): \(firstSamples)")
-            }
-        }
-
-        // Store references AFTER verification
+        // Store references
         self.buffer = buffer
         self.audioFile = file
-
-        print("   Duration: \(Double(buffer.frameLength) / file.fileFormat.sampleRate)s")
-        print("   Buffer frame length: \(buffer.frameLength)")
     }
 
     public func play(loop: Bool, crossfadeDuration: TimeInterval) {

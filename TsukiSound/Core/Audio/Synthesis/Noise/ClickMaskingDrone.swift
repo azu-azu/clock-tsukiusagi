@@ -72,14 +72,6 @@ public final class ClickMaskingDrone: AudioSource {
 
         let twoPi = 2.0 * Double.pi
 
-        // 診断用変数
-        var frameCounter: UInt64 = 0
-        let diagnosticInterval: UInt64 = 48000
-        var peakBase: Double = 0.0
-        var peakMask: Double = 0.0
-        var peakMixed: Double = 0.0
-        var rmsSum: Double = 0.0
-
         // AVAudioSourceNode を作成
         _sourceNode = AVAudioSourceNode { _, _, frameCount, audioBufferList -> OSStatus in
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
@@ -111,37 +103,6 @@ public final class ClickMaskingDrone: AudioSource {
                 mixed = tanh(mixed * 0.8)
 
                 let sample = Float(mixed)
-
-                // 診断情報の収集
-                peakBase = max(peakBase, abs(baseNoise))
-                peakMask = max(peakMask, abs(maskNoise))
-                peakMixed = max(peakMixed, abs(mixed))
-                rmsSum += mixed * mixed
-
-                frameCounter += 1
-
-                // 1秒ごとに診断情報を出力
-                if frameCounter >= diagnosticInterval {
-                    let rms = sqrt(rmsSum / Double(diagnosticInterval))
-                    let baseDb = 20.0 * log10(max(peakBase, 0.00001))
-                    let maskDb = 20.0 * log10(max(peakMask, 0.00001))
-                    let mixedDb = 20.0 * log10(max(peakMixed, 0.00001))
-                    let rmsDb = 20.0 * log10(max(rms, 0.00001))
-
-                    print("🎯 [ClickMaskingDrone Diagnostics]")
-                    print("   Base Noise: \(String(format: "%.4f", peakBase)) (\(String(format: "%.1f", baseDb)) dB)")
-                    print("   Mask Noise: \(String(format: "%.4f", peakMask)) (\(String(format: "%.1f", maskDb)) dB)")
-                    print("   Mixed Peak: \(String(format: "%.4f", peakMixed)) (\(String(format: "%.1f", mixedDb)) dB)")
-                    print("   RMS: \(String(format: "%.4f", rms)) (\(String(format: "%.1f", rmsDb)) dB)")
-                    print("   ---")
-
-                    // リセット
-                    frameCounter = 0
-                    peakBase = 0.0
-                    peakMask = 0.0
-                    peakMixed = 0.0
-                    rmsSum = 0.0
-                }
 
                 // 全チャンネルに書き込み
                 for buffer in abl {

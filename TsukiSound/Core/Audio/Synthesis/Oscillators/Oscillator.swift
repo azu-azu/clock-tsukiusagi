@@ -58,7 +58,6 @@ public final class Oscillator: AudioSource {
     public func attachAndConnect(to engine: AVAudioEngine, format: AVAudioFormat) throws {
         let sampleRate = format.sampleRate
 
-        print("Oscillator: Configuring with sampleRate: \(sampleRate), frequency: \(frequency), amplitude: \(amplitude)")
 
         // レンダーブロック内で波形を生成
         var renderCount = 0
@@ -70,7 +69,6 @@ public final class Oscillator: AudioSource {
 
             // デバッグ: 最初の数回だけログ出力
             if renderCount < 3 {
-                print("Oscillator: Rendering \(frameCount) frames, amplitude: \(self.amplitude), phaseIncrement: \(phaseIncrement)")
                 renderCount += 1
             }
 
@@ -98,6 +96,5 @@ public final class Oscillator: AudioSource {
         engine.attach(_sourceNode)
         engine.connect(_sourceNode, to: engine.mainMixerNode, format: format)
 
-        print("Oscillator: Attached and connected to engine")
     }
 }

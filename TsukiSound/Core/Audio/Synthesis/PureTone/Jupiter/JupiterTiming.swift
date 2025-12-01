@@ -121,7 +121,6 @@ public enum JupiterTiming {
         let section0MusicalEnd: Float = Float(sectionBars[1] - 1) * barDuration
 
         // 1回目はイントロ休符分だけSection 0が短い
-        let section0RealStart: Float = 0.0
         let section0RealEnd: Float = introSkipped
             ? (section0MusicalEnd - section0MusicalStart) / section0TempoRatio
             : section0RealDuration

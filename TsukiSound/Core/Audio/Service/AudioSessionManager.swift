@@ -46,49 +46,30 @@ public final class AudioSessionManager {
         options: AVAudioSession.CategoryOptions = [.mixWithOthers, .allowBluetooth],
         background: Bool = true
     ) throws {
-        print("AudioSessionManager: Starting activation...")
-        print("AudioSessionManager: Category: \(category.rawValue)")
-        print("AudioSessionManager: Options: \(options.rawValue)")
 
         // 既存のセッションを一旦非アクティブ化（エラーは無視）
         do {
             try session.setActive(false, options: [])
-            print("AudioSessionManager: Deactivated existing session")
         } catch {
-            print("AudioSessionManager: Could not deactivate existing session (may not be active): \(error)")
         }
 
         // カテゴリとモードを設定
         do {
-            print("AudioSessionManager: Setting category...")
             try session.setCategory(category, mode: .default, options: options)
-            print("AudioSessionManager: Category set successfully")
         } catch let error as NSError {
-            print("AudioSessionManager: Failed to set category")
-            print("  Error code: \(error.code)")
-            print("  Error domain: \(error.domain)")
-            print("  Error description: \(error.localizedDescription)")
             throw error
         }
 
         // サンプルレートを44100Hzに固定（再生ごとの変動を防ぐ）
         do {
             try session.setPreferredSampleRate(44100)
-            print("AudioSessionManager: Sample rate set to 44100Hz")
         } catch {
-            print("AudioSessionManager: Could not set sample rate: \(error)")
         }
 
         // セッションをアクティブ化
         do {
-            print("AudioSessionManager: Activating session...")
             try session.setActive(true, options: [])
-            print("AudioSessionManager: Session activated successfully")
         } catch let error as NSError {
-            print("AudioSessionManager: Failed to activate session")
-            print("  Error code: \(error.code)")
-            print("  Error domain: \(error.domain)")
-            print("  Error description: \(error.localizedDescription)")
             throw error
         }
 
@@ -96,7 +77,6 @@ public final class AudioSessionManager {
         observeInterruption()
         observeRouteChange()
 
-        print("AudioSessionManager: Activation complete")
     }
 
     /// オーディオセッションを非アクティブ化

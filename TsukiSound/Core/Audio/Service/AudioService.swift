@@ -174,9 +174,7 @@ public final class AudioService: ObservableObject {
         do {
             try activateAudioSession()
             sessionActivated = true
-            print("✅ [AudioService] Audio session activated in init for remote commands")
         } catch {
-            print("⚠️ [AudioService] Failed to activate session in init: \(error)")
             // Continue anyway - will retry on first play()
         }
 
@@ -192,14 +190,6 @@ public final class AudioService: ObservableObject {
 
         // システム音量監視を開始
         setupSystemVolumeMonitoring()
-
-        print("   Initial output route: \(outputRoute.displayName) \(outputRoute.icon)")
-        print("   Quiet breaks: \(settings.quietBreakEnabled ? "Enabled" : "Disabled")")
-        print("   Max output: \(settings.maxOutputDb) dB")
-        print("   Live Activity: \(activityController != nil ? "Available" : "Not Available")")
-        print("   System volume monitoring: Enabled")
-        print("   Volume cap: \(volumeCapLinear) (-2.5dB)")
-        print("   Audio routing: All sources → masterBusMixer → limiter → mainMixer → output")
     }
 
     deinit {
@@ -227,7 +217,6 @@ public final class AudioService: ObservableObject {
             try _playInternal(preset: preset)
         } catch {
             // CRITICAL: Cleanup state on error to unlock UI
-            print("❌ [AudioService] play() failed: \(error)")
             cleanupStateOnError()
             throw error
         }
@@ -269,7 +258,6 @@ public final class AudioService: ObservableObject {
         do {
             try registerSource(for: preset)
         } catch {
-            print("⚠️ [AudioService] Source registration failed: \(error)")
             throw AudioError.engineStartFailed(error)
         }
 
@@ -282,9 +270,6 @@ public final class AudioService: ObservableObject {
 
         // 音量は動的ゲイン補正で自動設定される（システム音量に基づく）
         applyDynamicGainCompensation()
-
-        // ✂️ ボリューム確認用ログ（本番前に削除）
-        print("🎵 [AudioService] after applyDynamicGainCompensation() mainMixerVolume=\(engine.engine.mainMixerNode.outputVolume)")
 
         // 遅延後にfadeEnabledを再有効化（stopAndWait→play の流れで無効化されているため）
         let currentSessionId = playbackSessionId
@@ -322,14 +307,12 @@ public final class AudioService: ObservableObject {
 
         // Prevent concurrent stop requests (preset switching protection)
         guard !isStopping else {
-            print("⚠️ [AudioService] stopAndWait() ignored (already stopping)")
             completion()  // Still call completion to unblock caller
             return
         }
 
         // Prevent duplicate stop() calls (ghost fade-out protection)
         guard isPlaying else {
-            print("⚠️ [AudioService] stopAndWait() ignored (not playing)")
             completion()  // Still call completion to unblock caller
             return
         }
@@ -353,7 +336,6 @@ public final class AudioService: ObservableObject {
 
             // Ghost task protection: ignore if session has changed
             guard stopSessionId == self.playbackSessionId else {
-                print("🛑 [AudioService] Stale stop ignored (session changed)")
                 completion()  // Still call completion to unblock caller
                 return
             }
@@ -401,7 +383,6 @@ public final class AudioService: ObservableObject {
 
         // Prevent duplicate stop() calls (ghost fade-out protection)
         guard isPlaying else {
-            print("⚠️ [AudioService] stop() ignored (not playing)")
             return
         }
         isPlaying = false  // Immediately set to prevent re-entrance
@@ -423,7 +404,6 @@ public final class AudioService: ObservableObject {
 
             // Ghost task protection: ignore if session has changed
             guard stopSessionId == self.playbackSessionId else {
-                print("🛑 [AudioService] Stale stop ignored (session changed)")
                 return
             }
 
@@ -505,7 +485,6 @@ public final class AudioService: ObservableObject {
     public func resume() throws {
 
         guard let reason = pauseReason else {
-            print("⚠️ [AudioService] No pause reason, cannot resume")
             return
         }
 
@@ -513,7 +492,6 @@ public final class AudioService: ObservableObject {
         if reason == .routeSafetySpeaker {
             let currentRoute = routeMonitor.currentRoute
             guard currentRoute != .speaker else {
-                print("⚠️ [AudioService] Still on speaker output, unsafe to resume")
                 throw AudioError.unsafeToResume("まだスピーカー出力です")
             }
         }
@@ -550,7 +528,6 @@ public final class AudioService: ObservableObject {
     /// - Parameter volume: 音量（0.0〜1.0）
     @available(*, deprecated, message: "音量はシステム音量（端末ボタン）で制御されます。このメソッドは無視されます。")
     public func setVolume(_ volume: Float) {
-        print("⚠️ [AudioService] setVolume() is deprecated. Volume is now controlled by system volume.")
         // Do nothing - volume is automatically controlled by dynamic gain compensation
     }
 
@@ -565,7 +542,6 @@ public final class AudioService: ObservableObject {
 
     /// Cleanup state on error to unlock UI
     private func cleanupStateOnError() {
-        print("🧹 [AudioService] Cleaning up state after error")
 
         // Cancel any pending stop/fade tasks
         engineStopWorkItem?.cancel()
@@ -595,7 +571,6 @@ public final class AudioService: ObservableObject {
         // Clear Now Playing
         nowPlayingController?.clearNowPlaying()
 
-        print("🧹 [AudioService] State cleanup complete")
     }
 
     /// Reset DSP state for current SignalEngine-based source (filters/reverb/fades)
@@ -612,10 +587,11 @@ public final class AudioService: ObservableObject {
     // MARK: - Preset Mapping
 
     /// Map UISoundPreset to PureTonePreset (if applicable)
+    /// Note: .jupiter uses .cathedralStillness which includes Jupiter melody + organ drone + tree chime
     private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
         switch uiPreset {
         case .jupiter:
-            return .cathedralStillness
+            return .cathedralStillness  // Jupiter melody is part of cathedralStillness
         case .moonlitGymnopedie:
             return .moonlitGymnopedie
         }
@@ -627,7 +603,6 @@ public final class AudioService: ObservableObject {
             guard let self = self else { return }
             Task { @MainActor in
                 self.outputRoute = route
-                print("🎧 [AudioService] Route changed to: \(route.displayName) \(route.icon)")
             }
         }
 
@@ -635,7 +610,6 @@ public final class AudioService: ObservableObject {
         routeMonitor.onSpeakerSafety = { [weak self] in
             guard let self = self else { return }
             Task { @MainActor in
-                print("⚠️ [AudioService] Speaker safety triggered - pausing playback")
                 self.pause(reason: .routeSafetySpeaker)
             }
         }
@@ -646,7 +620,6 @@ public final class AudioService: ObservableObject {
         breakScheduler.onBreakStart = { [weak self] in
             guard let self = self else { return }
             Task { @MainActor in
-                print("⏰ [AudioService] Quiet break started")
                 self.pause(reason: .quietBreak)
             }
         }
@@ -655,7 +628,6 @@ public final class AudioService: ObservableObject {
         breakScheduler.onBreakEnd = { [weak self] in
             guard let self = self else { return }
             Task { @MainActor in
-                print("⏰ [AudioService] Quiet break ended - resuming")
                 try? self.resume()
             }
         }
@@ -702,7 +674,6 @@ public final class AudioService: ObservableObject {
             Task { @MainActor in
                 switch type {
                 case .began:
-                    print("⚠️ [AudioService] Interruption began")
                     self.pause(reason: .interruption)
 
                 case .ended:
@@ -725,33 +696,19 @@ public final class AudioService: ObservableObject {
 
         let session = AVAudioSession.sharedInstance()
 
-        print("   Current state:")
-        print("     Category: \(session.category.rawValue)")
-        print("     Mode: \(session.mode.rawValue)")
-
-        // 既にアクティブかチェック
-        let isActive = session.isOtherAudioPlaying
-        print("     Is other audio playing: \(isActive)")
-
         // まずカテゴリだけ設定（アクティブ化前）
         // Note: .mixWithOthers removed to enable lock screen controls
         // Lock screen controls require exclusive audio session
         do {
-            print("   Setting category to .playback (exclusive for lock screen controls)...")
             try session.setCategory(.playback, mode: .default, options: [])
-            print("   ✅ Category set")
         } catch {
-            print("   ❌ setCategory failed: \(error)")
             throw error
         }
 
         // 次にアクティブ化
         do {
-            print("   Activating session...")
             try session.setActive(true, options: [])
-            print("   ✅ Session activated")
         } catch {
-            print("   ❌ setActive failed: \(error)")
             throw error
         }
 
@@ -765,14 +722,11 @@ public final class AudioService: ObservableObject {
 
         // Handle PureTone presets
         if let pureTonePreset = mapToPureTone(uiPreset) {
-            print("🎵 [AudioService] Using PureTone module for: \(uiPreset.rawValue)")
-            print("🎧 [AudioService] Output route: \(outputRoute.displayName)")
             let sources = PureToneBuilder.build(pureTonePreset)
             sources.forEach { engine.register($0) }
             return
         }
 
-        print("⚠️ [AudioService] No mapping found for: \(uiPreset.rawValue)")
     }
 
     // MARK: - Fade Effects (Phase 2)
@@ -961,7 +915,6 @@ public final class AudioService: ObservableObject {
             }
         }
 
-        print("   Current system volume: \(String(format: "%.2f", systemVolume)) (\(Int(systemVolume * 100))%)")
     }
 
     /// Apply dynamic gain compensation to maintain volume cap
