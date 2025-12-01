@@ -138,10 +138,10 @@ enum JupiterMelodyData {
 
         // === Bar 5 === ミ(2分) ミソ
         // ミ(2分、長い余韻) + ミ(8分)ソ(8分)
-        JupiterMelodyNote(.E4, bar: 5, beat: 0.0, dur: .half),                    // ミ（Organ、長い余韻でGymnopédieへ橋渡し）
+        JupiterMelodyNote(.E4, bar: 5, beat: 0.0, dur: .half),                    // ミ（Organ、長い余韻）
         // 🌠 sec1 Organ drone が静かに登場
-        JupiterMelodyNote(.E4, bar: 5, beat: 2.0, dur: .eighth),                  // ミ（Gymnopédie Echo）
-        JupiterMelodyNote(.G4, bar: 5, beat: 2.5, dur: .eighth),                 // ソ（1拍でBar 6につなげる）
+        JupiterMelodyNote(.E4, bar: 5, beat: 2.0, dur: .eighth),                  // ミ（Organ）
+        JupiterMelodyNote(.G4, bar: 5, beat: 2.5, dur: .eighth),                  // ソ（Organ）
 
         // === Bar 6 === ラ ラドシ.ソ (Bar 2と同じパターン)
         JupiterMelodyNote(.A4, bar: 6, beat: 0.0, dur: .quarter, breath: .long), // ラ 🫧
