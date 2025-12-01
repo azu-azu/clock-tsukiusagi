@@ -164,8 +164,7 @@ private final class JupiterMelodyGenerator {
         let musicalTime = JupiterTiming.realToMusicalTime(t)
         let local = musicalTime.truncatingRemainder(dividingBy: fullMusicalCycleDuration)
 
-        // セクション情報（クライマックス判定用）
-        let section = JupiterTiming.currentSection(at: t)
+        // セクション進行度（クライマックスのフェードアウト計算用）
         let sectionProgress = JupiterTiming.sectionProgress(at: t)
 
         // クロスフェード開始時刻（楽譜時間）
