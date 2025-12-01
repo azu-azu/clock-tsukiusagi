@@ -7,7 +7,8 @@
 //
 //  ## 自然さの改善
 //  - ランダム位相オフセット: 粒ごとに位相がずれ、人工的な統一感を解消
-//  - 微小デチューン: ±20Hz のランダムで、サイン波の人工さを軽減
+//  - 微小デチューン: ±1.5Hz のランダムで、サイン波の人工さを軽減
+//    （±20Hzだとモノラルでビート干渉が強すぎてシャリシャリ雑音になる）
 //
 //  ## セクション対応
 //  JupiterTimingを参照し、楽曲の進行に合わせて登場
@@ -45,8 +46,8 @@ public struct TreeChimeSignal {
         // Section 0-1 の遠いチャイム: -20dB ≈ 0.1 (10^(-20/20))
         let section0Gain: Float = 0.1
 
-        // 微小デチューンの振れ幅（±20Hz）
-        let detuneRange: Float = 40.0
+        // 微小デチューンの振れ幅（±1.5Hz - モノラルでのビート干渉を防ぐため極小）
+        let detuneRange: Float = 3.0
 
         // 各粒のベース周波数（低→高のグリッサンド）
         let baseFreqs: [Float] = (0..<numGrains).map { i in
@@ -163,7 +164,7 @@ public struct TreeChimeSignal {
                     continue
                 }
 
-                // ① 微小デチューン: ±20Hz のランダム
+                // ① 微小デチューン: ±1.5Hz のランダム（モノラルでの干渉防止）
                 let detune = (nextGrainRandom() - 0.5) * detuneRange
                 let freq = baseFreqs[i] + detune
 
