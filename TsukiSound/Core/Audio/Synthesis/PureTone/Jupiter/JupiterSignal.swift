@@ -11,7 +11,7 @@
 //  楽譜位置に基づいて音色が変化
 //  - Bar 1 (beat 0-1): Gymnopédie風メロディ音色（純粋サイン波 + 微細デチューン）
 //  - Bar 2 beat 1.0〜: オルガン音色（倍音 + ビブラート）へクロスフェード
-//  - Section 5: クライマックス（厚み増加）→ 終盤でフェードアウト
+//  - Section 5: クラリネット音色（奇数倍音）
 //
 
 import Foundation
@@ -66,6 +66,17 @@ private final class JupiterMelodyGenerator {
 
     /// Harmonic amplitudes: warm, full organ tone
     let harmonicAmps: [Float] = [1.0, 0.45, 0.25, 0.12, 0.03]
+
+    // MARK: - Clarinet Sound Parameters (Section 5)
+    //
+    // クラリネットの特徴: 奇数倍音のみが強い（閉管楽器の特性）
+    // 偶数倍音が抑制されることで独特の「空洞感」のある音色
+
+    /// Clarinet harmonics: odd harmonics only (characteristic of closed-pipe instruments)
+    let clarinetHarmonics: [Float] = [1.0, 3.0, 5.0, 7.0, 9.0]
+
+    /// Clarinet harmonic amplitudes: 1/n rolloff for natural clarinet tone
+    let clarinetHarmonicAmps: [Float] = [1.0, 0.33, 0.2, 0.14, 0.11]
 
     // MARK: - Tremulant (Vibrato)
 
@@ -204,10 +215,10 @@ private final class JupiterMelodyGenerator {
                     let v = generateSingleVoice(freq: transposedFreq, t: t)
                     output += v * env * gainReduction * masterGain
                 } else {
-                    // Section 5: クライマックス
+                    // Section 5: クラリネット音色（奇数倍音で空洞感のある音）
                     let env = calculateASREnvelope(time: dt, duration: effectiveDur)
                     let gainReduction = calculateHighFreqReduction(freq: transposedFreq)
-                    let v = generateSingleVoice(freq: transposedFreq, t: t)
+                    let v = generateClarinetVoice(freq: transposedFreq, t: t)
 
                     // 前半80%はクライマックス（1.1倍）、後半20%でフェードアウト
                     let climaxGain: Float
@@ -287,6 +298,37 @@ private final class JupiterMelodyGenerator {
         }
 
         signal /= Double(harmonics.count)
+        return Float(signal)
+    }
+
+    /// Generate clarinet voice with odd harmonics only
+    /// Characteristic hollow sound due to suppressed even harmonics
+    private func generateClarinetVoice(freq: Float, t: Float) -> Float {
+        let tDouble = Double(t)
+        let twoPiDouble = Double.pi * 2.0
+        let vibratoRateDouble = Double(vibratoRate)
+        let vibratoDepthDouble = Double(vibratoDepth)
+
+        // Vibrato: gentle phase offset (same as organ)
+        let vibrato = sin(twoPiDouble * vibratoRateDouble * tDouble) * vibratoDepthDouble
+
+        var signal: Double = 0.0
+
+        for (harmonicRatio, harmonicAmp) in zip(clarinetHarmonics, clarinetHarmonicAmps) {
+            let hFreqDouble = Double(freq * harmonicRatio)
+            let harmonicAmpDouble = Double(harmonicAmp)
+
+            // Calculate phase and wrap to prevent precision loss
+            let rawPhase = hFreqDouble * tDouble
+            let wrappedPhase = rawPhase - floor(rawPhase)
+
+            // Add vibrato as uniform phase offset
+            let phase = twoPiDouble * (wrappedPhase + vibrato)
+
+            signal += sin(phase) * harmonicAmpDouble
+        }
+
+        signal /= Double(clarinetHarmonics.count)
         return Float(signal)
     }
 
