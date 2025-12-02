@@ -608,13 +608,13 @@ public final class AudioService: ObservableObject {
     // MARK: - Preset Mapping
 
     /// Map UISoundPreset to PureTonePreset (if applicable)
-    /// Note: .jupiter now uses pre-rendered audio file, not real-time synthesis
+    /// Note: All presets now use pre-rendered audio files, not real-time synthesis
     private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
         switch uiPreset {
         case .jupiter:
             return nil  // Uses pre-rendered audio file (cathedral_stillness.caf)
         case .moonlitGymnopedie:
-            return .moonlitGymnopedie
+            return nil  // Uses pre-rendered audio file (moonlit_gymnopedie.caf)
         }
     }
 
@@ -751,27 +751,25 @@ public final class AudioService: ObservableObject {
             trackPlayer = nil
         }
 
-        // Handle cathedralStillness with pre-rendered audio file
-        if uiPreset == .jupiter {
-            try registerCathedralStillnessFile()
+        // Handle presets with pre-rendered audio files
+        switch uiPreset {
+        case .jupiter:
+            try registerPrerenderedAudioFile(named: "cathedral_stillness")
             return
-        }
-
-        // Handle other PureTone presets with real-time synthesis
-        if let pureTonePreset = mapToPureTone(uiPreset) {
-            let sources = PureToneBuilder.build(pureTonePreset)
-            sources.forEach { engine.register($0) }
+        case .moonlitGymnopedie:
+            try registerPrerenderedAudioFile(named: "moonlit_gymnopedie")
             return
         }
 
     }
 
-    /// Register pre-rendered cathedralStillness audio file for playback
+    /// Register pre-rendered audio file for playback
+    /// - Parameter name: Base name of the audio file (without .caf extension)
     /// Note: Does NOT start playback - engine.start() must be called first, then startTrackPlayerIfNeeded()
-    private func registerCathedralStillnessFile() throws {
+    private func registerPrerenderedAudioFile(named name: String) throws {
         // Find the audio file in bundle
-        guard let url = Bundle.main.url(forResource: "cathedral_stillness", withExtension: "caf") else {
-            print("⚠️ [AudioService] cathedral_stillness.caf not found in bundle")
+        guard let url = Bundle.main.url(forResource: name, withExtension: "caf") else {
+            print("⚠️ [AudioService] \(name).caf not found in bundle")
             throw AudioError.engineStartFailed(TrackPlayerError.fileNotLoaded)
         }
 
