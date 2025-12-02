@@ -3,7 +3,12 @@
 //  TsukiSound
 //
 //  Created by Claude Code on 2025-11-11.
-//  オーディオファイル再生プレイヤー（WAV対応、シームレスループ＆クロスフェード）
+//  オーディオファイル再生プレイヤー（オンメモリ再生、シームレスループ）
+//
+//  設計方針:
+//  - ファイル全体をRAMに読み込む「オンメモリ再生」方式
+//  - フェード制御は AudioService の masterMixer で行う（TrackPlayer は担当外）
+//  - シンプルに「再生/停止/ループ」のみを責務とする
 //
 
 import AVFoundation
@@ -18,21 +23,18 @@ public protocol TrackPlaying {
     func load(url: URL) throws
 
     /// 再生を開始
-    /// - Parameters:
-    ///   - loop: ループ再生を有効化
-    ///   - crossfadeDuration: ループ時のクロスフェード時間（秒）
-    func play(loop: Bool, crossfadeDuration: TimeInterval)
+    /// - Parameter loop: ループ再生を有効化
+    func play(loop: Bool)
 
-    /// 再生を停止
-    /// - Parameter fadeOut: フェードアウト時間（秒）
-    func stop(fadeOut: TimeInterval)
+    /// 再生を停止（即座に停止、フェードは AudioService 側で制御）
+    func stop()
 
     /// 再生中かどうか
     var isPlaying: Bool { get }
 }
 
 /// オーディオファイル再生プレイヤー
-/// WAVファイルをシームレスにループ再生（オプションでクロスフェード）
+/// オンメモリ方式でWAV/CAFファイルをシームレスにループ再生
 @MainActor
 public final class TrackPlayer: TrackPlaying {
     // MARK: - Internal Properties
@@ -44,11 +46,7 @@ public final class TrackPlayer: TrackPlaying {
 
     private var audioFile: AVAudioFile?
     private var buffer: AVAudioPCMBuffer?
-
     private var isLooping = false
-    private var crossfadeDuration: TimeInterval = 0.0
-    private var fadeOutWorkItem: DispatchWorkItem?  // Track pending fade out
-
     private weak var engine: AVAudioEngine?
 
     // MARK: - Public Properties
@@ -110,7 +108,7 @@ public final class TrackPlayer: TrackPlaying {
             throw TrackPlayerError.bufferCreationFailed
         }
 
-        // ファイル全体をバッファに読み込み
+        // ファイル全体をバッファに読み込み（オンメモリ方式）
         try file.read(into: buffer)
 
         // Store references
@@ -118,18 +116,13 @@ public final class TrackPlayer: TrackPlaying {
         self.audioFile = file
     }
 
-    public func play(loop: Bool, crossfadeDuration: TimeInterval) {
+    public func play(loop: Bool) {
         guard let buffer = buffer else {
             print("⚠️ [TrackPlayer] No buffer loaded, cannot play")
             return
         }
 
-        // Cancel any pending fade out from previous playback
-        fadeOutWorkItem?.cancel()
-        fadeOutWorkItem = nil
-
         self.isLooping = loop
-        self.crossfadeDuration = crossfadeDuration
 
         // 既に再生中の場合は停止
         if playerNode.isPlaying {
@@ -140,57 +133,25 @@ public final class TrackPlayer: TrackPlaying {
         playerNode.volume = 1.0
 
         // 再生開始
-        scheduleBuffer(buffer, loop: loop, crossfadeDuration: crossfadeDuration)
+        scheduleBuffer(buffer, loop: loop)
         playerNode.play()
-
     }
 
-    public func stop(fadeOut: TimeInterval) {
+    public func stop() {
         guard playerNode.isPlaying else { return }
-
-        // Cancel any pending fade out work item
-        fadeOutWorkItem?.cancel()
-        fadeOutWorkItem = nil
 
         // Stop looping immediately
         isLooping = false
 
-        if fadeOut > 0 {
-            // フェードアウト処理（ボリュームランプを使用）
-            let currentVolume = playerNode.volume
-            playerNode.volume = 0.0
-
-            // Create cancellable work item for fade out completion
-            // Note: We need to declare workItem first, then reference it in the closure
-            var workItem: DispatchWorkItem!
-            workItem = DispatchWorkItem { [weak self] in
-                guard let self = self else { return }
-
-                // Check if this work item was cancelled before execution
-                // This prevents "ghost" fade-out tasks from stopping new playback
-                if workItem.isCancelled {
-                    return
-                }
-
-                self.playerNode.stop()
-                self.playerNode.reset()  // Clear pending schedules
-                self.playerNode.volume = currentVolume  // 音量を元に戻す
-                self.fadeOutWorkItem = nil
-            }
-
-            fadeOutWorkItem = workItem
-            DispatchQueue.main.asyncAfter(deadline: .now() + fadeOut, execute: workItem)
-        } else {
-            // 即座に停止
-            playerNode.stop()
-            playerNode.reset()  // Clear pending schedules
-        }
+        // 即座に停止
+        playerNode.stop()
+        playerNode.reset()  // Clear pending schedules
     }
 
     // MARK: - Private Methods
 
     /// バッファをスケジュール（ループ対応）
-    private func scheduleBuffer(_ buffer: AVAudioPCMBuffer, loop: Bool, crossfadeDuration: TimeInterval) {
+    private func scheduleBuffer(_ buffer: AVAudioPCMBuffer, loop: Bool) {
         if loop {
             // ループ再生：completionCallbackType で次のバッファをスケジュール
             playerNode.scheduleBuffer(
@@ -198,12 +159,12 @@ public final class TrackPlayer: TrackPlaying {
                 at: nil,
                 options: [],
                 completionCallbackType: .dataPlayedBack
-            ) { [weak self] callbackType in
+            ) { [weak self] _ in
                 Task { @MainActor [weak self] in
                     guard let self = self, self.isLooping else { return }
 
                     // 次のバッファをスケジュール（シームレスループ）
-                    self.scheduleBuffer(buffer, loop: true, crossfadeDuration: crossfadeDuration)
+                    self.scheduleBuffer(buffer, loop: true)
                 }
             }
         } else {
@@ -213,7 +174,8 @@ public final class TrackPlayer: TrackPlaying {
                 at: nil,
                 options: [],
                 completionCallbackType: .dataPlayedBack
-            ) { callbackType in
+            ) { _ in
+                // Playback completed
             }
         }
     }

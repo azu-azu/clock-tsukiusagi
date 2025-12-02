@@ -325,8 +325,8 @@ public final class AudioService: ObservableObject {
         isPlaying = false  // Immediately set to prevent re-entrance
         isStopping = true  // Mark as stopping to prevent concurrent requests
 
-        // Stop TrackPlayer if active
-        trackPlayer?.stop(fadeOut: fadeOutDuration)
+        // Stop TrackPlayer if active (fade is handled by masterMixer)
+        trackPlayer?.stop()
 
         // Apply fade out to SignalAudioSource
         currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
@@ -396,8 +396,8 @@ public final class AudioService: ObservableObject {
         }
         isPlaying = false  // Immediately set to prevent re-entrance
 
-        // Stop TrackPlayer if active
-        trackPlayer?.stop(fadeOut: fadeOutDuration)
+        // Stop TrackPlayer if active (fade is handled by masterMixer)
+        trackPlayer?.stop()
 
         // Apply fade out to SignalAudioSource
         currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
@@ -563,7 +563,7 @@ public final class AudioService: ObservableObject {
 
         // Stop TrackPlayer if active
         if let player = trackPlayer {
-            player.stop(fadeOut: 0)
+            player.stop()
             if engine.engine.attachedNodes.contains(player.playerNode) {
                 engine.engine.detach(player.playerNode)
             }
@@ -743,7 +743,7 @@ public final class AudioService: ObservableObject {
 
         // Stop and cleanup any existing TrackPlayer
         if let player = trackPlayer {
-            player.stop(fadeOut: 0)
+            player.stop()
             // Detach from engine if attached
             if engine.engine.attachedNodes.contains(player.playerNode) {
                 engine.engine.detach(player.playerNode)
@@ -797,7 +797,7 @@ public final class AudioService: ObservableObject {
     /// Start TrackPlayer playback (must be called after engine.start())
     private func startTrackPlayerIfNeeded() {
         guard let player = trackPlayer, !player.isPlaying else { return }
-        player.play(loop: true, crossfadeDuration: 0.0)
+        player.play(loop: true)
         print("🎵 [AudioService] TrackPlayer started")
     }
 
