@@ -212,7 +212,7 @@ public final class AudioService: ObservableObject {
         // CRITICAL: 前のセッションのフェードアウトを即座に無効化
         // これにより stopAndWait → play の流れでも前のフェードが新しい再生を邪魔しない
         fadeEnabled = false
-        fadeTimer?.invalidate()
+        fadeTimer?.cancel()
         fadeTimer = nil
 
         // Wrap entire method in do-catch to ensure state cleanup on error
@@ -557,18 +557,13 @@ public final class AudioService: ObservableObject {
 
         // Cancel any pending stop/fade tasks
         engineStopWorkItem?.cancel()
-        fadeTimer?.invalidate()
+        fadeTimer?.cancel()
         engineStopWorkItem = nil
         fadeTimer = nil
 
-        // Stop TrackPlayer if active
-        if let player = trackPlayer {
-            player.stop()
-            if engine.engine.attachedNodes.contains(player.playerNode) {
-                engine.engine.detach(player.playerNode)
-            }
-            trackPlayer = nil
-        }
+        // Stop TrackPlayer if active (don't detach here - let engine.stop() handle cleanup)
+        trackPlayer?.stop()
+        trackPlayer = nil
 
         // Reset playback state
         isPlaying = false
@@ -742,10 +737,12 @@ public final class AudioService: ObservableObject {
         clearCurrentSignalSource()
 
         // Stop and cleanup any existing TrackPlayer
+        // NOTE: detach is safe here because engine is NOT running at this point
+        // (engine.start() is called AFTER registerSource in _playInternal)
         if let player = trackPlayer {
             player.stop()
-            // Detach from engine if attached
-            if engine.engine.attachedNodes.contains(player.playerNode) {
+            // Safe to detach when engine is stopped
+            if !engine.isEngineRunning && engine.engine.attachedNodes.contains(player.playerNode) {
                 engine.engine.detach(player.playerNode)
             }
             trackPlayer = nil
@@ -802,10 +799,19 @@ public final class AudioService: ObservableObject {
     }
 
     // MARK: - Fade Effects (Phase 2)
+    //
+    // 設計方針:
+    // - DispatchSourceTimer を高優先度キューで使用（Timer.scheduledTimer はオーディオに不適切）
+    // - Timer は RunLoop に依存し、バックグラウンドで精度が落ちる
+    // - DispatchSourceTimer はオーディオスレッドに近い精度で動作
+    //
 
-    private var fadeTimer: Timer?
+    private var fadeTimer: DispatchSourceTimer?
     private var targetVolume: Float = 0.5
     private var fadeEnabled: Bool = true  // フェードを許可するかどうか
+
+    /// 高優先度キュー（オーディオフェード用）
+    private let fadeQueue = DispatchQueue(label: "com.tsukisound.fade", qos: .userInteractive)
 
     /// 音量をフェードアウト
     /// - Parameter duration: フェード時間（秒）
@@ -813,50 +819,55 @@ public final class AudioService: ObservableObject {
         // フェードが無効化されている場合は何もしない
         guard fadeEnabled else { return }
 
-        fadeTimer?.invalidate()
+        // 既存のタイマーをキャンセル
+        fadeTimer?.cancel()
+        fadeTimer = nil
 
         let startVolume = engine.engine.mainMixerNode.outputVolume
         targetVolume = startVolume  // 元の音量を記憶
         let fadeSessionId = playbackSessionId  // Capture session ID for stale check
 
-        let steps = 60  // 60ステップ（60fps想定）
+        let steps = 60  // 60ステップ
         let stepDuration = duration / Double(steps)
         let volumeStep = startVolume / Float(steps)
 
         var currentStep = 0
 
-        fadeTimer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { [weak self] timer in
-            guard let self = self else {
-                timer.invalidate()
-                return
-            }
+        let timer = DispatchSource.makeTimerSource(queue: fadeQueue)
+        timer.schedule(deadline: .now(), repeating: stepDuration)
+        timer.setEventHandler { [weak self] in
+            currentStep += 1
 
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
 
                 // fadeEnabled と session ID をチェック
                 guard self.fadeEnabled, fadeSessionId == self.playbackSessionId else {
-                    timer.invalidate()
+                    self.fadeTimer?.cancel()
                     self.fadeTimer = nil
                     return
                 }
 
-                currentStep += 1
                 let newVolume = max(0.0, startVolume - (volumeStep * Float(currentStep)))
                 self.engine.setMasterVolume(newVolume)
 
                 if currentStep >= steps {
-                    timer.invalidate()
+                    self.fadeTimer?.cancel()
                     self.fadeTimer = nil
                 }
             }
         }
+
+        fadeTimer = timer
+        timer.resume()
     }
 
     /// 音量をフェードイン
     /// - Parameter duration: フェード時間（秒）
     private func fadeIn(duration: TimeInterval) {
-        fadeTimer?.invalidate()
+        // 既存のタイマーをキャンセル
+        fadeTimer?.cancel()
+        fadeTimer = nil
 
         let endVolume = targetVolume  // 記憶した音量に戻す
 
@@ -866,25 +877,26 @@ public final class AudioService: ObservableObject {
 
         var currentStep = 0
 
-        fadeTimer = Timer.scheduledTimer(withTimeInterval: stepDuration, repeats: true) { [weak self] timer in
-            guard let self = self else {
-                timer.invalidate()
-                return
-            }
+        let timer = DispatchSource.makeTimerSource(queue: fadeQueue)
+        timer.schedule(deadline: .now(), repeating: stepDuration)
+        timer.setEventHandler { [weak self] in
+            currentStep += 1
 
             Task { @MainActor [weak self] in
                 guard let self = self else { return }
 
-                currentStep += 1
                 let newVolume = min(endVolume, volumeStep * Float(currentStep))
                 self.engine.setMasterVolume(newVolume)
 
                 if currentStep >= steps {
-                    timer.invalidate()
+                    self.fadeTimer?.cancel()
                     self.fadeTimer = nil
                 }
             }
         }
+
+        fadeTimer = timer
+        timer.resume()
     }
 
     // MARK: - Live Activity Integration
