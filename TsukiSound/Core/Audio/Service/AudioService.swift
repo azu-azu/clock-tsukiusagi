@@ -125,6 +125,9 @@ public final class AudioService: ObservableObject {
     // SignalEngine fade control
     private var currentSignalSource: SignalEngineSource?
 
+    // TrackPlayer for pre-rendered audio files (cathedralStillness)
+    private var trackPlayer: TrackPlayer?
+
     // Preset switching protection: prevent multiple concurrent stop requests
     private var isStopping = false
 
@@ -268,6 +271,9 @@ public final class AudioService: ObservableObject {
             throw AudioError.engineStartFailed(error)
         }
 
+        // Start TrackPlayer AFTER engine is running (for file-based presets)
+        startTrackPlayerIfNeeded()
+
         // 音量は動的ゲイン補正で自動設定される（システム音量に基づく）
         applyDynamicGainCompensation()
 
@@ -318,6 +324,9 @@ public final class AudioService: ObservableObject {
         }
         isPlaying = false  // Immediately set to prevent re-entrance
         isStopping = true  // Mark as stopping to prevent concurrent requests
+
+        // Stop TrackPlayer if active
+        trackPlayer?.stop(fadeOut: fadeOutDuration)
 
         // Apply fade out to SignalAudioSource
         currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
@@ -386,6 +395,9 @@ public final class AudioService: ObservableObject {
             return
         }
         isPlaying = false  // Immediately set to prevent re-entrance
+
+        // Stop TrackPlayer if active
+        trackPlayer?.stop(fadeOut: fadeOutDuration)
 
         // Apply fade out to SignalAudioSource
         currentSignalSource?.applyFadeOut(durationMs: Int(fadeOutDuration * 1000))
@@ -549,6 +561,15 @@ public final class AudioService: ObservableObject {
         engineStopWorkItem = nil
         fadeTimer = nil
 
+        // Stop TrackPlayer if active
+        if let player = trackPlayer {
+            player.stop(fadeOut: 0)
+            if engine.engine.attachedNodes.contains(player.playerNode) {
+                engine.engine.detach(player.playerNode)
+            }
+            trackPlayer = nil
+        }
+
         // Reset playback state
         isPlaying = false
         currentPreset = nil
@@ -587,11 +608,11 @@ public final class AudioService: ObservableObject {
     // MARK: - Preset Mapping
 
     /// Map UISoundPreset to PureTonePreset (if applicable)
-    /// Note: .jupiter uses .cathedralStillness which includes Jupiter melody + organ drone + tree chime
+    /// Note: .jupiter now uses pre-rendered audio file, not real-time synthesis
     private func mapToPureTone(_ uiPreset: UISoundPreset) -> PureTonePreset? {
         switch uiPreset {
         case .jupiter:
-            return .cathedralStillness  // Jupiter melody is part of cathedralStillness
+            return nil  // Uses pre-rendered audio file (cathedral_stillness.caf)
         case .moonlitGymnopedie:
             return .moonlitGymnopedie
         }
@@ -720,13 +741,66 @@ public final class AudioService: ObservableObject {
         resetCurrentSignalEffectsState()
         clearCurrentSignalSource()
 
-        // Handle PureTone presets
+        // Stop and cleanup any existing TrackPlayer
+        if let player = trackPlayer {
+            player.stop(fadeOut: 0)
+            // Detach from engine if attached
+            if engine.engine.attachedNodes.contains(player.playerNode) {
+                engine.engine.detach(player.playerNode)
+            }
+            trackPlayer = nil
+        }
+
+        // Handle cathedralStillness with pre-rendered audio file
+        if uiPreset == .jupiter {
+            try registerCathedralStillnessFile()
+            return
+        }
+
+        // Handle other PureTone presets with real-time synthesis
         if let pureTonePreset = mapToPureTone(uiPreset) {
             let sources = PureToneBuilder.build(pureTonePreset)
             sources.forEach { engine.register($0) }
             return
         }
 
+    }
+
+    /// Register pre-rendered cathedralStillness audio file for playback
+    /// Note: Does NOT start playback - engine.start() must be called first, then startTrackPlayerIfNeeded()
+    private func registerCathedralStillnessFile() throws {
+        // Find the audio file in bundle
+        guard let url = Bundle.main.url(forResource: "cathedral_stillness", withExtension: "caf") else {
+            print("⚠️ [AudioService] cathedral_stillness.caf not found in bundle")
+            throw AudioError.engineStartFailed(TrackPlayerError.fileNotLoaded)
+        }
+
+        // Get file format first
+        guard let audioFile = try? AVAudioFile(forReading: url) else {
+            throw TrackPlayerError.fileNotLoaded
+        }
+        let fileFormat = audioFile.processingFormat
+        print("🎵 [AudioService] Audio file format: \(fileFormat.sampleRate) Hz, \(fileFormat.channelCount)ch")
+
+        // Create TrackPlayer
+        let player = TrackPlayer()
+
+        // Configure player FIRST (attach to engine and connect to masterBusMixer)
+        // Use file's native format - masterBusMixer will handle conversion to output format
+        player.configure(engine: engine.engine, format: fileFormat, destination: volumeLimiter.masterBusMixer)
+
+        // Load audio file AFTER configuration
+        try player.load(url: url)
+
+        // Store player - playback will be started after engine.start() in _playInternal
+        trackPlayer = player
+    }
+
+    /// Start TrackPlayer playback (must be called after engine.start())
+    private func startTrackPlayerIfNeeded() {
+        guard let player = trackPlayer, !player.isPlaying else { return }
+        player.play(loop: true, crossfadeDuration: 0.0)
+        print("🎵 [AudioService] TrackPlayer started")
     }
 
     // MARK: - Fade Effects (Phase 2)
