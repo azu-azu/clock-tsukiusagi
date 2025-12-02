@@ -3,14 +3,14 @@
 //  TsukiSound
 //
 //  Created by Claude Code on 2025-11-09.
-//  メインエンジン・統合管理
+//  メインエンジン・統合管理（TrackPlayer専用）
 //
 
 import AVFoundation
 import Foundation
 
-/// ローカル音声合成エンジン
-/// 複数の音源を管理し、AVAudioEngineを統合します
+/// ローカル音声エンジン
+/// AVAudioEngineをラップし、TrackPlayerと連携
 public final class LocalAudioEngine {
     // MARK: - Properties
 
@@ -18,11 +18,9 @@ public final class LocalAudioEngine {
     private let sessionManager: AudioSessionManager
     private let settings: BackgroundAudioToggle
 
-    private var sources: [AudioSource] = []
     private var isRunning = false
-    private var shouldStartSources = true  // 音源の自動起動フラグ
 
-    // Destination node for all sources (set by AudioService to use masterBusMixer)
+    // Destination node for TrackPlayer (set by AudioService to use masterBusMixer)
     private weak var destinationNode: AVAudioNode?
 
     /// エンジンの状態
@@ -72,50 +70,20 @@ public final class LocalAudioEngine {
 
     }
 
-    /// Set destination node for all sources
+    /// Set destination node for TrackPlayer
     /// - Parameter node: Destination audio node (e.g., masterBusMixer)
     public func setDestination(_ node: AVAudioNode) {
         self.destinationNode = node
     }
 
-    /// 音源を登録
-    /// - Parameter source: 登録する音源
-    public func register(_ source: AudioSource) {
-        // 固定フォーマットを使用（44100Hz, 2ch）してサンプルレート変動を防ぐ
-        let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2)!
-
-        do {
-            try source.attachAndConnect(to: engine, format: format)
-        } catch {
-            return
-        }
-
-        if let target = destinationNode {
-            engine.disconnectNodeOutput(source.sourceNode)
-            engine.connect(source.sourceNode, to: target, format: format)
-        }
-
-        sources.append(source)
-    }
-
     /// エンジンを開始
-    /// - Parameter startSources: 登録済み音源を起動するかどうか（デフォルト: true）
-    public func start(startSources: Bool = true) throws {
+    public func start() throws {
         guard !isRunning else { return }
 
         // エンジンを開始
         if !engine.isRunning {
             do {
                 try engine.start()
-            } catch {
-                throw error
-            }
-        }
-
-        // 音源の自動起動が有効な場合のみ起動
-        if startSources && shouldStartSources {
-            do {
-                try sources.forEach { try $0.start() }
             } catch {
                 throw error
             }
@@ -128,52 +96,10 @@ public final class LocalAudioEngine {
     public func stop() {
         guard isRunning else { return }
 
-        // 全ての音源を停止
-        sources.forEach { $0.stop() }
-
         // エンジンを停止
         engine.stop()
 
         isRunning = false
-    }
-
-    /// 音源の自動起動を無効化（TrackPlayer使用時など）
-    public func disableSources() {
-
-        // 現在の音源を停止＆サスペンド（ノードは接続されたまま、無音出力）
-        sources.forEach {
-            $0.stop()
-            $0.suspend()  // Silence output + stop diagnostics
-        }
-
-        // 次回start()時に音源を起動しない
-        shouldStartSources = false
-
-    }
-
-    /// 音源の自動起動を再有効化
-    public func enableSources() {
-
-        // Resume all sources (restart audio generation and diagnostics)
-        sources.forEach { $0.resume() }
-
-        shouldStartSources = true
-    }
-
-    /// すべての音源をクリア（デタッチして削除）
-    public func clearSources() {
-
-        // Stop and detach all sources
-        sources.forEach {
-            $0.stop()
-            $0.suspend()
-            // Detach the source node from engine
-            engine.detach($0.sourceNode)
-        }
-
-        // Clear the sources array
-        sources.removeAll()
-
     }
 
     /// 全体の音量を設定
