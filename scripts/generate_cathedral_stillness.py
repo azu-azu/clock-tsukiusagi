@@ -551,14 +551,15 @@ def generate_jupiter_melody(t: np.ndarray, cycle_duration: float) -> np.ndarray:
                     value += v * env * gain_reduction * master_gain
 
                 else:
-                    # Clarinet with climax fade
+                    # Clarinet with gradual fadeout through Section 5
                     env = calculate_asr_envelope(dt, effective_dur, attack_time, active_release)
                     v = generate_harmonic_voice(transposed_freq, time, clarinet_harmonics, clarinet_amps, vibrato_rate, vibrato_depth)
 
-                    if section_progress < 0.8:
+                    # Gradual fadeout: start at 30%, reach silence at 100%
+                    if section_progress < 0.3:
                         climax_gain = 1.1
                     else:
-                        fade_progress = (section_progress - 0.8) / 0.2
+                        fade_progress = (section_progress - 0.3) / 0.7
                         c = np.cos(fade_progress * np.pi * 0.5)
                         climax_gain = 1.1 * c * c
 
