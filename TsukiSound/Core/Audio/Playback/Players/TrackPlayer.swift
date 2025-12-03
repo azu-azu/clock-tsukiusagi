@@ -129,11 +129,15 @@ public final class TrackPlayer: TrackPlaying {
             playerNode.stop()
         }
 
+        // Reset to clear any scheduled buffers
+        playerNode.reset()
+
         // プレイヤーノードの音量を最大に設定（マスター音量で制御する）
         playerNode.volume = 1.0
 
-        // 再生開始
-        scheduleBuffer(buffer, loop: loop)
+        // .loops オプションでシームレスループ
+        let options: AVAudioPlayerNodeBufferOptions = loop ? .loops : []
+        playerNode.scheduleBuffer(buffer, at: nil, options: options)
         playerNode.play()
     }
 
@@ -146,38 +150,6 @@ public final class TrackPlayer: TrackPlaying {
         // 即座に停止
         playerNode.stop()
         playerNode.reset()  // Clear pending schedules
-    }
-
-    // MARK: - Private Methods
-
-    /// バッファをスケジュール（ループ対応）
-    private func scheduleBuffer(_ buffer: AVAudioPCMBuffer, loop: Bool) {
-        if loop {
-            // ループ再生：completionCallbackType で次のバッファをスケジュール
-            playerNode.scheduleBuffer(
-                buffer,
-                at: nil,
-                options: [],
-                completionCallbackType: .dataPlayedBack
-            ) { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    guard let self = self, self.isLooping else { return }
-
-                    // 次のバッファをスケジュール（シームレスループ）
-                    self.scheduleBuffer(buffer, loop: true)
-                }
-            }
-        } else {
-            // 1回再生
-            playerNode.scheduleBuffer(
-                buffer,
-                at: nil,
-                options: [],
-                completionCallbackType: .dataPlayedBack
-            ) { _ in
-                // Playback completed
-            }
-        }
     }
 }
 
