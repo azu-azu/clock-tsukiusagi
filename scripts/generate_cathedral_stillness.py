@@ -37,11 +37,12 @@ BEAT_DURATION = 1.0  # 60 BPM = 1.0s per beat
 BAR_DURATION = BEAT_DURATION * 3.0  # 3/4 time = 3 beats per bar
 TOTAL_BARS = 25
 
-# Tempo ratios per section
+# Tempo ratios per section (lower = slower)
 SECTION_0_TEMPO = 0.8   # Slower, a cappella style
 SECTION_1_TEMPO = 1.0   # Normal
 SECTION_2_TEMPO = 1.1   # Slightly faster
-SECTION_3_5_TEMPO = 1.2 # Fast
+SECTION_3_4_TEMPO = 1.2 # Fast (sections 3-4)
+SECTION_5_TEMPO = 0.9   # Slower for clarinet finale
 
 # Section boundaries (bar numbers, 1-indexed)
 SECTION_BARS = [1, 5, 9, 13, 17, 21]
@@ -61,20 +62,23 @@ def calculate_cycle_duration() -> float:
     A short lead-in silence is added for natural start feel.
     """
     # Musical durations (in beats)
-    sec0_musical = (SECTION_BARS[1] - SECTION_BARS[0]) * BAR_DURATION  # 12
-    sec1_musical = (SECTION_BARS[2] - SECTION_BARS[1]) * BAR_DURATION  # 12
-    sec2_musical = (SECTION_BARS[3] - SECTION_BARS[2]) * BAR_DURATION  # 12
-    sec3_5_musical = (TOTAL_BARS - SECTION_BARS[3] + 1) * BAR_DURATION  # 39
+    sec0_musical = (SECTION_BARS[1] - SECTION_BARS[0]) * BAR_DURATION  # 12 (bars 1-4)
+    sec1_musical = (SECTION_BARS[2] - SECTION_BARS[1]) * BAR_DURATION  # 12 (bars 5-8)
+    sec2_musical = (SECTION_BARS[3] - SECTION_BARS[2]) * BAR_DURATION  # 12 (bars 9-12)
+    sec3_4_musical = (SECTION_BARS[5] - SECTION_BARS[3]) * BAR_DURATION  # 24 (bars 13-20)
+    sec5_musical = (TOTAL_BARS - SECTION_BARS[5] + 1) * BAR_DURATION  # 15 (bars 21-25)
 
     # Real durations with tempo stretch
     sec0_real = sec0_musical / SECTION_0_TEMPO
     sec1_real = sec1_musical / SECTION_1_TEMPO
     sec2_real = sec2_musical / SECTION_2_TEMPO
-    sec3_5_real = sec3_5_musical / SECTION_3_5_TEMPO
+    sec3_4_real = sec3_4_musical / SECTION_3_4_TEMPO
+    sec5_real = sec5_musical / SECTION_5_TEMPO
 
     full_musical = TOTAL_BARS * BAR_DURATION  # 75s
 
-    tempo_extra = (sec0_real - sec0_musical) + (sec2_real - sec2_musical) + (sec3_5_real - sec3_5_musical)
+    tempo_extra = ((sec0_real - sec0_musical) + (sec2_real - sec2_musical) +
+                   (sec3_4_real - sec3_4_musical) + (sec5_real - sec5_musical))
 
     # Skip intro rest (2 beats at slow tempo) - no organ so no need for rest
     intro_rest_real = (INTRO_REST_BEATS * BEAT_DURATION) / SECTION_0_TEMPO
@@ -99,28 +103,32 @@ def convert_with_tempo_stretch(real_time: float, intro_skipped: bool = True) -> 
 
     # Musical boundaries
     sec0_start = intro_rest_musical if intro_skipped else 0.0  # Skip 2 beats on first cycle
-    sec0_end = (SECTION_BARS[1] - 1) * BAR_DURATION  # 12.0
-    sec1_end = (SECTION_BARS[2] - 1) * BAR_DURATION  # 24.0
-    sec2_end = (SECTION_BARS[3] - 1) * BAR_DURATION  # 36.0
-    sec3_5_end = TOTAL_BARS * BAR_DURATION           # 75.0
+    sec0_end = (SECTION_BARS[1] - 1) * BAR_DURATION  # 12.0 (bar 4 end)
+    sec1_end = (SECTION_BARS[2] - 1) * BAR_DURATION  # 24.0 (bar 8 end)
+    sec2_end = (SECTION_BARS[3] - 1) * BAR_DURATION  # 36.0 (bar 12 end)
+    sec3_4_end = (SECTION_BARS[5] - 1) * BAR_DURATION  # 60.0 (bar 20 end)
+    sec5_end = TOTAL_BARS * BAR_DURATION             # 75.0 (bar 25 end)
 
     # Musical durations
     sec0_musical_dur = sec0_end - sec0_start
     sec1_musical_dur = sec1_end - sec0_end
     sec2_musical_dur = sec2_end - sec1_end
-    sec3_5_musical_dur = sec3_5_end - sec2_end
+    sec3_4_musical_dur = sec3_4_end - sec2_end
+    sec5_musical_dur = sec5_end - sec3_4_end
 
     # Real durations
     sec0_real_dur = sec0_musical_dur / SECTION_0_TEMPO
     sec1_real_dur = sec1_musical_dur / SECTION_1_TEMPO
     sec2_real_dur = sec2_musical_dur / SECTION_2_TEMPO
-    sec3_5_real_dur = sec3_5_musical_dur / SECTION_3_5_TEMPO
+    sec3_4_real_dur = sec3_4_musical_dur / SECTION_3_4_TEMPO
+    sec5_real_dur = sec5_musical_dur / SECTION_5_TEMPO
 
     # Cumulative real time boundaries
     sec0_real_end = sec0_real_dur
     sec1_real_end = sec0_real_end + sec1_real_dur
     sec2_real_end = sec1_real_end + sec2_real_dur
-    sec3_5_real_end = sec2_real_end + sec3_5_real_dur
+    sec3_4_real_end = sec2_real_end + sec3_4_real_dur
+    sec5_real_end = sec3_4_real_end + sec5_real_dur
 
     if real_time < sec0_real_end:
         progress = real_time / sec0_real_dur if sec0_real_dur > 0 else 0
@@ -132,12 +140,16 @@ def convert_with_tempo_stretch(real_time: float, intro_skipped: bool = True) -> 
         time_in_sec = real_time - sec1_real_end
         progress = time_in_sec / sec2_real_dur if sec2_real_dur > 0 else 0
         return sec1_end + progress * sec2_musical_dur
-    elif real_time < sec3_5_real_end:
+    elif real_time < sec3_4_real_end:
         time_in_sec = real_time - sec2_real_end
-        progress = time_in_sec / sec3_5_real_dur if sec3_5_real_dur > 0 else 0
-        return sec2_end + progress * sec3_5_musical_dur
+        progress = time_in_sec / sec3_4_real_dur if sec3_4_real_dur > 0 else 0
+        return sec2_end + progress * sec3_4_musical_dur
+    elif real_time < sec5_real_end:
+        time_in_sec = real_time - sec3_4_real_end
+        progress = time_in_sec / sec5_real_dur if sec5_real_dur > 0 else 0
+        return sec3_4_end + progress * sec5_musical_dur
     else:
-        return sec3_5_end
+        return sec5_end
 
 
 def get_section_at_musical_time(musical_time: float) -> int:
