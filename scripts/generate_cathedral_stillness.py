@@ -19,11 +19,12 @@ Based on existing Swift implementations:
 
 import numpy as np
 from scipy.io import wavfile
-from scipy import signal as scipy_signal
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Tuple, Optional
+from typing import List, Optional
+
+from audio_utils import normalize
 
 # Constants
 SAMPLE_RATE = 48000
@@ -783,53 +784,6 @@ def apply_schroeder_reverb(signal: np.ndarray, sample_rate: int = SAMPLE_RATE) -
 
     # Mix dry and wet
     result = (1.0 - mix) * signal + mix * output[:len(signal)]
-
-    return result
-
-
-def normalize(signal: np.ndarray, target_peak: float = 0.9) -> np.ndarray:
-    """Normalize signal to target peak level."""
-    max_val = np.max(np.abs(signal))
-    if max_val > 0:
-        return signal * (target_peak / max_val)
-    return signal
-
-
-def apply_loop_crossfade(signal: np.ndarray, crossfade_duration: float = 0.1, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
-    """
-    Create perfect loop waveform by crossfading end into start.
-
-    The key insight: both the START and END of the file must be modified
-    so that when the file loops, the transition is seamless.
-
-    Method:
-    1. Crossfade the end section with the start section
-    2. Replace BOTH the start and end with the crossfaded result
-    3. This ensures: end of file == start of file (perfect loop)
-    """
-    crossfade_samples = int(crossfade_duration * sample_rate)
-
-    if crossfade_samples * 2 >= len(signal):
-        return signal
-
-    result = signal.copy()
-
-    # Equal-power crossfade curves
-    t = np.linspace(0, np.pi / 2, crossfade_samples)
-    fade_out = np.cos(t) ** 2  # 1 -> 0
-    fade_in = np.sin(t) ** 2   # 0 -> 1
-
-    end_section = signal[-crossfade_samples:]
-    start_section = signal[:crossfade_samples]
-
-    # Create the crossfaded transition
-    crossfaded = end_section * fade_out + start_section * fade_in
-
-    # Apply to BOTH start and end (this is the key!)
-    # The end fades out while mixing in the start
-    # The start fades in while mixing in the end
-    result[:crossfade_samples] = crossfaded
-    result[-crossfade_samples:] = crossfaded
 
     return result
 

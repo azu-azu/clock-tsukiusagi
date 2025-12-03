@@ -17,6 +17,8 @@ import numpy as np
 from scipy.io import wavfile
 import os
 
+from audio_utils import apply_loop_crossfade
+
 # Constants
 SAMPLE_RATE = 48000
 OUTPUT_DIR = "../TsukiSound/Resources/Audio"
@@ -534,30 +536,6 @@ def generate_gymnopedie():
 # ============================================================================
 # File Output
 # ============================================================================
-
-def apply_loop_crossfade(signal, crossfade_duration=0.1, sample_rate=SAMPLE_RATE):
-    """
-    Apply crossfade between end and start of audio for seamless looping.
-    """
-    crossfade_samples = int(crossfade_duration * sample_rate)
-
-    if crossfade_samples * 2 >= len(signal):
-        return signal
-
-    result = signal.copy()
-
-    # Equal-power crossfade curves
-    t = np.linspace(0, np.pi / 2, crossfade_samples)
-    fade_out = np.cos(t) ** 2
-    fade_in = np.sin(t) ** 2
-
-    end_section = signal[-crossfade_samples:]
-    start_section = signal[:crossfade_samples]
-
-    result[-crossfade_samples:] = end_section * fade_out + start_section * fade_in
-
-    return result
-
 
 def save_wav(signal, filename, sample_rate=SAMPLE_RATE):
     """Save signal as WAV file."""
