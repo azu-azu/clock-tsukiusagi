@@ -46,12 +46,20 @@ SECTION_3_5_TEMPO = 1.2 # Fast
 # Section boundaries (bar numbers, 1-indexed)
 SECTION_BARS = [1, 5, 9, 13, 17, 21]
 
-# Intro rest (2 beats) - skipped on first cycle
+# Intro rest (2 beats) - skipped because no organ accompaniment
 INTRO_REST_BEATS = 2.0
 
+# Lead-in silence before first note (for natural start)
+LEAD_IN_SILENCE = 0.5  # seconds
 
-def calculate_cycle_duration() -> Tuple[float, float]:
-    """Calculate first and normal cycle durations with tempo stretch."""
+
+def calculate_cycle_duration() -> float:
+    """Calculate cycle duration with tempo stretch.
+
+    Since we have no organ accompaniment and end in silence,
+    we skip the intro rest entirely for seamless looping.
+    A short lead-in silence is added for natural start feel.
+    """
     # Musical durations (in beats)
     sec0_musical = (SECTION_BARS[1] - SECTION_BARS[0]) * BAR_DURATION  # 12
     sec1_musical = (SECTION_BARS[2] - SECTION_BARS[1]) * BAR_DURATION  # 12
@@ -68,30 +76,29 @@ def calculate_cycle_duration() -> Tuple[float, float]:
 
     tempo_extra = (sec0_real - sec0_musical) + (sec2_real - sec2_musical) + (sec3_5_real - sec3_5_musical)
 
-    intro_rest_musical = INTRO_REST_BEATS * BEAT_DURATION
+    # Skip intro rest (2 beats at slow tempo) - no organ so no need for rest
+    intro_rest_real = (INTRO_REST_BEATS * BEAT_DURATION) / SECTION_0_TEMPO
+    cycle_without_intro = full_musical + tempo_extra - intro_rest_real
 
-    first_cycle = full_musical - intro_rest_musical + tempo_extra
-    normal_cycle = full_musical + tempo_extra
-
-    return first_cycle, normal_cycle
-
-
-def real_to_musical_time(real_time: float, first_cycle: float, normal_cycle: float) -> float:
-    """Convert real time to musical time (accounting for tempo stretch and intro skip)."""
-    if real_time < first_cycle:
-        return convert_with_tempo_stretch(real_time, intro_skipped=True)
-    else:
-        time_after_first = real_time - first_cycle
-        cycle_time = time_after_first % normal_cycle
-        return convert_with_tempo_stretch(cycle_time, intro_skipped=False)
+    return cycle_without_intro
 
 
-def convert_with_tempo_stretch(real_time: float, intro_skipped: bool) -> float:
+def real_to_musical_time(real_time: float, cycle_duration: float) -> float:
+    """Convert real time to musical time (with lead-in offset and intro skip)."""
+    # Subtract lead-in silence to get actual musical time
+    adjusted_time = real_time - LEAD_IN_SILENCE
+    if adjusted_time < 0:
+        # During lead-in silence, return time before first note
+        return INTRO_REST_BEATS * BEAT_DURATION + adjusted_time
+    return convert_with_tempo_stretch(adjusted_time, intro_skipped=True)
+
+
+def convert_with_tempo_stretch(real_time: float, intro_skipped: bool = True) -> float:
     """Convert real time within a cycle to musical time."""
     intro_rest_musical = INTRO_REST_BEATS * BEAT_DURATION
 
     # Musical boundaries
-    sec0_start = intro_rest_musical if intro_skipped else 0.0
+    sec0_start = intro_rest_musical if intro_skipped else 0.0  # Skip 2 beats on first cycle
     sec0_end = (SECTION_BARS[1] - 1) * BAR_DURATION  # 12.0
     sec1_end = (SECTION_BARS[2] - 1) * BAR_DURATION  # 24.0
     sec2_end = (SECTION_BARS[3] - 1) * BAR_DURATION  # 36.0
@@ -358,14 +365,21 @@ def create_melody() -> List[JupiterNote]:
 # Sound Generators
 # =============================================================================
 
-def generate_organ_drone(t: np.ndarray, first_cycle: float, normal_cycle: float) -> np.ndarray:
-    """Generate organ drone (CathedralStillnessSignal)."""
+def generate_organ_drone(t: np.ndarray, cycle_duration: float) -> np.ndarray:
+    """Generate organ drone (CathedralStillnessSignal).
+
+    Section 0: Silent (a cappella melody)
+    Section 1: Fade in from 0 to full
+    Section 2-4: Full volume
+    Section 5: Fade out to silence (a cappella clarinet ending)
+
+    This creates seamless looping: silence -> silence.
+    """
     root_freq = 130.81  # C3
     fifth_freq = 196.00  # G3
     lfo_freq = 0.02     # 50s cycle
 
-    section_0_volume = 0.3
-    section_2_volume = 1.0
+    full_volume = 1.0
 
     harmonics = [1.0, 2.0, 3.0, 4.0]
     amps = [0.9, 0.4, 0.25, 0.15]
@@ -373,20 +387,35 @@ def generate_organ_drone(t: np.ndarray, first_cycle: float, normal_cycle: float)
     output = np.zeros_like(t)
 
     for i, time in enumerate(t):
-        musical_time = real_to_musical_time(time, first_cycle, normal_cycle)
+        musical_time = real_to_musical_time(time, cycle_duration)
         section = get_section_at_musical_time(musical_time)
         section_progress = get_section_progress(musical_time, section)
 
         # LFO breathing (0.4 - 0.8 range)
         lfo_value = 0.6 + 0.2 * np.sin(2.0 * np.pi * lfo_freq * time)
 
-        # Section volume
+        # Section volume: silent at start and end, full in middle
         if section == 0:
-            volume = section_0_volume
+            # Section 0: Silent (a cappella)
+            volume = 0.0
         elif section == 1:
-            volume = section_0_volume + (section_2_volume - section_0_volume) * section_progress
+            # Section 1: Fade in from silence to full
+            s = np.sin(section_progress * np.pi * 0.5)
+            volume = full_volume * s * s
+        elif section == 5:
+            # Section 5: Fade out to silence
+            # Start fading at 20% progress, reach silence at 80%
+            if section_progress < 0.2:
+                volume = full_volume
+            elif section_progress < 0.8:
+                fade_progress = (section_progress - 0.2) / 0.6
+                c = np.cos(fade_progress * np.pi * 0.5)
+                volume = full_volume * c * c
+            else:
+                volume = 0.0  # Silent for the rest
         else:
-            volume = section_2_volume
+            # Section 2-4: Full volume
+            volume = full_volume
 
         value = 0.0
 
@@ -405,7 +434,7 @@ def generate_organ_drone(t: np.ndarray, first_cycle: float, normal_cycle: float)
     return output
 
 
-def generate_jupiter_melody(t: np.ndarray, first_cycle: float, normal_cycle: float) -> np.ndarray:
+def generate_jupiter_melody(t: np.ndarray, cycle_duration: float) -> np.ndarray:
     """Generate Jupiter melody (JupiterSignal)."""
     melody = create_melody()
     full_musical_cycle = TOTAL_BARS * BAR_DURATION
@@ -454,7 +483,7 @@ def generate_jupiter_melody(t: np.ndarray, first_cycle: float, normal_cycle: flo
     output = np.zeros_like(t)
 
     for i, time in enumerate(t):
-        musical_time = real_to_musical_time(time, first_cycle, normal_cycle)
+        musical_time = real_to_musical_time(time, cycle_duration)
         local = musical_time % full_musical_cycle
         section = get_section_at_musical_time(musical_time)
         section_progress = get_section_progress(musical_time, section)
@@ -609,7 +638,7 @@ def soft_clip(x: float, threshold: float = 0.8) -> float:
     return sign * (threshold + (1.0 - threshold) * np.tanh((abs(x) - threshold) / (1.0 - threshold)))
 
 
-def generate_tree_chime(t: np.ndarray, first_cycle: float, normal_cycle: float, seed: int = 42) -> np.ndarray:
+def generate_tree_chime(t: np.ndarray, cycle_duration: float, seed: int = 42) -> np.ndarray:
     """Generate tree chime accents at appropriate musical positions."""
     np.random.seed(seed)
 
@@ -649,7 +678,7 @@ def generate_tree_chime(t: np.ndarray, first_cycle: float, normal_cycle: float, 
         phase_offsets = np.random.random(num_grains) * 2 * np.pi
 
         # Determine gain based on section
-        musical_time = real_to_musical_time(chime_start, first_cycle, normal_cycle)
+        musical_time = real_to_musical_time(chime_start, cycle_duration)
         section = get_section_at_musical_time(musical_time)
 
         if section in [0, 1]:
@@ -755,7 +784,15 @@ def normalize(signal: np.ndarray, target_peak: float = 0.9) -> np.ndarray:
 
 def apply_loop_crossfade(signal: np.ndarray, crossfade_duration: float = 0.1, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
     """
-    Apply crossfade between end and start of audio for seamless looping.
+    Create perfect loop waveform by crossfading end into start.
+
+    The key insight: both the START and END of the file must be modified
+    so that when the file loops, the transition is seamless.
+
+    Method:
+    1. Crossfade the end section with the start section
+    2. Replace BOTH the start and end with the crossfaded result
+    3. This ensures: end of file == start of file (perfect loop)
     """
     crossfade_samples = int(crossfade_duration * sample_rate)
 
@@ -766,13 +803,38 @@ def apply_loop_crossfade(signal: np.ndarray, crossfade_duration: float = 0.1, sa
 
     # Equal-power crossfade curves
     t = np.linspace(0, np.pi / 2, crossfade_samples)
-    fade_out = np.cos(t) ** 2
-    fade_in = np.sin(t) ** 2
+    fade_out = np.cos(t) ** 2  # 1 -> 0
+    fade_in = np.sin(t) ** 2   # 0 -> 1
 
     end_section = signal[-crossfade_samples:]
     start_section = signal[:crossfade_samples]
 
-    result[-crossfade_samples:] = end_section * fade_out + start_section * fade_in
+    # Create the crossfaded transition
+    crossfaded = end_section * fade_out + start_section * fade_in
+
+    # Apply to BOTH start and end (this is the key!)
+    # The end fades out while mixing in the start
+    # The start fades in while mixing in the end
+    result[:crossfade_samples] = crossfaded
+    result[-crossfade_samples:] = crossfaded
+
+    return result
+
+
+def apply_final_fadeout(signal: np.ndarray, fadeout_duration: float = 2.0, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
+    """Apply fadeout at the end to ensure silence for seamless looping."""
+    fadeout_samples = int(fadeout_duration * sample_rate)
+
+    if fadeout_samples >= len(signal):
+        return signal
+
+    result = signal.copy()
+
+    # Equal-power fadeout curve
+    t = np.linspace(0, np.pi / 2, fadeout_samples)
+    fade_out = np.cos(t) ** 2  # 1 -> 0
+
+    result[-fadeout_samples:] *= fade_out
 
     return result
 
@@ -782,28 +844,36 @@ def main():
     print("Cathedral Stillness Audio Generator for TsukiSound")
     print("=" * 60)
 
-    # Calculate cycle duration
-    first_cycle, normal_cycle = calculate_cycle_duration()
-    print(f"First cycle duration: {first_cycle:.2f}s")
-    print(f"Normal cycle duration: {normal_cycle:.2f}s")
+    # Calculate cycle duration (skips intro rest since no organ)
+    cycle_duration = calculate_cycle_duration()
+    print(f"Musical cycle duration: {cycle_duration:.2f}s (skips intro rest)")
 
-    # Generate one full cycle (first cycle for seamless loop start)
-    duration = first_cycle
+    # Add lead-in silence for natural start
+    lead_in = LEAD_IN_SILENCE
+    # Add silence padding for reverb tail decay
+    silence_padding = 1.0  # 1 second of silence at end (reduced since we have lead-in)
+
+    # Generate one full cycle with lead-in and padding
+    # Loop structure: lead-in → music → fadeout → silence → [loop] → lead-in → ...
+    duration = lead_in + cycle_duration + silence_padding
     num_samples = int(duration * SAMPLE_RATE)
     t = np.linspace(0, duration, num_samples, endpoint=False)
 
     print(f"\nGenerating audio ({duration:.2f}s at {SAMPLE_RATE}Hz)...")
+    print(f"  - Lead-in silence: {lead_in:.2f}s")
+    print(f"  - Musical content: {cycle_duration:.2f}s")
+    print(f"  - End padding: {silence_padding:.2f}s")
     print()
 
     # Generate each layer
     print("1/4 Generating organ drone...")
-    drone = generate_organ_drone(t, first_cycle, normal_cycle)
+    drone = generate_organ_drone(t, cycle_duration)
 
     print("2/4 Generating Jupiter melody...")
-    melody = generate_jupiter_melody(t, first_cycle, normal_cycle)
+    melody = generate_jupiter_melody(t, cycle_duration)
 
     print("3/4 Generating tree chime accents...")
-    chime = generate_tree_chime(t, first_cycle, normal_cycle)
+    chime = generate_tree_chime(t, cycle_duration)
 
     # Mix layers
     print("4/4 Mixing and applying reverb...")
@@ -812,11 +882,12 @@ def main():
     # Apply reverb
     with_reverb = apply_schroeder_reverb(mixed)
 
-    # Apply crossfade for seamless looping (100ms)
-    crossfaded = apply_loop_crossfade(with_reverb, crossfade_duration=0.1)
+    # Apply final fadeout (reverb tail fades to silence)
+    # This ensures end is silent, matching the intro rest (silent)
+    faded = apply_final_fadeout(with_reverb, fadeout_duration=2.0)
 
     # Normalize
-    final = normalize(crossfaded)
+    final = normalize(faded)
 
     # Save
     script_dir = os.path.dirname(os.path.abspath(__file__))
