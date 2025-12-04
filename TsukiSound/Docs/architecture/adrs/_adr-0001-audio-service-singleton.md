@@ -1,5 +1,7 @@
 # ADR-0001: Audio Service Singleton Pattern
 
+> Related: [_arch-philosophy.md](../../_arch-philosophy.md) (設計思想の基底)
+
 **Status**: ✅ Accepted
 **Date**: 2025-11-10
 **Deciders**: Audio Architecture Team

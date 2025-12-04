@@ -1,10 +1,35 @@
-# TsukiUsagi ドキュメント
+# TsukiSound ドキュメント
 
-このディレクトリには、TsukiUsagiプロジェクトの開発・運用に関するドキュメントが含まれています。
+このディレクトリには、TsukiSoundプロジェクトの開発・運用に関するドキュメントが含まれています。
 
-## 🗂️ TsukiUsagi Docs Naming Rules（Fujiko構造版）
+---
 
-## 🧭 **命名フォーマット**
+## あなたは今どれを知りたい？
+
+| 目的 | ドキュメント |
+|------|-------------|
+| 🧠 なぜこの設計なのか | [`_arch-philosophy.md`](./_arch-philosophy.md) |
+| 🏛 設計判断の理由を知りたい | [`_adr-*.md`](./architecture/adrs/) |
+| 🛠 実装方法を知りたい | [`_guide-*.md`](./implementation/) |
+| 🧪 トラブル対応・運用 | [`_runbook-*.md`](./runbook/) |
+
+### ドキュメント階層
+
+```
+思想 (_arch-philosophy)
+      ↓
+意思決定 (_adr-)
+      ↓
+実装 (_guide-)
+      ↓
+運用 (_runbook-)
+```
+
+---
+
+## 🗂️ Docs Naming Rules（Fujiko構造版）
+
+### 🧭 命名フォーマット
 
 ```
 [_prefix]-[main-topic].md
@@ -45,6 +70,7 @@
 ## 📚 ドキュメント一覧
 
 ### 🏛️ 設計思想・アーキテクチャ
+- [`_arch-philosophy.md`](./_arch-philosophy.md) - **設計思想の核（Philosophy）** ★まずここを読む
 - [`_arch-guidelines.md`](./_arch-guidelines.md) - アーキテクチャガイドライン・設計原則
 - [`architecture/_arch-audio-parameter-safety-rules.md`](./architecture/_arch-audio-parameter-safety-rules.md) - オーディオパラメータ安全性ルール（3層アーキテクチャ）
 - [`architecture/audio-system-spec.md`](./architecture/audio-system-spec.md) - オーディオシステム仕様書（Phase 2完了 + 3層アーキテクチャ）
