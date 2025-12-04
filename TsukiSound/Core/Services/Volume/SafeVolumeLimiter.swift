@@ -25,7 +25,7 @@ public protocol SafeVolumeLimiting {
 /// Note: AVAudioUnitDynamicsProcessorはmacOSのみで利用可能なため、
 /// iOS用の代替として歪みエフェクトを使用してソフトリミットを実装
 ///
-/// Architecture:
+/// Architecture: ADR-0002 (iOS Volume Limiter - AVAudioUnitDistortion Alternative)
 /// Sources → masterBusMixer → Limiter → mainMixerNode → outputNode (Apple's auto-wiring)
 /// This avoids conflicts with Apple's automatic mainMixer→output connection
 public final class SafeVolumeLimiter: SafeVolumeLimiting {

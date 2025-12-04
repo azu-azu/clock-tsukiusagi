@@ -38,6 +38,8 @@ public enum AudioError: Error, LocalizedError {
 
 /// オーディオサービス（Singleton）
 /// アプリ全体で1つのインスタンスを共有し、画面遷移に関わらず音声再生を継続する
+///
+/// Architecture: ADR-0001 (Audio Service Singleton Pattern)
 @MainActor
 public final class AudioService: ObservableObject {
     // MARK: - Singleton
