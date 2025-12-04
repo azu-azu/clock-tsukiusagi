@@ -43,7 +43,10 @@ SECTION_0_TEMPO = 0.8   # Slower, a cappella style
 SECTION_1_TEMPO = 1.0   # Normal
 SECTION_2_TEMPO = 1.1   # Slightly faster
 SECTION_3_4_TEMPO = 1.2 # Fast (sections 3-4)
-SECTION_5_TEMPO = 0.9   # Slower for clarinet finale
+SECTION_5_TEMPO_START = 1.2  # Start at same tempo as section 3-4
+SECTION_5_TEMPO_END = 1.0    # Gradually slow to normal tempo
+# Average tempo for section 5 duration calculation
+SECTION_5_TEMPO = (SECTION_5_TEMPO_START + SECTION_5_TEMPO_END) / 2  # 1.1
 
 # Section boundaries (bar numbers, 1-indexed)
 SECTION_BARS = [1, 5, 9, 13, 17, 21]
@@ -98,6 +101,65 @@ def real_to_musical_time(real_time: float, cycle_duration: float) -> float:
     return convert_with_tempo_stretch(adjusted_time, intro_skipped=True)
 
 
+def calculate_section5_real_duration(musical_dur: float) -> float:
+    """Calculate real duration for section 5 with gradual tempo change.
+
+    For tempo changing linearly from t0 to t1 over musical duration M:
+    real_duration = M * 2 / (t0 + t1) = M / average_tempo
+    """
+    return musical_dur / SECTION_5_TEMPO  # Uses average tempo
+
+
+def section5_real_to_musical(real_time_in_section: float, sec5_real_dur: float, sec5_musical_dur: float) -> float:
+    """Convert real time within section 5 to musical time.
+
+    With linearly changing tempo from SECTION_5_TEMPO_START to SECTION_5_TEMPO_END:
+    - At start: tempo = 1.2 (fast, matches section 3-4)
+    - At end: tempo = 1.0 (normal)
+
+    The relationship is:
+    d(musical)/d(real) = tempo(progress)
+    tempo(progress) = start + (end - start) * progress
+
+    Integrating: musical = real * (start + (end-start)/2 * progress)
+    But progress depends on real_time, making this implicit.
+
+    For simplicity, we use a quadratic approximation that's accurate enough.
+    """
+    if sec5_real_dur <= 0:
+        return 0.0
+
+    # Linear progress through section 5 real time
+    real_progress = real_time_in_section / sec5_real_dur
+    real_progress = max(0.0, min(1.0, real_progress))
+
+    # Tempo at this point (linear interpolation)
+    tempo_start = SECTION_5_TEMPO_START
+    tempo_end = SECTION_5_TEMPO_END
+
+    # For gradual slowdown, the musical time advances faster at the start
+    # (when tempo is high) and slower at the end (when tempo is low).
+    #
+    # Using integral approach:
+    # If tempo(p) = t0 + (t1-t0)*p, and we integrate d(musical) = tempo * d(real)
+    # musical_progress = integral of tempo over real_progress
+    # = t0 * p + (t1-t0) * p^2 / 2, normalized by average
+    #
+    # Normalized: musical_progress = (t0 * p + (t1-t0) * p^2 / 2) / ((t0 + t1) / 2)
+
+    p = real_progress
+    t0, t1 = tempo_start, tempo_end
+    avg_tempo = (t0 + t1) / 2
+
+    # Unnormalized integral: t0*p + (t1-t0)*p^2/2
+    unnormalized = t0 * p + (t1 - t0) * p * p / 2
+    # Normalize so that at p=1, result=1
+    # At p=1: unnormalized = t0 + (t1-t0)/2 = (t0+t1)/2 = avg_tempo
+    musical_progress = unnormalized / avg_tempo
+
+    return musical_progress * sec5_musical_dur
+
+
 def convert_with_tempo_stretch(real_time: float, intro_skipped: bool = True) -> float:
     """Convert real time within a cycle to musical time."""
     intro_rest_musical = INTRO_REST_BEATS * BEAT_DURATION
@@ -122,7 +184,7 @@ def convert_with_tempo_stretch(real_time: float, intro_skipped: bool = True) -> 
     sec1_real_dur = sec1_musical_dur / SECTION_1_TEMPO
     sec2_real_dur = sec2_musical_dur / SECTION_2_TEMPO
     sec3_4_real_dur = sec3_4_musical_dur / SECTION_3_4_TEMPO
-    sec5_real_dur = sec5_musical_dur / SECTION_5_TEMPO
+    sec5_real_dur = calculate_section5_real_duration(sec5_musical_dur)
 
     # Cumulative real time boundaries
     sec0_real_end = sec0_real_dur
@@ -147,8 +209,9 @@ def convert_with_tempo_stretch(real_time: float, intro_skipped: bool = True) -> 
         return sec2_end + progress * sec3_4_musical_dur
     elif real_time < sec5_real_end:
         time_in_sec = real_time - sec3_4_real_end
-        progress = time_in_sec / sec5_real_dur if sec5_real_dur > 0 else 0
-        return sec3_4_end + progress * sec5_musical_dur
+        # Use gradual tempo change for section 5
+        musical_offset = section5_real_to_musical(time_in_sec, sec5_real_dur, sec5_musical_dur)
+        return sec3_4_end + musical_offset
     else:
         return sec5_end
 
