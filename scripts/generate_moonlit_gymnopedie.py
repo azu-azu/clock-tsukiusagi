@@ -513,9 +513,9 @@ def generate_gymnopedie():
     print(f"  Applying Schroeder reverb...")
     reverb = SchroederReverb(
         room_size=2.2,      # Large, open space
-        damping=0.40,       # Moderate damping for clarity
-        decay=0.85,         # Long tail for depth
-        mix=0.45,           # Rich reverb
+        damping=0.25,       # Less damping for brighter sound
+        decay=0.78,         # Slightly shorter for clarity
+        mix=0.35,           # More dry signal
         predelay=0.030      # Spacious predelay
     )
     processed = reverb.process(mixed)
