@@ -82,7 +82,7 @@ Core/Audio/
 - Service → Synthesis → Processing → Mixing → Playback flow
 - Clear separation of concerns prevents architectural drift
 
-See: `TsukiSound/Docs/architecture/audio-system-spec.md` for full specification
+See: `TsukiSound/Docs/architecture/_arch-audio-system-spec.md` for full specification
 
 ### Navigation Design
 
@@ -92,7 +92,7 @@ See: `TsukiSound/Docs/architecture/audio-system-spec.md` for full specification
 - Current page icon is hidden from navigation
 - Tab state managed in ContentView, passed via `@Binding`
 
-See: `TsukiSound/Docs/implementation/navigation-design.md` for full specification
+See: `TsukiSound/Docs/implementation/_guide-navigation-design.md` for full specification
 
 ---
 
@@ -125,7 +125,7 @@ See: `TsukiSound/Docs/implementation/navigation-design.md` for full specificatio
 - Quiet breaks: Scheduled pause periods (configurable duration)
 
 **Reference documentation:**
-- Audio architecture: `TsukiSound/Docs/architecture/audio-system-spec.md`
+- Audio architecture: `TsukiSound/Docs/architecture/_arch-audio-system-spec.md`
 - Implementation guide: `TsukiSound/Docs/implementation/_guide-audio-system-impl.md`
 - 3-layer architecture rules: `TsukiSound/Docs/implementation/audio-parameter-safety-rules.md`
 
@@ -144,7 +144,7 @@ See: `TsukiSound/Docs/implementation/navigation-design.md` for full specificatio
 - Font: Rounded design (`.withDesign(.rounded)`)
 - Large Title: 28pt bold, Inline Title: 17pt semibold
 
-See: `TsukiSound/Docs/implementation/navigation-design.md`
+See: `TsukiSound/Docs/implementation/_guide-navigation-design.md`
 
 ### Design System
 
@@ -219,7 +219,7 @@ SharedUI/
 
 **All temporary comments and debug logs must be marked with emojis (✂️ / 🔥 / 🐛 / 🧪) and removed before production.**
 
-See: `TsukiSound/Docs/implementation/comment-log-standards.md` for full specification
+See: `TsukiSound/Docs/implementation/_guide-comment-log-standards.md` for full specification
 
 ---
 
@@ -274,15 +274,15 @@ See: `TsukiSound/Docs/report/report-audio-distortion-noise.md`
 ## Documentation References
 
 ### Architecture & Specs
-* `TsukiSound/Docs/architecture/audio-system-spec.md` — Complete audio system specification
-* `TsukiSound/Docs/implementation/navigation-design.md` — Navigation bar and tab integration
+* `TsukiSound/Docs/architecture/_arch-audio-system-spec.md` — Complete audio system specification
+* `TsukiSound/Docs/implementation/_guide-navigation-design.md` — Navigation bar and tab integration
 
 ### Implementation Guides
 * `TsukiSound/Docs/implementation/_guide-audio-system-impl.md` — Audio system implementation guide
 * `TsukiSound/Docs/implementation/volume-control-guide.md` — Volume control guide (IMPORTANT: read before adjusting volume)
 * `TsukiSound/Docs/implementation/seamless-loop-audio-generation.md` — Audio file generation for seamless loops
 * `TsukiSound/Docs/implementation/natural-sound-presets-restoration.md` — Restoring natural sound presets
-* `TsukiSound/Docs/implementation/comment-log-standards.md` — Comment and log standards
+* `TsukiSound/Docs/implementation/_guide-comment-log-standards.md` — Comment and log standards
 
 ### Troubleshooting
 * `TsukiSound/Docs/report/report-audio-distortion-noise.md` — Audio distortion RCA

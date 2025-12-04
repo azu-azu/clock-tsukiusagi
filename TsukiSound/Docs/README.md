@@ -73,7 +73,7 @@
 - [`_arch-philosophy.md`](./_arch-philosophy.md) - **設計思想の核（Philosophy）** ★まずここを読む
 - [`_arch-guidelines.md`](./_arch-guidelines.md) - アーキテクチャガイドライン・設計原則
 - [`architecture/_arch-audio-parameter-safety-rules.md`](./architecture/_arch-audio-parameter-safety-rules.md) - オーディオパラメータ安全性ルール（3層アーキテクチャ）
-- [`architecture/audio-system-spec.md`](./architecture/audio-system-spec.md) - オーディオシステム仕様書（Phase 2完了 + 3層アーキテクチャ）
+- [`architecture/_arch-audio-system-spec.md`](./architecture/_arch-audio-system-spec.md) - オーディオシステム仕様書（Phase 2完了 + 3層アーキテクチャ）
 
 ### 🎯 アーキテクチャ決定記録（ADR）
 - `_adr-*.md` - 設計判断の背景・トレードオフ・決定理由を記録
@@ -93,7 +93,7 @@
 - [`implementation/_guide-organ-envelope-asr.md`](./implementation/_guide-organ-envelope-asr.md) - オルガン音色のASRエンベロープ設計ガイド（ASR vs AD、Legato Crossfade）
 - [`implementation/_guide-navigation-back-gesture.md`](./implementation/_guide-navigation-back-gesture.md) - カスタム戻る操作実装ガイド
 - [`implementation/_guide-design-tokens.md`](./implementation/_guide-design-tokens.md) - デザイントークン統一ガイド
-- [`implementation/navigation-design.md`](./implementation/navigation-design.md) - ナビゲーションバー・タブ統合設計
+- [`implementation/_guide-navigation-design.md`](./implementation/_guide-navigation-design.md) - ナビゲーションバー・タブ統合設計
 
 ### 📖 運用・テスト手順書（Runbook）
 - `_runbook-*.md` - 運用手順、テスト手順、デバッグ手順を記録

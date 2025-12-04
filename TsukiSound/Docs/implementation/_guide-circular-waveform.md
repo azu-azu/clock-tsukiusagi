@@ -537,7 +537,7 @@ xcodebuild -project TsukiSound.xcodeproj \
 
 - `CLAUDE.md` - Design System Guidelines
 - `Docs/implementation/_guide-design-tokens.md` - デザイントークン使用ガイド
-- `Docs/architecture/audio-system-spec.md` - AudioService 仕様
+- `Docs/architecture/_arch-audio-system-spec.md` - AudioService 仕様
 
 ### SwiftUI リファレンス
 

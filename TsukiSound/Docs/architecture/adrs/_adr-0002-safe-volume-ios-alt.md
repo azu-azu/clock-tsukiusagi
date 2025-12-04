@@ -273,7 +273,7 @@ If distortion unacceptable:
 
 ## Related Documents
 
-- **Architecture Spec**: `../audio-system-spec.md` (Section 3.3: Audio Graph)
+- **Architecture Spec**: `../_arch-audio-system-spec.md` (Section 3.3: Audio Graph)
 - **Implementation Guide**: `../../implementation/audio-system-impl-guide.md` (SafeVolumeLimiter section)
 - **Original Design**: `/Users/mypc/AI_develop/TsukiSound/architect/2025-11-10_audio_architecture_redesign.md` (Issue 4, Appendix C)
 - **ADR-0001**: Audio Service Singleton Pattern

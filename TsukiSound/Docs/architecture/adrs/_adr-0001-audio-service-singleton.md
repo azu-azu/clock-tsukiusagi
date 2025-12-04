@@ -235,7 +235,7 @@ struct AudioPlaybackView: View {
 
 ## Related Documents
 
-- **Architecture Spec**: `../audio-system-spec.md`
+- **Architecture Spec**: `../_arch-audio-system-spec.md`
 - **Implementation Guide**: `../../implementation/audio-system-impl-guide.md`
 - **Original Design**: `/Users/mypc/AI_develop/TsukiSound/architect/2025-11-10_audio_architecture_redesign.md` (Section 2.1)
 

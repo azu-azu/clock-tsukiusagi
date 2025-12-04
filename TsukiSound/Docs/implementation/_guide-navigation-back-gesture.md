@@ -256,13 +256,13 @@ if value.translation.width > 50 && abs(value.translation.height) < 100 {
 
 ---
 
-## navigation-design.mdとの関係
+## _guide-navigation-design.mdとの関係
 
 ### 役割分担
 
 | ドキュメント | 担当範囲 |
 |-------------|---------|
-| **navigation-design.md** | ナビゲーションバーの外観設計（フォント、ブラー、透明度） |
+| **_guide-navigation-design.md** | ナビゲーションバーの外観設計（フォント、ブラー、透明度） |
 | **_guide-navigation-back-gesture.md**（本ドキュメント） | 戻る操作の実装（Backボタン、スワイプジェスチャー） |
 
 ### 統合された実装例
@@ -270,8 +270,8 @@ if value.translation.width > 50 && abs(value.translation.height) < 100 {
 ```swift
 .navigationTitle("Audio Settings")
 .navigationBarTitleDisplayMode(.large)
-.dynamicNavigationFont()  // ← navigation-design.mdで定義
-.toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)  // ← navigation-design.mdで定義
+.dynamicNavigationFont()  // ← _guide-navigation-design.mdで定義
+.toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)  // ← _guide-navigation-design.mdで定義
 .navigationBackButton {  // ← 本ドキュメントで定義
     selectedTab = .clock
 }
@@ -424,7 +424,7 @@ if value.translation.width > 80 && abs(value.translation.height) < 100 {  // 50 
 ## 参考資料
 
 - [NavigationBackModifier.swift](../../DesignSystem/Navigation/NavigationBackModifier.swift) - 実装ファイル
-- [navigation-design.md](navigation-design.md) - ナビゲーションバー外観設計
+- [_guide-navigation-design.md](_guide-navigation-design.md) - ナビゲーションバー外観設計
 - [Apple HIG - Navigation](https://developer.apple.com/design/human-interface-guidelines/navigation) - Apple公式ガイドライン
 
 ---

@@ -207,7 +207,7 @@ public final class AirLayerSource: AudioSource {
 
 ### Documentation Updates
 - Updated `architecture/_arch-audio-parameter-safety-rules.md` to v2.0 with 3-layer architecture
-- Updated `audio-system-spec.md` API examples
+- Updated `_arch-audio-system-spec.md` API examples
 - Updated `_guide-audio-system-impl.md` with mapping flow
 - Updated `CLAUDE.md` with architecture explanation
 - Updated all ADRs to reflect new preset types
@@ -576,7 +576,7 @@ All View-owned engines replaced with `@EnvironmentObject` AudioService singleton
 
 ## Related Documents
 
-- **Architecture Spec**: `../architecture/audio-system-spec.md`
+- **Architecture Spec**: `../architecture/_arch-audio-system-spec.md`
 - **Implementation Guide**: `../implementation/_guide-audio-system-impl.md`
 - **Operations Runbook**: `../runbook/_runbook-audio-ops-and-tests.md`
 - **ADR-0001**: Singleton Pattern (`../architecture/adrs/_adr-0001-audio-service-singleton.md`)

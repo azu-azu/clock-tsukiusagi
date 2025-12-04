@@ -140,7 +140,7 @@ Core/Audio/
 * User-configurable volume limit (-12dB to 0dB)
 * Scheduled quiet breaks
 
-See: `Docs/architecture/audio-system-spec.md`
+See: `Docs/architecture/_arch-audio-system-spec.md`
 
 ---
 
@@ -172,7 +172,7 @@ public enum Tab {  // Must be public
 * Large Title: 28pt bold, Inline Title: 17pt semibold
 * shadowColor: `.clear` (no borders)
 
-See: `Docs/implementation/navigation-design.md`
+See: `Docs/implementation/_guide-navigation-design.md`
 
 ---
 
@@ -354,8 +354,8 @@ TsukiSound/
 
 **Key documents:**
 * `Docs/README.md` — Documentation index
-* `Docs/architecture/audio-system-spec.md` — Audio system spec
-* `Docs/implementation/navigation-design.md` — Navigation design
+* `Docs/architecture/_arch-audio-system-spec.md` — Audio system spec
+* `Docs/implementation/_guide-navigation-design.md` — Navigation design
 * `Docs/implementation/_guide-audio-system-impl.md` — Audio implementation guide
 
 **Update requirements:**
@@ -462,8 +462,8 @@ TsukiSound/
 ### Essential Reading
 * `CLAUDE.md` — AI assistant guidance (single source of truth for Claude Code)
 * `Docs/README.md` — Documentation index and naming conventions
-* `Docs/architecture/audio-system-spec.md` — Audio system specification
-* `Docs/implementation/navigation-design.md` — Navigation design patterns
+* `Docs/architecture/_arch-audio-system-spec.md` — Audio system specification
+* `Docs/implementation/_guide-navigation-design.md` — Navigation design patterns
 
 ### Implementation Guides
 * `Docs/implementation/_guide-audio-system-impl.md` — Audio implementation

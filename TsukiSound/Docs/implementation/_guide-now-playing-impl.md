@@ -1020,7 +1020,7 @@ private func setupNowPlayingCommands() {
 ## 9. 関連ドキュメント
 
 ### アーキテクチャ
-- [Audio System Specification](../architecture/audio-system-spec.md) - オーディオシステム全体の設計
+- [Audio System Specification](../architecture/_arch-audio-system-spec.md) - オーディオシステム全体の設計
 - [Phase 3 Integration Report](../report/report-audio-phase3-integration.md) - Phase 3実装の完全レポート
 
 ### トラブルシューティング

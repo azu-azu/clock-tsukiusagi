@@ -16,7 +16,7 @@ This runbook provides step-by-step procedures for:
 - **Troubleshooting** common issues
 - **Rollback plan** if problems occur
 
-For **architecture decisions**, see `../architecture/audio-system-spec.md`.
+For **architecture decisions**, see `../architecture/_arch-audio-system-spec.md`.
 For **implementation details**, see `../implementation/_guide-audio-system-impl.md`.
 
 ---
@@ -586,7 +586,7 @@ git push --force
 
 ## Related Documents
 
-- **Architecture Spec**: `../architecture/audio-system-spec.md`
+- **Architecture Spec**: `../architecture/_arch-audio-system-spec.md`
 - **Implementation Guide**: `../implementation/_guide-audio-system-impl.md`
 - **ADR-0001**: Singleton Pattern (`../architecture/adrs/_adr-0001-audio-service-singleton.md`)
 - **ADR-0002**: iOS Volume Limiter (`../architecture/adrs/_adr-0002-safe-volume-ios-alt.md`)

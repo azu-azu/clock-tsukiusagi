@@ -3,7 +3,7 @@
 **Version**: 2.1 (Phase 2 + 3-Layer Architecture)
 **Last Updated**: 2025-11-23
 **Target Audience**: Developers implementing or maintaining audio features
-**Prerequisites**: Read `../architecture/audio-system-spec.md` first
+**Prerequisites**: Read `../architecture/_arch-audio-system-spec.md` first
 
 ---
 
@@ -870,7 +870,7 @@ Expected log sequence on successful playback:
 
 ## Related Documents
 
-- **Architecture Spec**: `../architecture/audio-system-spec.md`
+- **Architecture Spec**: `../architecture/_arch-audio-system-spec.md`
 - **ADR-0001**: Singleton Pattern (`../architecture/adrs/_adr-0001-audio-service-singleton.md`)
 - **ADR-0002**: iOS Volume Limiter (`../architecture/adrs/_adr-0002-safe-volume-ios-alt.md`)
 - **Operations Runbook**: `../runbook/_runbook-audio-ops-and-tests.md`

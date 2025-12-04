@@ -400,7 +400,7 @@ private func sampleMelody(at t: Float) -> Float {
 - `_guide-transpose.md` — 移調の正しい実装方法
 - `architecture/_arch-audio-parameter-safety-rules.md` — パラメータ安全ルール
 - `report/report-audio-distortion-noise.md` — 歪み・雑音のRCA
-- `runbook/_2025-11-29_audio_playback_volume_corruption_fix.md` — 音量破損問題の解決
+- `runbook/_runbook-audio-volume-corruption-fix.md` — 音量破損問題の解決
 
 ---
 

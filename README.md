@@ -125,7 +125,7 @@ xcodebuild test -project TsukiSound.xcodeproj -scheme TsukiSound
 ドキュメントは `TsukiSound/Docs/` にまとめています。
 
 * `architecture/` — アーキテクチャ仕様
-* `audio-system-spec.md` — Audioエンジン仕様
+* `_arch-audio-system-spec.md` — Audioエンジン仕様
 * `implementation/` — 実装ガイド
 * `report/` — レポート・トラブルシュート
 
