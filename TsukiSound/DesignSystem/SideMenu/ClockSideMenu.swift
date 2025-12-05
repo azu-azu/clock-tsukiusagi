@@ -46,7 +46,7 @@ struct ClockSideMenu: View {
                                         .font(.title)
 
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text("TsukiUsagi")
+                                        Text("menu.title".localized)
                                             .dynamicFont(size: DesignTokens.SideMenuTypography.headerTitleSize, weight: DesignTokens.SideMenuTypography.headerTitleWeight)
                                             .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                                     }
@@ -77,7 +77,7 @@ struct ClockSideMenu: View {
 
                                 menuItem(
                                     icon: "clock",
-                                    title: "Clock",
+                                    title: "menu.clock".localized,
                                     action: {
                                         onBackToFront()
                                         close()
@@ -86,7 +86,7 @@ struct ClockSideMenu: View {
 
                                 menuItem(
                                     icon: "music.quarternote.3",
-                                    title: "Audio",
+                                    title: "menu.audio".localized,
                                     action: {
                                         onOpenAudio()
                                         close()
@@ -95,7 +95,7 @@ struct ClockSideMenu: View {
 
                                 menuItem(
                                     icon: "slider.horizontal.3",
-                                    title: "Audio Settings",
+                                    title: "menu.audioSettings".localized,
                                     action: {
                                         onOpenAudioSettings()
                                         close()
@@ -104,7 +104,7 @@ struct ClockSideMenu: View {
 
                                 menuItem(
                                     icon: "gearshape.fill",
-                                    title: "App Settings",
+                                    title: "menu.appSettings".localized,
                                     action: {
                                         onOpenAppSettings()
                                         close()
@@ -117,11 +117,11 @@ struct ClockSideMenu: View {
 
                                 // フッター（アプリ情報）
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("TsukiUsagi Clock")
+                                    Text("menu.version".localized)
                                         .dynamicFont(size: DesignTokens.SideMenuTypography.footerInfoSize, weight: DesignTokens.SideMenuTypography.footerInfoWeight)
                                         .foregroundColor(DesignTokens.SideMenuColors.textMuted)
 
-                                    Text("Version 1.0.0")
+                                    Text("menu.versionNumber".localized)
                                         .dynamicFont(size: DesignTokens.SideMenuTypography.footerInfoSize, weight: DesignTokens.SideMenuTypography.footerInfoWeight)
                                         .foregroundColor(DesignTokens.SideMenuColors.textMuted)
                                 }

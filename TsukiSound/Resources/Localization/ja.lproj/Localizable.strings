@@ -1,7 +1,67 @@
 /*
-  Localizable.strings (ja)
-  tsukiusagi-clock
-
-  Created by AI Assistant on 2025-01-14.
+  Localizable.strings (Japanese)
+  TsukiSound
 */
 
+// MARK: - Audio Settings
+"settings.audio.title" = "オーディオ設定";
+"settings.audio.routeSafety" = "経路安全";
+"settings.audio.headphoneOnly" = "ヘッドホン専用モード";
+"settings.audio.headphoneOnlyDesc" = "ヘッドホンを外すと自動で一時停止";
+"settings.audio.autoResume" = "中断後の自動再開";
+"settings.audio.autoResumeDesc" = "電話などの中断後に再生を再開";
+"settings.audio.quietBreak" = "静音ブレイク";
+"settings.audio.enableQuietBreak" = "静音ブレイクを有効化";
+"settings.audio.enableQuietBreakDesc" = "自動休憩スケジュール";
+"settings.audio.nextBreak" = "次の休憩";
+"settings.audio.playDuration" = "再生時間";
+"settings.audio.breakDuration" = "休憩時間";
+"settings.audio.volumeSafety" = "音量安全";
+"settings.audio.maxOutput" = "最大出力レベル";
+"settings.audio.maxOutputDesc" = "聴覚保護のため最大出力を制限します。デフォルト: -6.0 dB";
+"settings.audio.liveActivity" = "ライブアクティビティ";
+"settings.audio.showLiveActivity" = "ライブアクティビティを有効化";
+"settings.audio.showLiveActivityDesc" = "ロック画面とDynamic Islandに再生状態を表示";
+
+// MARK: - Audio Playback
+"audio.title" = "オーディオ";
+"audio.sound" = "サウンド";
+"audio.volume" = "音量";
+"audio.play" = "再生";
+"audio.stop" = "停止";
+"audio.status" = "ステータス";
+"audio.playing" = "再生中";
+"audio.stopped" = "停止中";
+"audio.pauseReason" = "停止理由:";
+"audio.selected" = "選択中:";
+
+// MARK: - App Settings
+"settings.app.title" = "アプリ設定";
+"settings.app.appearance" = "外観";
+"settings.app.fontStyle" = "フォントスタイル";
+
+// MARK: - Side Menu
+"menu.title" = "TsukiUsagi";
+"menu.clock" = "時計";
+"menu.audio" = "オーディオ";
+"menu.audioSettings" = "オーディオ設定";
+"menu.appSettings" = "アプリ設定";
+"menu.version" = "TsukiUsagi Clock";
+"menu.versionNumber" = "Version 1.0.0";
+
+// MARK: - Sound Presets
+"preset.jupiter" = "ジュピターの響き";
+"preset.gymnopedie" = "月明かりのジムノペディ";
+
+// MARK: - Audio Routes
+"route.headphones" = "ヘッドホン";
+"route.bluetooth" = "Bluetooth";
+"route.speaker" = "スピーカー";
+"route.unknown" = "不明";
+
+// MARK: - Font Styles
+"font.technical" = "テクニカル";
+"font.rounded" = "丸み";
+
+// MARK: - Common
+"common.minutes" = "分";

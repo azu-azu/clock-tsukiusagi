@@ -98,7 +98,7 @@ struct AudioPlaybackView: View {
                     }
                 }
             }
-            .navigationTitle("Audio")
+            .navigationTitle("audio.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
@@ -162,7 +162,7 @@ struct AudioPlaybackView: View {
 
     private var soundSelectionSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Sound")
+            Text("audio.sound".localized)
                 .dynamicFont(
                     size: DynamicTheme.AudioTestTypography.headlineSize,
                     weight: DynamicTheme.AudioTestTypography.headlineWeight
@@ -239,7 +239,7 @@ struct AudioPlaybackView: View {
             Button(action: togglePlayback) {
                 HStack {
                     Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
-                    Text(audioService.isPlaying ? "停止" : "再生")
+                    Text(audioService.isPlaying ? "audio.stop".localized : "audio.play".localized)
                 }
                 .dynamicFont(
                     size: DynamicTheme.AudioTestTypography.headlineSize,
@@ -263,7 +263,7 @@ struct AudioPlaybackView: View {
     private var volumeSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
             HStack {
-                Text("Volume")
+                Text("audio.volume".localized)
                     .dynamicFont(
                         size: DynamicTheme.AudioTestTypography.volumeLabelSize,
                         weight: DynamicTheme.AudioTestTypography.volumeLabelWeight
@@ -347,7 +347,7 @@ struct AudioPlaybackView: View {
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalSmall) {
-            Text("Status")
+            Text("audio.status".localized)
                 .dynamicFont(
                     size: DynamicTheme.AudioTestTypography.statusTitleSize,
                     weight: DynamicTheme.AudioTestTypography.statusTitleWeight
@@ -362,7 +362,7 @@ struct AudioPlaybackView: View {
                             : DesignTokens.SettingsColors.inactive
                     )
                     .frame(width: 10, height: 10)
-                Text(audioService.isPlaying ? "再生中" : "停止中")
+                Text(audioService.isPlaying ? "audio.playing".localized : "audio.stopped".localized)
                     .dynamicFont(
                         size: DynamicTheme.AudioTestTypography.statusTextSize,
                         weight: DynamicTheme.AudioTestTypography.statusTextWeight
@@ -372,7 +372,7 @@ struct AudioPlaybackView: View {
 
             if let reason = audioService.pauseReason {
                 HStack {
-                    Text("停止理由:")
+                    Text("audio.pauseReason".localized)
                         .dynamicFont(
                             size: DynamicTheme.AudioTestTypography.statusCaptionSize,
                             weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
@@ -389,7 +389,7 @@ struct AudioPlaybackView: View {
 
             // Selected source (inline)
             HStack(spacing: 4) {
-                Text("選択中:")
+                Text("audio.selected".localized)
                     .dynamicFont(
                         size: DynamicTheme.AudioTestTypography.statusCaptionSize,
                         weight: DynamicTheme.AudioTestTypography.statusCaptionWeight

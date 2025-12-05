@@ -15,14 +15,20 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
 
     public var id: String { rawValue }
 
-    /// Display name for UI (Japanese with emoji)
-    public var displayName: String {
+    /// Localization key for display name
+    private var localizationKey: String {
         switch self {
         case .jupiter:
-            return "🪐 ジュピターの響き"
+            return "preset.jupiter"
         case .moonlitGymnopedie:
-            return "🌖 月明かりのジムノペディ"
+            return "preset.gymnopedie"
         }
+    }
+
+    /// Display name for UI (localized with emoji)
+    public var displayName: String {
+        let icon = self == .jupiter ? "🪐 " : "🌖 "
+        return icon + localizationKey.localized
     }
 
     /// English title for selected display

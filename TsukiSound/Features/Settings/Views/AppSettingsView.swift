@@ -32,7 +32,7 @@ public struct AppSettingsView: View {
                     settingsContent
                 }
             }
-            .navigationTitle("App Settings")
+            .navigationTitle("settings.app.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
@@ -60,11 +60,11 @@ public struct AppSettingsView: View {
 
             // MARK: - Appearance Section
 
-            SettingsSection(title: "Appearance") {
+            SettingsSection(title: "settings.app.appearance".localized) {
                             VStack(alignment: .leading, spacing: 16) {
                                 // Font Style
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Font Style")
+                                    Text("settings.app.fontStyle".localized)
                                         .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 

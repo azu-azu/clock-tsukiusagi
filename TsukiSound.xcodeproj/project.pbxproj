@@ -299,7 +299,7 @@
 				};
 			};
 			buildConfigurationList = 32C0CBE32EA3141F008ACC87 /* Build configuration list for PBXProject "TsukiSound" */;
-			developmentRegion = en;
+			developmentRegion = ja;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,

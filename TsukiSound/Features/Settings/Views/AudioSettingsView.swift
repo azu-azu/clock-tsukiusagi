@@ -30,10 +30,10 @@ public struct AudioSettingsView: View {
                     VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
                         // MARK: - Route Safety Section
 
-                        SettingsSection(title: "Route Safety") {
+                        SettingsSection(title: "settings.audio.routeSafety".localized) {
                             SettingsToggle(
-                                title: "Headphone-Only Mode",
-                                subtitle: "Auto-pause when headphones are removed",
+                                title: "settings.audio.headphoneOnly".localized,
+                                subtitle: "settings.audio.headphoneOnlyDesc".localized,
                                 isOn: Binding(
                                     get: { settings.onlyHeadphoneOutput },
                                     set: {
@@ -44,8 +44,8 @@ public struct AudioSettingsView: View {
                             )
 
                             SettingsToggle(
-                                title: "Auto-Resume After Interruption",
-                                subtitle: "Resume playback after phone calls, etc.",
+                                title: "settings.audio.autoResume".localized,
+                                subtitle: "settings.audio.autoResumeDesc".localized,
                                 isOn: Binding(
                                     get: { settings.autoResumeAfterInterruption },
                                     set: {
@@ -58,10 +58,10 @@ public struct AudioSettingsView: View {
 
                         // MARK: - Quiet Break Section (Phase 2)
 
-                        SettingsSection(title: "Quiet Break Schedule") {
+                        SettingsSection(title: "settings.audio.quietBreak".localized) {
                             SettingsToggle(
-                                title: "Enable Quiet Breaks",
-                                subtitle: "Automatic break scheduling",
+                                title: "settings.audio.enableQuietBreak".localized,
+                                subtitle: "settings.audio.enableQuietBreakDesc".localized,
                                 isOn: Binding(
                                     get: { settings.quietBreakEnabled },
                                     set: {
@@ -73,7 +73,7 @@ public struct AudioSettingsView: View {
 
                             if settings.quietBreakEnabled {
                                 SettingsStepper(
-                                    title: "Play Duration",
+                                    title: "settings.audio.playDuration".localized,
                                     value: Binding(
                                         get: { settings.playMinutes },
                                         set: {
@@ -83,11 +83,11 @@ public struct AudioSettingsView: View {
                                     ),
                                     range: 10...120,
                                     step: 5,
-                                    unit: "min"
+                                    unit: "common.minutes".localized
                                 )
 
                                 SettingsStepper(
-                                    title: "Break Duration",
+                                    title: "settings.audio.breakDuration".localized,
                                     value: Binding(
                                         get: { settings.breakMinutes },
                                         set: {
@@ -97,13 +97,13 @@ public struct AudioSettingsView: View {
                                     ),
                                     range: 1...30,
                                     step: 1,
-                                    unit: "min"
+                                    unit: "common.minutes".localized
                                 )
 
                                 // 次の休憩時刻を表示
                                 if let nextBreak = audioService.breakScheduler.nextBreakAt {
                                     HStack {
-                                        Text("Next Break")
+                                        Text("settings.audio.nextBreak".localized)
                                             .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                             .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                                         Spacer()
@@ -118,10 +118,10 @@ public struct AudioSettingsView: View {
 
                         // MARK: - Volume Safety Section (Phase 2)
 
-                        SettingsSection(title: "Volume Safety") {
+                        SettingsSection(title: "settings.audio.volumeSafety".localized) {
                             VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalMedium) {
                                 HStack {
-                                    Text("Maximum Output Level")
+                                    Text("settings.audio.maxOutput".localized)
                                         .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
                                         .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                                     Spacer()
@@ -144,7 +144,7 @@ public struct AudioSettingsView: View {
                                 )
                                 .tint(DesignTokens.SettingsColors.accent)
 
-                                Text("Limits the maximum output volume to protect your hearing. Default: -6.0 dB")
+                                Text("settings.audio.maxOutputDesc".localized)
                                     .dynamicFont(size: DesignTokens.SettingsTypography.captionSize, weight: DesignTokens.SettingsTypography.captionWeight)
                                     .foregroundColor(DesignTokens.SettingsColors.textQuaternary)
                             }
@@ -153,10 +153,10 @@ public struct AudioSettingsView: View {
 
                         // MARK: - Live Activity (Phase 3)
                         if #available(iOS 16.1, *) {
-                            SettingsSection(title: "Live Activity") {
+                            SettingsSection(title: "settings.audio.liveActivity".localized) {
                                 SettingsToggle(
-                                    title: "Enable Live Activity",
-                                    subtitle: "Show playback status on Lock Screen and Dynamic Island",
+                                    title: "settings.audio.showLiveActivity".localized,
+                                    subtitle: "settings.audio.showLiveActivityDesc".localized,
                                     isOn: Binding(
                                         get: { settings.liveActivityEnabled },
                                         set: {
@@ -175,7 +175,7 @@ public struct AudioSettingsView: View {
                     .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
                 }
             }
-            .navigationTitle("Audio Settings")
+            .navigationTitle("settings.audio.title".localized)
             .navigationBarTitleDisplayMode(.inline)
             .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)

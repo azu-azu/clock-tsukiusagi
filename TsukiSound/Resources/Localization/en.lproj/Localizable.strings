@@ -1,0 +1,67 @@
+/*
+  Localizable.strings (English)
+  TsukiSound
+*/
+
+// MARK: - Audio Settings
+"settings.audio.title" = "Audio Settings";
+"settings.audio.routeSafety" = "Route Safety";
+"settings.audio.headphoneOnly" = "Headphone-Only Mode";
+"settings.audio.headphoneOnlyDesc" = "Auto-pause when headphones are removed";
+"settings.audio.autoResume" = "Auto-Resume After Interruption";
+"settings.audio.autoResumeDesc" = "Resume playback after phone calls, etc.";
+"settings.audio.quietBreak" = "Quiet Break Schedule";
+"settings.audio.enableQuietBreak" = "Enable Quiet Breaks";
+"settings.audio.enableQuietBreakDesc" = "Automatic break scheduling";
+"settings.audio.nextBreak" = "Next Break";
+"settings.audio.playDuration" = "Play Duration";
+"settings.audio.breakDuration" = "Break Duration";
+"settings.audio.volumeSafety" = "Volume Safety";
+"settings.audio.maxOutput" = "Maximum Output Level";
+"settings.audio.maxOutputDesc" = "Limits the maximum output volume to protect your hearing. Default: -6.0 dB";
+"settings.audio.liveActivity" = "Live Activity";
+"settings.audio.showLiveActivity" = "Enable Live Activity";
+"settings.audio.showLiveActivityDesc" = "Show playback status on Lock Screen and Dynamic Island";
+
+// MARK: - Audio Playback
+"audio.title" = "Audio";
+"audio.sound" = "Sound";
+"audio.volume" = "Volume";
+"audio.play" = "Play";
+"audio.stop" = "Stop";
+"audio.status" = "Status";
+"audio.playing" = "Playing";
+"audio.stopped" = "Stopped";
+"audio.pauseReason" = "Pause Reason:";
+"audio.selected" = "Selected:";
+
+// MARK: - App Settings
+"settings.app.title" = "App Settings";
+"settings.app.appearance" = "Appearance";
+"settings.app.fontStyle" = "Font Style";
+
+// MARK: - Side Menu
+"menu.title" = "TsukiUsagi";
+"menu.clock" = "Clock";
+"menu.audio" = "Audio";
+"menu.audioSettings" = "Audio Settings";
+"menu.appSettings" = "App Settings";
+"menu.version" = "TsukiUsagi Clock";
+"menu.versionNumber" = "Version 1.0.0";
+
+// MARK: - Sound Presets
+"preset.jupiter" = "Jupiter (Holst)";
+"preset.gymnopedie" = "Moonlit Gymnopedie";
+
+// MARK: - Audio Routes
+"route.headphones" = "Headphones";
+"route.bluetooth" = "Bluetooth";
+"route.speaker" = "Speaker";
+"route.unknown" = "Unknown";
+
+// MARK: - Font Styles
+"font.technical" = "Technical";
+"font.rounded" = "Rounded";
+
+// MARK: - Common
+"common.minutes" = "min";

@@ -26,14 +26,19 @@ public enum AudioOutputRoute: Equatable {
         }
     }
 
-    /// 表示名
-    public var displayName: String {
+    /// Localization key
+    private var localizationKey: String {
         switch self {
-        case .headphones: return "Headphones"
-        case .bluetooth: return "Bluetooth"
-        case .speaker: return "Speaker"
-        case .unknown: return "Unknown"
+        case .headphones: return "route.headphones"
+        case .bluetooth: return "route.bluetooth"
+        case .speaker: return "route.speaker"
+        case .unknown: return "route.unknown"
         }
+    }
+
+    /// 表示名（ローカライズ済み）
+    public var displayName: String {
+        localizationKey.localized
     }
 }
 
