@@ -1,14 +1,14 @@
 # RCA: オーディオ中断時の音声バグ
 
-**Date**: 2025-12-05
-**Status**: Resolved
-**Severity**: Critical
+- **Date**: 2025-12-05
+- **Status**: Resolved
+- **Severity**: Critical
 
 ---
 
 ## 問題の説明
 
-**症状**: 再生中に別アプリを開いたりすると、音が止まったり、ブツっとなったり雑音が入ったりバグる
+**症状**: 再生中に別アプリを開いたりすると、音が止まる / 瞬間的なノイズが入る / 予期しない無音状態になる などの異常挙動が発生する
 
 **再現条件**:
 - TsukiSoundで音声再生中
@@ -278,7 +278,7 @@ Playback層    → AudioService 経由で Engine/Player に委譲
 
 ---
 
-## 教訓
+## 教訓 / Lessons Learned
 
 1. **iOSオーディオには3つの独立したライフサイクルがある**
    - Interruption / Session Lifecycle / Playback Graph
