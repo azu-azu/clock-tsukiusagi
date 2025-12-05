@@ -238,7 +238,7 @@ public func resume() throws {
     TrackPlayer （再生操作のみ）
 ```
 
-**原則**: システム通知を受け取って判断するのは `AudioService` のみ。下位コンポーネントは命令を実行するだけ。
+**Key Rule: Notificationは下層に直接触れない。制御は必ずAudioServiceを経由。**
 
 ---
 
