@@ -215,6 +215,69 @@ public func resume() throws {
 
 ---
 
+## 責任境界（Who Owns What）
+
+**このプロジェクトにおけるオーディオコンポーネントの責務分担を明文化する。**
+
+| コンポーネント | 責務 | やってはいけないこと |
+|---------------|------|---------------------|
+| **AudioService** | State + Interruption + Session lifecycle owner | なし（全責任を持つ） |
+| **LocalAudioEngine** | Engine start/stop/volume のみ | システム通知の処理、状態管理 |
+| **AudioSessionManager** | Session activation のみ | 再生ロジック、中断判断 |
+| **TrackPlayer** | ファイル再生のみ | セッション管理、中断処理 |
+
+### 責務の流れ
+
+```
+[iOS System Notification]
+         ↓
+    AudioService （判断・調整）
+         ↓
+    LocalAudioEngine （エンジン操作のみ）
+         ↓
+    TrackPlayer （再生操作のみ）
+```
+
+**原則**: システム通知を受け取って判断するのは `AudioService` のみ。下位コンポーネントは命令を実行するだけ。
+
+---
+
+## 再発防止策（Preventive Action）
+
+### コードレビュー観点
+
+| チェック項目 | 理由 |
+|-------------|------|
+| `interruptionNotification` の監視は `AudioService` のみか？ | 二重監視による競合防止 |
+| `routeChangeNotification` の監視は `AudioService` のみか？ | レイヤー混在防止 |
+| 新規コンポーネントが `AVAudioSession` を直接操作していないか？ | 責任境界の維持 |
+| `LocalAudioEngine` に状態判断ロジックがないか？ | 純粋なエンジン操作に限定 |
+
+### 新規開発時のルール
+
+1. **Interruptionを監視していいのは `AudioService` のみ**
+   - 他のコンポーネントで監視が必要に見えたら、設計を見直す
+
+2. **`LocalAudioEngine` はステートレス**
+   - start/stop/setVolume のみ
+   - 「いつ止めるべきか」の判断はしない
+
+3. **routeChanged は別レイヤー、混ぜるな危険**
+   - Interruption と Route Change は異なるイベント
+   - 同じハンドラで処理しない
+
+### 将来の拡張時の注意
+
+AirPlay, SharePlay, Spatial Audio 等を追加する際も、この3層構造を維持する：
+
+```
+Interruption層 → AudioService で一元処理
+Session層     → AudioService 経由で SessionManager に委譲
+Playback層    → AudioService 経由で Engine/Player に委譲
+```
+
+---
+
 ## 教訓
 
 1. **iOSオーディオには3つの独立したライフサイクルがある**
@@ -228,6 +291,10 @@ public func resume() throws {
 3. **エンジンとノードは別ライフサイクル**
    - `engine.start()` だけでは `playerNode` は再開しない
    - 明示的に `node.play()` を呼ぶ必要がある
+
+4. **ソフトウェアの敵はバグではなく「知らない人」**
+   - 責任境界を明文化しないと、後任が壊す
+   - RCAは「修正記録」ではなく「防波堤」として書く
 
 ---
 
