@@ -290,6 +290,18 @@ def pure_sine(freq, t, phase=0):
     """Generate pure sine wave."""
     return np.sin(2 * np.pi * freq * t + phase)
 
+def organ_tone(freq, t):
+    """Generate organ-like tone with harmonics (same as Jupiter)."""
+    harmonics = [1.0, 2.0, 3.0, 4.0, 6.0]
+    amps = [1.0, 0.45, 0.25, 0.12, 0.03]
+
+    signal = np.zeros_like(t)
+    for h, a in zip(harmonics, amps):
+        signal += a * np.sin(2 * np.pi * freq * h * t)
+
+    # Normalize by sum of amplitudes
+    return signal / sum(amps)
+
 def soft_clip(signal, threshold=0.9):
     """Soft clip to prevent harsh distortion."""
     return np.tanh(signal / threshold) * threshold
@@ -420,12 +432,9 @@ def generate_melody(duration):
                 fade_multiplier = 0.3 + 0.7 * (1.0 + np.cos(fade_progress * np.pi)) / 2.0
                 env[fade_mask] *= fade_multiplier
 
-        # Detuned sine layers
+        # Organ tone (Jupiter-style harmonics)
         t_note = t_global[mask]
-        v1 = pure_sine(note.freq, t_note)
-        v2 = pure_sine(note.freq + DETUNE_HZ, t_note)
-        v3 = pure_sine(note.freq - DETUNE_HZ, t_note)
-        layered = (v1 + v2 + v3) / 3.0
+        layered = organ_tone(note.freq, t_note)
 
         signal[mask] += layered * env * effective_gain
 
@@ -452,13 +461,10 @@ def generate_bass(duration):
         env = smooth_envelope(t_local, note_dur, BASS_ATTACK, BASS_DECAY)
 
         t_note = t_global[mask]
-        # Fundamental frequency
-        v_fundamental = pure_sine(data['bass_freq'], t_note)
-        # Octave overtone for definition (helps bass cut through reverb)
-        v_octave = pure_sine(data['bass_freq'] * 2, t_note)
+        # Organ tone (Jupiter-style harmonics)
+        bass_signal = organ_tone(data['bass_freq'], t_note)
 
-        bass_signal = v_fundamental * BASS_GAIN + v_octave * BASS_OCTAVE_GAIN
-        signal[mask] += bass_signal * env
+        signal[mask] += bass_signal * env * BASS_GAIN
 
     return signal
 
@@ -483,14 +489,11 @@ def generate_chords(duration):
         t_local = t_global[mask] - chord_start
         env = smooth_envelope(t_local, chord_dur, CHORD_ATTACK, CHORD_DECAY)
 
-        # Detuned chord layers
+        # Organ tone chords (Jupiter-style harmonics)
         t_note = t_global[mask]
         chord_val = np.zeros(len(t_note))
         for freq in data['chord_freqs']:
-            v1 = pure_sine(freq, t_note)
-            v2 = pure_sine(freq + DETUNE_HZ, t_note)
-            v3 = pure_sine(freq - DETUNE_HZ, t_note)
-            chord_val += (v1 + v2 + v3) / 3.0
+            chord_val += organ_tone(freq, t_note)
         chord_val /= len(data['chord_freqs'])
 
         signal[mask] += chord_val * env * CHORD_GAIN
