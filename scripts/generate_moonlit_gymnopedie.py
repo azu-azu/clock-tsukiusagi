@@ -75,9 +75,10 @@ MELODY_ATTACK = 0.15
 MELODY_DECAY = 4.5
 MELODY_GAIN = 0.28
 
-BASS_ATTACK = 0.20
-BASS_DECAY = 3.5
-BASS_GAIN = 0.16
+BASS_ATTACK = 0.15    # Slightly shorter attack for clearer articulation
+BASS_DECAY = 3.2      # Balanced decay
+BASS_GAIN = 0.18      # Modest increase (was 0.16)
+BASS_OCTAVE_GAIN = 0.04  # Subtle octave overtone for clarity without overpowering
 
 CHORD_ATTACK = 0.08
 CHORD_DECAY = 2.5
@@ -431,7 +432,7 @@ def generate_melody(duration):
     return signal
 
 def generate_bass(duration):
-    """Generate bass layer."""
+    """Generate bass layer with octave overtone for clarity."""
     num_samples = int(duration * SAMPLE_RATE)
     signal = np.zeros(num_samples, dtype=np.float64)
     t_global = np.linspace(0, duration, num_samples, endpoint=False)
@@ -451,8 +452,13 @@ def generate_bass(duration):
         env = smooth_envelope(t_local, note_dur, BASS_ATTACK, BASS_DECAY)
 
         t_note = t_global[mask]
-        v = pure_sine(data['bass_freq'], t_note)
-        signal[mask] += v * env * BASS_GAIN
+        # Fundamental frequency
+        v_fundamental = pure_sine(data['bass_freq'], t_note)
+        # Octave overtone for definition (helps bass cut through reverb)
+        v_octave = pure_sine(data['bass_freq'] * 2, t_note)
+
+        bass_signal = v_fundamental * BASS_GAIN + v_octave * BASS_OCTAVE_GAIN
+        signal[mask] += bass_signal * env
 
     return signal
 
