@@ -112,29 +112,21 @@ public final class LocalAudioEngine {
     // MARK: - Private Methods
 
     private func setupSessionCallbacks() {
-        // 中断開始時の処理
-        sessionManager.onInterruptionBegan = { [weak self] in
-            self?.stop()
-        }
-
-        // 中断終了時の処理
-        sessionManager.onInterruptionEnded = { [weak self] shouldResume in
-            guard let self = self else { return }
-
-            // ユーザー設定で自動再開が有効 かつ システムが再開を推奨している場合のみ再開
-            if self.settings.isAutoResumeEnabled && shouldResume {
-                try? self.start()
-            }
-        }
-
-        // ルート変化時の処理
-        sessionManager.onRouteChanged = { [weak self] reason in
-            guard let self = self else { return }
-
-            // イヤホン抜けの場合
-            if reason == .oldDeviceUnavailable && self.settings.stopOnHeadphoneDisconnect {
-                self.stop()
-            }
-        }
+        // Architecture Decision: Interruption責務の一元化
+        //
+        // 中断ハンドリング（Interruption）、セッションライフサイクル（Session Lifecycle）、
+        // 再生グラフ管理（Playback Graph）は AudioService で一元管理する。
+        //
+        // LocalAudioEngine は純粋にエンジン操作（start/stop/setVolume）のみを責務とし、
+        // 中断イベントに対する判断や状態管理は行わない。
+        //
+        // これにより：
+        // - AudioService.isPlaying と実際のエンジン状態の不整合を防止
+        // - 中断イベントの二重処理を防止
+        // - 将来の拡張（AirPlay, SharePlay, Spatial Audio等）で責務が混乱しない
+        //
+        sessionManager.onInterruptionBegan = nil
+        sessionManager.onInterruptionEnded = nil
+        sessionManager.onRouteChanged = nil
     }
 }

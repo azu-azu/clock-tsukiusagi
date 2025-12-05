@@ -438,6 +438,14 @@ public final class AudioService: ObservableObject {
             throw AudioError.engineStartFailed(error)
         }
 
+        // Playback Graph: TrackPlayerを再開
+        //
+        // エンジンとノードは別ライフサイクル。
+        // engine.start() だけでは playerNode の再生は再開されない。
+        // 明示的に再生を開始する必要がある。
+        //
+        startTrackPlayerIfNeeded()
+
         // フェードイン
         fadeIn(duration: 0.5)
 
@@ -590,10 +598,17 @@ public final class AudioService: ObservableObject {
                     self.pause(reason: .interruption)
 
                 case .ended:
-                    // 自動再開するかチェック
+                    // Session Lifecycle: 中断終了後のセッション再アクティベート
+                    //
+                    // InterruptionイベントはInterruptionレイヤーの責務だが、
+                    // その「結果」としてセッション権限が変わる。
+                    // これはSession Lifecycleレイヤーの問題なので明示的に処理する。
+                    //
                     if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
                         let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
                         if options.contains(.shouldResume) && self.settings.autoResumeAfterInterruption {
+                            // iOSから権限が戻った → 明示的にセッションを再アクティベート
+                            try? AVAudioSession.sharedInstance().setActive(true)
                             try? self.resume()
                         }
                     }

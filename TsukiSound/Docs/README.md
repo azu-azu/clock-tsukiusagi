@@ -123,6 +123,7 @@
 
 ### 🔧 トラブルシューティング・問題分析
 - [`report/report-audio-distortion-noise.md`](./report/report-audio-distortion-noise.md) - AVAudioUnitDistortion雑音問題RCA（最重要）★CRITICAL
+- [`report/report-audio-interruption-rca.md`](./report/report-audio-interruption-rca.md) - オーディオ中断時の音声バグRCA（3レイヤー設計）
 - [`report/report-audio-no-sound-silent-switch.md`](./report/report-audio-no-sound-silent-switch.md) - オーディオ無音問題（サイレントスイッチ）RCA
 - [`report/report-audio-sample-rate-mismatch.md`](./report/report-audio-sample-rate-mismatch.md) - サンプルレート不一致によるノイズ問題RCA（パチパチ音）
 - [`report/report-jupiter-melody-optimization.md`](./report/report-jupiter-melody-optimization.md) - Jupiter Melody パフォーマンス最適化
