@@ -17,7 +17,7 @@ import numpy as np
 from scipy.io import wavfile
 import os
 
-from audio_utils import apply_loop_crossfade
+from audio_utils import apply_silence_padding
 
 # Constants
 SAMPLE_RATE = 48000
@@ -529,15 +529,18 @@ def generate_gymnopedie():
     # Final soft limiting
     processed = soft_clip(processed * 1.05, threshold=0.95)
 
-    # Apply crossfade for seamless looping (100ms)
-    crossfaded = apply_loop_crossfade(processed, crossfade_duration=0.1)
+    # Apply silence padding for seamless looping
+    # Fade-in at start (0.8s) and fade-out at end (1.5s)
+    # This ensures loop boundary is silence-to-silence, eliminating pops/clicks
+    print(f"  Applying silence padding (fade-in: 0.8s, fade-out: 1.5s)...")
+    padded = apply_silence_padding(processed, fade_in_duration=0.8, fade_out_duration=1.5)
 
     # Normalize
-    max_val = np.max(np.abs(crossfaded))
+    max_val = np.max(np.abs(padded))
     if max_val > 0:
-        crossfaded = crossfaded / max_val * 0.9
+        padded = padded / max_val * 0.9
 
-    return crossfaded.astype(np.float32)
+    return padded.astype(np.float32)
 
 # ============================================================================
 # File Output
