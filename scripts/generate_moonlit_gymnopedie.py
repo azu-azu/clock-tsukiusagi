@@ -31,7 +31,7 @@ CYCLE_DURATION = TOTAL_BARS * BAR_DURATION
 
 # Structure Constants
 CLIMAX_BAR = 39
-DETUNE_HZ = 0.2
+DETUNE_HZ = 0.0  # Disabled: detuning creates audible beating/buzzing
 
 # ============================================================================
 # Frequency Constants (D Major: F#, C#)
@@ -515,25 +515,30 @@ def generate_gymnopedie():
     mixed = melody + bass + chords
     mixed = soft_clip(mixed)
 
-    # Apply reverb
-    print(f"  Applying Schroeder reverb...")
-    reverb = SchroederReverb(
-        room_size=2.2,      # Large, open space
-        damping=0.25,       # Less damping for brighter sound
-        decay=0.78,         # Slightly shorter for clarity
-        mix=0.35,           # More dry signal
-        predelay=0.030      # Spacious predelay
-    )
-    processed = reverb.process(mixed)
+    # Apply reverb (optional - can be disabled for cleaner sound)
+    USE_REVERB = True  # Enabled: reverb provides essential ambiance
+    if USE_REVERB:
+        print(f"  Applying Schroeder reverb...")
+        reverb = SchroederReverb(
+            room_size=1.8,      # Smaller room for tighter sound
+            damping=0.50,       # More damping for cleaner highs
+            decay=0.55,         # Short decay for clarity
+            mix=0.20,           # Mostly dry signal
+            predelay=0.020      # Short predelay
+        )
+        processed = reverb.process(mixed)
+    else:
+        print(f"  Skipping reverb (dry signal)...")
+        processed = mixed
 
     # Final soft limiting
     processed = soft_clip(processed * 1.05, threshold=0.95)
 
     # Apply silence padding for seamless looping
-    # Fade-in at start (0.8s) and fade-out at end (1.5s)
-    # This ensures loop boundary is silence-to-silence, eliminating pops/clicks
-    print(f"  Applying silence padding (fade-in: 0.8s, fade-out: 1.5s)...")
-    padded = apply_silence_padding(processed, fade_in_duration=0.8, fade_out_duration=1.5)
+    # Fade-in at start (0.8s) and fade-out at end (3.0s)
+    # Longer fade-out ensures reverb tail fully decays to silence before loop restart
+    print(f"  Applying silence padding (fade-in: 0.8s, fade-out: 3.0s)...")
+    padded = apply_silence_padding(processed, fade_in_duration=0.8, fade_out_duration=3.0)
 
     # Normalize
     max_val = np.max(np.abs(padded))
