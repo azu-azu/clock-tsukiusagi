@@ -5,6 +5,7 @@ struct NumberClockView: View {
     // MARK: - Constants
     static let markerColor = DesignTokens.CommonTextColors.secondary
     static let handColor = DesignTokens.CommonTextColors.primary
+    static let secondHandColor = DesignTokens.ClockColors.captionBlue
     static let centerCircleColor = DesignTokens.CommonTextColors.primary
 
     var body: some View {
@@ -68,6 +69,7 @@ private struct NumberClockFace: View {
                     )
                 }
 
+                // 時針・分針の描画
                 func drawHand(angle: Angle, length: CGFloat, width: CGFloat, alpha: Double) {
                     var path = Path()
                     path.move(to: center)
@@ -81,9 +83,23 @@ private struct NumberClockFace: View {
                     )
                 }
 
+                // 秒針の描画（別色・薄め）
+                func drawSecondHand(angle: Angle, length: CGFloat, width: CGFloat) {
+                    var path = Path()
+                    path.move(to: center)
+                    path.addLine(to: endPoint(angle, length))
+                    let style = StrokeStyle(lineWidth: width, lineCap: .round)
+
+                    context.stroke(
+                        path,
+                        with: .color(NumberClockView.secondHandColor.opacity(0.7)),
+                        style: style
+                    )
+                }
+
                 drawHand(angle: hourAngle, length: radius * 0.55, width: 6, alpha: 0.95)
-                drawHand(angle: minAngle,  length: radius * 0.78, width: 5, alpha: 0.95)
-                drawHand(angle: secAngle,  length: radius * 0.88, width: 2, alpha: 0.65)
+                drawHand(angle: minAngle, length: radius * 0.78, width: 5, alpha: 0.95)
+                drawSecondHand(angle: secAngle, length: radius * 0.55, width: 2)
 
                 // 中心点
                 let dot = Path(ellipseIn: CGRect(x: center.x - 4, y: center.y - 4, width: 8, height: 8))
