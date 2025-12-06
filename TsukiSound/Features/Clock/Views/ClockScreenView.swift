@@ -385,7 +385,6 @@ final class ClockScreenVM: ObservableObject {
                 dateStyle: .short,
                 timeStyle: .none
             )
-            .replacingOccurrences(of: "/", with: "/")
         )
             .font(.headline).foregroundColor(.white)
 

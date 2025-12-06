@@ -1,5 +1,4 @@
 import SwiftUI
-import Foundation
 
 struct NumberClockView: View {
     // MARK: - Constants
