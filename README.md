@@ -157,7 +157,7 @@ If you encounter issues or have questions, please open a ticket in
 
 ## 🔒 Privacy Policy
 
-[Privacy Policy](https://github.com/azu-azu/tsuki-sound/blob/main/privacy.html)
+https://github.com/azu-azu/tsuki-sound/blob/main/privacy.html
 
 ---
 
