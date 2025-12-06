@@ -32,7 +32,12 @@ struct ClockScreenView: View {
 
     // MARK: - Analog Clock View (bunny/number mode)
     @ViewBuilder
-    private var analogClockView: some View {
+    private func analogClockView(in geometry: GeometryProxy) -> some View {
+        let isLandscape = geometry.size.width > geometry.size.height
+        let clockSize = isLandscape
+            ? min(geometry.size.height * 0.85, geometry.size.width * 0.5)
+            : min(geometry.size.width * 0.85, geometry.size.height * 0.5)
+
         Group {
             switch displayMode {
             case .bunny:
@@ -43,8 +48,10 @@ struct ClockScreenView: View {
                 EmptyView()
             }
         }
-        .padding(.top, 140)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .frame(width: clockSize, height: clockSize)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: isLandscape ? .center : .top)
+        .offset(y: isLandscape ? -20 : 0)
+        .padding(.top, isLandscape ? 0 : 100)
         .accessibilityLabel("Current time")
     }
 
@@ -52,87 +59,93 @@ struct ClockScreenView: View {
 		TimelineView(.periodic(from: .now, by: 1)) { context in
             let now = fixedDate ?? context.date
             let snapshot = vm.snapshot(at: now)
-            ZStack {
-                // 背景（朝/昼/夕/夜でフェード）
-                LinearGradient(
-                    colors: [snapshot.skyTone.gradStart, snapshot.skyTone.gradEnd],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-
-                // 月（UTC位相は内部で計算）— bunny/numberモード時は非表示
-                if displayMode != .bunny && displayMode != .number {
-                    MoonGlyph(
-                        date: now,
-                        tone: snapshot.skyTone
+            GeometryReader { geometry in
+                let isLandscape = geometry.size.width > geometry.size.height
+                ZStack {
+                    // 背景（朝/昼/夕/夜でフェード）
+                    LinearGradient(
+                        colors: [snapshot.skyTone.gradStart, snapshot.skyTone.gradEnd],
+                        startPoint: .top,
+                        endPoint: .bottom
                     )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityHidden(true)
-                }
+                    .ignoresSafeArea()
 
-                // bunny/numberモードのアナログ時計（共通化）
-                if displayMode == .bunny || displayMode == .number {
-                    analogClockView
-                }
-
-                // 時刻 + 一言（bunny/numberモード以外）または キャプションのみ（bunny/numberモード）
-                VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
-                    // 時刻表示（bunny/numberモード以外のみ）
+                    // 月（UTC位相は内部で計算）— bunny/numberモード時は非表示
                     if displayMode != .bunny && displayMode != .number {
-                        Group {
-                            switch displayMode {
-                            case .normal:
-                                let timeText = Text(formatter.string(from: snapshot.time))
-                                    .font(.system(size: Self.clockFontSize, weight: .semibold, design: .rounded))
-                                    .monospacedDigit()
-                                    .foregroundStyle(DesignTokens.ClockColors.textPrimary)
-                                timeText
-
-                            case .dotMatrix:
-                                DotMatrixClockView(
-                                    timeString: formatter.string(from: snapshot.time),
-                                    fontSize: Self.clockFontSize,
-                                    fontWeight: .semibold,
-                                    fontDesign: .monospaced,
-                                    dotSize: 2,
-                                    dotSpacing: 2,
-                                    color: DesignTokens.ClockColors.textPrimary,
-                                    enableGlow: true
-                                )
-
-                            case .sevenSeg:
-                                SevenSegDotClockView(
-                                    targetHeight: Self.sevenSegHeight,
-                                    formatter: formatter,
-                                    textColor: DesignTokens.ClockColors.textPrimary
-                                )
-                                .offset(y: -8)
-
-                            case .bunny:
-                                EmptyView()
-
-                            case .number:
-                                EmptyView()
-                            }
-                        }
-                        .accessibilityLabel("Current time")
+                        MoonGlyph(
+                            date: now,
+                            tone: snapshot.skyTone
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .offset(y: -30)
+                        .accessibilityHidden(true)
                     }
 
-                    // キャプション（全モード共通）
-                    Text(snapshot.caption)
-                        .font(
-                            .system(
-                                size: DesignTokens.ClockTypography.captionFontSize,
-                                weight: .regular,
-                                design: .serif
-                            )
-                        )
-                        .foregroundStyle(DesignTokens.ClockColors.captionBlue)
-                        .accessibilityLabel("Caption")
+                    // bunny/numberモードのアナログ時計（共通化）
+                    if displayMode == .bunny || displayMode == .number {
+                        analogClockView(in: geometry)
+                    }
+
+                    // 時刻 + 一言（bunny/numberモード以外）または キャプションのみ（bunny/numberモード）
+                    VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
+                        // 時刻表示（bunny/numberモード以外のみ）
+                        if displayMode != .bunny && displayMode != .number {
+                            Group {
+                                switch displayMode {
+                                case .normal:
+                                    let timeText = Text(formatter.string(from: snapshot.time))
+                                        .font(.system(size: Self.clockFontSize, weight: .semibold, design: .rounded))
+                                        .monospacedDigit()
+                                        .foregroundStyle(DesignTokens.ClockColors.textPrimary)
+                                    timeText
+
+                                case .dotMatrix:
+                                    DotMatrixClockView(
+                                        timeString: formatter.string(from: snapshot.time),
+                                        fontSize: Self.clockFontSize,
+                                        fontWeight: .semibold,
+                                        fontDesign: .monospaced,
+                                        dotSize: 2,
+                                        dotSpacing: 2,
+                                        color: DesignTokens.ClockColors.textPrimary,
+                                        enableGlow: true
+                                    )
+
+                                case .sevenSeg:
+                                    SevenSegDotClockView(
+                                        targetHeight: Self.sevenSegHeight,
+                                        formatter: formatter,
+                                        textColor: DesignTokens.ClockColors.textPrimary
+                                    )
+                                    .offset(y: -8)
+
+                                case .bunny:
+                                    EmptyView()
+
+                                case .number:
+                                    EmptyView()
+                                }
+                            }
+                            .accessibilityLabel("Current time")
+                        }
+
+                        // キャプション（全モード共通）— 横向き時はアナログ時計モードで非表示
+                        if !(isLandscape && (displayMode == .bunny || displayMode == .number)) {
+                            Text(snapshot.caption)
+                                .font(
+                                    .system(
+                                        size: DesignTokens.ClockTypography.captionFontSize,
+                                        weight: .regular,
+                                        design: .serif
+                                    )
+                                )
+                                .foregroundStyle(DesignTokens.ClockColors.captionBlue)
+                                .accessibilityLabel("Caption")
+                        }
+                    }
+                    .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
                 }
-                .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
-                .frame(maxHeight: .infinity, alignment: .bottom)
             }
             .animation(.easeInOut(duration: 0.6), value: snapshot.skyTone) // 時間帯フェード
             // タップ範囲を画面中央部に限定（上部ナビバー領域を除外）
