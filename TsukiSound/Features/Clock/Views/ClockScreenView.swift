@@ -13,14 +13,15 @@ struct ClockScreenView: View {
     private static let clockFontSize: CGFloat = DesignTokens.ClockTypography.clockFontSize
     private static let sevenSegHeight: CGFloat = DesignTokens.ClockTypography.sevenSegHeight
 
-    @State private var displayMode: ClockDisplayMode = .dotMatrix      // 表示モード切り替えフラグ
+    @Binding var displayMode: ClockDisplayMode
     @StateObject private var vm = ClockScreenVM()
     @State private var use24HourFormat: Bool = true  // 24時間表記切り替えフラグ
 
     // DEBUG用途の固定日時（nilの場合は通常通り現在時刻）
     private let fixedDate: Date?
 
-    init(fixedDate: Date? = nil) {
+    init(displayMode: Binding<ClockDisplayMode>, fixedDate: Date? = nil) {
+        self._displayMode = displayMode
         self.fixedDate = fixedDate
     }
 
@@ -28,6 +29,40 @@ struct ClockScreenView: View {
         let f = DateFormatter()
         f.dateFormat = use24HourFormat ? "H:mm" : "h:mm" // 24時間表記 or 12時間表記
         return f
+    }
+
+    // MARK: - Digital Clock Content
+    @ViewBuilder
+    private func digitalClockContent(snapshot: ClockScreenVM.Snapshot) -> some View {
+        switch displayMode {
+        case .normal:
+            Text(formatter.string(from: snapshot.time))
+                .font(.system(size: Self.clockFontSize, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(DesignTokens.ClockColors.textPrimary)
+
+        case .dotMatrix:
+            DotMatrixClockView(
+                timeString: formatter.string(from: snapshot.time),
+                fontSize: Self.clockFontSize,
+                fontWeight: .semibold,
+                fontDesign: .monospaced,
+                dotSize: 2,
+                dotSpacing: 2,
+                color: DesignTokens.ClockColors.textPrimary,
+                enableGlow: true
+            )
+
+        case .sevenSeg:
+            SevenSegDotClockView(
+                targetHeight: Self.sevenSegHeight,
+                formatter: formatter,
+                textColor: DesignTokens.ClockColors.textPrimary
+            )
+
+        case .bunny, .number:
+            EmptyView()
+        }
     }
 
     // MARK: - Analog Clock View (bunny/number mode)
@@ -61,6 +96,7 @@ struct ClockScreenView: View {
             let snapshot = vm.snapshot(at: now)
             GeometryReader { geometry in
                 let isLandscape = geometry.size.width > geometry.size.height
+                let isDigitalMode = displayMode != .bunny && displayMode != .number
                 ZStack {
                     // 背景（朝/昼/夕/夜でフェード）
                     LinearGradient(
@@ -70,81 +106,82 @@ struct ClockScreenView: View {
                     )
                     .ignoresSafeArea()
 
-                    // 月（UTC位相は内部で計算）— bunny/numberモード時は非表示
-                    if displayMode != .bunny && displayMode != .number {
-                        MoonGlyph(
-                            date: now,
-                            tone: snapshot.skyTone
-                        )
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .offset(y: -30)
-                        .accessibilityHidden(true)
-                    }
+                    // 横向き＋デジタルモード: 左に月、右に時計
+                    if isLandscape && isDigitalMode {
+                        HStack(spacing: 0) {
+                            // 左側: 月
+                            MoonGlyph(
+                                date: now,
+                                tone: snapshot.skyTone
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .accessibilityHidden(true)
 
-                    // bunny/numberモードのアナログ時計（共通化）
-                    if displayMode == .bunny || displayMode == .number {
-                        analogClockView(in: geometry)
-                    }
+                            // 右側: 時計 + キャプション
+                            VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
+                                digitalClockContent(snapshot: snapshot)
+                                    .frame(height: Self.clockFontSize)
+                                    .accessibilityLabel("Current time")
 
-                    // 時刻 + 一言（bunny/numberモード以外）または キャプションのみ（bunny/numberモード）
-                    VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
-                        // 時刻表示（bunny/numberモード以外のみ）
-                        if displayMode != .bunny && displayMode != .number {
-                            Group {
-                                switch displayMode {
-                                case .normal:
-                                    let timeText = Text(formatter.string(from: snapshot.time))
-                                        .font(.system(size: Self.clockFontSize, weight: .semibold, design: .rounded))
-                                        .monospacedDigit()
-                                        .foregroundStyle(DesignTokens.ClockColors.textPrimary)
-                                    timeText
-
-                                case .dotMatrix:
-                                    DotMatrixClockView(
-                                        timeString: formatter.string(from: snapshot.time),
-                                        fontSize: Self.clockFontSize,
-                                        fontWeight: .semibold,
-                                        fontDesign: .monospaced,
-                                        dotSize: 2,
-                                        dotSpacing: 2,
-                                        color: DesignTokens.ClockColors.textPrimary,
-                                        enableGlow: true
+                                Text(snapshot.caption)
+                                    .font(
+                                        .system(
+                                            size: DesignTokens.ClockTypography.captionFontSize,
+                                            weight: .regular,
+                                            design: .serif
+                                        )
                                     )
-
-                                case .sevenSeg:
-                                    SevenSegDotClockView(
-                                        targetHeight: Self.sevenSegHeight,
-                                        formatter: formatter,
-                                        textColor: DesignTokens.ClockColors.textPrimary
-                                    )
-                                    .offset(y: -8)
-
-                                case .bunny:
-                                    EmptyView()
-
-                                case .number:
-                                    EmptyView()
-                                }
+                                    .foregroundStyle(DesignTokens.ClockColors.captionBlue)
+                                    .accessibilityLabel("Caption")
                             }
-                            .accessibilityLabel("Current time")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
+                    } else {
+                        // 縦向き or アナログモード: 従来のレイアウト
+
+                        // 月（UTC位相は内部で計算）— bunny/numberモード時は非表示
+                        if isDigitalMode {
+                            MoonGlyph(
+                                date: now,
+                                tone: snapshot.skyTone
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .offset(y: -30)
+                            .accessibilityHidden(true)
                         }
 
-                        // キャプション（全モード共通）— 横向き時はアナログ時計モードで非表示
-                        if !(isLandscape && (displayMode == .bunny || displayMode == .number)) {
-                            Text(snapshot.caption)
-                                .font(
-                                    .system(
-                                        size: DesignTokens.ClockTypography.captionFontSize,
-                                        weight: .regular,
-                                        design: .serif
-                                    )
-                                )
-                                .foregroundStyle(DesignTokens.ClockColors.captionBlue)
-                                .accessibilityLabel("Caption")
+                        // bunny/numberモードのアナログ時計（共通化）
+                        if displayMode == .bunny || displayMode == .number {
+                            analogClockView(in: geometry)
                         }
+
+                        // 時刻 + 一言（bunny/numberモード以外）または キャプションのみ（bunny/numberモード）
+                        VStack(spacing: DesignTokens.ClockSpacing.timeCaptionSpacing) {
+                            // 時刻表示（bunny/numberモード以外のみ）
+                            if isDigitalMode {
+                                digitalClockContent(snapshot: snapshot)
+                                    // SevenSegは高さが小さいので、他と同じ高さのフレームで包む
+                                    .frame(height: Self.clockFontSize)
+                                    .accessibilityLabel("Current time")
+                            }
+
+                            // キャプション（全モード共通）— 横向き時はアナログ時計モードで非表示
+                            if !(isLandscape && (displayMode == .bunny || displayMode == .number)) {
+                                Text(snapshot.caption)
+                                    .font(
+                                        .system(
+                                            size: DesignTokens.ClockTypography.captionFontSize,
+                                            weight: .regular,
+                                            design: .serif
+                                        )
+                                    )
+                                    .foregroundStyle(DesignTokens.ClockColors.captionBlue)
+                                    .accessibilityLabel("Caption")
+                            }
+                        }
+                        .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
                     }
-                    .padding(.bottom, DesignTokens.ClockSpacing.bottomPadding)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
                 }
             }
             .animation(.easeInOut(duration: 0.6), value: snapshot.skyTone) // 時間帯フェード
@@ -232,7 +269,7 @@ final class ClockScreenVM: ObservableObject {
 }
 
 #Preview {
-    ClockScreenView()
+    ClockScreenView(displayMode: .constant(.dotMatrix))
 }
 
 #if DEBUG
@@ -368,7 +405,7 @@ final class ClockScreenVM: ObservableObject {
         Text(String(format: "オフセット: %.1f", offset))
             .font(.caption).foregroundColor(.gray)
 
-        ClockScreenView(fixedDate: date)
+        ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: date)
     }
     .background(.black)
 }
@@ -386,7 +423,7 @@ final class ClockScreenVM: ObservableObject {
     let moonPhase = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
     let _ = print("10/13 Debug: phase=\(moonPhase.phase), illumination=\(moonPhase.illumination)")
 
-    return ClockScreenView(fixedDate: date)
+    return ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: date)
 }
 
 #Preview("Fixed 10/29 右明,first") {
@@ -395,7 +432,7 @@ final class ClockScreenVM: ObservableObject {
     comps.hour = 7; comps.minute = 5
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
-    return ClockScreenView(fixedDate: date)
+    return ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: date)
 }
 
 #Preview("Fixed 10/30 右明") {
@@ -404,11 +441,11 @@ final class ClockScreenVM: ObservableObject {
     comps.hour = 7; comps.minute = 5
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
-    return ClockScreenView(fixedDate: date)
+    return ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: date)
 }
 
 #Preview("Full-moon-ish (+14d)") {
-    ClockScreenView(fixedDate: Date().addingTimeInterval(14 * 86_400))
+    ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: Date().addingTimeInterval(14 * 86_400))
 }
 
 #Preview("True Full Moon") {
@@ -426,7 +463,7 @@ final class ClockScreenVM: ObservableObject {
     let synodicMonthDays: Double = 29.530588853
     let daysToFullMoon = phaseDifference * synodicMonthDays
     let fullMoonDate = now.addingTimeInterval(daysToFullMoon * 86_400)
-    return ClockScreenView(fixedDate: fullMoonDate)
+    return ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: fullMoonDate)
 }
 
 #Preview("True First Quarter") {
@@ -444,7 +481,7 @@ final class ClockScreenVM: ObservableObject {
     let synodicMonthDays: Double = 29.530588853
     let daysToFirstQuarter = phaseDifference * synodicMonthDays
     let firstQuarterDate = now.addingTimeInterval(daysToFirstQuarter * 86_400)
-    return ClockScreenView(fixedDate: firstQuarterDate)
+    return ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: firstQuarterDate)
 }
 
 #Preview("True Third Quarter") {
@@ -462,6 +499,6 @@ final class ClockScreenVM: ObservableObject {
     let synodicMonthDays: Double = 29.530588853
     let daysToThirdQuarter = phaseDifference * synodicMonthDays
     let thirdQuarterDate = now.addingTimeInterval(daysToThirdQuarter * 86_400)
-    return ClockScreenView(fixedDate: thirdQuarterDate)
+    return ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: thirdQuarterDate)
 }
 #endif

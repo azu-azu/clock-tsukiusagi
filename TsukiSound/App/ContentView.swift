@@ -3,9 +3,14 @@ import SwiftUI
 public struct ContentView: View {
     @State private var selectedTab: Tab = .clock
     @State private var isMenuPresented = false
+    @State private var clockDisplayMode: ClockDisplayMode = .dotMatrix
     @StateObject private var fontStyleProvider = FontStyleProvider()
 
     public init() {}
+
+    private var isAnalogClockMode: Bool {
+        clockDisplayMode == .bunny || clockDisplayMode == .number
+    }
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
@@ -14,7 +19,7 @@ public struct ContentView: View {
                 switch selectedTab {
                 case .clock:
                     ZStack(alignment: .bottom) {
-                        ClockScreenView()
+                        ClockScreenView(displayMode: $clockDisplayMode)
 
                         // 底辺に重ねる波アニメーション（背景は描かない）
                         WavyBottomView()
@@ -40,7 +45,8 @@ public struct ContentView: View {
                         TabButton(
                             icon: "gearshape.fill",
                             label: "Menu",
-                            isSelected: false
+                            isSelected: false,
+                            useAnalogColor: isAnalogClockMode
                         ) {
                             withAnimation {
                                 isMenuPresented = true
@@ -53,7 +59,8 @@ public struct ContentView: View {
                         TabButton(
                             icon: "music.quarternote.3",
                             label: "Audio",
-                            isSelected: false
+                            isSelected: false,
+                            useAnalogColor: isAnalogClockMode
                         ) {
                             selectedTab = .audioPlayback
                         }
@@ -146,7 +153,18 @@ private struct TabButton: View {
     let icon: String
     let label: String
     let isSelected: Bool
+    var useAnalogColor: Bool = false
     let action: () -> Void
+
+    private var foregroundColor: Color {
+        if isSelected {
+            return .accentColor
+        } else if useAnalogColor {
+            return DesignTokens.ClockColors.captionBlue
+        } else {
+            return .white.opacity(0.6)
+        }
+    }
 
     var body: some View {
         Button(action: action) {
@@ -156,7 +174,7 @@ private struct TabButton: View {
                 Text(label)
                     .font(.caption)
             }
-            .foregroundColor(isSelected ? .accentColor : .white.opacity(0.6))
+            .foregroundColor(foregroundColor)
         }
         .buttonStyle(.plain)
     }
