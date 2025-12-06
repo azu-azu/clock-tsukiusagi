@@ -93,57 +93,16 @@ private struct ClockFace: View {
                     }
                 }
 
-                // --- 針の計算と描画（既存のまま） ---
-                let cal = Calendar.current
-                let s = Double(cal.component(.second, from: date))
-                let m = Double(cal.component(.minute, from: date)) + s/60.0
-                let h = Double(cal.component(.hour,   from: date) % 12) + m/60.0
-
-				let secAngle  = Angle.degrees(s/60.0 * 360.0 - 90)
-                let minAngle  = Angle.degrees(m/60.0 * 360.0 - 90)
-                let hourAngle = Angle.degrees(h/12.0 * 360.0 - 90)
-
-                func endPoint(_ angle: Angle, _ length: CGFloat) -> CGPoint {
-                    CGPoint(
-                        x: center.x + CGFloat(Foundation.cos(angle.radians)) * length,
-                        y: center.y + CGFloat(Foundation.sin(angle.radians)) * length
-                    )
-                }
-
-                // 時針・分針の描画
-                func drawHand(angle: Angle, length: CGFloat, width: CGFloat, alpha: Double) {
-                    var path = Path()
-                    path.move(to: center)
-                    path.addLine(to: endPoint(angle, length))
-                    let style = StrokeStyle(lineWidth: width, lineCap: .round)
-                    context.stroke(
-                        path,
-                        with: .color(BunnyClockView.handColor.opacity(alpha)),
-                        style: style
-                    )
-                }
-
-                // 秒針の描画（別色・薄め）
-                func drawSecondHand(angle: Angle, length: CGFloat, width: CGFloat) {
-                    var path = Path()
-                    path.move(to: center)
-                    path.addLine(to: endPoint(angle, length))
-                    let style = StrokeStyle(lineWidth: width, lineCap: .round)
-                    context.stroke(
-                        path,
-                        with: .color(BunnyClockView.secondHandColor.opacity(0.7)),
-                        style: style
-                    )
-                }
-
-                // 呼び出し
-                drawHand(angle: hourAngle, length: radius * 0.55, width: 6, alpha: 0.95)
-                drawHand(angle: minAngle, length: radius * 0.78, width: 5, alpha: 0.95)
-                drawSecondHand(angle: secAngle, length: radius * 0.55, width: 2)
-
-
-                let centerCircle = Path(ellipseIn: CGRect(x: center.x - 4, y: center.y - 4, width: 8, height: 8))
-                context.fill(centerCircle, with: .color(BunnyClockView.centerCircleColor))
+                // 針と中心円の描画
+                ClockHandDrawing.drawAllHands(
+                    context: &context,
+                    center: center,
+                    radius: radius,
+                    date: date,
+                    handColor: BunnyClockView.handColor,
+                    secondHandColor: BunnyClockView.secondHandColor,
+                    centerColor: BunnyClockView.centerCircleColor
+                )
             }
         }
         .aspectRatio(1, contentMode: .fit)

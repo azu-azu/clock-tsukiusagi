@@ -106,20 +106,20 @@ public struct ContentView: View {
 
     // MARK: - Swipe Gesture
 
-    /// ✂️ 左端からのスワイプでSideMenuを開くジェスチャー
-    /// ✂️ Timer app と同じロジック: 左端20px以内からのスワイプのみ検知
+    /// 左端からのスワイプでSideMenuを開くジェスチャー
+    /// Timer app と同じロジック: 左端20px以内からのスワイプのみ検知
     private func sideMenuDragGesture() -> some Gesture {
         DragGesture()
             .onEnded { value in
                 let horizontalAmount = value.translation.width
                 let verticalAmount = abs(value.translation.height)
-                // ✂️ 画面幅の10%を最小閾値として使用（最低50px）
+                // 画面幅の10%を最小閾値として使用（最低50px）
                 let openThreshold: CGFloat = 50
                 let closeThreshold = -openThreshold
 
-                // ✂️ 水平方向のスワイプのみ処理（垂直スクロールとの競合を避ける）
+                // 水平方向のスワイプのみ処理（垂直スクロールとの競合を避ける）
                 if abs(horizontalAmount) > verticalAmount {
-                    // ✂️ 右スワイプ & 左端20px以内からのスワイプのみメニューを開く
+                    // 右スワイプ & 左端20px以内からのスワイプのみメニューを開く
                     if horizontalAmount > openThreshold && !isMenuPresented {
                         if value.startLocation.x <= 20 {
                             withAnimation(.easeInOut(duration: 0.3)) {
@@ -127,7 +127,7 @@ public struct ContentView: View {
                             }
                         }
                     }
-                    // ✂️ 左スワイプでメニューを閉じる
+                    // 左スワイプでメニューを閉じる
                     else if horizontalAmount < closeThreshold && isMenuPresented {
                         withAnimation(.easeInOut(duration: 0.3)) {
                             isMenuPresented = false
@@ -162,7 +162,7 @@ private struct TabButton: View {
         } else if useAnalogColor {
             return DesignTokens.ClockColors.captionBlue
         } else {
-            return .white.opacity(0.6)
+            return DesignTokens.CommonTextColors.quaternary
         }
     }
 

@@ -82,6 +82,34 @@ struct DesignTokens {
 
         /// 7セグ表示の高さ
         static let sevenSegHeight: CGFloat = 44
+
+        /// アナログ時計の数字フォント
+        static let analogClockNumberFont = Font.custom("AmericanTypewriter-CondensedBold", size: 22)
+    }
+
+    // MARK: - Analog Clock
+    enum AnalogClock {
+        /// 時針の長さ（半径に対する比率）
+        static let hourHandLength: CGFloat = 0.55
+        /// 分針の長さ（半径に対する比率）
+        static let minuteHandLength: CGFloat = 0.78
+        /// 秒針の長さ（半径に対する比率）
+        static let secondHandLength: CGFloat = 0.55
+
+        /// 時針の太さ
+        static let hourHandWidth: CGFloat = 6
+        /// 分針の太さ
+        static let minuteHandWidth: CGFloat = 5
+        /// 秒針の太さ
+        static let secondHandWidth: CGFloat = 2
+
+        /// 時針・分針の不透明度
+        static let handOpacity: CGFloat = 0.95
+        /// 秒針の不透明度
+        static let secondHandOpacity: CGFloat = 0.7
+
+        /// 中心円のサイズ
+        static let centerCircleSize: CGFloat = 8
     }
 
     // MARK: - Clock Spacing
