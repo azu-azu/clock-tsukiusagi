@@ -151,7 +151,7 @@ Before contributing, please review the following steps:
 ## 📞 Support
 
 If you encounter issues or have questions, please open a ticket in
-[Issues](https://github.com/azu-azu/TsukiSound/issues).
+[Issues](https://github.com/azu-azu/tsuki-sound/issues).
 
 ---
 
