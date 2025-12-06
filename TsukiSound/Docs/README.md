@@ -129,6 +129,7 @@
 - [`report/report-jupiter-melody-optimization.md`](./report/report-jupiter-melody-optimization.md) - Jupiter Melody パフォーマンス最適化
 - [`report/report-jupiter-harp-interference-fix.md`](./report/report-jupiter-harp-interference-fix.md) - Jupiter-Harp 周波数干渉問題の修正
 - [`report/report-jupiter-breath-implementation.md`](./report/report-jupiter-breath-implementation.md) - Jupiter Breath（息継ぎ）実装の試行錯誤と最終方式
+- [`report/report-clock-landscape-layout-fix.md`](./report/report-clock-landscape-layout-fix.md) - Clock横向きレイアウト修正（SevenSeg高さ統一、HStack配置）
 
 ## 📝 ドキュメント作成・更新ルール
 
