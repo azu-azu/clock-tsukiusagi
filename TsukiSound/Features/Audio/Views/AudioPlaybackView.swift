@@ -186,35 +186,47 @@ struct AudioPlaybackView: View {
                             .onChanged { value in
                                 switch value {
                                 case .first(true):
+                                    // Long press started
                                     impactFeedback.impactOccurred()
                                     draggingPreset = preset
                                     dragStartIndex = index
                                 case .second(true, let drag):
+                                    // Dragging - only update visual offset
                                     guard let drag = drag, draggingPreset?.id == preset.id else { return }
                                     dragOffset = drag.translation.height
-
-                                    // Calculate target position based on drag from start
-                                    let positionChange = Int(round(drag.translation.height / rowHeight))
-                                    let targetIndex = dragStartIndex + positionChange
-                                    let clampedTarget = max(0, min(audioService.playlistState.orderedPresets.count - 1, targetIndex))
-
-                                    // Find where the dragged item currently is
-                                    guard let currentIndex = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == preset.id }) else { return }
-
-                                    if clampedTarget != currentIndex {
-                                        impactFeedback.impactOccurred(intensity: 0.6)
-                                        audioService.playlistState.move(
-                                            from: IndexSet(integer: currentIndex),
-                                            to: clampedTarget > currentIndex ? clampedTarget + 1 : clampedTarget
-                                        )
-                                    }
                                 default:
                                     break
                                 }
                             }
-                            .onEnded { _ in
-                                draggingPreset = nil
-                                dragOffset = 0
+                            .onEnded { value in
+                                defer {
+                                    draggingPreset = nil
+                                    dragOffset = 0
+                                }
+
+                                // Only process if drag gesture completed
+                                guard
+                                    case .second(true, let drag?) = value,
+                                    let dragging = draggingPreset,
+                                    let currentIndex = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == dragging.id })
+                                else { return }
+
+                                let totalTranslation = drag.translation.height
+                                let positionChange = Int(round(totalTranslation / rowHeight))
+
+                                guard positionChange != 0 else { return }
+
+                                let count = audioService.playlistState.orderedPresets.count
+                                var targetIndex = currentIndex + positionChange
+                                targetIndex = max(0, min(count - 1, targetIndex))
+
+                                guard targetIndex != currentIndex else { return }
+
+                                impactFeedback.impactOccurred(intensity: 0.6)
+                                audioService.playlistState.move(
+                                    from: IndexSet(integer: currentIndex),
+                                    to: targetIndex > currentIndex ? targetIndex + 1 : targetIndex
+                                )
                             }
                     )
                 }
