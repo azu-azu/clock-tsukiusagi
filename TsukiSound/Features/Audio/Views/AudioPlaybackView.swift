@@ -62,6 +62,7 @@ struct AudioPlaybackView: View {
     @State private var draggingPreset: UISoundPreset?
     @State private var dragStartIndex: Int = 0
     @State private var dragOffset: CGFloat = 0
+    @State private var activeDragId: String?
 
     @AppStorage("showAudioTitle") private var showAudioTitle: Bool = true
 
@@ -182,33 +183,47 @@ struct AudioPlaybackView: View {
                         playFromPreset(preset)
                     }
                     .highPriorityGesture(
-                        LongPressGesture(minimumDuration: 0.4)
+                        LongPressGesture(minimumDuration: 0.15)
                             .sequenced(before: DragGesture())
                             .onChanged { value in
-                                // 🐛 DEBUG: Log gesture state
-                                print("🐛 [Drag] onChanged: \(value)")
                                 switch value {
                                 case .first(true):
-                                    // Long press started
+                                    // Already dragging another cell - ignore
+                                    guard activeDragId == nil else {
+                                        print("🐛 [Drag] Ignoring .first(true) - already dragging \(activeDragId ?? "nil")")
+                                        return
+                                    }
                                     print("🐛 [Drag] Long press started for: \(preset.displayName)")
                                     impactFeedback.impactOccurred()
+                                    activeDragId = preset.id
                                     draggingPreset = preset
                                     dragStartIndex = index
+
                                 case .second(true, let drag):
-                                    // Dragging - only update visual offset
-                                    guard let drag = drag, draggingPreset?.id == preset.id else {
-                                        print("🐛 [Drag] Guard failed in .second - drag: \(String(describing: drag)), draggingPreset: \(String(describing: draggingPreset?.id)), preset: \(preset.id)")
+                                    // Only track the cell that started the drag
+                                    guard
+                                        let drag = drag,
+                                        activeDragId == preset.id,
+                                        draggingPreset?.id == preset.id
+                                    else {
                                         return
                                     }
                                     dragOffset = drag.translation.height
+
                                 default:
-                                    print("🐛 [Drag] Default case hit")
                                     break
                                 }
                             }
                             .onEnded { value in
-                                print("🐛 [Drag] onEnded: \(value)")
-                                defer {
+                                // Only the active drag cell should handle onEnded
+                                guard activeDragId == preset.id else {
+                                    print("🐛 [Drag] onEnded ignored - not active cell. activeDragId: \(activeDragId ?? "nil"), preset: \(preset.id)")
+                                    return
+                                }
+
+                                // Reset state function
+                                func resetDragState() {
+                                    activeDragId = nil
                                     draggingPreset = nil
                                     dragOffset = 0
                                 }
@@ -216,10 +231,10 @@ struct AudioPlaybackView: View {
                                 // Only process if drag gesture completed
                                 guard
                                     case .second(true, let drag?) = value,
-                                    let dragging = draggingPreset,
-                                    let currentIndex = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == dragging.id })
+                                    let currentIndex = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == preset.id })
                                 else {
-                                    print("🐛 [Drag] onEnded guard failed - value: \(value), draggingPreset: \(String(describing: draggingPreset?.id))")
+                                    print("🐛 [Drag] onEnded - drag not completed, resetting")
+                                    resetDragState()
                                     return
                                 }
 
@@ -229,6 +244,7 @@ struct AudioPlaybackView: View {
 
                                 guard positionChange != 0 else {
                                     print("🐛 [Drag] positionChange is 0, no move needed")
+                                    resetDragState()
                                     return
                                 }
 
@@ -238,6 +254,7 @@ struct AudioPlaybackView: View {
 
                                 guard targetIndex != currentIndex else {
                                     print("🐛 [Drag] targetIndex == currentIndex, no move needed")
+                                    resetDragState()
                                     return
                                 }
 
@@ -247,6 +264,7 @@ struct AudioPlaybackView: View {
                                     from: IndexSet(integer: currentIndex),
                                     to: targetIndex > currentIndex ? targetIndex + 1 : targetIndex
                                 )
+                                resetDragState()
                             }
                     )
                 }
