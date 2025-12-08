@@ -55,6 +55,10 @@ public final class TrackPlayer: TrackPlaying {
         playerNode.isPlaying
     }
 
+    /// 曲終了時に呼ばれるコールバック（プレイリスト連続再生用）
+    /// loop: false で再生した場合のみ発火
+    public var onTrackFinished: (() -> Void)?
+
     // MARK: - Initialization
 
     public init() {
@@ -135,9 +139,22 @@ public final class TrackPlayer: TrackPlaying {
         // プレイヤーノードの音量を最大に設定（マスター音量で制御する）
         playerNode.volume = 1.0
 
-        // .loops オプションでシームレスループ
-        let options: AVAudioPlayerNodeBufferOptions = loop ? .loops : []
-        playerNode.scheduleBuffer(buffer, at: nil, options: options)
+        if loop {
+            // .loops オプションでシームレスループ（単曲ループ）
+            playerNode.scheduleBuffer(buffer, at: nil, options: .loops)
+        } else {
+            // 1回再生 + 完了検知（プレイリスト連続再生用）
+            playerNode.scheduleBuffer(
+                buffer,
+                at: nil,
+                options: [],
+                completionCallbackType: .dataPlayedBack
+            ) { [weak self] _ in
+                Task { @MainActor in
+                    self?.onTrackFinished?()
+                }
+            }
+        }
         playerNode.play()
     }
 

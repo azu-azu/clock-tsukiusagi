@@ -16,6 +16,7 @@ struct TsukiSoundApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(audioService)
+                .environmentObject(audioService.playlistState)
         }
     }
 }

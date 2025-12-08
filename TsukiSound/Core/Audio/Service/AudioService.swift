@@ -53,6 +53,10 @@ public final class AudioService: ObservableObject {
     @Published public private(set) var outputRoute: AudioOutputRoute = .unknown
     @Published public private(set) var pauseReason: PauseReason?
 
+    /// プレイリスト状態（曲順と現在位置の "地図"）
+    /// UI は .environmentObject(audioService.playlistState) で参照
+    public let playlistState: PlaylistState
+
     // MARK: - Private Properties
 
     private let engine: LocalAudioEngine
@@ -91,6 +95,9 @@ public final class AudioService: ObservableObject {
     private init() {
         // 設定を読み込み
         self.settings = AudioSettings.load()
+
+        // プレイリスト状態を初期化
+        self.playlistState = PlaylistState()
 
         // コンポーネントを初期化
         self.sessionManager = AudioSessionManager()
@@ -695,15 +702,77 @@ public final class AudioService: ObservableObject {
         // Load audio file AFTER configuration
         try player.load(url: url)
 
+        // Setup track finished callback with safety guard
+        // CRITICAL: Check instance identity to ignore callbacks from old TrackPlayer instances
+        player.onTrackFinished = { [weak self, weak player] in
+            guard let self = self,
+                  let player = player,
+                  self.trackPlayer === player  // Safety: verify this is the current player
+            else { return }
+            self.handleTrackFinished()
+        }
+
         // Store player - playback will be started after engine.start() in _playInternal
         trackPlayer = player
     }
 
     /// Start TrackPlayer playback (must be called after engine.start())
+    /// Note: Uses loop: false to enable playlist continuous playback via onTrackFinished callback
     private func startTrackPlayerIfNeeded() {
         guard let player = trackPlayer, !player.isPlaying else { return }
-        player.play(loop: true)
-        print("🎵 [AudioService] TrackPlayer started")
+        player.play(loop: false)  // Playlist mode: detect track end for next track
+        print("🎵 [AudioService] TrackPlayer started (playlist mode)")
+    }
+
+    // MARK: - Playlist Playback
+
+    /// Handle track finished event (advance to next track in playlist)
+    private func handleTrackFinished() {
+        guard isPlaying else { return }  // Ignore if already stopped
+
+        let nextPreset = playlistState.advanceToNext()
+        print("🎵 [AudioService] Track finished, advancing to: \(nextPreset)")
+
+        // Play next track without stopping engine (seamless transition)
+        do {
+            try playNextTrack(preset: nextPreset)
+        } catch {
+            print("⚠️ [AudioService] Failed to play next track: \(error)")
+            stop()
+        }
+    }
+
+    /// Play next track in playlist (engine already running)
+    private func playNextTrack(preset: UISoundPreset) throws {
+        // Stop current TrackPlayer but don't stop engine
+        trackPlayer?.stop()
+
+        // Detach old player node (safe because we stopped it first)
+        // Note: detaching while engine is running is safe if the node is stopped
+        if let player = trackPlayer, engine.engine.attachedNodes.contains(player.playerNode) {
+            engine.engine.detach(player.playerNode)
+        }
+        trackPlayer = nil
+
+        // Register new source (creates new TrackPlayer with callback)
+        try registerSource(for: preset)
+
+        // Start playback (engine is already running)
+        startTrackPlayerIfNeeded()
+
+        // Update state
+        currentPreset = preset
+        updateNowPlaying()
+    }
+
+    /// プレイリスト再生を開始（指定曲から）
+    /// - Parameter preset: 開始する曲（nil の場合は現在の曲から）
+    public func playPlaylist(startingFrom preset: UISoundPreset? = nil) throws {
+        if let preset = preset {
+            playlistState.setCurrentIndex(to: preset)
+        }
+        guard let current = playlistState.presetForCurrentIndex() else { return }
+        try play(preset: current)
     }
 
     // MARK: - Fade Effects (Phase 2)

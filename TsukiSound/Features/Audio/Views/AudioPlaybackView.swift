@@ -57,10 +57,11 @@ struct AudioPlaybackView: View {
     @EnvironmentObject var audioService: AudioService
     @Binding var selectedTab: Tab
 
-    @State private var selectedSource: AudioSourcePreset = .synthesis(.jupiter)
-
     @State private var errorMessage: String?
     @State private var showError = false
+    @State private var draggingPreset: UISoundPreset?
+    @State private var dragStartIndex: Int = 0
+    @State private var dragOffset: CGFloat = 0
 
     @AppStorage("showAudioTitle") private var showAudioTitle: Bool = true
 
@@ -87,7 +88,6 @@ struct AudioPlaybackView: View {
                             // 下部コンテンツ（Status〜Waveform）
                             VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
                                 statusSection
-                                volumeSection
                                 waveformSection
                             }
                         }
@@ -122,18 +122,6 @@ struct AudioPlaybackView: View {
             } message: {
                 Text(errorMessage ?? "不明なエラー")
             }
-            .onChange(of: selectedSource) { oldValue, newValue in
-                // Automatic preset switching when playing
-                guard oldValue != newValue else { return }
-
-                if audioService.isPlaying {
-                    // Stop current playback and switch to new preset
-                    audioService.stopAndWait(fadeOut: 0.5) {
-                        playAudio()
-                    }
-                }
-                // If not playing, just update the selection (no automatic playback)
-            }
         }
     }
 
@@ -161,7 +149,11 @@ struct AudioPlaybackView: View {
     }
 
     private var soundSelectionSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        let rowHeight: CGFloat = 68
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+
+        return VStack(alignment: .leading, spacing: 12) {
+            // Header
             Text("audio.sound".localized)
                 .dynamicFont(
                     size: DynamicTheme.AudioTestTypography.headlineSize,
@@ -169,69 +161,78 @@ struct AudioPlaybackView: View {
                 )
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            HStack {
-                Spacer()
-                Menu {
-                    ForEach(AudioSourcePreset.allSources) { source in
-                        Button(action: {
-                            selectedSource = source
-                        }) {
-                            Text(source.displayName)
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Text(selectedSource.displayName)
-                            .dynamicFont(
-                                size: DynamicTheme.AudioTestTypography.soundMenuSize,
-                                weight: DynamicTheme.AudioTestTypography.soundMenuWeight
-                            )
-                            .foregroundColor(DesignTokens.SettingsColors.accent)
-                        Spacer()
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.system(size: 14))
-                            .foregroundColor(DesignTokens.SettingsColors.accent.opacity(0.6))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-                }
-                Spacer()
-            }
+            // Playlist (custom drag reordering)
+            VStack(spacing: 8) {
+                ForEach(Array(audioService.playlistState.orderedPresets.enumerated()), id: \.element.id) { index, preset in
+                    let isDragging = draggingPreset?.id == preset.id
 
-            HStack {
-                Spacer()
-                Text(selectedSource.englishTitle)
-                    .dynamicFont(
-                        size: DynamicTheme.AudioTestTypography.englishTitleSize,
-                        weight: DynamicTheme.AudioTestTypography.englishTitleWeight
+                    PlaylistRowView(
+                        preset: preset,
+                        isCurrentTrack: index == audioService.playlistState.currentIndex,
+                        isPlaying: audioService.isPlaying
                     )
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                    .zIndex(isDragging ? 1 : 0)
+                    .offset(y: isDragging ? dragOffset : 0)
+                    .scaleEffect(isDragging ? 1.02 : 1.0)
+                    .opacity(isDragging ? 0.9 : 1.0)
+                    .shadow(color: isDragging ? Color.black.opacity(0.3) : Color.clear, radius: 8, y: 4)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        playFromPreset(preset)
+                    }
+                    .gesture(
+                        LongPressGesture(minimumDuration: 0.4)
+                            .sequenced(before: DragGesture())
+                            .onChanged { value in
+                                switch value {
+                                case .first(true):
+                                    impactFeedback.impactOccurred()
+                                    draggingPreset = preset
+                                    dragStartIndex = index
+                                case .second(true, let drag):
+                                    guard let drag = drag, draggingPreset?.id == preset.id else { return }
+                                    dragOffset = drag.translation.height
+
+                                    // Calculate target position based on drag from start
+                                    let positionChange = Int(round(drag.translation.height / rowHeight))
+                                    let targetIndex = dragStartIndex + positionChange
+                                    let clampedTarget = max(0, min(audioService.playlistState.orderedPresets.count - 1, targetIndex))
+
+                                    // Find where the dragged item currently is
+                                    guard let currentIndex = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == preset.id }) else { return }
+
+                                    if clampedTarget != currentIndex {
+                                        impactFeedback.impactOccurred(intensity: 0.6)
+                                        audioService.playlistState.move(
+                                            from: IndexSet(integer: currentIndex),
+                                            to: clampedTarget > currentIndex ? clampedTarget + 1 : clampedTarget
+                                        )
+                                    }
+                                default:
+                                    break
+                                }
+                            }
+                            .onEnded { _ in
+                                draggingPreset = nil
+                                dragOffset = 0
+                            }
+                    )
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(DesignTokens.SettingsSpacing.cardPadding)
-        .background(
-            ZStack {
-                // 背景色（cardHighlight: より濃いめ）
-                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
-                // 上辺ハイライト（光）
-                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.25),
-                                Color.white.opacity(0.02)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
-            }
-        )
-        .shadow(color: Color.black.opacity(0.5), radius: 8, x: 0, y: 4)
     }
+
+    /// タップした曲からプレイリスト再生を開始
+    private func playFromPreset(_ preset: UISoundPreset) {
+        do {
+            try audioService.playPlaylist(startingFrom: preset)
+        } catch {
+            errorMessage = "再生エラー: \(error.localizedDescription)"
+            showError = true
+        }
+    }
+
 
     private var controlSection: some View {
         HStack {
@@ -258,81 +259,6 @@ struct AudioPlaybackView: View {
             .frame(maxWidth: 200)
             Spacer()
         }
-    }
-
-    private var volumeSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-            HStack {
-                Text("audio.volume".localized)
-                    .dynamicFont(
-                        size: DynamicTheme.AudioTestTypography.volumeLabelSize,
-                        weight: DynamicTheme.AudioTestTypography.volumeLabelWeight
-                    )
-                    .foregroundColor(Color.gray.opacity(0.7))
-                Spacer()
-                Text("\(Int(audioService.systemVolume * 100))%")
-                    .dynamicFont(
-                        size: DynamicTheme.AudioTestTypography.volumeLabelSize,
-                        weight: DynamicTheme.AudioTestTypography.volumeLabelWeight
-                    )
-                    .foregroundColor(Color.gray.opacity(0.7))
-            }
-
-            HStack(spacing: DesignTokens.SettingsSpacing.sectionInnerSpacing) {
-                Image(systemName: "speaker.fill")
-                    .foregroundColor(Color.gray.opacity(0.6))
-
-                // Read-only progress bar
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        // Background
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 8)
-
-                        // Filled portion
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.5))
-                            .frame(width: geometry.size.width * CGFloat(audioService.systemVolume), height: 8)
-                    }
-                }
-                .frame(height: 8)
-
-                Image(systemName: "speaker.wave.3.fill")
-                    .foregroundColor(Color.gray.opacity(0.6))
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(DesignTokens.SettingsSpacing.cardPadding)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.08),
-                                Color.white.opacity(0.03)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.15),
-                                Color.white.opacity(0.02)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
-            }
-        )
-        .shadow(color: Color.black.opacity(0.4), radius: 8, x: 0, y: 4)
-        .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
     }
 
     private var waveformSection: some View {
@@ -387,21 +313,23 @@ struct AudioPlaybackView: View {
                 }
             }
 
-            // Selected source (inline)
-            HStack(spacing: 4) {
-                Text("audio.selected".localized)
-                    .dynamicFont(
-                        size: DynamicTheme.AudioTestTypography.statusCaptionSize,
-                        weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
-                    )
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+            // Current track (from playlist)
+            if let currentPreset = audioService.playlistState.presetForCurrentIndex() {
+                HStack(spacing: 4) {
+                    Text("audio.selected".localized)
+                        .dynamicFont(
+                            size: DynamicTheme.AudioTestTypography.statusCaptionSize,
+                            weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
+                        )
+                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
 
-                Text(selectedSource.englishTitle)
-                    .dynamicFont(
-                        size: DynamicTheme.AudioTestTypography.statusCaptionSize,
-                        weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
-                    )
-                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                    Text(currentPreset.englishTitle)
+                        .dynamicFont(
+                            size: DynamicTheme.AudioTestTypography.statusCaptionSize,
+                            weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
+                        )
+                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -449,12 +377,8 @@ struct AudioPlaybackView: View {
 
     private func playAudio() {
         do {
-            // SignalEngine による合成音源を再生
-            switch selectedSource {
-            case .synthesis(let preset):
-                try audioService.play(preset: preset)
-            }
-
+            // プレイリスト再生を開始（現在の曲から）
+            try audioService.playPlaylist()
         } catch let error as NSError {
             let detailedMessage = """
             再生エラー:
@@ -480,4 +404,5 @@ struct AudioPlaybackView: View {
 #Preview {
     AudioPlaybackView(selectedTab: .constant(.audioPlayback))
         .environmentObject(AudioService.shared)
+        .environmentObject(AudioService.shared.playlistState)
 }

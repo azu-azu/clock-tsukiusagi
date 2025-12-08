@@ -34,6 +34,8 @@
 "audio.stopped" = "停止中";
 "audio.pauseReason" = "停止理由:";
 "audio.selected" = "選択中:";
+"audio.edit" = "編集";
+"audio.done" = "完了";
 
 // MARK: - App Settings
 "settings.app.title" = "アプリ設定";

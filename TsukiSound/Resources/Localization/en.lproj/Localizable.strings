@@ -34,6 +34,8 @@
 "audio.stopped" = "Stopped";
 "audio.pauseReason" = "Pause Reason:";
 "audio.selected" = "Selected:";
+"audio.edit" = "Edit";
+"audio.done" = "Done";
 
 // MARK: - App Settings
 "settings.app.title" = "App Settings";
