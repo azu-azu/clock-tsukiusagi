@@ -163,7 +163,8 @@ struct AudioPlaybackView: View {
 
             // Playlist (custom drag reordering)
             VStack(spacing: 8) {
-                ForEach(Array(audioService.playlistState.orderedPresets.enumerated()), id: \.element.id) { index, preset in
+                ForEach(audioService.playlistState.orderedPresets, id: \.id) { preset in
+                    let index = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == preset.id }) ?? 0
                     let isDragging = draggingPreset?.id == preset.id
 
                     PlaylistRowView(
@@ -180,25 +181,33 @@ struct AudioPlaybackView: View {
                     .onTapGesture {
                         playFromPreset(preset)
                     }
-                    .gesture(
+                    .highPriorityGesture(
                         LongPressGesture(minimumDuration: 0.4)
                             .sequenced(before: DragGesture())
                             .onChanged { value in
+                                // 🐛 DEBUG: Log gesture state
+                                print("🐛 [Drag] onChanged: \(value)")
                                 switch value {
                                 case .first(true):
                                     // Long press started
+                                    print("🐛 [Drag] Long press started for: \(preset.displayName)")
                                     impactFeedback.impactOccurred()
                                     draggingPreset = preset
                                     dragStartIndex = index
                                 case .second(true, let drag):
                                     // Dragging - only update visual offset
-                                    guard let drag = drag, draggingPreset?.id == preset.id else { return }
+                                    guard let drag = drag, draggingPreset?.id == preset.id else {
+                                        print("🐛 [Drag] Guard failed in .second - drag: \(String(describing: drag)), draggingPreset: \(String(describing: draggingPreset?.id)), preset: \(preset.id)")
+                                        return
+                                    }
                                     dragOffset = drag.translation.height
                                 default:
+                                    print("🐛 [Drag] Default case hit")
                                     break
                                 }
                             }
                             .onEnded { value in
+                                print("🐛 [Drag] onEnded: \(value)")
                                 defer {
                                     draggingPreset = nil
                                     dragOffset = 0
@@ -209,19 +218,30 @@ struct AudioPlaybackView: View {
                                     case .second(true, let drag?) = value,
                                     let dragging = draggingPreset,
                                     let currentIndex = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == dragging.id })
-                                else { return }
+                                else {
+                                    print("🐛 [Drag] onEnded guard failed - value: \(value), draggingPreset: \(String(describing: draggingPreset?.id))")
+                                    return
+                                }
 
                                 let totalTranslation = drag.translation.height
                                 let positionChange = Int(round(totalTranslation / rowHeight))
+                                print("🐛 [Drag] totalTranslation: \(totalTranslation), positionChange: \(positionChange)")
 
-                                guard positionChange != 0 else { return }
+                                guard positionChange != 0 else {
+                                    print("🐛 [Drag] positionChange is 0, no move needed")
+                                    return
+                                }
 
                                 let count = audioService.playlistState.orderedPresets.count
                                 var targetIndex = currentIndex + positionChange
                                 targetIndex = max(0, min(count - 1, targetIndex))
 
-                                guard targetIndex != currentIndex else { return }
+                                guard targetIndex != currentIndex else {
+                                    print("🐛 [Drag] targetIndex == currentIndex, no move needed")
+                                    return
+                                }
 
+                                print("🐛 [Drag] Moving from \(currentIndex) to \(targetIndex)")
                                 impactFeedback.impactOccurred(intensity: 0.6)
                                 audioService.playlistState.move(
                                     from: IndexSet(integer: currentIndex),
