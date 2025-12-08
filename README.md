@@ -161,4 +161,10 @@ https://azu-azu.github.io/tsuki-sound/privacy.html
 
 ---
 
+### ✨ App Store
+
+- v1.0.0 2025/12/08
+
+---
+
 **TsukiSound**  — Feel the quiet. 🌙
