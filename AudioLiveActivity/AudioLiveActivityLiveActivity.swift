@@ -48,8 +48,15 @@ struct AudioLiveActivityLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
-                    .foregroundColor(context.state.isPlaying ? .green : .orange)
+                HStack(spacing: 4) {
+                    Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
+                        .foregroundColor(context.state.isPlaying ? .green : .orange)
+                    if let name = context.state.presetName {
+                        Text(name)
+                            .font(.caption2)
+                            .lineLimit(1)
+                    }
+                }
             } compactTrailing: {
                 Image(systemName: audioOutputIcon(for: context.state.outputRoute))
                     .font(.caption2)
