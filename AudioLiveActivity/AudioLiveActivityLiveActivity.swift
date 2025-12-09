@@ -61,7 +61,15 @@ struct AudioLiveActivityLiveActivity: Widget {
                 Image(systemName: audioOutputIcon(for: context.state.outputRoute))
                     .font(.caption2)
             } minimal: {
-                Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
+                // Minimal view is very small (~36pt circle), text will likely be clipped
+                // but we try to show first character of preset name
+                if let name = context.state.presetName, let firstChar = name.first {
+                    Text(String(firstChar))
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                } else {
+                    Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
+                }
             }
             .keylineTint(Color.green)
         }
