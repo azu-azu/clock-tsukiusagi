@@ -66,20 +66,20 @@ E6 = 1318.51
 # Music Box Sound Parameters
 # ============================================================================
 
-# Music box characteristics: quick attack, medium decay, bell-like harmonics
-MELODY_ATTACK = 0.005  # Very quick attack (metallic strike)
-MELODY_DECAY = 2.8     # Slightly longer decay for Gymnopédie's gentle feel
-MELODY_GAIN = 0.32
+# Authentic music box: soft attack, long singing decay
+MELODY_ATTACK = 0.012  # Slightly softer attack (like plucked tine)
+MELODY_DECAY = 3.5     # Long, singing decay
+MELODY_GAIN = 0.38
 
-# Bass (lower register, softer)
-BASS_ATTACK = 0.008
-BASS_DECAY = 2.2
-BASS_GAIN = 0.14
+# Bass (lower register, warm)
+BASS_ATTACK = 0.015
+BASS_DECAY = 2.8
+BASS_GAIN = 0.16
 
-# Chord (middle register)
-CHORD_ATTACK = 0.006
-CHORD_DECAY = 1.8
-CHORD_GAIN = 0.08
+# Chord (middle register, gentle)
+CHORD_ATTACK = 0.010
+CHORD_DECAY = 2.2
+CHORD_GAIN = 0.10
 
 # ============================================================================
 # Music Box Tone Synthesis
@@ -87,44 +87,33 @@ CHORD_GAIN = 0.08
 
 def music_box_tone(freq, t, brightness=1.0):
     """
-    Generate music box bell-like tone.
+    Generate authentic music box tone.
 
-    Music box characteristics:
-    - Strong fundamental
-    - Prominent 2nd and 3rd harmonics
-    - Subtle inharmonic partials (gives metallic quality)
-    - Quick high-frequency decay (shimmer fades faster)
+    Real music box characteristics:
+    - Very strong, pure fundamental (the "ping")
+    - Gentle octave overtone
+    - Minimal higher harmonics (clean, not harsh)
+    - Smooth, singing decay
+    - NO inharmonic partials (real music boxes use tuned metal tines)
     """
     signal = np.zeros_like(t)
 
-    # Harmonic series with music box character
+    # Music box has very pure tone - mostly fundamental with soft overtones
     harmonics = [
-        (1.0, 1.00),      # Fundamental
-        (2.0, 0.55),      # Octave
-        (3.0, 0.30),      # Fifth above octave
-        (4.0, 0.15),      # 2 octaves
-        (5.0, 0.08),      # Major 3rd above 2 octaves
-    ]
-
-    # Slightly inharmonic partials for metallic quality
-    inharmonics = [
-        (2.756, 0.06 * brightness),  # Slightly detuned
-        (4.112, 0.03 * brightness),  # Bell-like partial
+        (1.0, 1.00),      # Strong fundamental (the main tone)
+        (2.0, 0.25),      # Soft octave (adds warmth)
+        (3.0, 0.08),      # Very subtle 12th (barely there)
+        (4.0, 0.03),      # Trace of 2nd octave
     ]
 
     for harmonic, amp in harmonics:
-        # Higher harmonics decay faster (simulate real music box)
-        decay_mult = 1.0 / (1.0 + (harmonic - 1) * 0.25)
-        decay_env = np.exp(-t * (1.0 / MELODY_DECAY) * (1.0 + (harmonic - 1) * 0.4))
-        signal += amp * decay_mult * np.sin(2 * np.pi * freq * harmonic * t) * decay_env
-
-    # Add inharmonic partials (subtle)
-    for partial, amp in inharmonics:
-        decay_env = np.exp(-t * (1.0 / MELODY_DECAY) * 1.8)  # Faster decay
-        signal += amp * np.sin(2 * np.pi * freq * partial * t) * decay_env
+        # Gentle decay curve - higher harmonics fade slightly faster
+        decay_rate = 1.0 + (harmonic - 1) * 0.15
+        decay_env = np.exp(-t * (1.0 / MELODY_DECAY) * decay_rate)
+        signal += amp * brightness * np.sin(2 * np.pi * freq * harmonic * t) * decay_env
 
     # Normalize
-    return signal / 1.4
+    return signal / 1.2
 
 # ============================================================================
 # Envelope Functions
@@ -132,27 +121,30 @@ def music_box_tone(freq, t, brightness=1.0):
 
 def music_box_envelope(t, duration, attack=MELODY_ATTACK, decay=MELODY_DECAY):
     """
-    Music box envelope: instant attack, exponential decay.
+    Music box envelope: soft attack, smooth singing decay.
     """
     env = np.ones_like(t)
 
-    # Very quick attack (strike)
+    # Soft cosine attack (not harsh linear)
     attack_mask = t < attack
     if np.any(attack_mask):
-        env[attack_mask] = t[attack_mask] / attack
+        # Cosine curve for smooth onset
+        env[attack_mask] = 0.5 * (1.0 - np.cos(np.pi * t[attack_mask] / attack))
 
-    # Exponential decay
+    # Smooth exponential decay with gentle curve
     decay_mask = t >= attack
     if np.any(decay_mask):
         decay_t = t[decay_mask] - attack
+        # Slightly slower initial decay for "singing" quality
         env[decay_mask] = np.exp(-decay_t / decay)
 
-    # Ensure clean end
-    end_fade = 0.05
+    # Ensure clean end with smooth fade
+    end_fade = 0.08
     end_mask = t >= duration - end_fade
     if np.any(end_mask):
         fade_t = t[end_mask] - (duration - end_fade)
-        env[end_mask] *= 1.0 - (fade_t / end_fade)
+        fade_curve = 0.5 * (1.0 + np.cos(np.pi * fade_t / end_fade))
+        env[end_mask] *= fade_curve
 
     return env
 
