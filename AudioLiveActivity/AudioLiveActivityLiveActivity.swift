@@ -61,12 +61,10 @@ struct AudioLiveActivityLiveActivity: Widget {
                 Image(systemName: audioOutputIcon(for: context.state.outputRoute))
                     .font(.caption2)
             } minimal: {
-                // Minimal view is very small (~36pt circle), text will likely be clipped
-                // but we try to show first character of preset name
-                if let name = context.state.presetName, let firstChar = name.first {
+                // Show emoji icon from preset name (e.g., "🪐 Jupiter" → "🪐")
+                if let name = context.state.presetName, let firstChar = name.first, firstChar.isEmoji {
                     Text(String(firstChar))
-                        .font(.caption2)
-                        .fontWeight(.bold)
+                        .font(.system(size: 24))
                 } else {
                     Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
                 }
@@ -77,6 +75,14 @@ struct AudioLiveActivityLiveActivity: Widget {
 }
 
 // MARK: - Helper Functions
+
+/// Check if a character is an emoji
+extension Character {
+    var isEmoji: Bool {
+        guard let scalar = unicodeScalars.first else { return false }
+        return scalar.properties.isEmoji && scalar.value > 0x238C
+    }
+}
 
 /// Get SF Symbol icon for audio output route
 private func audioOutputIcon(for route: String) -> String {
