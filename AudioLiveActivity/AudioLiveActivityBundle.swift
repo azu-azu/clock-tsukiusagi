@@ -11,8 +11,6 @@ import SwiftUI
 @main
 struct AudioLiveActivityBundle: WidgetBundle {
     var body: some Widget {
-        AudioLiveActivity()
-        AudioLiveActivityControl()
         AudioLiveActivityLiveActivity()
     }
 }
