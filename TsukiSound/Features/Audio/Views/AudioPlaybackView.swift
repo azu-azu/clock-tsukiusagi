@@ -36,10 +36,10 @@ struct AudioPlaybackView: View {
 
                             Spacer(minLength: 24)
 
-                            // 下部コンテンツ（Status〜Waveform）
+                            // 下部コンテンツ（Waveform〜Status）
                             VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
-                                statusSection
                                 waveformSection
+                                statusSection
                             }
                         }
                         .padding(.top, 16)
