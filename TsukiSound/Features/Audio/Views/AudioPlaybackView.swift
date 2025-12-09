@@ -7,50 +7,6 @@
 //
 
 import SwiftUI
-import AVFoundation
-
-/// 音源プリセット（SignalEngine による合成音源）
-enum AudioSourcePreset: Identifiable {
-    case synthesis(UISoundPreset)
-
-    var id: String {
-        switch self {
-        case .synthesis(let preset):
-            return "synthesis_\(preset.rawValue)"
-        }
-    }
-
-    var displayName: String {
-        switch self {
-        case .synthesis(let preset):
-            return preset.displayName
-        }
-    }
-
-    var englishTitle: String {
-        switch self {
-        case .synthesis(let preset):
-            return preset.englishTitle
-        }
-    }
-}
-
-// MARK: - Hashable & Equatable conformance
-extension AudioSourcePreset: Hashable, Equatable {
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-
-    static func == (lhs: AudioSourcePreset, rhs: AudioSourcePreset) -> Bool {
-        lhs.id == rhs.id
-    }
-
-    /// All available audio sources
-    static var allSources: [AudioSourcePreset] {
-        // All presets are production presets now
-        return UISoundPreset.allCases.map { AudioSourcePreset.synthesis($0) }
-    }
-}
 
 /// 音声再生コントロールビュー
 struct AudioPlaybackView: View {
@@ -59,8 +15,6 @@ struct AudioPlaybackView: View {
 
     @State private var errorMessage: String?
     @State private var showError = false
-
-    @AppStorage("showAudioTitle") private var showAudioTitle: Bool = true
 
     init(selectedTab: Binding<Tab>) {
         _selectedTab = selectedTab
