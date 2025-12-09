@@ -937,7 +937,7 @@ public final class AudioService: ObservableObject {
 
         nowPlayingController?.updateNowPlaying(
             title: preset.englishTitle,
-            artist: "Clock Tsukiusagi",
+            artist: "TsukiSound",
             album: "Natural Sound Drones",
             artwork: preset.artworkImage,
             duration: nil, // Infinite duration for continuous playback

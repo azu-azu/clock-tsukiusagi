@@ -48,7 +48,7 @@
 "menu.audio" = "オーディオ";
 "menu.audioSettings" = "オーディオ設定";
 "menu.appSettings" = "アプリ設定";
-"menu.version" = "TsukiUsagi Clock";
+"menu.version" = "TsukiSound";
 "menu.versionNumber" = "Version 1.0.0";
 
 // MARK: - Sound Presets

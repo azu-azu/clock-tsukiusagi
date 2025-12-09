@@ -314,7 +314,7 @@ private func updateNowPlaying() {
     let title = "\(preset)"  // enumを文字列に変換
     nowPlayingController?.updateNowPlaying(
         title: title,
-        artist: "Clock Tsukiusagi",
+        artist: "TsukiSound",
         album: "Natural Sound Drones",
         artwork: nil,  // TODO: アプリアイコンまたはプリセット固有のアートワーク
         duration: nil, // 無限再生なのでnil
@@ -375,7 +375,7 @@ public var artworkImage: UIImage? {
 // AudioService.swift - updateNowPlaying()
 nowPlayingController?.updateNowPlaying(
     title: preset.englishTitle,
-    artist: "Clock Tsukiusagi",
+    artist: "TsukiSound",
     album: "Natural Sound Drones",
     artwork: preset.artworkImage,  // 絵文字画像を設定
     duration: nil,

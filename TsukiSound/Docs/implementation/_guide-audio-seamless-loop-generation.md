@@ -338,7 +338,7 @@ python3 scripts/generate_test_tone.py
 
 **出力**:
 ```
-🎵 Generating ambient audio for Clock Tsukiusagi...
+🎵 Generating ambient audio for TsukiSound...
    Sample rate: 48000 Hz
    Duration: 60 sec
 
