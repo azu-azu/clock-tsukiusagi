@@ -48,14 +48,19 @@ struct AudioLiveActivityLiveActivity: Widget {
                     }
                 }
             } compactLeading: {
-                HStack(spacing: 4) {
-                    Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
-                        .foregroundColor(context.state.isPlaying ? .green : .orange)
-                    if let name = context.state.presetName {
-                        Text(name)
+                // Show emoji icon + track name (without emoji prefix)
+                if let name = context.state.presetName, let firstChar = name.first, firstChar.isEmoji {
+                    HStack(spacing: 4) {
+                        Text(String(firstChar))
+                        // Remove emoji prefix from name for display
+                        let nameWithoutEmoji = String(name.dropFirst()).trimmingCharacters(in: .whitespaces)
+                        Text(nameWithoutEmoji)
                             .font(.caption2)
                             .lineLimit(1)
                     }
+                } else {
+                    Image(systemName: context.state.isPlaying ? "waveform" : "pause.fill")
+                        .foregroundColor(context.state.isPlaying ? .green : .orange)
                 }
             } compactTrailing: {
                 Image(systemName: audioOutputIcon(for: context.state.outputRoute))
