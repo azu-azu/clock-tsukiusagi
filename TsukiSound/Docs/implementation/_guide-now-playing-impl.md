@@ -356,7 +356,34 @@ if let artwork = artwork {
 }
 ```
 
-現在は`nil`を渡しているが、将来的にアプリアイコンやプリセット固有の画像を追加可能。
+**実装済み（2025-12-09）**: `UISoundPreset.artworkImage` で絵文字から画像を生成し、Now Playing に設定。
+
+```swift
+// UISoundPreset.swift
+public var artworkImage: UIImage? {
+    let size = CGSize(width: 300, height: 300)
+    let renderer = UIGraphicsImageRenderer(size: size)
+    return renderer.image { context in
+        UIColor(white: 0.1, alpha: 1.0).setFill()
+        context.fill(CGRect(origin: .zero, size: size))
+        let emoji = icon as NSString
+        let font = UIFont.systemFont(ofSize: 180)
+        // ... 絵文字を中央に描画
+    }
+}
+
+// AudioService.swift - updateNowPlaying()
+nowPlayingController?.updateNowPlaying(
+    title: preset.englishTitle,
+    artist: "Clock Tsukiusagi",
+    album: "Natural Sound Drones",
+    artwork: preset.artworkImage,  // 絵文字画像を設定
+    duration: nil,
+    elapsedTime: 0
+)
+```
+
+これにより、ダイナミックアイランドの Now Playing 表示でスピーカーマークの代わりに絵文字アイコン（🪐 / 🌖）が表示される。
 
 ### 3.4 AudioServiceとの統合
 
@@ -1070,7 +1097,7 @@ private func setupNowPlayingCommands() {
 ### 10.3 次のステップ
 
 **短期的改善**:
-- [ ] アートワーク追加（アプリアイコンまたはプリセット固有）
+- [x] アートワーク追加（アプリアイコンまたはプリセット固有） ✅ 2025-12-09 完了
 - [ ] 経過時間の表示（長時間再生の場合）
 - [ ] エラーハンドリングの強化
 
@@ -1137,7 +1164,7 @@ Audio sessionは有効化されているか？
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-11-24
+**Document Version**: 1.1
+**Last Updated**: 2025-12-09
 **Maintained By**: Claude Code
 **Status**: Production-ready
