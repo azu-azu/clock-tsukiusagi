@@ -28,19 +28,21 @@ struct AudioPlaybackView: View {
 
                 GeometryReader { geometry in
                     ScrollView {
-                        VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
+                        VStack(spacing: 0) {
                             // 上部コンテンツ
-                            bluetoothStatusIndicator
-                            soundSelectionSection
-                            controlSection
-
-                            Spacer(minLength: 24)
-
-                            // 下部コンテンツ（Waveform〜Status）
                             VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
-                                waveformSection
-                                statusSection
+                                bluetoothStatusIndicator
+                                soundSelectionSection
+                                controlSection
                             }
+
+                            // Waveform（再生ボタンとStatusの間の中央）
+                            Spacer()
+                            waveformSection
+                            Spacer()
+
+                            // 下部コンテンツ（Status）
+                            statusSection
                         }
                         .padding(.top, 16)
                         .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
