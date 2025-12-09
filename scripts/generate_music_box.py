@@ -87,45 +87,33 @@ CHORD_GAIN = 0.10
 
 def music_box_tone(freq, t, brightness=1.0):
     """
-    Generate authentic music box tone with "ti-ton" attack.
+    Generate authentic music box tone.
 
     Real music box characteristics:
-    - Initial bright "ti" from tine being struck (high frequency burst)
-    - Followed by warm "ton" fundamental that sings
-    - The "ti-ton" is the signature double-sound of music boxes
+    - Very strong, pure fundamental (the "ping")
+    - Gentle octave overtone
+    - Minimal higher harmonics (clean, not harsh)
+    - Smooth, singing decay
+    - NO inharmonic partials (real music boxes use tuned metal tines)
     """
     signal = np.zeros_like(t)
 
-    # === Main tone (the "ton" - singing fundamental) ===
+    # Music box has very pure tone - mostly fundamental with soft overtones
     harmonics = [
-        (1.0, 1.00),      # Strong fundamental
-        (2.0, 0.20),      # Soft octave
-        (3.0, 0.06),      # Very subtle 12th
+        (1.0, 1.00),      # Strong fundamental (the main tone)
+        (2.0, 0.25),      # Soft octave (adds warmth)
+        (3.0, 0.08),      # Very subtle 12th (barely there)
+        (4.0, 0.03),      # Trace of 2nd octave
     ]
 
     for harmonic, amp in harmonics:
-        decay_rate = 1.0 + (harmonic - 1) * 0.12
+        # Gentle decay curve - higher harmonics fade slightly faster
+        decay_rate = 1.0 + (harmonic - 1) * 0.15
         decay_env = np.exp(-t * (1.0 / MELODY_DECAY) * decay_rate)
         signal += amp * brightness * np.sin(2 * np.pi * freq * harmonic * t) * decay_env
 
-    # === Initial "ti" attack (bright transient when tine is plucked) ===
-    # This is the characteristic "ti" before the "ton"
-    # Higher frequency burst that decays very quickly
-    ti_freq = freq * 3.0  # Higher pitched "ti"
-    ti_decay = 0.08       # Very fast decay (80ms)
-    ti_amp = 0.35 * brightness
-    ti_env = np.exp(-t / ti_decay)
-    signal += ti_amp * np.sin(2 * np.pi * ti_freq * t) * ti_env
-
-    # Secondary "ti" component (octave above for shimmer)
-    ti2_freq = freq * 4.0
-    ti2_decay = 0.05
-    ti2_amp = 0.15 * brightness
-    ti2_env = np.exp(-t / ti2_decay)
-    signal += ti2_amp * np.sin(2 * np.pi * ti2_freq * t) * ti2_env
-
     # Normalize
-    return signal / 1.3
+    return signal / 1.2
 
 # ============================================================================
 # Envelope Functions
