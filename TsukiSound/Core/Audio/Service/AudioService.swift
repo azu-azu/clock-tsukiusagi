@@ -935,12 +935,11 @@ public final class AudioService: ObservableObject {
             return
         }
 
-        let title = "\(preset)"  // Convert enum to string
         nowPlayingController?.updateNowPlaying(
-            title: title,
+            title: preset.englishTitle,
             artist: "Clock Tsukiusagi",
             album: "Natural Sound Drones",
-            artwork: nil,  // TODO: Add app icon or preset-specific artwork
+            artwork: preset.artworkImage,
             duration: nil, // Infinite duration for continuous playback
             elapsedTime: 0
         )

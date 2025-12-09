@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 /// Sound preset for UI display (decoupled from technical implementation)
 /// This enum represents what users see in the app, not how sounds are generated.
@@ -14,6 +15,16 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case moonlitGymnopedie      // Moonlit Gymnopédie（PureTone module）
 
     public var id: String { rawValue }
+
+    /// Emoji icon for this preset
+    public var icon: String {
+        switch self {
+        case .jupiter:
+            return "🪐"
+        case .moonlitGymnopedie:
+            return "🌖"
+        }
+    }
 
     /// Localization key for display name
     private var localizationKey: String {
@@ -27,8 +38,29 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
 
     /// Display name for UI (localized with emoji)
     public var displayName: String {
-        let icon = self == .jupiter ? "🪐 " : "🌖 "
-        return icon + localizationKey.localized
+        return icon + " " + localizationKey.localized
+    }
+
+    /// Artwork image generated from emoji icon (for Now Playing)
+    public var artworkImage: UIImage? {
+        let size = CGSize(width: 300, height: 300)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            // Dark background
+            UIColor(white: 0.1, alpha: 1.0).setFill()
+            context.fill(CGRect(origin: .zero, size: size))
+
+            // Draw emoji
+            let emoji = icon as NSString
+            let font = UIFont.systemFont(ofSize: 180)
+            let attributes: [NSAttributedString.Key: Any] = [.font: font]
+            let textSize = emoji.size(withAttributes: attributes)
+            let origin = CGPoint(
+                x: (size.width - textSize.width) / 2,
+                y: (size.height - textSize.height) / 2
+            )
+            emoji.draw(at: origin, withAttributes: attributes)
+        }
     }
 
     /// English title for selected display
