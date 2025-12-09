@@ -302,35 +302,6 @@ def organ_tone(freq, t):
     # Normalize by sum of amplitudes
     return signal / sum(amps)
 
-def music_box_tone(freq, t, decay_time=MELODY_DECAY):
-    """
-    Generate authentic music box tone for melody.
-
-    Real music box characteristics:
-    - Very strong, pure fundamental
-    - Gentle octave overtone
-    - Minimal higher harmonics (clean, not harsh)
-    - Smooth, singing decay
-    """
-    signal = np.zeros_like(t)
-
-    # Music box has very pure tone - mostly fundamental with soft overtones
-    harmonics = [
-        (1.0, 1.00),      # Strong fundamental (the main tone)
-        (2.0, 0.25),      # Soft octave (adds warmth)
-        (3.0, 0.08),      # Very subtle 12th (barely there)
-        (4.0, 0.03),      # Trace of 2nd octave
-    ]
-
-    for harmonic, amp in harmonics:
-        # Gentle decay curve - higher harmonics fade slightly faster
-        decay_rate = 1.0 + (harmonic - 1) * 0.15
-        decay_env = np.exp(-t * (1.0 / decay_time) * decay_rate)
-        signal += amp * np.sin(2 * np.pi * freq * harmonic * t) * decay_env
-
-    # Normalize
-    return signal / 1.2
-
 def soft_clip(signal, threshold=0.9):
     """Soft clip to prevent harsh distortion."""
     return np.tanh(signal / threshold) * threshold
@@ -461,9 +432,9 @@ def generate_melody(duration):
                 fade_multiplier = 0.3 + 0.7 * (1.0 + np.cos(fade_progress * np.pi)) / 2.0
                 env[fade_mask] *= fade_multiplier
 
-        # Music box tone for melody (pure, singing sound)
+        # Organ tone (Jupiter-style harmonics)
         t_note = t_global[mask]
-        layered = music_box_tone(note.freq, t_note, effective_decay)
+        layered = organ_tone(note.freq, t_note)
 
         signal[mask] += layered * env * effective_gain
 
