@@ -2,11 +2,12 @@
 """
 Generate Music Box (オルゴール) audio for TsukiSound
 
-Generates a gentle, dreamy music box melody with:
+Generates Gymnopédie No.1 melody with music box timbre:
 - Bell-like metallic tones with quick decay
-- Simple lullaby-style melody (based on Brahms' Lullaby)
+- 88 BPM, 3/4 time signature, D Major
 - Soft reverb for dreamy atmosphere
-- 60 BPM, 3/4 time signature
+
+Based on generate_moonlit_gymnopedie.py melody data
 
 Output: WAV file (to be converted to CAF for iOS)
 """
@@ -21,42 +22,45 @@ from audio_utils import apply_silence_padding
 SAMPLE_RATE = 48000
 OUTPUT_DIR = "../TsukiSound/Resources/Audio"
 
-# Timing Constants (60 BPM - slower, dreamy)
-BPM = 60
-BEAT = 60.0 / BPM  # 1 beat = 1.0 second
-BAR_DURATION = BEAT * 3  # 3/4 time
-TOTAL_BARS = 32  # ~96 seconds total
+# Timing Constants (88 BPM - same as original Gymnopédie)
+BEAT = 0.682  # 1 beat = 0.682 seconds
+BAR_DURATION = BEAT * 3  # 1 bar = 3 beats (3/4 time)
+TOTAL_BARS = 41  # Bar 39 + 2 bars for reverb tail
 CYCLE_DURATION = TOTAL_BARS * BAR_DURATION
 
 # ============================================================================
-# Frequency Constants (F Major - warm, lullaby-like)
+# Frequency Constants (D Major: F#, C#)
 # ============================================================================
 
-# Octave 4 (middle)
-C4 = 261.63
+# Bass
+D3 = 146.83
+E3 = 164.81
+G3 = 196.00
+
+# Chord
+A3 = 220.00
+B3 = 246.94
+Cs4 = 277.18   # C#4
 D4 = 293.66
+
+# Melody (wide range)
 E4 = 329.63
-F4 = 349.23
+Fs4 = 369.99   # F#4
 G4 = 392.00
 A4 = 440.00
-Bb4 = 466.16  # B-flat
 B4 = 493.88
-
-# Octave 5 (higher, bell-like)
-C5 = 523.25
+C5 = 523.25    # C5 (natural)
+Cs5 = 554.37   # C#5
 D5 = 587.33
 E5 = 659.25
-F5 = 698.46
+F5 = 698.46    # F5 (natural)
+Fs5 = 739.99   # F#5
 G5 = 783.99
 A5 = 880.00
-Bb5 = 932.33
 B5 = 987.77
-
-# Octave 6 (sparkle)
 C6 = 1046.50
 D6 = 1174.66
 E6 = 1318.51
-F6 = 1396.91
 
 # ============================================================================
 # Music Box Sound Parameters
@@ -64,13 +68,18 @@ F6 = 1396.91
 
 # Music box characteristics: quick attack, medium decay, bell-like harmonics
 MELODY_ATTACK = 0.005  # Very quick attack (metallic strike)
-MELODY_DECAY = 2.5     # Medium decay
-MELODY_GAIN = 0.35
+MELODY_DECAY = 2.8     # Slightly longer decay for Gymnopédie's gentle feel
+MELODY_GAIN = 0.32
 
-# Accompaniment (lower register, softer)
-ACC_ATTACK = 0.008
-ACC_DECAY = 1.8
-ACC_GAIN = 0.15
+# Bass (lower register, softer)
+BASS_ATTACK = 0.008
+BASS_DECAY = 2.2
+BASS_GAIN = 0.14
+
+# Chord (middle register)
+CHORD_ATTACK = 0.006
+CHORD_DECAY = 1.8
+CHORD_GAIN = 0.08
 
 # ============================================================================
 # Music Box Tone Synthesis
@@ -91,32 +100,31 @@ def music_box_tone(freq, t, brightness=1.0):
     # Harmonic series with music box character
     harmonics = [
         (1.0, 1.00),      # Fundamental
-        (2.0, 0.60),      # Octave
-        (3.0, 0.35),      # Fifth above octave
-        (4.0, 0.20),      # 2 octaves
-        (5.0, 0.10),      # Major 3rd above 2 octaves
-        (6.0, 0.05),      #
+        (2.0, 0.55),      # Octave
+        (3.0, 0.30),      # Fifth above octave
+        (4.0, 0.15),      # 2 octaves
+        (5.0, 0.08),      # Major 3rd above 2 octaves
     ]
 
     # Slightly inharmonic partials for metallic quality
     inharmonics = [
-        (2.756, 0.08 * brightness),  # Slightly detuned
-        (4.112, 0.04 * brightness),  # Bell-like partial
+        (2.756, 0.06 * brightness),  # Slightly detuned
+        (4.112, 0.03 * brightness),  # Bell-like partial
     ]
 
     for harmonic, amp in harmonics:
         # Higher harmonics decay faster (simulate real music box)
-        decay_mult = 1.0 / (1.0 + (harmonic - 1) * 0.3)
-        decay_env = np.exp(-t * (1.0 / MELODY_DECAY) * (1.0 + (harmonic - 1) * 0.5))
+        decay_mult = 1.0 / (1.0 + (harmonic - 1) * 0.25)
+        decay_env = np.exp(-t * (1.0 / MELODY_DECAY) * (1.0 + (harmonic - 1) * 0.4))
         signal += amp * decay_mult * np.sin(2 * np.pi * freq * harmonic * t) * decay_env
 
     # Add inharmonic partials (subtle)
     for partial, amp in inharmonics:
-        decay_env = np.exp(-t * (1.0 / MELODY_DECAY) * 2.0)  # Faster decay
+        decay_env = np.exp(-t * (1.0 / MELODY_DECAY) * 1.8)  # Faster decay
         signal += amp * np.sin(2 * np.pi * freq * partial * t) * decay_env
 
     # Normalize
-    return signal / 1.5
+    return signal / 1.4
 
 # ============================================================================
 # Envelope Functions
@@ -149,172 +157,173 @@ def music_box_envelope(t, duration, attack=MELODY_ATTACK, decay=MELODY_DECAY):
     return env
 
 # ============================================================================
-# Melody Note Data
+# Melody Note Data (from GymnopedieMelodyData)
 # ============================================================================
 
-class Note:
-    def __init__(self, freq, bar, beat, dur_beats, gain=None):
+class MelodyNote:
+    def __init__(self, freq, start_bar, start_beat, dur_beats, custom_gain=None, fade_out=False):
         self.freq = freq
-        self.bar = bar      # 1-indexed
-        self.beat = beat    # 0, 1, 2 (for 3/4)
+        self.start_bar = start_bar  # 1-indexed
+        self.start_beat = start_beat  # 0, 1, 2
         self.dur_beats = dur_beats
-        self.gain = gain
+        self.custom_gain = custom_gain
+        self.fade_out = fade_out
 
 def get_melody_notes():
-    """
-    Simple lullaby melody inspired by Brahms' Lullaby.
-    Adapted to F Major for a warm, gentle feel.
-    """
+    """All melody notes for Gymnopédie No.1"""
     notes = []
 
-    # Section A - Bars 1-8 (Theme)
-    # Bar 1: pickup
-    notes.append(Note(A5, 1, 2, 1))
-    # Bar 2
-    notes.append(Note(A5, 2, 0, 1))
-    notes.append(Note(C6, 2, 1, 2))
-    # Bar 3
-    notes.append(Note(A5, 3, 0, 1))
-    notes.append(Note(C6, 3, 1, 1))
-    notes.append(Note(F6, 3, 2, 1))
-    # Bar 4
-    notes.append(Note(E6, 4, 0, 3))
-    # Bar 5
-    notes.append(Note(G5, 5, 2, 1))
+    # Section G1 - Bars 1-12 (Intro + Theme A)
+    # Bar 1-4: Intro (No Melody)
+    # Bar 5 (Melody Enters)
+    notes.append(MelodyNote(Fs5, 5, 1, 1))
+    notes.append(MelodyNote(A5, 5, 2, 1))
     # Bar 6
-    notes.append(Note(G5, 6, 0, 1))
-    notes.append(Note(Bb5, 6, 1, 2))
+    notes.append(MelodyNote(G5, 6, 0, 1))
+    notes.append(MelodyNote(Fs5, 6, 1, 1))
+    notes.append(MelodyNote(Cs5, 6, 2, 1))
     # Bar 7
-    notes.append(Note(G5, 7, 0, 1))
-    notes.append(Note(Bb5, 7, 1, 1))
-    notes.append(Note(E6, 7, 2, 1))
+    notes.append(MelodyNote(B4, 7, 0, 1))
+    notes.append(MelodyNote(Cs5, 7, 1, 1))
+    notes.append(MelodyNote(D5, 7, 2, 1))
     # Bar 8
-    notes.append(Note(F6, 8, 0, 3))
+    notes.append(MelodyNote(A4, 8, 0, 3))
+    # Bar 9-12: F#4 sustain with fade out
+    notes.append(MelodyNote(Fs4, 9, 0, 12, fade_out=True))
 
-    # Section A' - Bars 9-16 (Theme repeat with variation)
-    # Bar 9
-    notes.append(Note(A5, 9, 2, 1))
-    # Bar 10
-    notes.append(Note(A5, 10, 0, 1))
-    notes.append(Note(C6, 10, 1, 2))
-    # Bar 11
-    notes.append(Note(A5, 11, 0, 1))
-    notes.append(Note(C6, 11, 1, 1))
-    notes.append(Note(F6, 11, 2, 1))
-    # Bar 12
-    notes.append(Note(E6, 12, 0, 2))
-    notes.append(Note(D6, 12, 2, 1))
+    # Section G2 - Bars 13-21 (Theme repeat + Development)
     # Bar 13
-    notes.append(Note(C6, 13, 0, 1))
-    notes.append(Note(D6, 13, 1, 1))
-    notes.append(Note(E6, 13, 2, 1))
+    notes.append(MelodyNote(Fs5, 13, 1, 1))
+    notes.append(MelodyNote(A5, 13, 2, 1))
     # Bar 14
-    notes.append(Note(F6, 14, 0, 2))
-    notes.append(Note(E6, 14, 2, 1))
+    notes.append(MelodyNote(G5, 14, 0, 1))
+    notes.append(MelodyNote(Fs5, 14, 1, 1))
+    notes.append(MelodyNote(Cs5, 14, 2, 1))
     # Bar 15
-    notes.append(Note(D6, 15, 0, 1))
-    notes.append(Note(C6, 15, 1, 1))
-    notes.append(Note(Bb5, 15, 2, 1))
+    notes.append(MelodyNote(B4, 15, 0, 1))
+    notes.append(MelodyNote(Cs5, 15, 1, 1))
+    notes.append(MelodyNote(D5, 15, 2, 1))
     # Bar 16
-    notes.append(Note(A5, 16, 0, 3))
-
-    # Section B - Bars 17-24 (Contrasting section)
+    notes.append(MelodyNote(A4, 16, 0, 3))
     # Bar 17
-    notes.append(Note(D6, 17, 1, 1))
-    notes.append(Note(D6, 17, 2, 1))
+    notes.append(MelodyNote(Cs5, 17, 0, 3))
     # Bar 18
-    notes.append(Note(D6, 18, 0, 1))
-    notes.append(Note(E6, 18, 1, 2))
-    # Bar 19
-    notes.append(Note(C6, 19, 0, 1))
-    notes.append(Note(C6, 19, 1, 1))
-    notes.append(Note(C6, 19, 2, 1))
-    # Bar 20
-    notes.append(Note(C6, 20, 0, 1))
-    notes.append(Note(D6, 20, 1, 2))
-    # Bar 21
-    notes.append(Note(Bb5, 21, 0, 1))
-    notes.append(Note(Bb5, 21, 1, 1))
-    notes.append(Note(Bb5, 21, 2, 1))
+    notes.append(MelodyNote(Fs5, 18, 0, 3))
+    # Bar 19-21: E5 sustain with fade out
+    notes.append(MelodyNote(E5, 19, 0, 9, fade_out=True))
+
+    # Section G3 - Bars 22-26 (Development)
     # Bar 22
-    notes.append(Note(Bb5, 22, 0, 1))
-    notes.append(Note(C6, 22, 1, 1))
-    notes.append(Note(D6, 22, 2, 1))
+    notes.append(MelodyNote(A4, 22, 0, 1))
+    notes.append(MelodyNote(B4, 22, 1, 1))
+    notes.append(MelodyNote(C5, 22, 2, 1))  # C natural
     # Bar 23
-    notes.append(Note(C6, 23, 0, 2))
-    notes.append(Note(Bb5, 23, 2, 1))
+    notes.append(MelodyNote(E5, 23, 0, 1))
+    notes.append(MelodyNote(D5, 23, 1, 1))
+    notes.append(MelodyNote(B4, 23, 2, 1))
     # Bar 24
-    notes.append(Note(A5, 24, 0, 3))
+    notes.append(MelodyNote(D5, 24, 0, 1))
+    notes.append(MelodyNote(C5, 24, 1, 1))  # C natural
+    notes.append(MelodyNote(B4, 24, 2, 1))
+    notes.append(MelodyNote(E4, 24, 1, 2))  # Alto
+    # Bar 25-26
+    notes.append(MelodyNote(D5, 25, 0, 5))
+    notes.append(MelodyNote(D4, 25, 1, 2))  # Alto
+    notes.append(MelodyNote(D5, 26, 2, 1))
+    notes.append(MelodyNote(D4, 26, 1, 2))  # Alto
 
-    # Section A'' - Bars 25-32 (Final theme, gentle ending)
-    # Bar 25
-    notes.append(Note(A5, 25, 2, 1))
-    # Bar 26
-    notes.append(Note(A5, 26, 0, 1))
-    notes.append(Note(C6, 26, 1, 2))
+    # Section G4 - Bars 27-31 (Ascending passage)
     # Bar 27
-    notes.append(Note(A5, 27, 0, 1))
-    notes.append(Note(C6, 27, 1, 1))
-    notes.append(Note(F6, 27, 2, 1))
+    notes.append(MelodyNote(E5, 27, 0, 1))
+    notes.append(MelodyNote(F5, 27, 1, 1))  # F natural
+    notes.append(MelodyNote(G5, 27, 2, 1))
     # Bar 28
-    notes.append(Note(E6, 28, 0, 3))
+    notes.append(MelodyNote(A5, 28, 0, 1))
+    notes.append(MelodyNote(C5, 28, 1, 1))  # C natural
+    notes.append(MelodyNote(D5, 28, 2, 1))
     # Bar 29
-    notes.append(Note(D6, 29, 0, 1))
-    notes.append(Note(C6, 29, 1, 1))
-    notes.append(Note(Bb5, 29, 2, 1))
-    # Bar 30
-    notes.append(Note(A5, 30, 0, 2))
-    notes.append(Note(G5, 30, 2, 1))
-    # Bar 31
-    notes.append(Note(F5, 31, 0, 3))
-    # Bar 32 (final, very soft)
-    notes.append(Note(F5, 32, 0, 3, gain=0.2))
+    notes.append(MelodyNote(E5, 29, 0, 1))
+    notes.append(MelodyNote(D5, 29, 1, 1))
+    notes.append(MelodyNote(B4, 29, 2, 1))
+    notes.append(MelodyNote(E4, 29, 1, 2))  # Alto
+    # Bar 30-31
+    notes.append(MelodyNote(D5, 30, 0, 5))
+    notes.append(MelodyNote(D4, 30, 1, 2))  # Alto
+    notes.append(MelodyNote(D5, 31, 2, 1))
+    notes.append(MelodyNote(D4, 31, 1, 2))  # Alto
 
-    return notes
+    # Section G5 - Bars 32-39 (Final section + Climax)
+    # Bar 32
+    notes.append(MelodyNote(G5, 32, 0, 3))
+    # Bar 33
+    notes.append(MelodyNote(Fs5, 33, 0, 3))
+    # Bar 34
+    notes.append(MelodyNote(B4, 34, 0, 1))
+    notes.append(MelodyNote(A4, 34, 1, 1))
+    notes.append(MelodyNote(B4, 34, 2, 1))
+    # Bar 35
+    notes.append(MelodyNote(Cs5, 35, 0, 1))
+    notes.append(MelodyNote(D5, 35, 1, 1))
+    notes.append(MelodyNote(E5, 35, 2, 1))
+    # Bar 36
+    notes.append(MelodyNote(Cs5, 36, 0, 1))
+    notes.append(MelodyNote(D5, 36, 1, 1))
+    notes.append(MelodyNote(E5, 36, 2, 1))
+    # Bar 37
+    notes.append(MelodyNote(Fs4, 37, 0, 3))
+    notes.append(MelodyNote(D4, 37, 1, 1))  # Alto
+    notes.append(MelodyNote(G4, 37, 2, 1))  # Alto
 
-def get_accompaniment_notes():
-    """
-    Simple accompaniment: bass notes on beat 1, chord tones on beats 2-3.
-    F Major tonality.
-    """
-    notes = []
+    # Bar 38: Am context - quiet preparation (staggered layers)
+    notes.append(MelodyNote(A3, 38, 0.00, 3.5, custom_gain=0.18))
+    notes.append(MelodyNote(E4, 38, 0.12, 3.3, custom_gain=0.14))
+    notes.append(MelodyNote(A4, 38, 0.24, 3.1, custom_gain=0.12))
 
-    # Pattern: Bass (beat 1), then two chord tones (beats 2, 3)
-    patterns = [
-        # Bars 1-4: F major
-        {'bars': [1, 2, 3, 4], 'bass': F4, 'chord': [A4, C5]},
-        # Bars 5-8: Bb major, then F
-        {'bars': [5, 6], 'bass': Bb4, 'chord': [D5, F5]},
-        {'bars': [7, 8], 'bass': F4, 'chord': [A4, C5]},
-        # Bars 9-12: F major
-        {'bars': [9, 10, 11, 12], 'bass': F4, 'chord': [A4, C5]},
-        # Bars 13-16: C7 -> F
-        {'bars': [13, 14], 'bass': C4, 'chord': [E4, Bb4]},
-        {'bars': [15, 16], 'bass': F4, 'chord': [A4, C5]},
-        # Bars 17-20: Bb -> C
-        {'bars': [17, 18], 'bass': Bb4, 'chord': [D5, F5]},
-        {'bars': [19, 20], 'bass': C4, 'chord': [E4, G4]},
-        # Bars 21-24: Bb -> F
-        {'bars': [21, 22], 'bass': Bb4, 'chord': [D5, F5]},
-        {'bars': [23, 24], 'bass': F4, 'chord': [A4, C5]},
-        # Bars 25-32: F major (gentle ending)
-        {'bars': [25, 26, 27, 28], 'bass': F4, 'chord': [A4, C5]},
-        {'bars': [29, 30], 'bass': Bb4, 'chord': [D5, F5]},
-        {'bars': [31, 32], 'bass': F4, 'chord': [A4, C5]},
-    ]
-
-    for pattern in patterns:
-        for bar in pattern['bars']:
-            # Bass on beat 1
-            notes.append(Note(pattern['bass'], bar, 0, 1))
-            # Chord tones on beats 2 and 3
-            notes.append(Note(pattern['chord'][0], bar, 1, 0.8))
-            notes.append(Note(pattern['chord'][1], bar, 2, 0.8))
+    # Bar 39: D Major - final climax (staggered layers)
+    notes.append(MelodyNote(D3, 39, 0.00, 6.0, custom_gain=0.20))
+    notes.append(MelodyNote(D4, 39, 0.12, 5.8, custom_gain=0.14))
+    notes.append(MelodyNote(A4, 39, 0.21, 5.5, custom_gain=0.16))
+    notes.append(MelodyNote(D5, 39, 0.30, 5.2, custom_gain=0.12))
 
     return notes
 
 # ============================================================================
-# Schroeder Reverb (simplified for music box)
+# Bass & Chord Data (per bar)
+# ============================================================================
+
+def get_bass_chord_data():
+    """
+    Bass & Chord patterns:
+    - Default odd bars: Bass=G3, Chord=B3+D4
+    - Default even bars: Bass=D3, Chord=A3+C#4
+    - E minor context (bars 9-12, 19-21): Bass=E3, Chord=B3+D4
+    """
+    data = []
+
+    for bar in range(1, TOTAL_BARS + 1):
+        if bar in [9, 10, 11, 12, 19, 20, 21]:
+            # E minor context
+            bass_freq = E3
+            chord_freqs = [B3, D4]
+        elif bar % 2 == 1:
+            # Default odd
+            bass_freq = G3
+            chord_freqs = [B3, D4]
+        else:
+            # Default even
+            bass_freq = D3
+            chord_freqs = [A3, Cs4]
+
+        data.append({
+            'bar': bar,
+            'bass_freq': bass_freq,
+            'chord_freqs': chord_freqs
+        })
+
+    return data
+
+# ============================================================================
+# Schroeder Reverb (for music box)
 # ============================================================================
 
 class MusicBoxReverb:
@@ -390,7 +399,7 @@ def generate_melody(duration):
     melody_notes = get_melody_notes()
 
     for note in melody_notes:
-        note_start = (note.bar - 1) * BAR_DURATION + note.beat * BEAT
+        note_start = (note.start_bar - 1) * BAR_DURATION + note.start_beat * BEAT
         note_dur = note.dur_beats * BEAT
         note_end = note_start + note_dur
 
@@ -399,6 +408,19 @@ def generate_melody(duration):
             continue
 
         t_local = t_global[mask] - note_start
+
+        # Determine gain
+        if note.custom_gain is not None:
+            effective_gain = note.custom_gain
+        else:
+            effective_gain = MELODY_GAIN
+            # High frequency reduction (600Hz+)
+            if note.freq >= 600.0:
+                max_freq = E6
+                min_freq = 600.0
+                reduction_ratio = min(1.0, (note.freq - min_freq) / (max_freq - min_freq))
+                high_freq_reduction = 1.0 - reduction_ratio * 0.30
+                effective_gain *= high_freq_reduction
 
         # Music box tone
         tone = music_box_tone(note.freq, t_local)
@@ -406,24 +428,30 @@ def generate_melody(duration):
         # Envelope
         env = music_box_envelope(t_local, note_dur)
 
-        # Gain
-        gain = note.gain if note.gain else MELODY_GAIN
+        # Fade out for long sustain notes
+        if note.fade_out:
+            progress = t_local / note_dur
+            fade_mask = progress > 0.5
+            if np.any(fade_mask):
+                fade_progress = (progress[fade_mask] - 0.5) * 2.0
+                fade_multiplier = 0.3 + 0.7 * (1.0 + np.cos(fade_progress * np.pi)) / 2.0
+                env[fade_mask] *= fade_multiplier
 
-        signal[mask] += tone * env * gain
+        signal[mask] += tone * env * effective_gain
 
     return signal
 
-def generate_accompaniment(duration):
-    """Generate accompaniment layer (softer, lower register)."""
+def generate_bass(duration):
+    """Generate bass layer."""
     num_samples = int(duration * SAMPLE_RATE)
     signal = np.zeros(num_samples, dtype=np.float64)
     t_global = np.linspace(0, duration, num_samples, endpoint=False)
 
-    acc_notes = get_accompaniment_notes()
+    bass_chord_data = get_bass_chord_data()
 
-    for note in acc_notes:
-        note_start = (note.bar - 1) * BAR_DURATION + note.beat * BEAT
-        note_dur = note.dur_beats * BEAT
+    for data in bass_chord_data:
+        note_start = (data['bar'] - 1) * BAR_DURATION
+        note_dur = BAR_DURATION
         note_end = note_start + note_dur
 
         mask = (t_global >= note_start) & (t_global < note_end)
@@ -432,13 +460,46 @@ def generate_accompaniment(duration):
 
         t_local = t_global[mask] - note_start
 
-        # Music box tone (less bright for accompaniment)
-        tone = music_box_tone(note.freq, t_local, brightness=0.5)
+        # Music box tone (less bright for bass)
+        tone = music_box_tone(data['bass_freq'], t_local, brightness=0.4)
 
-        # Envelope (shorter decay for accompaniment)
-        env = music_box_envelope(t_local, note_dur, attack=ACC_ATTACK, decay=ACC_DECAY)
+        # Envelope
+        env = music_box_envelope(t_local, note_dur, attack=BASS_ATTACK, decay=BASS_DECAY)
 
-        signal[mask] += tone * env * ACC_GAIN
+        signal[mask] += tone * env * BASS_GAIN
+
+    return signal
+
+def generate_chords(duration):
+    """Generate chord layer."""
+    num_samples = int(duration * SAMPLE_RATE)
+    signal = np.zeros(num_samples, dtype=np.float64)
+    t_global = np.linspace(0, duration, num_samples, endpoint=False)
+
+    bass_chord_data = get_bass_chord_data()
+
+    for data in bass_chord_data:
+        # Chords start on beat 2 (after bass on beat 1)
+        chord_start = (data['bar'] - 1) * BAR_DURATION + BEAT
+        chord_dur = 2 * BEAT  # Beats 2 and 3
+        chord_end = chord_start + chord_dur
+
+        mask = (t_global >= chord_start) & (t_global < chord_end)
+        if not np.any(mask):
+            continue
+
+        t_local = t_global[mask] - chord_start
+
+        # Music box tone for chord notes
+        chord_val = np.zeros(len(t_local))
+        for freq in data['chord_freqs']:
+            chord_val += music_box_tone(freq, t_local, brightness=0.6)
+        chord_val /= len(data['chord_freqs'])
+
+        # Envelope
+        env = music_box_envelope(t_local, chord_dur, attack=CHORD_ATTACK, decay=CHORD_DECAY)
+
+        signal[mask] += chord_val * env * CHORD_GAIN
 
     return signal
 
@@ -453,20 +514,23 @@ def generate_music_box():
     print("  Generating melody layer...")
     melody = generate_melody(duration)
 
-    print("  Generating accompaniment layer...")
-    accompaniment = generate_accompaniment(duration)
+    print("  Generating bass layer...")
+    bass = generate_bass(duration)
+
+    print("  Generating chord layer...")
+    chords = generate_chords(duration)
 
     print("  Mixing layers...")
-    mixed = melody + accompaniment
+    mixed = melody + bass + chords
     mixed = soft_clip(mixed)
 
     print("  Applying reverb...")
     reverb = MusicBoxReverb(
-        room_size=1.5,
-        damping=0.55,
-        decay=0.45,
-        mix=0.22,
-        predelay=0.012
+        room_size=1.6,
+        damping=0.50,
+        decay=0.48,
+        mix=0.24,
+        predelay=0.015
     )
     processed = reverb.process(mixed)
 
@@ -474,8 +538,8 @@ def generate_music_box():
     processed = soft_clip(processed * 1.05, threshold=0.95)
 
     # Apply silence padding for seamless looping
-    print("  Applying silence padding (fade-in: 0.5s, fade-out: 2.5s)...")
-    padded = apply_silence_padding(processed, fade_in_duration=0.5, fade_out_duration=2.5)
+    print("  Applying silence padding (fade-in: 0.8s, fade-out: 3.0s)...")
+    padded = apply_silence_padding(processed, fade_in_duration=0.8, fade_out_duration=3.0)
 
     # Normalize
     max_val = np.max(np.abs(padded))
@@ -495,10 +559,10 @@ def save_wav(signal, filename, sample_rate=SAMPLE_RATE):
 
 def main():
     print("=" * 60)
-    print("Music Box Audio Generator for TsukiSound")
+    print("Music Box (Gymnopédie) Audio Generator for TsukiSound")
     print("=" * 60)
     print(f"Sample rate: {SAMPLE_RATE} Hz")
-    print(f"BPM: {BPM}")
+    print(f"BPM: 88 (beat = {BEAT:.3f}s)")
     print(f"Duration: {CYCLE_DURATION:.1f}s ({TOTAL_BARS} bars)")
     print(f"Output directory: {OUTPUT_DIR}")
     print()
@@ -509,7 +573,7 @@ def main():
     os.makedirs(output_path, exist_ok=True)
 
     # Generate audio
-    print("Generating Music Box melody...")
+    print("Generating Music Box (Gymnopédie No.1)...")
     signal = generate_music_box()
 
     # Save WAV
