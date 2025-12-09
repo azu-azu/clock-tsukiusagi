@@ -13,6 +13,7 @@ import UIKit
 public enum UISoundPreset: String, CaseIterable, Identifiable {
     case jupiter                // ジュピター（PureTone module）
     case moonlitGymnopedie      // Moonlit Gymnopédie（PureTone module）
+    case musicBox               // オルゴール（Music Box）
 
     public var id: String { rawValue }
 
@@ -23,6 +24,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🪐"
         case .moonlitGymnopedie:
             return "🌖"
+        case .musicBox:
+            return "🎵"
         }
     }
 
@@ -33,6 +36,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "preset.jupiter"
         case .moonlitGymnopedie:
             return "preset.gymnopedie"
+        case .musicBox:
+            return "preset.musicBox"
         }
     }
 
@@ -70,6 +75,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Jupiter (Holst)"
         case .moonlitGymnopedie:
             return "Moonlit Gymnopédie"
+        case .musicBox:
+            return "Music Box Lullaby"
         }
     }
 }
