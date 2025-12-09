@@ -885,7 +885,7 @@ public final class AudioService: ObservableObject {
 
         let route = outputRoute.displayName
         let nextBreak = breakScheduler.nextBreakAt
-        let presetName = currentPreset.map { "\($0)" }  // Convert enum to string
+        let presetName = currentPreset?.displayName  // Use displayName with emoji prefix
 
         if isPlaying {
             // Start or update activity
