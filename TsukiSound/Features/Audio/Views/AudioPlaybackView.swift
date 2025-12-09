@@ -112,24 +112,27 @@ struct AudioPlaybackView: View {
             // Playlist with List + onMove (standard iOS drag)
             List {
                 ForEach(Array(audioService.playlistState.orderedPresets.enumerated()), id: \.element.id) { index, preset in
-                    PlaylistRowView(
-                        preset: preset,
-                        isCurrentTrack: index == audioService.playlistState.currentIndex,
-                        isPlaying: audioService.isPlaying
-                    )
-                    .listRowBackground(
-                        Rectangle()
-                            .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
-                            .overlay(
-                                Rectangle()
-                                    .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
-                            )
-                    )
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    .onTapGesture {
-                        playFromPreset(preset)
-                    }
+                    let isCurrentlyPlaying = index == audioService.playlistState.currentIndex && audioService.isPlaying
+
+                    PlaylistRowView(preset: preset)
+                        .listRowBackground(
+                            Rectangle()
+                                .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
+                                .overlay(
+                                    Rectangle()
+                                        .stroke(
+                                            isCurrentlyPlaying
+                                                ? DesignTokens.SettingsColors.accent
+                                                : Color.white.opacity(0.1),
+                                            lineWidth: isCurrentlyPlaying ? 1.5 : 0.5
+                                        )
+                                )
+                        )
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .onTapGesture {
+                            playFromPreset(preset)
+                        }
                 }
                 .onMove { from, to in
                     audioService.playlistState.move(from: from, to: to)
