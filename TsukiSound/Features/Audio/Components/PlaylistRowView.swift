@@ -47,21 +47,8 @@ struct PlaylistRowView: View {
                     .cornerRadius(4)
             }
         }
-        .padding(.vertical, 14)
+        .padding(.vertical, 12)
         .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(
-                    isCurrentTrack
-                        ? DesignTokens.SettingsColors.accent.opacity(0.4)
-                        : Color.white.opacity(0.1),
-                    lineWidth: 1
-                )
-        )
         .contentShape(Rectangle())
     }
 }

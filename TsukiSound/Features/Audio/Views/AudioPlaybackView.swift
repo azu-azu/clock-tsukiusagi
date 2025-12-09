@@ -59,10 +59,6 @@ struct AudioPlaybackView: View {
 
     @State private var errorMessage: String?
     @State private var showError = false
-    @State private var draggingPreset: UISoundPreset?
-    @State private var dragStartIndex: Int = 0
-    @State private var dragOffset: CGFloat = 0
-    @State private var activeDragId: String?
 
     @AppStorage("showAudioTitle") private var showAudioTitle: Bool = true
 
@@ -150,10 +146,7 @@ struct AudioPlaybackView: View {
     }
 
     private var soundSelectionSection: some View {
-        let rowHeight: CGFloat = 68
-        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-
-        return VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
             // Header
             Text("audio.sound".localized)
                 .dynamicFont(
@@ -162,113 +155,36 @@ struct AudioPlaybackView: View {
                 )
                 .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-            // Playlist (custom drag reordering)
-            VStack(spacing: 8) {
-                ForEach(audioService.playlistState.orderedPresets, id: \.id) { preset in
-                    let index = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == preset.id }) ?? 0
-                    let isDragging = draggingPreset?.id == preset.id
-
+            // Playlist with List + onMove (standard iOS drag)
+            List {
+                ForEach(Array(audioService.playlistState.orderedPresets.enumerated()), id: \.element.id) { index, preset in
                     PlaylistRowView(
                         preset: preset,
                         isCurrentTrack: index == audioService.playlistState.currentIndex,
                         isPlaying: audioService.isPlaying
                     )
-                    .zIndex(isDragging ? 1 : 0)
-                    .offset(y: isDragging ? dragOffset : 0)
-                    .scaleEffect(isDragging ? 1.02 : 1.0)
-                    .opacity(isDragging ? 0.9 : 1.0)
-                    .shadow(color: isDragging ? Color.black.opacity(0.3) : Color.clear, radius: 8, y: 4)
-                    .contentShape(Rectangle())
+                    .listRowBackground(
+                        Rectangle()
+                            .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
+                            .overlay(
+                                Rectangle()
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 0.5)
+                            )
+                    )
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                     .onTapGesture {
                         playFromPreset(preset)
                     }
-                    .highPriorityGesture(
-                        LongPressGesture(minimumDuration: 0.15)
-                            .sequenced(before: DragGesture())
-                            .onChanged { value in
-                                switch value {
-                                case .first(true):
-                                    // Already dragging another cell - ignore
-                                    guard activeDragId == nil else {
-                                        print("🐛 [Drag] Ignoring .first(true) - already dragging \(activeDragId ?? "nil")")
-                                        return
-                                    }
-                                    print("🐛 [Drag] Long press started for: \(preset.displayName)")
-                                    impactFeedback.impactOccurred()
-                                    activeDragId = preset.id
-                                    draggingPreset = preset
-                                    dragStartIndex = index
-
-                                case .second(true, let drag):
-                                    // Only track the cell that started the drag
-                                    guard
-                                        let drag = drag,
-                                        activeDragId == preset.id,
-                                        draggingPreset?.id == preset.id
-                                    else {
-                                        return
-                                    }
-                                    dragOffset = drag.translation.height
-
-                                default:
-                                    break
-                                }
-                            }
-                            .onEnded { value in
-                                // Only the active drag cell should handle onEnded
-                                guard activeDragId == preset.id else {
-                                    print("🐛 [Drag] onEnded ignored - not active cell. activeDragId: \(activeDragId ?? "nil"), preset: \(preset.id)")
-                                    return
-                                }
-
-                                // Reset state function
-                                func resetDragState() {
-                                    activeDragId = nil
-                                    draggingPreset = nil
-                                    dragOffset = 0
-                                }
-
-                                // Only process if drag gesture completed
-                                guard
-                                    case .second(true, let drag?) = value,
-                                    let currentIndex = audioService.playlistState.orderedPresets.firstIndex(where: { $0.id == preset.id })
-                                else {
-                                    print("🐛 [Drag] onEnded - drag not completed, resetting")
-                                    resetDragState()
-                                    return
-                                }
-
-                                let totalTranslation = drag.translation.height
-                                let positionChange = Int(round(totalTranslation / rowHeight))
-                                print("🐛 [Drag] totalTranslation: \(totalTranslation), positionChange: \(positionChange)")
-
-                                guard positionChange != 0 else {
-                                    print("🐛 [Drag] positionChange is 0, no move needed")
-                                    resetDragState()
-                                    return
-                                }
-
-                                let count = audioService.playlistState.orderedPresets.count
-                                var targetIndex = currentIndex + positionChange
-                                targetIndex = max(0, min(count - 1, targetIndex))
-
-                                guard targetIndex != currentIndex else {
-                                    print("🐛 [Drag] targetIndex == currentIndex, no move needed")
-                                    resetDragState()
-                                    return
-                                }
-
-                                print("🐛 [Drag] Moving from \(currentIndex) to \(targetIndex)")
-                                impactFeedback.impactOccurred(intensity: 0.6)
-                                audioService.playlistState.move(
-                                    from: IndexSet(integer: currentIndex),
-                                    to: targetIndex > currentIndex ? targetIndex + 1 : targetIndex
-                                )
-                                resetDragState()
-                            }
-                    )
+                }
+                .onMove { from, to in
+                    audioService.playlistState.move(from: from, to: to)
                 }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .frame(height: CGFloat(audioService.playlistState.orderedPresets.count) * 52)
+            .environment(\.editMode, .constant(.active))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
