@@ -106,31 +106,39 @@ public struct ContentView: View {
 
     // MARK: - Swipe Gesture
 
-    /// 左端からのスワイプでSideMenuを開くジェスチャー
-    /// Timer app と同じロジック: 左端20px以内からのスワイプのみ検知
+    /// スワイプジェスチャー
+    /// - 左端からの右スワイプ: SideMenuを開く
+    /// - 右端からの左スワイプ（Clock画面のみ）: Audio画面へ遷移
     private func sideMenuDragGesture() -> some Gesture {
         DragGesture()
             .onEnded { value in
                 let horizontalAmount = value.translation.width
                 let verticalAmount = abs(value.translation.height)
-                // 画面幅の10%を最小閾値として使用（最低50px）
-                let openThreshold: CGFloat = 50
-                let closeThreshold = -openThreshold
+                let swipeThreshold: CGFloat = 50
 
                 // 水平方向のスワイプのみ処理（垂直スクロールとの競合を避ける）
                 if abs(horizontalAmount) > verticalAmount {
-                    // 右スワイプ & 左端20px以内からのスワイプのみメニューを開く
-                    if horizontalAmount > openThreshold && !isMenuPresented {
+                    // 右スワイプ
+                    if horizontalAmount > swipeThreshold && !isMenuPresented {
+                        // 左端20px以内からのスワイプ → メニューを開く
                         if value.startLocation.x <= 20 {
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 isMenuPresented = true
                             }
                         }
                     }
-                    // 左スワイプでメニューを閉じる
-                    else if horizontalAmount < closeThreshold && isMenuPresented {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isMenuPresented = false
+                    // 左スワイプ
+                    else if horizontalAmount < -swipeThreshold {
+                        if isMenuPresented {
+                            // メニューが開いている → 閉じる
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isMenuPresented = false
+                            }
+                        } else if selectedTab == .clock {
+                            // Clock画面で左スワイプ → Audio画面へ
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                selectedTab = .audioPlayback
+                            }
                         }
                     }
                 }
