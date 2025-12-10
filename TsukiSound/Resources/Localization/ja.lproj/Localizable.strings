@@ -55,6 +55,7 @@
 "preset.jupiter" = "ジュピターの響き";
 "preset.gymnopedie" = "月明かりのジムノペディ";
 "preset.musicBox" = "オルゴール";
+"preset.acousticGymnopedie" = "アコースティック・ジムノペディ";
 
 // MARK: - Audio Routes
 "route.headphones" = "ヘッドホン";

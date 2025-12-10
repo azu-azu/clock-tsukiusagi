@@ -55,6 +55,7 @@
 "preset.jupiter" = "Jupiter (Holst)";
 "preset.gymnopedie" = "Moonlit Gymnopedie";
 "preset.musicBox" = "Music Box Lullaby";
+"preset.acousticGymnopedie" = "Acoustic Gymnopedie";
 
 // MARK: - Audio Routes
 "route.headphones" = "Headphones";
