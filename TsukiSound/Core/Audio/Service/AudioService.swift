@@ -666,7 +666,7 @@ public final class AudioService: ObservableObject {
         // Handle presets with pre-rendered audio files
         switch uiPreset {
         case .jupiter:
-            try registerPrerenderedAudioFile(named: "cathedral_stillness")
+            try registerPrerenderedAudioFile(named: "jupiter")
             return
         case .moonlitGymnopedie:
             try registerPrerenderedAudioFile(named: "moonlit_gymnopedie")
