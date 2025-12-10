@@ -11,16 +11,48 @@ Clock画面のフルスクリーン体験を維持しつつ、他の画面では
 
 **Tab enum の定義（ContentView.swift）**
 ```swift
-public enum Tab {
+public enum Tab: CaseIterable {
     case clock
     case audioPlayback
     case settings
+    case appSettings
+
+    /// 次のタブ（左スワイプ時）
+    var next: Tab? {
+        let all = Tab.allCases
+        guard let index = all.firstIndex(of: self),
+              index + 1 < all.count else { return nil }
+        return all[index + 1]
+    }
+
+    /// 前のタブ（右スワイプ時）
+    var previous: Tab? {
+        let all = Tab.allCases
+        guard let index = all.firstIndex(of: self),
+              index > 0 else { return nil }
+        return all[index - 1]
+    }
 }
 ```
 
 - `public` で定義し、全画面からアクセス可能
+- `CaseIterable` でタブ順序を管理（スワイプナビゲーション用）
+- `next` / `previous` プロパティでタブ間遷移をサポート
 - ContentView で `@State private var selectedTab: Tab` を管理
 - 子ビューには `@Binding var selectedTab: Tab` で渡す
+
+### タブの順序
+
+```
+Clock → Audio → AudioSettings → AppSettings
+```
+
+| インデックス | タブ | 左スワイプ | 右スワイプ |
+|-------------|------|-----------|-----------|
+| 0 | Clock | → Audio | SideMenu（左端からのみ） |
+| 1 | Audio | → AudioSettings | → Clock |
+| 2 | AudioSettings | → AppSettings | → Audio |
+| 3 | AppSettings | (なし) | → AudioSettings |
 
 ### ナビゲーション方式の使い分け
 
@@ -285,13 +317,74 @@ let roundedFont = UIFont(descriptor: descriptor, size: 28)
 3. `init(selectedTab: Binding<Tab>)` で受け取る
 4. `_selectedTab = selectedTab` で初期化
 
+## スワイプナビゲーション
+
+### 実装（ContentView.swift）
+
+```swift
+/// スワイプジェスチャー（全画面）
+/// - 左スワイプ: 次のタブへ遷移
+/// - 右スワイプ: 前のタブへ遷移（Clock画面では左端からのみSideMenu開く）
+private func sideMenuDragGesture() -> some Gesture {
+    DragGesture()
+        .onEnded { value in
+            let horizontalAmount = value.translation.width
+            let verticalAmount = abs(value.translation.height)
+            let swipeThreshold: CGFloat = 50
+
+            // 水平方向のスワイプのみ処理（垂直スクロールとの競合を避ける）
+            guard abs(horizontalAmount) > verticalAmount else { return }
+
+            // 右スワイプ（前のタブへ）
+            if horizontalAmount > swipeThreshold && !isMenuPresented {
+                if selectedTab == .clock {
+                    // Clock画面：左端20px以内からのスワイプ → メニューを開く
+                    if value.startLocation.x <= 20 {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isMenuPresented = true
+                        }
+                    }
+                } else if let prev = selectedTab.previous {
+                    // その他の画面：前のタブへ
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        selectedTab = prev
+                    }
+                }
+            }
+            // 左スワイプ（次のタブへ）
+            else if horizontalAmount < -swipeThreshold {
+                if isMenuPresented {
+                    // メニューが開いている → 閉じる
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isMenuPresented = false
+                    }
+                } else if let next = selectedTab.next {
+                    // 次のタブへ
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        selectedTab = next
+                    }
+                }
+            }
+        }
+}
+```
+
+### 重要なポイント
+
+1. **ContentView全体に適用**: `.gesture(sideMenuDragGesture())` でルートに適用
+2. **Tab.next / Tab.previous**: タブ順序はenumの定義順に従う
+3. **Clock画面の特殊処理**: 右スワイプは左端からのみSideMenuを開く
+4. **垂直スクロールとの競合回避**: `abs(horizontalAmount) > verticalAmount` でチェック
+
 ## 関連ファイル
 
-- `TsukiSound/App/ContentView.swift` - タブ管理とカスタムタブバー
+- `TsukiSound/App/ContentView.swift` - タブ管理、スワイプナビゲーション、カスタムタブバー
 - `TsukiSound/Features/Settings/Views/AudioSettingsView.swift` - ナビバー実装例
-- `TsukiSound/Core/Audio/AudioPlaybackView.swift` - ナビバー実装例
+- `TsukiSound/Features/Audio/Views/AudioPlaybackView.swift` - ナビバー実装例
 - `TsukiSound/DesignSystem/DesignTokens.swift` - デザイントークン定義
+- `TsukiSound/DesignSystem/Navigation/NavigationBackModifier.swift` - カスタムBackボタン
 
 ## 変更履歴
 
+- 2025-12-10: スワイプナビゲーション追加（全画面対応、Tab.next/previous）
 - 2025-11-16: 初版作成 - タブバー統合とナビバー透明化の設計を記録

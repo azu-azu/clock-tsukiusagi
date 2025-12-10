@@ -8,10 +8,10 @@
 
 import SwiftUI
 
-/// カスタム Back ボタンとスワイプジェスチャを提供する ViewModifier
+/// カスタム Back ボタンを提供する ViewModifier
 ///
 /// 標準の NavigationView back ボタンを隠し、カスタム "< Back" ボタンを表示。
-/// 右スワイプ（50pt以上）で戻る動作も提供。
+/// スワイプナビゲーションは ContentView.sideMenuDragGesture() で一元管理。
 struct NavigationBackModifier: ViewModifier {
     let onBack: () -> Void
 
@@ -33,15 +33,6 @@ struct NavigationBackModifier: ViewModifier {
                     }
                 }
             }
-            .gesture(
-                DragGesture()
-                    .onEnded { value in
-                        // 右スワイプ（50pt以上、垂直移動は100pt未満）で戻る
-                        if value.translation.width > 50 && abs(value.translation.height) < 100 {
-                            onBack()
-                        }
-                    }
-            )
     }
 }
 

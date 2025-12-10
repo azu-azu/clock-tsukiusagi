@@ -1,13 +1,15 @@
 # Navigation Back Gesture - カスタム戻る操作実装ガイド
 
 **作成日**: 2025-11-22
-**最終更新**: 2025-11-22
+**最終更新**: 2025-12-10
 
 ## 概要
 
-Settings/Audio画面でのカスタムBackボタンと、右スワイプジェスチャーによる戻る操作の実装ガイドです。
+Settings/Audio画面でのカスタムBackボタンの実装ガイドです。
 
-本アプリはタブベースのナビゲーション（`selectedTab`による画面切り替え）を採用しているため、標準のNavigationViewの戻る動作では正しく機能しません。`NavigationBackModifier`を使用することで、カスタムBackボタンと直感的なスワイプ操作を提供します。
+本アプリはタブベースのナビゲーション（`selectedTab`による画面切り替え）を採用しているため、標準のNavigationViewの戻る動作では正しく機能しません。`NavigationBackModifier`を使用することで、カスタムBackボタンを提供します。
+
+**注意**: スワイプによる画面遷移は `ContentView.swift` の `sideMenuDragGesture()` で一元管理されています。詳細は `_guide-navigation-design.md` の「スワイプナビゲーション」セクションを参照してください。
 
 ---
 
@@ -40,11 +42,11 @@ selectedTab = .clock     // Clock画面に戻る
 
 ### 提供機能
 
-`NavigationBackModifier`は以下の3つの機能を提供します：
+`NavigationBackModifier`は以下の機能を提供します：
 
 1. **カスタムBackボタン** - 左上に "< Back" ボタンを表示
-2. **右スワイプジェスチャー** - 50pt以上の右スワイプで戻る
-3. **垂直スクロールとの競合回避** - ScrollView内でも正しく動作
+
+**注意**: スワイプジェスチャーは `ContentView.swift` で一元管理されるため、このModifierでは提供しません。
 
 **実装場所**: `DesignSystem/Navigation/NavigationBackModifier.swift`
 
@@ -110,50 +112,8 @@ struct NavigationBackModifier: ViewModifier {
                     }
                 }
             }
-            .gesture(
-                DragGesture()
-                    .onEnded { value in
-                        // 右スワイプ（50pt以上、垂直移動は100pt未満）で戻る
-                        if value.translation.width > 50 && abs(value.translation.height) < 100 {
-                            onBack()
-                        }
-                    }
-            )
     }
 }
-```
-
-### スワイプジェスチャーの仕組み
-
-#### 判定条件
-
-```swift
-value.translation.width > 50 && abs(value.translation.height) < 100
-```
-
-| 条件 | 意味 | 理由 |
-|------|------|------|
-| `translation.width > 50` | 右方向に50pt以上移動 | 意図しない誤操作を防ぐ |
-| `abs(translation.height) < 100` | 垂直移動が100pt未満 | ScrollViewとの競合を避ける |
-
-#### 動作フロー
-
-```
-ユーザーがスワイプ開始
-    ↓
-DragGesture検知
-    ↓
-スワイプ終了（onEnded）
-    ↓
-水平移動量 > 50pt？
-    ↓ YES
-垂直移動量 < 100pt？
-    ↓ YES
-onBack()実行
-    ↓
-selectedTab = .clock
-    ↓
-Clock画面に戻る
 ```
 
 ---
@@ -182,7 +142,7 @@ struct AudioSettingsView: View {
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .navigationBackButton {
-                selectedTab = .clock  // ← カスタム戻る動作
+                selectedTab = .audioPlayback  // ← Audio画面に戻る
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -213,46 +173,22 @@ struct AppSettingsView: View {
             }
             .navigationTitle("App Settings")
             .navigationBackButton {
-                selectedTab = .clock  // ← カスタム戻る動作
+                selectedTab = .settings  // ← AudioSettings画面に戻る
             }
         }
     }
 }
 ```
 
----
+### 戻り先の設計
 
-## 垂直スクロールとの競合回避
+| 画面 | Backボタンの戻り先 |
+|------|-------------------|
+| Audio | Clock |
+| AudioSettings | Audio |
+| AppSettings | AudioSettings |
 
-### 問題
-
-Settings画面にはScrollViewがあります。ユーザーが上下スクロール中に横方向にも少し動かしてしまうと、意図せず戻る操作が発動してしまう可能性があります。
-
-```
-ユーザーの操作:
-- 縦に100pt移動（スクロール）
-- 横に60pt移動（ブレ）
-→ 横移動が50pt以上なので戻ってしまう？
-```
-
-### 解決策
-
-`abs(value.translation.height) < 100`という条件を追加することで、**垂直移動が大きい場合はスワイプと判定しない**ようにしています。
-
-```swift
-if value.translation.width > 50 && abs(value.translation.height) < 100 {
-    onBack()
-}
-```
-
-#### 動作例
-
-| 水平移動 | 垂直移動 | 判定 | 結果 |
-|---------|---------|------|------|
-| 60pt → | 10pt ↓ | ✅ スワイプ | 戻る |
-| 60pt → | 50pt ↓ | ✅ スワイプ | 戻る |
-| 60pt → | 120pt ↓ | ❌ スクロール | 戻らない |
-| 30pt → | 10pt ↓ | ❌ 距離不足 | 戻らない |
+**ポイント**: Backボタンは直前のタブ（`Tab.previous`）に戻る設計です。
 
 ---
 
@@ -262,8 +198,8 @@ if value.translation.width > 50 && abs(value.translation.height) < 100 {
 
 | ドキュメント | 担当範囲 |
 |-------------|---------|
-| **_guide-navigation-design.md** | ナビゲーションバーの外観設計（フォント、ブラー、透明度） |
-| **_guide-navigation-back-gesture.md**（本ドキュメント） | 戻る操作の実装（Backボタン、スワイプジェスチャー） |
+| **_guide-navigation-design.md** | ナビゲーションバーの外観設計、スワイプナビゲーション、タブ管理 |
+| **_guide-navigation-back-gesture.md**（本ドキュメント） | カスタムBackボタンの実装 |
 
 ### 統合された実装例
 
@@ -273,7 +209,7 @@ if value.translation.width > 50 && abs(value.translation.height) < 100 {
 .dynamicNavigationFont()  // ← _guide-navigation-design.mdで定義
 .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)  // ← _guide-navigation-design.mdで定義
 .navigationBackButton {  // ← 本ドキュメントで定義
-    selectedTab = .clock
+    selectedTab = .audioPlayback  // Audio画面に戻る
 }
 ```
 
@@ -283,50 +219,8 @@ if value.translation.width > 50 && abs(value.translation.height) < 100 {
 
 ### Q: スワイプジェスチャーが効かない
 
-**原因1**: ScrollView内でのスワイプが垂直スクロールとして処理されている
-
-**確認方法**:
-- 画面の上端（スクロール範囲外）でスワイプしてみる
-- スワイプ時の垂直移動量を確認（100pt未満か？）
-
-**解決方法**:
-- より水平方向を意識してスワイプする
-- または、垂直移動の閾値を調整（`< 100` → `< 150`など）
-
----
-
-**原因2**: DragGestureが他のジェスチャーと競合している
-
-**確認方法**:
-```swift
-.gesture(
-    DragGesture()
-        .onChanged { value in
-            print("🐛 translation: \(value.translation)")  // デバッグ出力
-        }
-        .onEnded { value in
-            print("🐛 final: \(value.translation)")
-        }
-)
-```
-
-**解決方法**:
-- 他のジェスチャーとの優先度を調整
-- `.highPriorityGesture()` または `.simultaneousGesture()` の使用を検討
-
----
-
-### Q: スクロール中に戻ってしまう
-
-**原因**: 垂直移動の閾値が小さすぎる
-
-**解決方法**:
-```swift
-// 閾値を増やす
-if value.translation.width > 50 && abs(value.translation.height) < 150 {  // 100 → 150
-    onBack()
-}
-```
+スワイプによる画面遷移は `ContentView.swift` の `sideMenuDragGesture()` で一元管理されています。
+詳細は `_guide-navigation-design.md` の「スワイプナビゲーション」セクションを参照してください。
 
 ---
 
@@ -344,23 +238,9 @@ if value.translation.width > 50 && abs(value.translation.height) < 150 {  // 100
 **解決方法**:
 ```swift
 // .navigationBackButton を先に適用
-.navigationBackButton { selectedTab = .clock }
+.navigationBackButton { selectedTab = .audioPlayback }
 .toolbar {
     // 他のツールバーアイテム
-}
-```
-
----
-
-### Q: スワイプが敏感すぎる（誤動作が多い）
-
-**原因**: 閾値が小さすぎる
-
-**解決方法**:
-```swift
-// 閾値を増やす
-if value.translation.width > 80 && abs(value.translation.height) < 100 {  // 50 → 80
-    onBack()
 }
 ```
 
@@ -370,16 +250,13 @@ if value.translation.width > 80 && abs(value.translation.height) < 100 {  // 50 
 
 ### ✅ 推奨
 
-1. **統一された戻り先**: 基本的にはClock画面（`.clock`）に戻る
-2. **明示的なアニメーション**: `withAnimation`で滑らかな遷移を提供（必要に応じて）
-3. **デバッグ時のログ出力**: スワイプ検知の動作確認には`print`を活用
+1. **直前のタブに戻る**: `Tab.previous` に相当するタブに戻る（Audio→Clock、AudioSettings→Audio）
+2. **シンプルな戻り先**: 各画面の戻り先は固定する
 
 ```swift
+// AudioSettingsView
 .navigationBackButton {
-    print("🔙 Navigating back to Clock")
-    withAnimation(.easeInOut(duration: 0.3)) {
-        selectedTab = .clock
-    }
+    selectedTab = .audioPlayback  // 直前のAudio画面に戻る
 }
 ```
 
@@ -393,42 +270,15 @@ if value.translation.width > 80 && abs(value.translation.height) < 100 {  // 50 
 
 ---
 
-## 将来の拡張可能性
-
-### アニメーション付きスワイプ
-
-現在は`onEnded`でスワイプ完了時のみ処理していますが、`onChanged`を使うことで、スワイプに追従してプレビューを表示する実装も可能です。
-
-```swift
-// 将来的な拡張例
-@State private var swipeProgress: CGFloat = 0
-
-.gesture(
-    DragGesture()
-        .onChanged { value in
-            swipeProgress = max(0, value.translation.width / 300)  // 0.0 ~ 1.0
-        }
-        .onEnded { value in
-            if value.translation.width > 50 && abs(value.translation.height) < 100 {
-                onBack()
-            } else {
-                swipeProgress = 0
-            }
-        }
-)
-.offset(x: swipeProgress * 100)  // スワイプに追従
-```
-
----
-
 ## 参考資料
 
-- [NavigationBackModifier.swift](../../DesignSystem/Navigation/NavigationBackModifier.swift) - 実装ファイル
-- [_guide-navigation-design.md](_guide-navigation-design.md) - ナビゲーションバー外観設計
+- [NavigationBackModifier.swift](../../DesignSystem/Navigation/NavigationBackModifier.swift) - カスタムBackボタン実装
+- [_guide-navigation-design.md](_guide-navigation-design.md) - ナビゲーションバー外観設計、スワイプナビゲーション
 - [Apple HIG - Navigation](https://developer.apple.com/design/human-interface-guidelines/navigation) - Apple公式ガイドライン
 
 ---
 
 ## 更新履歴
 
+- **2025-12-10**: スワイプナビゲーションをContentViewに一元化、戻り先を直前のタブに変更
 - **2025-11-22**: 初版作成（NavigationBackModifier実装を受けて）
