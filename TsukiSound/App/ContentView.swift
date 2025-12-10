@@ -106,12 +106,15 @@ public struct ContentView: View {
 
     // MARK: - Swipe Gesture
 
-    /// スワイプジェスチャー
+    /// スワイプジェスチャー（Clock画面専用）
     /// - 左端からの右スワイプ: SideMenuを開く
-    /// - 右端からの左スワイプ（Clock画面のみ）: Audio画面へ遷移
+    /// - 左スワイプ: Audio画面へ遷移
     private func sideMenuDragGesture() -> some Gesture {
         DragGesture()
             .onEnded { value in
+                // Clock画面以外ではジェスチャーを無視
+                guard selectedTab == .clock else { return }
+
                 let horizontalAmount = value.translation.width
                 let verticalAmount = abs(value.translation.height)
                 let swipeThreshold: CGFloat = 50
@@ -134,8 +137,8 @@ public struct ContentView: View {
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 isMenuPresented = false
                             }
-                        } else if selectedTab == .clock {
-                            // Clock画面で左スワイプ → Audio画面へ
+                        } else {
+                            // Audio画面へ遷移
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 selectedTab = .audioPlayback
                             }
