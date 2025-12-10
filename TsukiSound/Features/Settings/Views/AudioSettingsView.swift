@@ -181,7 +181,7 @@ public struct AudioSettingsView: View {
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .navigationBackButton {
-                selectedTab = .clock
+                selectedTab = .audioPlayback
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
