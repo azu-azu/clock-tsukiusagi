@@ -106,42 +106,46 @@ public struct ContentView: View {
 
     // MARK: - Swipe Gesture
 
-    /// スワイプジェスチャー（Clock画面専用）
-    /// - 左端からの右スワイプ: SideMenuを開く
-    /// - 左スワイプ: Audio画面へ遷移
+    /// スワイプジェスチャー（全画面）
+    /// - 左スワイプ: 次のタブへ遷移
+    /// - 右スワイプ: 前のタブへ遷移（Clock画面では左端からのみSideMenu開く）
     private func sideMenuDragGesture() -> some Gesture {
         DragGesture()
             .onEnded { value in
-                // Clock画面以外ではジェスチャーを無視
-                guard selectedTab == .clock else { return }
-
                 let horizontalAmount = value.translation.width
                 let verticalAmount = abs(value.translation.height)
                 let swipeThreshold: CGFloat = 50
 
                 // 水平方向のスワイプのみ処理（垂直スクロールとの競合を避ける）
-                if abs(horizontalAmount) > verticalAmount {
-                    // 右スワイプ
-                    if horizontalAmount > swipeThreshold && !isMenuPresented {
-                        // 左端20px以内からのスワイプ → メニューを開く
+                guard abs(horizontalAmount) > verticalAmount else { return }
+
+                // 右スワイプ（前のタブへ）
+                if horizontalAmount > swipeThreshold && !isMenuPresented {
+                    if selectedTab == .clock {
+                        // Clock画面：左端20px以内からのスワイプ → メニューを開く
                         if value.startLocation.x <= 20 {
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 isMenuPresented = true
                             }
                         }
+                    } else if let prev = selectedTab.previous {
+                        // その他の画面：前のタブへ
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            selectedTab = prev
+                        }
                     }
-                    // 左スワイプ
-                    else if horizontalAmount < -swipeThreshold {
-                        if isMenuPresented {
-                            // メニューが開いている → 閉じる
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isMenuPresented = false
-                            }
-                        } else {
-                            // Audio画面へ遷移
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                selectedTab = .audioPlayback
-                            }
+                }
+                // 左スワイプ（次のタブへ）
+                else if horizontalAmount < -swipeThreshold {
+                    if isMenuPresented {
+                        // メニューが開いている → 閉じる
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isMenuPresented = false
+                        }
+                    } else if let next = selectedTab.next {
+                        // 次のタブへ
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            selectedTab = next
                         }
                     }
                 }
@@ -151,11 +155,27 @@ public struct ContentView: View {
 
 // MARK: - Tab Enum
 
-public enum Tab {
+public enum Tab: CaseIterable {
     case clock
     case audioPlayback
     case settings
     case appSettings
+
+    /// 次のタブ（左スワイプ時）
+    var next: Tab? {
+        let all = Tab.allCases
+        guard let index = all.firstIndex(of: self),
+              index + 1 < all.count else { return nil }
+        return all[index + 1]
+    }
+
+    /// 前のタブ（右スワイプ時）
+    var previous: Tab? {
+        let all = Tab.allCases
+        guard let index = all.firstIndex(of: self),
+              index > 0 else { return nil }
+        return all[index - 1]
+    }
 }
 
 // MARK: - TabButton
