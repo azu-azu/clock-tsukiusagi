@@ -74,12 +74,12 @@ MELODY_GAIN = 0.38
 # Bass (lower register, warm)
 BASS_ATTACK = 0.015
 BASS_DECAY = 2.8
-BASS_GAIN = 0.16
+BASS_GAIN = 0.22
 
 # Chord (middle register, gentle)
 CHORD_ATTACK = 0.010
 CHORD_DECAY = 2.2
-CHORD_GAIN = 0.10
+CHORD_GAIN = 0.15
 
 # ============================================================================
 # Music Box Tone Synthesis

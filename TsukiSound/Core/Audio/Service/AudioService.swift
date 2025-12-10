@@ -671,14 +671,8 @@ public final class AudioService: ObservableObject {
         case .moonlitGymnopedie:
             try registerPrerenderedAudioFile(named: "moonlit_gymnopedie")
             return
-        case .musicBox:
-            try registerPrerenderedAudioFile(named: "music_box")
-            return
         case .acousticGymnopedie:
             try registerPrerenderedAudioFile(named: "acoustic_gymnopedie")
-            return
-        case .acousticJupiter:
-            try registerPrerenderedAudioFile(named: "acoustic_jupiter")
             return
         }
 
