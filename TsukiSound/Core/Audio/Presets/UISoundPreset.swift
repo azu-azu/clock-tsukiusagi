@@ -15,6 +15,7 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case moonlitGymnopedie      // Moonlit Gymnopédie（PureTone module）
     case musicBox               // オルゴール（Music Box）
     case acousticGymnopedie     // アコースティックギター版ジムノペディ
+    case acousticJupiter        // アコースティックギター版ジュピター
 
     public var id: String { rawValue }
 
@@ -29,6 +30,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🎵"
         case .acousticGymnopedie:
             return "🎸"
+        case .acousticJupiter:
+            return "🪕"
         }
     }
 
@@ -43,6 +46,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "preset.musicBox"
         case .acousticGymnopedie:
             return "preset.acousticGymnopedie"
+        case .acousticJupiter:
+            return "preset.acousticJupiter"
         }
     }
 
@@ -84,6 +89,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Music Box Lullaby"
         case .acousticGymnopedie:
             return "Acoustic Gymnopédie"
+        case .acousticJupiter:
+            return "Acoustic Jupiter"
         }
     }
 }
