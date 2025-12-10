@@ -29,12 +29,16 @@ struct AudioPlaybackView: View {
                 GeometryReader { geometry in
                     ScrollView {
                         VStack(spacing: 0) {
-                            // 上部コンテンツ
-                            VStack(spacing: DesignTokens.SettingsSpacing.sectionSpacing) {
-                                bluetoothStatusIndicator
-                                soundSelectionSection
-                                controlSection
-                            }
+                            // Bluetooth状態
+                            bluetoothStatusIndicator
+
+                            // Soundセクション
+                            soundSelectionSection
+                                .padding(.top, 8)
+
+                            // 再生ボタン
+                            controlSection
+                                .padding(.top, 12)
 
                             // Waveform（再生ボタンとStatusの間の中央）
                             Spacer()
@@ -142,7 +146,7 @@ struct AudioPlaybackView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .frame(height: CGFloat(audioService.playlistState.orderedPresets.count) * 52)
+            .frame(height: CGFloat(audioService.playlistState.orderedPresets.count) * 44)
             .environment(\.editMode, .constant(.active))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
