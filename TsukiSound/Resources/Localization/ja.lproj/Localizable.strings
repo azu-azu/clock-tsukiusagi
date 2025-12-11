@@ -36,6 +36,8 @@
 "audio.selected" = "選択中:";
 "audio.edit" = "編集";
 "audio.done" = "完了";
+"audio.repeat.one" = "1曲リピート";
+"audio.repeat.all" = "連続再生";
 
 // MARK: - App Settings
 "settings.app.title" = "アプリ設定";

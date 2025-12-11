@@ -16,6 +16,8 @@ import numpy as np
 from scipy.io import wavfile
 import os
 
+from pedalboard import Pedalboard, Reverb, Compressor, Limiter, Gain
+
 from audio_utils import apply_silence_padding
 
 # Constants
@@ -516,18 +518,32 @@ def generate_music_box():
     mixed = melody + bass + chords
     mixed = soft_clip(mixed)
 
-    print("  Applying reverb...")
-    reverb = MusicBoxReverb(
-        room_size=1.6,
-        damping=0.50,
-        decay=0.48,
-        mix=0.24,
-        predelay=0.015
-    )
-    processed = reverb.process(mixed)
+    print("  Applying Pedalboard effects (Compressor + Reverb + Limiter)...")
+    # Professional-quality effects chain using Spotify's Pedalboard
+    board = Pedalboard([
+        # Gentle compression for consistent dynamics
+        Compressor(
+            threshold_db=-18,
+            ratio=2.5,
+            attack_ms=20,
+            release_ms=200
+        ),
+        # High-quality reverb for dreamy atmosphere
+        Reverb(
+            room_size=0.4,
+            damping=0.6,
+            wet_level=0.25,
+            dry_level=0.75,
+            width=1.0
+        ),
+        # Final limiting to prevent clipping
+        Limiter(threshold_db=-1.0)
+    ])
 
-    # Final soft limiting
-    processed = soft_clip(processed * 1.05, threshold=0.95)
+    # Pedalboard expects shape (channels, samples) for mono: (1, N)
+    mixed_2d = mixed.reshape(1, -1)
+    processed_2d = board(mixed_2d, SAMPLE_RATE)
+    processed = processed_2d.flatten()
 
     # Apply silence padding for seamless looping
     print("  Applying silence padding (fade-in: 0.8s, fade-out: 3.0s)...")

@@ -8,6 +8,26 @@
 
 import Foundation
 
+/// リピートモード
+public enum RepeatMode: String, CaseIterable {
+    case one = "one"    // 一曲リピート
+    case all = "all"    // 連続再生（全曲ループ）
+
+    var icon: String {
+        switch self {
+        case .one: return "repeat.1"
+        case .all: return "repeat"
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .one: return "audio.repeat.one".localized
+        case .all: return "audio.repeat.all".localized
+        }
+    }
+}
+
 /// プレイリストの状態を管理
 @MainActor
 public final class PlaylistState: ObservableObject {
@@ -18,6 +38,9 @@ public final class PlaylistState: ObservableObject {
 
     /// 現在再生中の曲のインデックス
     @Published public private(set) var currentIndex: Int = 0
+
+    /// リピートモード
+    @Published public var repeatMode: RepeatMode = .all
 
     // MARK: - Private Properties
 
@@ -39,13 +62,21 @@ public final class PlaylistState: ObservableObject {
         saveOrder()
     }
 
-    /// 次の曲に進む（ループ）
+    /// 次の曲に進む（リピートモードに応じて動作）
     public func advanceToNext() -> UISoundPreset {
         guard !orderedPresets.isEmpty else {
             fatalError("Playlist is empty")
         }
-        currentIndex = (currentIndex + 1) % orderedPresets.count
-        return orderedPresets[currentIndex]
+
+        switch repeatMode {
+        case .one:
+            // 一曲リピート: 同じ曲を返す
+            return orderedPresets[currentIndex]
+        case .all:
+            // 連続再生: 次の曲に進む（ループ）
+            currentIndex = (currentIndex + 1) % orderedPresets.count
+            return orderedPresets[currentIndex]
+        }
     }
 
     /// 特定の曲を現在位置に設定

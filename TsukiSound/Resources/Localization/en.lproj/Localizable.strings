@@ -36,6 +36,8 @@
 "audio.selected" = "Selected:";
 "audio.edit" = "Edit";
 "audio.done" = "Done";
+"audio.repeat.one" = "Repeat One";
+"audio.repeat.all" = "Repeat All";
 
 // MARK: - App Settings
 "settings.app.title" = "App Settings";

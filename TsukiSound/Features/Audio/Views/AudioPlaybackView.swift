@@ -11,6 +11,7 @@ import SwiftUI
 /// 音声再生コントロールビュー
 struct AudioPlaybackView: View {
     @EnvironmentObject var audioService: AudioService
+    @EnvironmentObject var playlistState: PlaylistState
     @Binding var selectedTab: Tab
 
     @State private var errorMessage: String?
@@ -84,6 +85,26 @@ struct AudioPlaybackView: View {
 
     // MARK: - Sections
 
+    private var repeatModeToggle: some View {
+        Button(action: {
+            playlistState.repeatMode = playlistState.repeatMode == .one ? .all : .one
+        }) {
+            HStack(spacing: 6) {
+                Image(systemName: playlistState.repeatMode.icon)
+                    .font(.system(size: 14, weight: .medium))
+                Text(playlistState.repeatMode.displayName)
+                    .font(.system(size: 14, weight: .medium))
+            }
+            .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.white.opacity(0.08))
+            )
+        }
+    }
+
     @ViewBuilder
     private var bluetoothStatusIndicator: some View {
         HStack(spacing: 8) {
@@ -107,18 +128,13 @@ struct AudioPlaybackView: View {
 
     private var soundSelectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
-            Text("audio.sound".localized)
-                .dynamicFont(
-                    size: DynamicTheme.AudioTestTypography.headlineSize,
-                    weight: DynamicTheme.AudioTestTypography.headlineWeight
-                )
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+            // Repeat mode toggle
+            repeatModeToggle
 
             // Playlist with List + onMove (standard iOS drag)
             List {
-                ForEach(Array(audioService.playlistState.orderedPresets.enumerated()), id: \.element.id) { index, preset in
-                    let isCurrentlyPlaying = index == audioService.playlistState.currentIndex && audioService.isPlaying
+                ForEach(Array(playlistState.orderedPresets.enumerated()), id: \.element.id) { index, preset in
+                    let isCurrentlyPlaying = index == playlistState.currentIndex && audioService.isPlaying
 
                     PlaylistRowView(preset: preset)
                         .listRowBackground(
@@ -141,12 +157,12 @@ struct AudioPlaybackView: View {
                         }
                 }
                 .onMove { from, to in
-                    audioService.playlistState.move(from: from, to: to)
+                    playlistState.move(from: from, to: to)
                 }
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .frame(height: CGFloat(audioService.playlistState.orderedPresets.count) * 44)
+            .frame(height: CGFloat(playlistState.orderedPresets.count) * 44)
             .environment(\.editMode, .constant(.active))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -243,7 +259,7 @@ struct AudioPlaybackView: View {
             }
 
             // Current track (from playlist)
-            if let currentPreset = audioService.playlistState.presetForCurrentIndex() {
+            if let currentPreset = playlistState.presetForCurrentIndex() {
                 HStack(spacing: 4) {
                     Text("audio.selected".localized)
                         .dynamicFont(
