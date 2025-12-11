@@ -55,6 +55,7 @@
 
 // MARK: - Sound Presets
 "preset.jupiter" = "Jupiter (Holst)";
+"preset.jupiterRemastered" = "Jupiter Remastered";
 "preset.gymnopedie" = "Moonlit Gymnopedie";
 "preset.acousticGymnopedie" = "Acoustic Gymnopedie";
 

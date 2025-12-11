@@ -12,6 +12,7 @@ import UIKit
 /// This enum represents what users see in the app, not how sounds are generated.
 public enum UISoundPreset: String, CaseIterable, Identifiable {
     case jupiter                // ジュピター（PureTone module）
+    case jupiterRemastered      // ジュピター Remastered（Pedalboard処理版）
     case moonlitGymnopedie      // Moonlit Gymnopédie（Music Box音色）
     case acousticGymnopedie     // アコースティックギター版ジムノペディ
 
@@ -22,6 +23,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
         switch self {
         case .jupiter:
             return "🪐"
+        case .jupiterRemastered:
+            return "✨"
         case .moonlitGymnopedie:
             return "🌖"
         case .acousticGymnopedie:
@@ -34,6 +37,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
         switch self {
         case .jupiter:
             return "preset.jupiter"
+        case .jupiterRemastered:
+            return "preset.jupiterRemastered"
         case .moonlitGymnopedie:
             return "preset.gymnopedie"
         case .acousticGymnopedie:
@@ -73,6 +78,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
         switch self {
         case .jupiter:
             return "Jupiter (Holst)"
+        case .jupiterRemastered:
+            return "Jupiter Remastered"
         case .moonlitGymnopedie:
             return "Moonlit Gymnopédie"
         case .acousticGymnopedie:

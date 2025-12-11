@@ -55,6 +55,7 @@
 
 // MARK: - Sound Presets
 "preset.jupiter" = "ジュピターの響き";
+"preset.jupiterRemastered" = "ジュピター Remastered";
 "preset.gymnopedie" = "月明かりのジムノペディ";
 "preset.acousticGymnopedie" = "アコースティック・ジムノペディ";
 

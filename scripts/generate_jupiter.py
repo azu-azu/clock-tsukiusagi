@@ -24,6 +24,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
 
+from pedalboard import Pedalboard, Reverb, Compressor, Limiter, Gain
+
 from audio_utils import normalize
 
 # Constants
@@ -906,15 +908,39 @@ def main():
     chime = generate_tree_chime(t, cycle_duration)
 
     # Mix layers
-    print("4/4 Mixing and applying reverb...")
+    print("4/4 Mixing and applying effects...")
     mixed = drone + melody * 0.7 + chime * 0.8
 
-    # Apply reverb
-    with_reverb = apply_schroeder_reverb(mixed)
+    # Apply Pedalboard effects (professional quality)
+    print("    Applying Pedalboard effects (Compressor + Reverb + Limiter)...")
+    board = Pedalboard([
+        # Gentle compression for consistent dynamics
+        Compressor(
+            threshold_db=-20,
+            ratio=2.5,
+            attack_ms=30,
+            release_ms=250
+        ),
+        # Cathedral-style reverb for spacious atmosphere
+        Reverb(
+            room_size=0.7,
+            damping=0.4,
+            wet_level=0.45,
+            dry_level=0.55,
+            width=1.0
+        ),
+        # Final limiting to prevent clipping
+        Limiter(threshold_db=-1.0)
+    ])
+
+    # Pedalboard expects shape (channels, samples) for mono: (1, N)
+    mixed_2d = mixed.reshape(1, -1).astype(np.float32)
+    processed_2d = board(mixed_2d, SAMPLE_RATE)
+    with_effects = processed_2d.flatten()
 
     # Apply final fadeout (reverb tail fades to silence)
     # This ensures end is silent, matching the intro rest (silent)
-    faded = apply_final_fadeout(with_reverb, fadeout_duration=2.0)
+    faded = apply_final_fadeout(with_effects, fadeout_duration=2.0)
 
     # Normalize
     final = normalize(faded)
@@ -924,20 +950,20 @@ def main():
     output_path = os.path.join(script_dir, OUTPUT_DIR)
     os.makedirs(output_path, exist_ok=True)
 
-    wav_path = os.path.join(output_path, "cathedral_stillness.wav")
+    wav_path = os.path.join(output_path, "jupiter_remastered.wav")
 
     # Convert to 16-bit PCM
     signal_int16 = (final * 32767).astype(np.int16)
     wavfile.write(wav_path, SAMPLE_RATE, signal_int16)
 
     print()
-    print(f"Saved: cathedral_stillness.wav")
+    print(f"Saved: jupiter_remastered.wav")
     print()
     print("=" * 60)
     print("Next step: Convert to CAF format using:")
     print()
     print("  cd TsukiSound/Resources/Audio")
-    print('  afconvert -f caff -d LEF32@48000 -c 1 cathedral_stillness.wav cathedral_stillness.caf')
+    print('  afconvert -f caff -d LEF32@48000 -c 1 jupiter_remastered.wav jupiter_remastered.caf')
     print("=" * 60)
 
 
