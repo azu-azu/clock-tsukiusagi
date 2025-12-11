@@ -73,7 +73,7 @@ let chordGain: Float = 0.25   // 元: 0.08
 
 ```swift
 // ❌ 冗長でDRY原則に反する
-case .jupiterRemastered:
+case .jupiter:
     mixer.masterGain = 1.5  // 全プリセットに同じ値をコピペ
 case .moonlitGymnopedie:
     mixer.masterGain = 1.5  // 同じ値を繰り返し

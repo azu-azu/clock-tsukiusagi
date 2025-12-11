@@ -54,7 +54,7 @@
 "menu.versionNumber" = "Version 1.0.0";
 
 // MARK: - Sound Presets
-"preset.jupiterRemastered" = "Jupiter (Holst)";
+"preset.jupiter" = "Jupiter (Holst)";
 "preset.gymnopedie" = "Moonlit Gymnopedie";
 "preset.acousticGymnopedie" = "Acoustic Gymnopedie";
 
