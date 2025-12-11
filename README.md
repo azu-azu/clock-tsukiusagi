@@ -163,6 +163,7 @@ https://azu-azu.github.io/tsuki-sound/privacy.html
 
 ### ✨ App Store
 
+- v1.1.0 2025/12/11 — Added swipe navigation between all tabs, improved back navigation from AudioSettings
 - v1.0.0 2025/12/08
 
 ---
