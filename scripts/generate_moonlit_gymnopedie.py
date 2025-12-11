@@ -16,7 +16,7 @@ import numpy as np
 from scipy.io import wavfile
 import os
 
-from pedalboard import Pedalboard, Reverb, Compressor, Limiter, Gain
+from pedalboard import Pedalboard, Reverb, Compressor, Limiter
 
 from audio_utils import apply_silence_padding
 

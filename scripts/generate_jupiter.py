@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
 
-from pedalboard import Pedalboard, Reverb, Compressor, Limiter, Gain
+from pedalboard import Pedalboard, Reverb, Compressor, Limiter
 
 from audio_utils import normalize
 
