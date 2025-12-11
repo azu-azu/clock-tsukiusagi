@@ -902,20 +902,20 @@ def main():
     output_path = os.path.join(script_dir, OUTPUT_DIR)
     os.makedirs(output_path, exist_ok=True)
 
-    wav_path = os.path.join(output_path, "jupiter_remastered.wav")
+    wav_path = os.path.join(output_path, "jupiter.wav")
 
     # Convert to 16-bit PCM
     signal_int16 = (final * 32767).astype(np.int16)
     wavfile.write(wav_path, SAMPLE_RATE, signal_int16)
 
     print()
-    print(f"Saved: jupiter_remastered.wav")
+    print(f"Saved: jupiter.wav")
     print()
     print("=" * 60)
     print("Next step: Convert to CAF format using:")
     print()
     print("  cd TsukiSound/Resources/Audio")
-    print('  afconvert -f caff -d LEF32@48000 -c 1 jupiter_remastered.wav jupiter_remastered.caf')
+    print('  afconvert -f caff -d LEF32@48000 -c 1 jupiter.wav jupiter.caf')
     print("=" * 60)
 
 
