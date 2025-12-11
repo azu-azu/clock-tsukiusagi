@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
 """
-Generate Cathedral Stillness audio for TsukiSound
+Generate Jupiter audio for TsukiSound
 
-Generates the complete cathedral stillness sound including:
+Generates Jupiter (Holst) audio including:
 - Organ drone (C3 + G3 fifth chord with slow LFO breathing)
 - Jupiter melody (Holst's Jupiter theme in C Major)
 - Tree chime accents (metallic shimmer)
-- Schroeder reverb
+- Pedalboard effects (Compressor + Reverb + Limiter)
 
 The output is a single audio file that can be looped seamlessly.
-
-Based on existing Swift implementations:
-- CathedralStillnessSignal.swift (organ drone)
-- JupiterSignal.swift (melody)
-- JupiterMelodyData.swift (note data)
-- JupiterTiming.swift (tempo/section control)
 """
 
 import numpy as np
@@ -444,7 +438,7 @@ def create_melody() -> List[JupiterNote]:
 # =============================================================================
 
 def generate_organ_drone(t: np.ndarray, cycle_duration: float) -> np.ndarray:
-    """Generate organ drone (CathedralStillnessSignal).
+    """Generate organ drone.
 
     Section 0: Silent (a cappella melody)
     Section 1: Fade in from 0 to full
@@ -825,7 +819,7 @@ def apply_final_fadeout(signal: np.ndarray, fadeout_duration: float = 2.0, sampl
 
 def main():
     print("=" * 60)
-    print("Cathedral Stillness Audio Generator for TsukiSound")
+    print("Jupiter Audio Generator for TsukiSound")
     print("=" * 60)
 
     # Calculate cycle duration (skips intro rest since no organ)
@@ -873,7 +867,7 @@ def main():
             attack_ms=30,
             release_ms=250
         ),
-        # Cathedral-style reverb for spacious atmosphere
+        # Spacious reverb for atmospheric sound
         Reverb(
             room_size=0.7,
             damping=0.4,
