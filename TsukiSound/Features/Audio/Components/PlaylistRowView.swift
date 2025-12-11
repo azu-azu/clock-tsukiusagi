@@ -27,7 +27,7 @@ struct PlaylistRowView: View {
 
 #Preview {
     VStack(spacing: 0) {
-        PlaylistRowView(preset: .jupiter)
+        PlaylistRowView(preset: .jupiterRemastered)
         Divider()
         PlaylistRowView(preset: .moonlitGymnopedie)
     }

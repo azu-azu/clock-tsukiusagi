@@ -54,8 +54,7 @@
 "menu.versionNumber" = "Version 1.0.0";
 
 // MARK: - Sound Presets
-"preset.jupiter" = "ジュピターの響き";
-"preset.jupiterRemastered" = "ジュピター Remastered";
+"preset.jupiterRemastered" = "ジュピターの響き";
 "preset.gymnopedie" = "月明かりのジムノペディ";
 "preset.acousticGymnopedie" = "アコースティック・ジムノペディ";
 
