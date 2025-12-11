@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """
-Generate Music Box (オルゴール) audio for TsukiSound
+Generate Moonlit Gymnopedie audio for TsukiSound
 
 Generates Gymnopédie No.1 melody with music box timbre:
 - Bell-like metallic tones with quick decay
 - 88 BPM, 3/4 time signature, D Major
-- Soft reverb for dreamy atmosphere
-
-Based on generate_moonlit_gymnopedie.py melody data
+- Pedalboard effects (Compressor + Reverb + Limiter)
 
 Output: WAV file (to be converted to CAF for iOS)
 """
@@ -503,7 +501,7 @@ def save_wav(signal, filename, sample_rate=SAMPLE_RATE):
 
 def main():
     print("=" * 60)
-    print("Music Box (Gymnopédie) Audio Generator for TsukiSound")
+    print("Moonlit Gymnopedie Audio Generator for TsukiSound")
     print("=" * 60)
     print(f"Sample rate: {SAMPLE_RATE} Hz")
     print(f"BPM: 88 (beat = {BEAT:.3f}s)")
@@ -517,13 +515,13 @@ def main():
     os.makedirs(output_path, exist_ok=True)
 
     # Generate audio
-    print("Generating Music Box (Gymnopédie No.1)...")
+    print("Generating Moonlit Gymnopedie...")
     signal = generate_music_box()
 
     # Save WAV
-    wav_path = os.path.join(output_path, "music_box.wav")
+    wav_path = os.path.join(output_path, "moonlit_gymnopedie.wav")
     save_wav(signal, wav_path)
-    print(f"Saved: music_box.wav")
+    print(f"Saved: moonlit_gymnopedie.wav")
 
     print()
     print("=" * 60)
@@ -532,7 +530,7 @@ def main():
     print("Next step: Convert to CAF format using:")
     print()
     print(f"  cd {output_path}")
-    print("  afconvert -f caff -d LEF32@48000 -c 1 music_box.wav music_box.caf")
+    print("  afconvert -f caff -d LEF32@48000 -c 1 moonlit_gymnopedie.wav moonlit_gymnopedie.caf")
     print("=" * 60)
 
 if __name__ == "__main__":
