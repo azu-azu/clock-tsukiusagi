@@ -805,54 +805,6 @@ def generate_tree_chime(t: np.ndarray, cycle_duration: float, seed: int = 42) ->
     return output
 
 
-def apply_schroeder_reverb(signal: np.ndarray, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
-    """Apply Schroeder reverb for cathedral atmosphere."""
-    room_size = 2.2
-    damping = 0.35
-    decay = 0.88
-    mix = 0.55
-    predelay = 0.04
-
-    # Predelay
-    predelay_samples = int(predelay * sample_rate)
-    delayed = np.zeros(len(signal) + predelay_samples)
-    delayed[predelay_samples:] = signal
-
-    # Simple comb filter reverb (simplified Schroeder)
-    output = np.copy(delayed)
-
-    # Comb filter delays (ms) scaled by room size
-    comb_delays_ms = [29.7, 37.1, 41.1, 43.7]
-    comb_gains = [decay] * 4
-
-    for delay_ms, gain in zip(comb_delays_ms, comb_gains):
-        delay_samples = int(delay_ms * room_size * sample_rate / 1000.0)
-        filtered = np.zeros_like(output)
-
-        for i in range(delay_samples, len(output)):
-            filtered[i] = output[i] + gain * (1.0 - damping) * filtered[i - delay_samples]
-
-        output = output + filtered * 0.25
-
-    # Allpass filters for diffusion
-    allpass_delays_ms = [5.0, 1.7]
-
-    for delay_ms in allpass_delays_ms:
-        delay_samples = int(delay_ms * room_size * sample_rate / 1000.0)
-        filtered = np.zeros_like(output)
-
-        g = 0.5
-        for i in range(delay_samples, len(output)):
-            filtered[i] = -g * output[i] + output[i - delay_samples] + g * filtered[i - delay_samples]
-
-        output = filtered
-
-    # Mix dry and wet
-    result = (1.0 - mix) * signal + mix * output[:len(signal)]
-
-    return result
-
-
 def apply_final_fadeout(signal: np.ndarray, fadeout_duration: float = 2.0, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
     """Apply fadeout at the end to ensure silence for seamless looping."""
     fadeout_samples = int(fadeout_duration * sample_rate)
