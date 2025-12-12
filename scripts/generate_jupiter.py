@@ -16,7 +16,7 @@ from scipy.io import wavfile
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 from pedalboard import Pedalboard, Reverb, Compressor, Limiter
 

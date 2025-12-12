@@ -57,10 +57,7 @@ F5 = 698.46    # F5 (natural)
 Fs5 = 739.99   # F#5
 G5 = 783.99
 A5 = 880.00
-B5 = 987.77
-C6 = 1046.50
-D6 = 1174.66
-E6 = 1318.51
+E6 = 1318.51  # Used for high frequency reduction calculation
 
 # ============================================================================
 # Music Box Sound Parameters
