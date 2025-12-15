@@ -33,11 +33,12 @@ enum WaningCrescentMoon {
         let th1Q = ang(c1.x, c1.y, qx, qy)
 
         // 三日月（isCrescent=YES）かつ左が明（rightLit=L）の場合
-        // c0(Q→P, CW) + c1(Q→P, CW)
+        // WaxingCrescentと同じ描画方向（clockwise: false, true）
+        // c1が右側にあるので、自動的に左側が光る形状になる
         var path = Path()
         path.move(to: CGPoint(x: px, y: py))
-        path.addArc(center: c0, radius: radius, startAngle: th0P, endAngle: th0Q, clockwise: true)
-        path.addArc(center: c1, radius: radius, startAngle: th1Q, endAngle: th1P, clockwise: false)
+        path.addArc(center: c0, radius: radius, startAngle: th0P, endAngle: th0Q, clockwise: false)
+        path.addArc(center: c1, radius: radius, startAngle: th1Q, endAngle: th1P, clockwise: true)
         path.closeSubpath()
         return path
     }
