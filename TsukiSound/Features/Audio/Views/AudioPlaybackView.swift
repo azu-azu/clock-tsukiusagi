@@ -331,12 +331,16 @@ struct AudioPlaybackView: View {
             Domain: \(error.domain)
             Description: \(error.localizedDescription)
             """
-            print("AudioPlaybackView: \(detailedMessage)")
+            #if DEBUG
+            print("🐛 AudioPlaybackView: \(detailedMessage)")
+            #endif
             errorMessage = detailedMessage
             showError = true
         } catch {
             errorMessage = "再生エラー: \(error.localizedDescription)"
-            print("AudioPlaybackView: \(errorMessage ?? "")")
+            #if DEBUG
+            print("🐛 AudioPlaybackView: \(errorMessage ?? "")")
+            #endif
             showError = true
         }
     }

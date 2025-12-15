@@ -338,42 +338,6 @@ final class ClockScreenVM: ObservableObject {
 
     let (phaseName, tag) = labelForQuarter(phase: φ)
 
-    // コンソールデバッグ出力
-    #if DEBUG
-    print("=== Moon Phase Debug ===")
-    print("Date: \(DateFormatter.localizedString(from: date, dateStyle: .short, timeStyle: .none))")
-    print("Phase: \(phaseName)\(tag)")
-    print("Illumination: \(illumPct)%")
-    print("φ (phase): \(String(format: "%.6f", φ))")
-    print("isRightLit: \(isRightLit)")
-    print("Offset: \(String(format: "%.3f", abs(cos(2.0 * .pi * φ))))")
-
-    // 詳細な計算過程
-    let x = φ - floor(φ)
-    let x4 = x * 4.0
-    let prevIdx = Int(floor(x4)) & 3
-    let nextIdx = (prevIdx + 1) & 3
-    let prevTurn = Double(prevIdx) / 4.0
-    let nextTurn = Double(nextIdx) / 4.0
-
-    var dPrevTurn = φ - prevTurn
-    if dPrevTurn < 0 { dPrevTurn += 1.0 }
-    dPrevTurn = min(dPrevTurn, 1.0 - dPrevTurn)
-    dPrevTurn = -dPrevTurn
-
-    var dNextTurn = nextTurn - φ
-    if dNextTurn < 0 { dNextTurn += 1.0 }
-    dNextTurn = min(dNextTurn, 1.0 - dNextTurn)
-
-    let daysPrev = dPrevTurn * 29.530588861
-    let daysNext = dNextTurn * 29.530588861
-
-    print("x4: \(String(format: "%.3f", x4)), prevIdx: \(prevIdx), nextIdx: \(nextIdx)")
-    print("prevTurn: \(String(format: "%.3f", prevTurn)), nextTurn: \(String(format: "%.3f", nextTurn))")
-    print("dPrevTurn: \(String(format: "%.3f", dPrevTurn)), dNextTurn: \(String(format: "%.3f", dNextTurn))")
-    print("daysPrev: \(String(format: "%.3f", daysPrev)), daysNext: \(String(format: "%.3f", daysNext))")
-    print("========================")
-    #endif
 
     let litSide = (mp.illumination > 0.05 && mp.illumination < 0.95)
                   ? (isRightLit ? "右側" : "左側") : nil
@@ -417,11 +381,6 @@ final class ClockScreenVM: ObservableObject {
     comps.hour = 7; comps.minute = 5
     comps.timeZone = .current
     let date = Calendar.current.date(from: comps)!
-
-    // デバッグ用：10/13の月相計算を確認
-    let moonPhase = MoonPhaseCalculator.moonPhaseForLocalEvening(on: date)
-    let _ = print("10/13 Debug: phase=\(moonPhase.phase), illumination=\(moonPhase.illumination)")
-
     return ClockScreenView(displayMode: .constant(.dotMatrix), fixedDate: date)
 }
 

@@ -67,12 +67,10 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         // Attach nodes to engine
         if !engine.attachedNodes.contains(masterBusMixer) {
             engine.attach(masterBusMixer)
-            print("   ✅ masterBusMixer attached")
         }
 
         if !engine.attachedNodes.contains(limiterNode) {
             engine.attach(limiterNode)
-            print("   ✅ limiterNode attached")
         }
 
         nodesAttached = true
@@ -96,9 +94,11 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         // CRITICAL: Refuse to reconfigure if engine is running
         // Runtime graph reconfiguration causes -10868 crashes
         if engine.isRunning {
-            print("⚠️ [SafeVolumeLimiter] Engine is running, cannot reconfigure (would crash)")
+            #if DEBUG
+            print("🐛 [SafeVolumeLimiter] Engine is running, cannot reconfigure (would crash)")
             print("   Current format: \(configuredFormat?.sampleRate ?? 0)Hz/\(configuredFormat?.channelCount ?? 0)ch")
             print("   Requested format: \(format.sampleRate)Hz/\(format.channelCount)ch")
+            #endif
             return
         }
 
@@ -141,12 +141,10 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
     // MARK: - Private Methods
 
     private func updateLimiterSettings() {
-        // TEMPORARY FIX: Bypass distortion effect entirely
-        // The multiDecimated4 preset was causing noise/artifacts
-        // TODO: Find proper limiter solution for iOS (AVAudioUnitEQ or custom gain control)
-
-        // Bypass the effect by setting wet/dry mix to 0% (100% dry = no processing)
-        limiterNode.wetDryMix = 0
-
+        // NOTE: Volume limiting is intentionally bypassed.
+        // AVAudioUnitDistortion caused noise/artifacts with all presets tested.
+        // iOS lacks AVAudioUnitDynamicsProcessor (macOS only).
+        // Future options: AVAudioUnitEQ-based soft limiting or custom gain node.
+        limiterNode.wetDryMix = 0  // 100% dry = no processing
     }
 }

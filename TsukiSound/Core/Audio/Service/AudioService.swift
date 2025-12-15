@@ -66,9 +66,6 @@ public final class AudioService: ObservableObject {
     private let volumeLimiter: SafeVolumeLimiter
     private var settings: AudioSettings
 
-    // Phase 3: Live Activity
-    private var activityController: AudioActivityController?
-
     // Phase 3: Now Playing Controller
     private var nowPlayingController: NowPlayingController?
 
@@ -119,11 +116,6 @@ public final class AudioService: ObservableObject {
         self.volumeLimiter = SafeVolumeLimiter(
             maxOutputDb: settings.maxOutputDb
         )
-
-        // Phase 3: Live Activity Controller (iOS 16.1+)
-        if #available(iOS 16.1, *) {
-            self.activityController = AudioActivityController()
-        }
 
         // Phase 3: Now Playing Controller
         self.nowPlayingController = NowPlayingController()
@@ -253,10 +245,6 @@ public final class AudioService: ObservableObject {
         pauseReason = nil
         outputRoute = routeMonitor.currentRoute
 
-        // Phase 3: Live Activityを更新
-        // Disabled: Now Playing provides sufficient lock screen integration
-        // updateLiveActivity()
-
         // Phase 3: Now Playingを更新
         updateNowPlaying()
         updateNowPlayingState()
@@ -314,10 +302,6 @@ public final class AudioService: ObservableObject {
             // isPlaying already set to false at the beginning of stopAndWait()
             self.currentPreset = nil
             self.pauseReason = nil
-
-            // Phase 3: Live Activityを終了
-            // Disabled: Now Playing provides sufficient lock screen integration
-            // self.endLiveActivity()
 
             // Phase 3: Now Playingをクリア
             self.nowPlayingController?.clearNowPlaying()
@@ -378,10 +362,6 @@ public final class AudioService: ObservableObject {
         currentPreset = nil
         pauseReason = nil
 
-        // Phase 3: Live Activityを終了
-        // Disabled: Now Playing provides sufficient lock screen integration
-        // endLiveActivity()
-
         // Phase 3: Now Playingをクリア
         nowPlayingController?.clearNowPlaying()
 
@@ -414,10 +394,6 @@ public final class AudioService: ObservableObject {
 
         pauseReason = reason
         isPlaying = false
-
-        // Phase 3: Live Activityを更新
-        // Disabled: Now Playing provides sufficient lock screen integration
-        // updateLiveActivity()
 
         // Phase 3: Now Playing状態を更新
         updateNowPlayingState()
@@ -465,10 +441,6 @@ public final class AudioService: ObservableObject {
         isPlaying = true
         pauseReason = nil
 
-        // Phase 3: Live Activityを更新
-        // Disabled: Now Playing provides sufficient lock screen integration
-        // updateLiveActivity()
-
         // Phase 3: Now Playing状態を更新
         updateNowPlayingState()
 
@@ -515,10 +487,6 @@ public final class AudioService: ObservableObject {
 
         // Reset limiter
         volumeLimiter.reset()
-
-        // Clear Live Activity
-        // Disabled: Now Playing provides sufficient lock screen integration
-        // endLiveActivity()
 
         // Clear Now Playing
         nowPlayingController?.clearNowPlaying()
@@ -877,56 +845,6 @@ public final class AudioService: ObservableObject {
 
         fadeTimer = timer
         timer.resume()
-    }
-
-    // MARK: - Live Activity Integration
-
-    /// Update Live Activity with current state
-    private func updateLiveActivity() {
-        guard #available(iOS 16.1, *), settings.liveActivityEnabled else { return }
-        guard let controller = activityController else { return }
-
-        let route = outputRoute.displayName
-        let nextBreak = breakScheduler.nextBreakAt
-        let presetName = currentPreset?.displayName  // Use displayName with emoji prefix
-
-        if isPlaying {
-            // Start or update activity
-            if !controller.isActivityActive {
-                controller.startActivity(
-                    isPlaying: true,
-                    nextBreakAt: nextBreak,
-                    outputRoute: route,
-                    pauseReason: nil,
-                    presetName: presetName
-                )
-            } else {
-                controller.updateActivity(
-                    isPlaying: true,
-                    nextBreakAt: nextBreak,
-                    outputRoute: route,
-                    pauseReason: nil,
-                    presetName: presetName
-                )
-            }
-        } else {
-            // Update with paused state
-            if controller.isActivityActive {
-                controller.updateActivity(
-                    isPlaying: false,
-                    nextBreakAt: nextBreak,
-                    outputRoute: route,
-                    pauseReason: pauseReason?.rawValue,
-                    presetName: presetName
-                )
-            }
-        }
-    }
-
-    /// End Live Activity
-    private func endLiveActivity() {
-        guard #available(iOS 16.1, *) else { return }
-        activityController?.endActivity(after: 3.0)  // Keep visible for 3 seconds
     }
 
     // MARK: - Now Playing Integration
