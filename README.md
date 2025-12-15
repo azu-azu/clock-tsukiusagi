@@ -164,7 +164,7 @@ https://azu-azu.github.io/tsuki-sound/privacy.html
 ### ✨ App Store
 
 - v1.2.0 2025/12/12 — Added Repeat Mode Toggle for audio playback, applied Pedalboard-based audio effects for smoother ambience
-- v1.1.0 2025/12/11 — Added swipe navigation between all tabs, improved back navigation from AudioSettings
+- v1.1.0 2025/12/10 — Added swipe navigation between all tabs, improved back navigation from AudioSettings
 - v1.0.0 2025/12/08
 
 ---
