@@ -113,7 +113,7 @@ enum FirstQuarterMoon {
                 layer.addFilter(.blur(radius: 3.0))
 
                 // Apply multiple stroke passes for feathering effect
-                let passes = 40
+                let passes = 20  // Match MoonPainter implementation
                 for p in 0..<passes {
                     let w = 3.0 * (1.6 - 0.25 * CGFloat(p))
                     layer.stroke(
@@ -130,8 +130,8 @@ enum FirstQuarterMoon {
             path.addArc(
                 center: center,
                 radius: radius,
-                startAngle: .degrees(center.y < size.height * 0.5 ? -90 : -90),
-                endAngle: .degrees(center.y < size.height * 0.5 ? 90 : 90),
+                startAngle: .degrees(-90),
+                endAngle: .degrees(90),
                 clockwise: false
             )
         }
