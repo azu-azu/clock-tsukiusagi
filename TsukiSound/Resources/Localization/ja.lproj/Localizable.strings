@@ -57,6 +57,9 @@
 "preset.jupiter" = "ジュピターの響き";
 "preset.gymnopedie" = "月明かりのジムノペディ";
 "preset.acousticGymnopedie" = "アコースティック・ジムノペディ";
+"preset.gnossienne1" = "グノシエンヌ 第1番";
+"preset.gnossienne3" = "グノシエンヌ 第3番";
+"preset.gnossienne4Jazz" = "グノシエンヌ 第4番 (Jazz)";
 
 // MARK: - Audio Routes
 "route.headphones" = "ヘッドホン";

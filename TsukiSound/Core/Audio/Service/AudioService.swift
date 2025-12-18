@@ -642,17 +642,35 @@ public final class AudioService: ObservableObject {
         case .acousticGymnopedie:
             try registerPrerenderedAudioFile(named: "acoustic_gymnopedie")
             return
+        case .gnossienne1:
+            try registerPrerenderedAudioFile(named: "gnossienne-1", ext: "mp3")
+            return
+        case .gnossienne3:
+            try registerPrerenderedAudioFile(named: "gnossienne-3", ext: "mp3")
+            return
+        case .gnossienne4Jazz:
+            try registerPrerenderedAudioFile(named: "gnossienne-4-jazz", ext: "mp3")
+            return
         }
 
     }
 
     /// Register pre-rendered audio file for playback
-    /// - Parameter name: Base name of the audio file (without .caf extension)
+    /// - Parameter name: Base name of the audio file (without extension)
+    /// - Parameter ext: File extension (default: nil, will try caf then mp3)
     /// Note: Does NOT start playback - engine.start() must be called first, then startTrackPlayerIfNeeded()
-    private func registerPrerenderedAudioFile(named name: String) throws {
-        // Find the audio file in bundle
-        guard let url = Bundle.main.url(forResource: name, withExtension: "caf") else {
-            print("⚠️ [AudioService] \(name).caf not found in bundle")
+    private func registerPrerenderedAudioFile(named name: String, ext: String? = nil) throws {
+        // Find the audio file in bundle (try specified extension or fallback order)
+        let extensions = ext.map { [$0] } ?? ["caf", "mp3"]
+        var url: URL?
+        for fileExt in extensions {
+            if let foundURL = Bundle.main.url(forResource: name, withExtension: fileExt) {
+                url = foundURL
+                break
+            }
+        }
+        guard let url = url else {
+            print("⚠️ [AudioService] \(name) not found in bundle (tried: \(extensions.joined(separator: ", ")))")
             throw AudioError.engineStartFailed(TrackPlayerError.fileNotLoaded)
         }
 

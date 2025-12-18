@@ -14,6 +14,9 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case jupiter                // ジュピター（Pedalboard処理版）
     case moonlitGymnopedie      // Moonlit Gymnopédie（Music Box音色）
     case acousticGymnopedie     // アコースティックギター版ジムノペディ
+    case gnossienne1            // グノシエンヌ第1番
+    case gnossienne3            // グノシエンヌ第3番
+    case gnossienne4Jazz        // グノシエンヌ第4番（ジャズアレンジ）
 
     public var id: String { rawValue }
 
@@ -26,6 +29,12 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🌖"
         case .acousticGymnopedie:
             return "🎸"
+        case .gnossienne1:
+            return "🎹"
+        case .gnossienne3:
+            return "🎹"
+        case .gnossienne4Jazz:
+            return "🎷"
         }
     }
 
@@ -38,6 +47,12 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "preset.gymnopedie"
         case .acousticGymnopedie:
             return "preset.acousticGymnopedie"
+        case .gnossienne1:
+            return "preset.gnossienne1"
+        case .gnossienne3:
+            return "preset.gnossienne3"
+        case .gnossienne4Jazz:
+            return "preset.gnossienne4Jazz"
         }
     }
 
@@ -77,6 +92,12 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Moonlit Gymnopédie"
         case .acousticGymnopedie:
             return "Acoustic Gymnopédie"
+        case .gnossienne1:
+            return "Gnossienne No. 1"
+        case .gnossienne3:
+            return "Gnossienne No. 3"
+        case .gnossienne4Jazz:
+            return "Gnossienne No. 4 (Jazz)"
         }
     }
 }

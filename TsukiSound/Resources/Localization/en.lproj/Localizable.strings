@@ -57,6 +57,9 @@
 "preset.jupiter" = "Jupiter (Holst)";
 "preset.gymnopedie" = "Moonlit Gymnopedie";
 "preset.acousticGymnopedie" = "Acoustic Gymnopedie";
+"preset.gnossienne1" = "Gnossienne No. 1";
+"preset.gnossienne3" = "Gnossienne No. 3";
+"preset.gnossienne4Jazz" = "Gnossienne No. 4 (Jazz)";
 
 // MARK: - Audio Routes
 "route.headphones" = "Headphones";
