@@ -34,7 +34,7 @@ public protocol TrackPlaying {
 }
 
 /// オーディオファイル再生プレイヤー
-/// オンメモリ方式でWAV/CAFファイルをシームレスにループ再生
+/// オンメモリ方式でオーディオファイル（CAF/MP3等）をシームレスにループ再生
 @MainActor
 public final class TrackPlayer: TrackPlaying {
     // MARK: - Internal Properties
