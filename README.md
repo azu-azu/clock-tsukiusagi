@@ -163,6 +163,7 @@ https://azu-azu.github.io/tsuki-sound/privacy.html
 
 ### ✨ App Store
 
+- v1.3.0 2025/12/19 — Added MP3 playback support with 3 new Gnossienne tracks (No. 1, No. 3, No. 4 Jazz)
 - v1.2.1 2025/12/15 — Fixed WaningCrescentMoon arc direction for proper left-lit display
 - v1.2.0 2025/12/12 — Added Repeat Mode Toggle for audio playback, applied Pedalboard-based audio effects for smoother ambience
 - v1.1.0 2025/12/10 — Added swipe navigation between all tabs, improved back navigation from AudioSettings
