@@ -4,7 +4,6 @@ import SwiftUI
 struct SkyTone: Equatable {
     let gradStart: Color
     let gradEnd: Color
-    // captionKey を削除
 
     static func forHour(_ h: Int) -> SkyTone {
         switch h {
@@ -38,13 +37,3 @@ struct SkyTone: Equatable {
         gradEnd: Color(hex: "#141A26")
     )
 }
-
-
-// 夜明け
-        // gradStart: Color(hex: "#1B2330"),
-        // gradEnd: Color(hex: "#EEF2F7"),
-
-
-// 結構くらい
-        // gradStart: Color(hex: "#0F1420"),
-        // gradEnd: Color(hex: "#1A2030"),
