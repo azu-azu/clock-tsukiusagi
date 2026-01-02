@@ -78,26 +78,28 @@ public final class PlaylistState: ObservableObject {
         saveOrder()
     }
 
-    /// 次の曲に進む（リピートモードに応じて動作）
+    /// 次の曲に進む（リピートモードに応じて動作、カテゴリフィルタを考慮）
     public func advanceToNext() -> UISoundPreset {
-        guard !orderedPresets.isEmpty else {
+        let activePresets = displayedPresets
+        guard !activePresets.isEmpty else {
             fatalError("Playlist is empty")
         }
 
         switch repeatMode {
         case .one:
             // 一曲リピート: 同じ曲を返す
-            return orderedPresets[currentIndex]
+            return activePresets[currentIndex]
         case .all:
             // 連続再生: 次の曲に進む（ループ）
-            currentIndex = (currentIndex + 1) % orderedPresets.count
-            return orderedPresets[currentIndex]
+            currentIndex = (currentIndex + 1) % activePresets.count
+            return activePresets[currentIndex]
         }
     }
 
-    /// 特定の曲を現在位置に設定
+    /// 特定の曲を現在位置に設定（カテゴリフィルタを考慮）
     public func setCurrentIndex(to preset: UISoundPreset) {
-        if let idx = orderedPresets.firstIndex(where: { $0.id == preset.id }) {
+        let activePresets = displayedPresets
+        if let idx = activePresets.firstIndex(where: { $0.id == preset.id }) {
             currentIndex = idx
         } else {
             // 保険：存在しない場合は0に戻す
@@ -105,15 +107,18 @@ public final class PlaylistState: ObservableObject {
         }
     }
 
-    /// 現在の曲を取得
+    /// 現在の曲を取得（カテゴリフィルタを考慮）
     public func presetForCurrentIndex() -> UISoundPreset? {
-        guard orderedPresets.indices.contains(currentIndex) else { return nil }
-        return orderedPresets[currentIndex]
+        let activePresets = displayedPresets
+        guard activePresets.indices.contains(currentIndex) else { return nil }
+        return activePresets[currentIndex]
     }
 
     /// カテゴリを設定（永続化付き）
     public func setCategory(_ category: AudioCategory?) {
         selectedCategory = category
+        // カテゴリ変更時はインデックスをリセット
+        currentIndex = 0
         saveCategory()
     }
 
