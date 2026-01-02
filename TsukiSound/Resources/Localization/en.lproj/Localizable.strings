@@ -39,6 +39,10 @@
 "audio.repeat.one" = "Repeat One";
 "audio.repeat.all" = "Repeat All";
 
+// MARK: - Categories
+"category.all" = "All";
+"category.tsukiSound" = "TsukiSound";
+
 // MARK: - App Settings
 "settings.app.title" = "App Settings";
 "settings.app.appearance" = "Appearance";
@@ -60,6 +64,7 @@
 "preset.gnossienne1" = "Gnossienne No. 1";
 "preset.gnossienne3" = "Gnossienne No. 3";
 "preset.gnossienne4Jazz" = "Gnossienne No. 4 (Jazz)";
+"preset.pachelbelCanon" = "Pachelbel's Canon";
 
 // MARK: - Audio Routes
 "route.headphones" = "Headphones";

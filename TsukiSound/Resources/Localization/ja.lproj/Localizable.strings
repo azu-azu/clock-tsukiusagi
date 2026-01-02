@@ -39,6 +39,10 @@
 "audio.repeat.one" = "1曲リピート";
 "audio.repeat.all" = "連続再生";
 
+// MARK: - Categories
+"category.all" = "すべて";
+"category.tsukiSound" = "TsukiSound";
+
 // MARK: - App Settings
 "settings.app.title" = "アプリ設定";
 "settings.app.appearance" = "外観";
@@ -60,6 +64,7 @@
 "preset.gnossienne1" = "グノシエンヌ 第1番";
 "preset.gnossienne3" = "グノシエンヌ 第3番";
 "preset.gnossienne4Jazz" = "グノシエンヌ 第4番 (Jazz)";
+"preset.pachelbelCanon" = "パッヘルベルのカノン";
 
 // MARK: - Audio Routes
 "route.headphones" = "ヘッドホン";

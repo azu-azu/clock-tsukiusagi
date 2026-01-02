@@ -42,16 +42,32 @@ public final class PlaylistState: ObservableObject {
     /// リピートモード
     @Published public var repeatMode: RepeatMode = .all
 
+    /// 選択中のカテゴリ（nil = 全曲表示）
+    @Published public var selectedCategory: AudioCategory?
+
+    // MARK: - Computed Properties
+
+    /// カテゴリでフィルタされたプリセット一覧
+    public var displayedPresets: [UISoundPreset] {
+        guard let category = selectedCategory else {
+            return orderedPresets  // 全曲
+        }
+        let categoryPresets = Set(category.presets)
+        return orderedPresets.filter { categoryPresets.contains($0) }
+    }
+
     // MARK: - Private Properties
 
     private let allPresets: [UISoundPreset]
     private let storageKey = "playlist.order.v1"
+    private let categoryStorageKey = "playlist.category.v1"
 
     // MARK: - Initialization
 
     public init(allPresets: [UISoundPreset] = Array(UISoundPreset.allCases)) {
         self.allPresets = allPresets
         self.orderedPresets = Self.loadOrder(from: "playlist.order.v1", allPresets: allPresets)
+        self.selectedCategory = Self.loadCategory(from: "playlist.category.v1")
     }
 
     // MARK: - Public Methods
@@ -95,6 +111,12 @@ public final class PlaylistState: ObservableObject {
         return orderedPresets[currentIndex]
     }
 
+    /// カテゴリを設定（永続化付き）
+    public func setCategory(_ category: AudioCategory?) {
+        selectedCategory = category
+        saveCategory()
+    }
+
     // MARK: - Private Methods
 
     /// UserDefaultsから曲順を復元
@@ -117,5 +139,22 @@ public final class PlaylistState: ObservableObject {
     private func saveOrder() {
         let ids = orderedPresets.map(\.id)
         UserDefaults.standard.set(ids, forKey: storageKey)
+    }
+
+    /// UserDefaultsからカテゴリを復元
+    private static func loadCategory(from key: String) -> AudioCategory? {
+        guard let categoryId = UserDefaults.standard.string(forKey: key) else {
+            return nil
+        }
+        return AudioCategory(rawValue: categoryId)
+    }
+
+    /// UserDefaultsにカテゴリを保存
+    private func saveCategory() {
+        if let category = selectedCategory {
+            UserDefaults.standard.set(category.rawValue, forKey: categoryStorageKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: categoryStorageKey)
+        }
     }
 }

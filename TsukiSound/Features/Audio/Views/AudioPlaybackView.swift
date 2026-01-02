@@ -131,10 +131,13 @@ struct AudioPlaybackView: View {
             // Repeat mode toggle
             repeatModeToggle
 
+            // Category selector
+            CategorySelectorView()
+
             // Playlist with List + onMove (standard iOS drag)
             List {
-                ForEach(Array(playlistState.orderedPresets.enumerated()), id: \.element.id) { index, preset in
-                    let isCurrentlyPlaying = index == playlistState.currentIndex && audioService.isPlaying
+                ForEach(Array(playlistState.displayedPresets.enumerated()), id: \.element.id) { index, preset in
+                    let isCurrentlyPlaying = playlistState.presetForCurrentIndex() == preset && audioService.isPlaying
 
                     PlaylistRowView(preset: preset)
                         .listRowBackground(
@@ -162,7 +165,7 @@ struct AudioPlaybackView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .frame(height: CGFloat(playlistState.orderedPresets.count) * 44)
+            .frame(height: CGFloat(playlistState.displayedPresets.count) * 44)
             .environment(\.editMode, .constant(.active))
         }
         .frame(maxWidth: .infinity, alignment: .leading)

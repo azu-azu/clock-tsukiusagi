@@ -17,6 +17,7 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case gnossienne1            // グノシエンヌ第1番
     case gnossienne3            // グノシエンヌ第3番
     case gnossienne4Jazz        // グノシエンヌ第4番（ジャズアレンジ）
+    case pachelbelCanon         // パッヘルベルのカノン
 
     public var id: String { rawValue }
 
@@ -35,6 +36,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🎹"
         case .gnossienne4Jazz:
             return "🎷"
+        case .pachelbelCanon:
+            return "🎻"
         }
     }
 
@@ -53,6 +56,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "preset.gnossienne3"
         case .gnossienne4Jazz:
             return "preset.gnossienne4Jazz"
+        case .pachelbelCanon:
+            return "preset.pachelbelCanon"
         }
     }
 
@@ -98,6 +103,8 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Gnossienne No. 3"
         case .gnossienne4Jazz:
             return "Gnossienne No. 4 (Jazz)"
+        case .pachelbelCanon:
+            return "Pachelbel's Canon"
         }
     }
 }
