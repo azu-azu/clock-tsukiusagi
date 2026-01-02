@@ -65,6 +65,8 @@
 "preset.gnossienne3" = "グノシエンヌ 第3番";
 "preset.gnossienne4Jazz" = "グノシエンヌ 第4番 (Jazz)";
 "preset.pachelbelCanon" = "パッヘルベルのカノン";
+"preset.clairDeLune" = "月の光";
+"preset.moonlightSonataHipHop" = "月光ソナタ (Hip-Hop)";
 
 // MARK: - Audio Routes
 "route.headphones" = "ヘッドホン";
