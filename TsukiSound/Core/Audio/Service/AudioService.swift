@@ -651,9 +651,6 @@ public final class AudioService: ObservableObject {
         case .gnossienne4Jazz:
             try registerPrerenderedAudioFile(named: "gnossienne-4-jazz", ext: "mp3")
             return
-        case .pachelbelCanon:
-            try registerPrerenderedAudioFile(named: "pachelbelx-canon", ext: "mp3")
-            return
         case .clairDeLune:
             try registerPrerenderedAudioFile(named: "clair-de-lune-debussy", ext: "mp3")
             return
