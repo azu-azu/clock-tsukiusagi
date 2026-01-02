@@ -19,6 +19,12 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case gnossienne4Jazz        // グノシエンヌ第4番（ジャズアレンジ）
     case clairDeLune            // 月の光（ドビュッシー）
     case moonlightSonataHipHop  // 月光ソナタ（ベートーヴェン Hip-Hop）
+    // Canon variations
+    case canonOriginal          // カノン オリジナル
+    case canonAmbient           // カノン アンビエント
+    case canonSaxophone         // カノン サックス
+    case canonClassic           // カノン クラシック
+    case canonPiano             // カノン ピアノ
 
     public var id: String { rawValue }
 
@@ -41,6 +47,16 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🌙"
         case .moonlightSonataHipHop:
             return "🎤"
+        case .canonOriginal:
+            return "🎻"
+        case .canonAmbient:
+            return "🌌"
+        case .canonSaxophone:
+            return "🎷"
+        case .canonClassic:
+            return "🎼"
+        case .canonPiano:
+            return "🎹"
         }
     }
 
@@ -63,6 +79,16 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "preset.clairDeLune"
         case .moonlightSonataHipHop:
             return "preset.moonlightSonataHipHop"
+        case .canonOriginal:
+            return "preset.canonOriginal"
+        case .canonAmbient:
+            return "preset.canonAmbient"
+        case .canonSaxophone:
+            return "preset.canonSaxophone"
+        case .canonClassic:
+            return "preset.canonClassic"
+        case .canonPiano:
+            return "preset.canonPiano"
         }
     }
 
@@ -112,6 +138,16 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Clair de Lune (Debussy)"
         case .moonlightSonataHipHop:
             return "Moonlight Sonata Hip-Hop (Beethoven)"
+        case .canonOriginal:
+            return "Canon Original (Pachelbel)"
+        case .canonAmbient:
+            return "Canon Ambient (Pachelbel)"
+        case .canonSaxophone:
+            return "Canon Saxophone (Pachelbel)"
+        case .canonClassic:
+            return "Canon Classic (Pachelbel)"
+        case .canonPiano:
+            return "Canon Piano (Pachelbel)"
         }
     }
 }

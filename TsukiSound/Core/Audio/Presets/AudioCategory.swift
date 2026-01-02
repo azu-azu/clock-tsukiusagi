@@ -10,8 +10,8 @@ import Foundation
 /// Audio category for grouping presets (UI presentation layer)
 /// Categories don't affect audio processing - pure presentation concept.
 public enum AudioCategory: String, CaseIterable, Identifiable, Codable {
-    case tsukiSound  // All tracks (initial category)
-    // Future: case classical, case jazz, case ambient, etc.
+    case tsukiSound  // TsukiSound original tracks
+    case canon       // Canon variations (Pachelbel)
 
     public var id: String { rawValue }
 
@@ -20,6 +20,8 @@ public enum AudioCategory: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .tsukiSound:
             return "🌙"
+        case .canon:
+            return "🎻"
         }
     }
 
@@ -33,6 +35,8 @@ public enum AudioCategory: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .tsukiSound:
             return "category.tsukiSound"
+        case .canon:
+            return "category.canon"
         }
     }
 
@@ -40,7 +44,16 @@ public enum AudioCategory: String, CaseIterable, Identifiable, Codable {
     public var presets: [UISoundPreset] {
         switch self {
         case .tsukiSound:
-            return Array(UISoundPreset.allCases)
+            return [
+                .jupiter, .moonlitGymnopedie, .acousticGymnopedie,
+                .gnossienne1, .gnossienne3, .gnossienne4Jazz,
+                .clairDeLune, .moonlightSonataHipHop
+            ]
+        case .canon:
+            return [
+                .canonOriginal, .canonAmbient, .canonSaxophone,
+                .canonClassic, .canonPiano
+            ]
         }
     }
 }
