@@ -677,15 +677,28 @@ public final class AudioService: ObservableObject {
     }
 
     /// Register pre-rendered audio file for playback
-    /// - Parameter name: Base name of the audio file (without extension)
+    /// - Parameter name: Base name of the audio file (without extension), can include subdirectory (e.g. "subfolder/filename")
     /// - Parameter ext: File extension (default: nil, will try caf then mp3)
     /// Note: Does NOT start playback - engine.start() must be called first, then startTrackPlayerIfNeeded()
     private func registerPrerenderedAudioFile(named name: String, ext: String? = nil) throws {
         // Find the audio file in bundle (try specified extension or fallback order)
         let extensions = ext.map { [$0] } ?? ["caf", "mp3"]
         var url: URL?
+
+        // Split name into subdirectory and filename if path separator exists
+        let components = name.split(separator: "/")
+        let fileName: String
+        let subdirectory: String?
+        if components.count > 1 {
+            subdirectory = components.dropLast().joined(separator: "/")
+            fileName = String(components.last!)
+        } else {
+            subdirectory = nil
+            fileName = name
+        }
+
         for fileExt in extensions {
-            if let foundURL = Bundle.main.url(forResource: name, withExtension: fileExt) {
+            if let foundURL = Bundle.main.url(forResource: fileName, withExtension: fileExt, subdirectory: subdirectory) {
                 url = foundURL
                 break
             }
