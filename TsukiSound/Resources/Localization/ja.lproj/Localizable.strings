@@ -58,15 +58,15 @@
 "menu.versionNumber" = "Version 1.0.0";
 
 // MARK: - Sound Presets
-"preset.jupiter" = "ジュピターの響き";
-"preset.gymnopedie" = "月明かりのジムノペディ";
-"preset.acousticGymnopedie" = "アコースティック・ジムノペディ";
-"preset.gnossienne1" = "グノシエンヌ 第1番";
-"preset.gnossienne3" = "グノシエンヌ 第3番";
-"preset.gnossienne4Jazz" = "グノシエンヌ 第4番 (Jazz)";
-"preset.pachelbelCanon" = "パッヘルベルのカノン";
-"preset.clairDeLune" = "月の光";
-"preset.moonlightSonataHipHop" = "月光ソナタ (Hip-Hop)";
+"preset.jupiter" = "Jupiter (Holst)";
+"preset.gymnopedie" = "Gymnopédie No.1 (Satie)";
+"preset.acousticGymnopedie" = "Gymnopédie Acoustic (Satie)";
+"preset.gnossienne1" = "Gnossienne No.1 (Satie)";
+"preset.gnossienne3" = "Gnossienne No.3 (Satie)";
+"preset.gnossienne4Jazz" = "Gnossienne No.4 Jazz (Satie)";
+"preset.pachelbelCanon" = "Canon (Pachelbel)";
+"preset.clairDeLune" = "Clair de Lune (Debussy)";
+"preset.moonlightSonataHipHop" = "Moonlight Sonata Hip-Hop (Beethoven)";
 
 // MARK: - Audio Routes
 "route.headphones" = "ヘッドホン";

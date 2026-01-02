@@ -59,14 +59,14 @@
 
 // MARK: - Sound Presets
 "preset.jupiter" = "Jupiter (Holst)";
-"preset.gymnopedie" = "Moonlit Gymnopedie";
-"preset.acousticGymnopedie" = "Acoustic Gymnopedie";
-"preset.gnossienne1" = "Gnossienne No. 1";
-"preset.gnossienne3" = "Gnossienne No. 3";
-"preset.gnossienne4Jazz" = "Gnossienne No. 4 (Jazz)";
-"preset.pachelbelCanon" = "Pachelbel's Canon";
-"preset.clairDeLune" = "Clair de Lune";
-"preset.moonlightSonataHipHop" = "Moonlight Sonata (Hip-Hop)";
+"preset.gymnopedie" = "Gymnopédie No.1 (Satie)";
+"preset.acousticGymnopedie" = "Gymnopédie Acoustic (Satie)";
+"preset.gnossienne1" = "Gnossienne No.1 (Satie)";
+"preset.gnossienne3" = "Gnossienne No.3 (Satie)";
+"preset.gnossienne4Jazz" = "Gnossienne No.4 Jazz (Satie)";
+"preset.pachelbelCanon" = "Canon (Pachelbel)";
+"preset.clairDeLune" = "Clair de Lune (Debussy)";
+"preset.moonlightSonataHipHop" = "Moonlight Sonata Hip-Hop (Beethoven)";
 
 // MARK: - Audio Routes
 "route.headphones" = "Headphones";

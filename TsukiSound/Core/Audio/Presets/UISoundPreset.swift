@@ -104,21 +104,21 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
         case .jupiter:
             return "Jupiter (Holst)"
         case .moonlitGymnopedie:
-            return "Moonlit Gymnopédie"
+            return "Gymnopédie No.1 (Satie)"
         case .acousticGymnopedie:
-            return "Acoustic Gymnopédie"
+            return "Gymnopédie Acoustic (Satie)"
         case .gnossienne1:
-            return "Gnossienne No. 1"
+            return "Gnossienne No.1 (Satie)"
         case .gnossienne3:
-            return "Gnossienne No. 3"
+            return "Gnossienne No.3 (Satie)"
         case .gnossienne4Jazz:
-            return "Gnossienne No. 4 (Jazz)"
+            return "Gnossienne No.4 Jazz (Satie)"
         case .pachelbelCanon:
-            return "Pachelbel's Canon"
+            return "Canon (Pachelbel)"
         case .clairDeLune:
             return "Clair de Lune (Debussy)"
         case .moonlightSonataHipHop:
-            return "Moonlight Sonata (Hip-Hop)"
+            return "Moonlight Sonata Hip-Hop (Beethoven)"
         }
     }
 }
