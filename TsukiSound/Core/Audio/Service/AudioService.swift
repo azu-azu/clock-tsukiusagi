@@ -673,7 +673,9 @@ public final class AudioService: ObservableObject {
             }
         }
         guard let url = url else {
+            #if DEBUG
             print("⚠️ [AudioService] \(name) not found in bundle (tried: \(extensions.joined(separator: ", ")))")
+            #endif
             throw AudioError.engineStartFailed(TrackPlayerError.fileNotLoaded)
         }
 
@@ -682,7 +684,9 @@ public final class AudioService: ObservableObject {
             throw TrackPlayerError.fileNotLoaded
         }
         let fileFormat = audioFile.processingFormat
+        #if DEBUG
         print("🎵 [AudioService] Audio file format: \(fileFormat.sampleRate) Hz, \(fileFormat.channelCount)ch")
+        #endif
 
         // Create TrackPlayer
         let player = TrackPlayer()
@@ -713,7 +717,9 @@ public final class AudioService: ObservableObject {
     private func startTrackPlayerIfNeeded() {
         guard let player = trackPlayer, !player.isPlaying else { return }
         player.play(loop: false)  // Playlist mode: detect track end for next track
+        #if DEBUG
         print("🎵 [AudioService] TrackPlayer started (playlist mode)")
+        #endif
     }
 
     // MARK: - Playlist Playback
@@ -723,13 +729,17 @@ public final class AudioService: ObservableObject {
         guard isPlaying else { return }  // Ignore if already stopped
 
         let nextPreset = playlistState.advanceToNext()
+        #if DEBUG
         print("🎵 [AudioService] Track finished, advancing to: \(nextPreset)")
+        #endif
 
         // Play next track without stopping engine (seamless transition)
         do {
             try playNextTrack(preset: nextPreset)
         } catch {
+            #if DEBUG
             print("⚠️ [AudioService] Failed to play next track: \(error)")
+            #endif
             stop()
         }
     }

@@ -105,11 +105,15 @@ public final class AudioRouteMonitor: AudioRouteMonitoring {
             return
         }
 
+        #if DEBUG
         print("🎧 [AudioRouteMonitor] Route change reason: \(reason.description)")
+        #endif
 
         // 現在の経路を取得
         let newRoute = detectCurrentRoute()
+        #if DEBUG
         print("🎧 [AudioRouteMonitor] Current route: \(newRoute.displayName) \(newRoute.icon)")
+        #endif
 
         // 常に経路変更を通知（UIをリアルタイム更新）
         onRouteChanged?(newRoute)
@@ -122,7 +126,9 @@ public final class AudioRouteMonitor: AudioRouteMonitoring {
         // 2. 前の経路をチェック - イヤホン/Bluetooth系だったか？
         guard let previousRoute = userInfo[AVAudioSessionRouteChangePreviousRouteKey] as? AVAudioSessionRouteDescription,
               let previousOutput = previousRoute.outputs.first else {
+            #if DEBUG
             print("⚠️ [AudioRouteMonitor] Could not detect previous route")
+            #endif
             return
         }
 
@@ -132,15 +138,21 @@ public final class AudioRouteMonitor: AudioRouteMonitoring {
             AVAudioSession.Port.bluetoothLE
         ].contains(previousOutput.portType)
 
+        #if DEBUG
         print("🎧 [AudioRouteMonitor] Previous route: \(previousOutput.portType.rawValue), was headphone type: \(wasHeadphoneType)")
+        #endif
 
         // 3. イヤホン→スピーカー かつ 設定で安全停止が有効なら発動
         if wasHeadphoneType && newRoute == .speaker {
             if settings.onlyHeadphoneOutput {
+                #if DEBUG
                 print("⚠️ [AudioRouteMonitor] Safety pause triggered: headphone→speaker")
+                #endif
                 onSpeakerSafety?()
             } else {
+                #if DEBUG
                 print("🎧 [AudioRouteMonitor] Headphone removed but safety pause disabled")
+                #endif
             }
         }
     }

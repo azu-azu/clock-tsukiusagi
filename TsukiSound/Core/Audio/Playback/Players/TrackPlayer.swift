@@ -122,7 +122,9 @@ public final class TrackPlayer: TrackPlaying {
 
     public func play(loop: Bool) {
         guard let buffer = buffer else {
+            #if DEBUG
             print("⚠️ [TrackPlayer] No buffer loaded, cannot play")
+            #endif
             return
         }
 
