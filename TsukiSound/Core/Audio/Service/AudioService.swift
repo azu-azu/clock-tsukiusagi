@@ -658,19 +658,19 @@ public final class AudioService: ObservableObject {
             try registerPrerenderedAudioFile(named: "moonlight-sonata-beethoven-hip-hop", ext: "mp3")
             return
         case .canonOriginal:
-            try registerPrerenderedAudioFile(named: "canon-in-d-122218", ext: "mp3")
+            try registerPrerenderedAudioFile(named: "canon-original", ext: "mp3")
             return
         case .canonAmbient:
-            try registerPrerenderedAudioFile(named: "canon-in-d-ambient-version-2-447834", ext: "mp3")
+            try registerPrerenderedAudioFile(named: "canon-ambient", ext: "mp3")
             return
         case .canonSaxophone:
-            try registerPrerenderedAudioFile(named: "johann-pachelbel-canon-in-d-classical-remix-saxophone-10142", ext: "mp3")
+            try registerPrerenderedAudioFile(named: "canon-saxophone", ext: "mp3")
             return
         case .canonClassic:
-            try registerPrerenderedAudioFile(named: "pachelbel-canon-160700", ext: "mp3")
+            try registerPrerenderedAudioFile(named: "canon-classic", ext: "mp3")
             return
         case .canonPiano:
-            try registerPrerenderedAudioFile(named: "pachelbel-canon-in-d-p-37-arranged-for-piano-227465", ext: "mp3")
+            try registerPrerenderedAudioFile(named: "canon-piano", ext: "mp3")
             return
         }
 
