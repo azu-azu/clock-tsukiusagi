@@ -47,7 +47,8 @@ public enum AudioCategory: String, CaseIterable, Identifiable, Codable {
             return [
                 .jupiter, .moonlitGymnopedie, .acousticGymnopedie,
                 .gnossienne1, .gnossienne3, .gnossienne4Jazz,
-                .clairDeLune, .moonlightSonataHipHop
+                .clairDeLune, .moonlightSonataHipHop,
+                .bachAirOnGString, .bachMinuet, .chopinNocturneRain
             ]
         case .canon:
             return [

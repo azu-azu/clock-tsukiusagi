@@ -657,6 +657,15 @@ public final class AudioService: ObservableObject {
         case .moonlightSonataHipHop:
             try registerPrerenderedAudioFile(named: "moonlight-sonata-beethoven-hip-hop", ext: "mp3")
             return
+        case .bachAirOnGString:
+            try registerPrerenderedAudioFile(named: "bach-air-on-the-g-string", ext: "mp3")
+            return
+        case .bachMinuet:
+            try registerPrerenderedAudioFile(named: "bach-minuet", ext: "mp3")
+            return
+        case .chopinNocturneRain:
+            try registerPrerenderedAudioFile(named: "chopin-nocturne-op-9-no-2-rain", ext: "mp3")
+            return
         case .canonOriginal:
             try registerPrerenderedAudioFile(named: "canon-original", ext: "mp3")
             return

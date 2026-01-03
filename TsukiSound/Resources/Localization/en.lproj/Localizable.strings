@@ -67,6 +67,9 @@
 "preset.gnossienne4Jazz" = "Gnossienne No.4 Jazz (Satie)";
 "preset.clairDeLune" = "Clair de Lune (Debussy)";
 "preset.moonlightSonataHipHop" = "Moonlight Sonata Hip-Hop (Beethoven)";
+"preset.bachAirOnGString" = "Air on the G String (Bach)";
+"preset.bachMinuet" = "Minuet (Bach)";
+"preset.chopinNocturneRain" = "Nocturne Op.9-2 Rain (Chopin)";
 "preset.canonOriginal" = "Canon Original (Pachelbel)";
 "preset.canonAmbient" = "Canon Ambient (Pachelbel)";
 "preset.canonSaxophone" = "Canon Saxophone (Pachelbel)";

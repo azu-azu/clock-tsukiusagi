@@ -19,6 +19,9 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     case gnossienne4Jazz        // グノシエンヌ第4番（ジャズアレンジ）
     case clairDeLune            // 月の光（ドビュッシー）
     case moonlightSonataHipHop  // 月光ソナタ（ベートーヴェン Hip-Hop）
+    case bachAirOnGString       // G線上のアリア（バッハ）
+    case bachMinuet             // メヌエット（バッハ）
+    case chopinNocturneRain     // ノクターン Op.9-2 雨（ショパン）
     // Canon variations
     case canonOriginal          // カノン オリジナル
     case canonAmbient           // カノン アンビエント
@@ -52,6 +55,12 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🌙"
         case .moonlightSonataHipHop:
             return "🎤"
+        case .bachAirOnGString:
+            return "🎻"
+        case .bachMinuet:
+            return "🎼"
+        case .chopinNocturneRain:
+            return "🌧️"
         case .canonOriginal:
             return "🎻"
         case .canonAmbient:
@@ -94,6 +103,12 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "preset.clairDeLune"
         case .moonlightSonataHipHop:
             return "preset.moonlightSonataHipHop"
+        case .bachAirOnGString:
+            return "preset.bachAirOnGString"
+        case .bachMinuet:
+            return "preset.bachMinuet"
+        case .chopinNocturneRain:
+            return "preset.chopinNocturneRain"
         case .canonOriginal:
             return "preset.canonOriginal"
         case .canonAmbient:
@@ -163,6 +178,12 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Clair de Lune (Debussy)"
         case .moonlightSonataHipHop:
             return "Moonlight Sonata Hip-Hop (Beethoven)"
+        case .bachAirOnGString:
+            return "Air on the G String (Bach)"
+        case .bachMinuet:
+            return "Minuet (Bach)"
+        case .chopinNocturneRain:
+            return "Nocturne Op.9-2 Rain (Chopin)"
         case .canonOriginal:
             return "Canon Original (Pachelbel)"
         case .canonAmbient:
