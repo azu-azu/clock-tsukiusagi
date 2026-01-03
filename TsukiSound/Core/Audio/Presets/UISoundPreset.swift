@@ -22,9 +22,14 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     // Canon variations
     case canonOriginal          // カノン オリジナル
     case canonAmbient           // カノン アンビエント
+    case canonAmbient2          // カノン アンビエント2
     case canonSaxophone         // カノン サックス
     case canonClassic           // カノン クラシック
     case canonPiano             // カノン ピアノ
+    case canonPiano2            // カノン ピアノ2
+    case canonPianoStrings      // カノン ピアノ＆ストリングス
+    case canon2                 // カノン2
+    case canon3                 // カノン3
 
     public var id: String { rawValue }
 
@@ -57,6 +62,16 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🎼"
         case .canonPiano:
             return "🎹"
+        case .canonPiano2:
+            return "🎹"
+        case .canonPianoStrings:
+            return "🎻"
+        case .canonAmbient2:
+            return "🌌"
+        case .canon2:
+            return "🎼"
+        case .canon3:
+            return "🎼"
         }
     }
 
@@ -89,6 +104,16 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "preset.canonClassic"
         case .canonPiano:
             return "preset.canonPiano"
+        case .canonPiano2:
+            return "preset.canonPiano2"
+        case .canonPianoStrings:
+            return "preset.canonPianoStrings"
+        case .canonAmbient2:
+            return "preset.canonAmbient2"
+        case .canon2:
+            return "preset.canon2"
+        case .canon3:
+            return "preset.canon3"
         }
     }
 
@@ -148,6 +173,16 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Canon Classic (Pachelbel)"
         case .canonPiano:
             return "Canon Piano (Pachelbel)"
+        case .canonPiano2:
+            return "Canon Piano 2 (Pachelbel)"
+        case .canonPianoStrings:
+            return "Canon Piano & Strings (Pachelbel)"
+        case .canonAmbient2:
+            return "Canon Ambient 2 (Pachelbel)"
+        case .canon2:
+            return "Canon 2 (Pachelbel)"
+        case .canon3:
+            return "Canon 3 (Pachelbel)"
         }
     }
 }

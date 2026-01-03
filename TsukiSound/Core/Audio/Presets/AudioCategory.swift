@@ -51,8 +51,9 @@ public enum AudioCategory: String, CaseIterable, Identifiable, Codable {
             ]
         case .canon:
             return [
-                .canonOriginal, .canonAmbient, .canonSaxophone,
-                .canonClassic, .canonPiano
+                .canonOriginal, .canonAmbient, .canonAmbient2,
+                .canonSaxophone, .canonClassic, .canonPiano,
+                .canonPiano2, .canonPianoStrings, .canon2, .canon3
             ]
         }
     }
