@@ -687,9 +687,6 @@ public final class AudioService: ObservableObject {
         case .canonPianoStrings:
             try registerPrerenderedAudioFile(named: "canon-piano-and-strings", ext: "mp3")
             return
-        case .canonAmbient2:
-            try registerPrerenderedAudioFile(named: "canon-ambient2", ext: "mp3")
-            return
         case .canon2:
             try registerPrerenderedAudioFile(named: "canon2", ext: "mp3")
             return

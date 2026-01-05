@@ -25,7 +25,6 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
     // Canon variations
     case canonOriginal          // カノン オリジナル
     case canonAmbient           // カノン アンビエント
-    case canonAmbient2          // カノン アンビエント2
     case canonSaxophone         // カノン サックス
     case canonClassic           // カノン クラシック
     case canonPiano             // カノン ピアノ
@@ -75,8 +74,6 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "🎹"
         case .canonPianoStrings:
             return "🎻"
-        case .canonAmbient2:
-            return "🌌"
         case .canon2:
             return "🎼"
         case .canon3:
@@ -123,8 +120,6 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "preset.canonPiano2"
         case .canonPianoStrings:
             return "preset.canonPianoStrings"
-        case .canonAmbient2:
-            return "preset.canonAmbient2"
         case .canon2:
             return "preset.canon2"
         case .canon3:
@@ -198,8 +193,6 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Canon Piano 2 (Pachelbel)"
         case .canonPianoStrings:
             return "Canon Piano & Strings (Pachelbel)"
-        case .canonAmbient2:
-            return "Canon Ambient 2 (Pachelbel)"
         case .canon2:
             return "Canon 2 (Pachelbel)"
         case .canon3:
