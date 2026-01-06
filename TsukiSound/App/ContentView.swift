@@ -27,7 +27,7 @@ public struct ContentView: View {
                     }
 
                 case .audioPlayback:
-                    AudioPlaybackView(selectedTab: $selectedTab)
+                    CategorySelectionView(selectedTab: $selectedTab)
 
                 case .settings:
                     AudioSettingsView(selectedTab: $selectedTab)
