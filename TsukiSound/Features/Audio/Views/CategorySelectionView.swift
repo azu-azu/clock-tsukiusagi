@@ -18,6 +18,11 @@ struct CategorySelectionView: View {
         GridItem(.flexible(), spacing: 16)
     ]
 
+    /// Whether mini player should be visible (has a selected track)
+    private var showMiniPlayer: Bool {
+        playlistState.presetForCurrentIndex() != nil
+    }
+
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
@@ -54,12 +59,12 @@ struct CategorySelectionView: View {
                     }
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
                     .padding(.top, 16)
-                    .padding(.bottom, audioService.isPlaying ? 100 : 32)
+                    .padding(.bottom, showMiniPlayer ? 100 : 32)
                 }
 
-                // Floating mini player (Spotify-style)
+                // Floating mini player (Spotify-style, visible when track selected)
                 MiniPlayerView()
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: audioService.isPlaying)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showMiniPlayer)
             }
             .navigationTitle("audio.title".localized)
             .navigationBarTitleDisplayMode(.inline)

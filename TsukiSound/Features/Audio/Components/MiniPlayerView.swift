@@ -7,13 +7,18 @@
 
 import SwiftUI
 
-/// Floating mini player shown when audio is playing
+/// Floating mini player shown when a track is selected (Spotify-style)
 struct MiniPlayerView: View {
     @EnvironmentObject var audioService: AudioService
     @EnvironmentObject var playlistState: PlaylistState
 
+    /// Status text based on playback state
+    private var statusText: String {
+        audioService.isPlaying ? "audio.playing".localized : "audio.stopped".localized
+    }
+
     var body: some View {
-        if audioService.isPlaying, let preset = playlistState.presetForCurrentIndex() {
+        if let preset = playlistState.presetForCurrentIndex() {
             NavigationLink {
                 TrackListView(category: playlistState.selectedCategory)
             } label: {
@@ -32,7 +37,7 @@ struct MiniPlayerView: View {
                             .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                             .lineLimit(1)
 
-                        Text("audio.playing".localized)
+                        Text(statusText)
                             .font(.system(
                                 size: DesignTokens.SettingsTypography.captionSize,
                                 weight: DesignTokens.SettingsTypography.captionWeight
@@ -42,11 +47,11 @@ struct MiniPlayerView: View {
 
                     Spacer()
 
-                    // Stop button
+                    // Play/Stop toggle button
                     Button {
-                        audioService.stop()
+                        togglePlayback()
                     } label: {
-                        Image(systemName: "stop.fill")
+                        Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
                             .font(.system(size: 20, weight: .medium))
                             .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                             .frame(width: 44, height: 44)
@@ -71,6 +76,14 @@ struct MiniPlayerView: View {
             .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
             .padding(.bottom, 8)
             .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    private func togglePlayback() {
+        if audioService.isPlaying {
+            audioService.stop()
+        } else {
+            try? audioService.playPlaylist()
         }
     }
 }
