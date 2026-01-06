@@ -1,85 +1,86 @@
 //
-//  AudioPlaybackView.swift
+//  TrackListView.swift
 //  TsukiSound
 //
-//  Created by Claude Code on 2025-11-09.
-//  音声再生コントロール画面
+//  Track list view for a selected category
 //
 
 import SwiftUI
 
-/// 音声再生コントロールビュー
-struct AudioPlaybackView: View {
+/// Track list view displaying presets for a category
+struct TrackListView: View {
+    let category: AudioCategory?  // nil = All
+
     @EnvironmentObject var audioService: AudioService
     @EnvironmentObject var playlistState: PlaylistState
-    @Binding var selectedTab: Tab
 
     @State private var errorMessage: String?
     @State private var showError = false
 
-    init(selectedTab: Binding<Tab>) {
-        _selectedTab = selectedTab
+    /// Presets to display based on category
+    private var displayedPresets: [UISoundPreset] {
+        guard let category = category else {
+            return playlistState.orderedPresets
+        }
+        let categoryPresets = Set(category.presets)
+        return playlistState.orderedPresets.filter { categoryPresets.contains($0) }
+    }
+
+    /// Navigation title based on category
+    private var navigationTitle: String {
+        if let category = category {
+            return "\(category.icon) \(category.displayName)"
+        }
+        return "🎵 " + "category.all".localized
     }
 
     var body: some View {
-        NavigationView {
-            ZStack {
-                DesignTokens.SettingsColors.backgroundGradient
-                    .ignoresSafeArea()
+        ZStack {
+            DesignTokens.SettingsColors.backgroundGradient
+                .ignoresSafeArea()
 
-                GeometryReader { geometry in
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            // Bluetooth状態
-                            bluetoothStatusIndicator
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Bluetooth status
+                        bluetoothStatusIndicator
 
-                            // Soundセクション
-                            soundSelectionSection
-                                .padding(.top, 8)
+                        // Sound selection section
+                        soundSelectionSection
+                            .padding(.top, 8)
 
-                            // 再生ボタン
-                            controlSection
-                                .padding(.top, 12)
+                        // Play button
+                        controlSection
+                            .padding(.top, 12)
 
-                            // Waveform（再生ボタンとStatusの間の中央）
-                            Spacer()
-                            waveformSection
-                            Spacer()
+                        // Waveform
+                        Spacer()
+                        waveformSection
+                        Spacer()
 
-                            // 下部コンテンツ（Status）
-                            statusSection
-                        }
-                        .padding(.top, 16)
-                        .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
-                        .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
-                        .frame(minHeight: geometry.size.height)
+                        // Status section
+                        statusSection
                     }
+                    .padding(.top, 16)
+                    .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
+                    .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
+                    .frame(minHeight: geometry.size.height)
                 }
             }
-            .navigationTitle("audio.title".localized)
-            .navigationBarTitleDisplayMode(.inline)
-            .dynamicNavigationFont()
-            .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .navigationBackButton {
-                selectedTab = .clock
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        selectedTab = .settings
-                    }) {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-                }
-            }
-            .alert("エラー", isPresented: $showError) {
-                Button("OK") { showError = false }
-            } message: {
-                Text(errorMessage ?? "不明なエラー")
-            }
+        }
+        .navigationTitle(navigationTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .dynamicNavigationFont()
+        .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .alert("エラー", isPresented: $showError) {
+            Button("OK") { showError = false }
+        } message: {
+            Text(errorMessage ?? "不明なエラー")
+        }
+        .onAppear {
+            // Set category when view appears
+            playlistState.setCategory(category)
         }
     }
 
@@ -131,12 +132,9 @@ struct AudioPlaybackView: View {
             // Repeat mode toggle
             repeatModeToggle
 
-            // Category selector
-            CategorySelectorView()
-
-            // Playlist with List + onMove (standard iOS drag)
+            // Playlist with List + onMove
             List {
-                ForEach(Array(playlistState.displayedPresets.enumerated()), id: \.element.id) { index, preset in
+                ForEach(Array(displayedPresets.enumerated()), id: \.element.id) { index, preset in
                     let isCurrentlyPlaying = playlistState.presetForCurrentIndex() == preset && audioService.isPlaying
 
                     PlaylistRowView(preset: preset)
@@ -165,13 +163,13 @@ struct AudioPlaybackView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .frame(height: CGFloat(playlistState.displayedPresets.count) * 44)
+            .frame(height: CGFloat(displayedPresets.count) * 44)
             .environment(\.editMode, .constant(.active))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// タップした曲からプレイリスト再生を開始
+    /// Play from tapped preset
     private func playFromPreset(_ preset: UISoundPreset) {
         do {
             try audioService.playPlaylist(startingFrom: preset)
@@ -180,7 +178,6 @@ struct AudioPlaybackView: View {
             showError = true
         }
     }
-
 
     private var controlSection: some View {
         HStack {
@@ -261,7 +258,7 @@ struct AudioPlaybackView: View {
                 }
             }
 
-            // Current track (from playlist)
+            // Current track
             if let currentPreset = playlistState.presetForCurrentIndex() {
                 HStack(spacing: 4) {
                     Text("audio.selected".localized)
@@ -325,7 +322,6 @@ struct AudioPlaybackView: View {
 
     private func playAudio() {
         do {
-            // プレイリスト再生を開始（現在の曲から）
             try audioService.playPlaylist()
         } catch let error as NSError {
             let detailedMessage = """
@@ -335,14 +331,14 @@ struct AudioPlaybackView: View {
             Description: \(error.localizedDescription)
             """
             #if DEBUG
-            print("🐛 AudioPlaybackView: \(detailedMessage)")
+            print("🐛 TrackListView: \(detailedMessage)")
             #endif
             errorMessage = detailedMessage
             showError = true
         } catch {
             errorMessage = "再生エラー: \(error.localizedDescription)"
             #if DEBUG
-            print("🐛 AudioPlaybackView: \(errorMessage ?? "")")
+            print("🐛 TrackListView: \(errorMessage ?? "")")
             #endif
             showError = true
         }
@@ -354,7 +350,9 @@ struct AudioPlaybackView: View {
 }
 
 #Preview {
-    AudioPlaybackView(selectedTab: .constant(.audioPlayback))
-        .environmentObject(AudioService.shared)
-        .environmentObject(AudioService.shared.playlistState)
+    NavigationStack {
+        TrackListView(category: .tsukiSound)
+            .environmentObject(AudioService.shared)
+            .environmentObject(AudioService.shared.playlistState)
+    }
 }
