@@ -109,6 +109,7 @@ struct CircularWaveformView: View {
             .opacity(barOpacity)
             .animation(.easeInOut(duration: 0.3), value: audioService.isPlaying)
         }
+        .background(.clear)
         .drawingGroup() // Metal acceleration for better performance
         .onChange(of: audioService.isPlaying) { oldValue, newValue in
             if newValue {
