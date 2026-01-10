@@ -38,13 +38,20 @@ struct CategorySelectionView: View {
                             CategoryCard(
                                 title: "category.all".localized,
                                 icon: "🎵",
-                                trackCount: UISoundPreset.allCases.count
+                                trackCount: UISoundPreset.allCases.count,
+                                onPlayTapped: {
+                                    playCategory(nil)
+                                }
                             )
                         }
                         .buttonStyle(.plain)
-                        .simultaneousGesture(TapGesture().onEnded {
-                            playCategory(nil)
-                        })
+                        .contextMenu {
+                            Button(action: {
+                                playCategory(nil)
+                            }) {
+                                Label("audio.play".localized, systemImage: "play.fill")
+                            }
+                        }
 
                         // Category cards
                         ForEach(AudioCategory.allCases) { category in
@@ -54,13 +61,20 @@ struct CategorySelectionView: View {
                                 CategoryCard(
                                     title: category.displayName,
                                     icon: category.icon,
-                                    trackCount: category.presets.count
+                                    trackCount: category.presets.count,
+                                    onPlayTapped: {
+                                        playCategory(category)
+                                    }
                                 )
                             }
                             .buttonStyle(.plain)
-                            .simultaneousGesture(TapGesture().onEnded {
-                                playCategory(category)
-                            })
+                            .contextMenu {
+                                Button(action: {
+                                    playCategory(category)
+                                }) {
+                                    Label("audio.play".localized, systemImage: "play.fill")
+                                }
+                            }
                         }
                     }
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
