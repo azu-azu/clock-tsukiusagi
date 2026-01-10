@@ -127,12 +127,14 @@ struct TrackListView: View {
 
             // Playlist with List + onMove
             ScrollViewReader { proxy in
+                // Calculate once outside ForEach for performance
+                let currentPreset = playlistState.presetForCurrentIndex()
+                let isCurrentPresetInCategory = currentPreset.map { displayedPresets.contains($0) } ?? false
+
                 List {
                     ForEach(Array(displayedPresets.enumerated()), id: \.element.id) { index, preset in
                         // Only highlight if currently playing AND in current category
-                        let currentPreset = playlistState.presetForCurrentIndex()
-                        let isInCurrentCategory = currentPreset.map { displayedPresets.contains($0) } ?? false
-                        let isCurrentlyPlaying = currentPreset == preset && audioService.isPlaying && isInCurrentCategory
+                        let isCurrentlyPlaying = currentPreset == preset && audioService.isPlaying && isCurrentPresetInCategory
 
                         PlaylistRowView(preset: preset)
                             .listRowBackground(

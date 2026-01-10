@@ -300,31 +300,3 @@ struct CircularWaveformView: View {
             .shadow(color: DesignTokens.SettingsColors.accent.opacity(0.3), radius: 20)
     }
 }
-
-#Preview("Background Test - Red") {
-    ZStack {
-        Color.red
-            .ignoresSafeArea()
-
-        CircularWaveformView()
-            .environmentObject(AudioService.shared)
-            .frame(width: 100, height: 100)
-            .border(Color.green, width: 2)
-    }
-}
-
-#Preview("Background Test - Pattern") {
-    ZStack {
-        LinearGradient(colors: [.red, .blue, .green], startPoint: .topLeading, endPoint: .bottomTrailing)
-            .ignoresSafeArea()
-
-        VStack(spacing: 20) {
-            Text("If you see a square box, there's a background")
-                .foregroundColor(.white)
-
-            CircularWaveformView()
-                .environmentObject(AudioService.shared)
-                .frame(width: 100, height: 100)
-        }
-    }
-}
