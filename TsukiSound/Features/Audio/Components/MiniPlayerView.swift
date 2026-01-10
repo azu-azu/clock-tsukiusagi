@@ -47,6 +47,11 @@ struct MiniPlayerView: View {
 
                     Spacer()
 
+                    // Waveform visualization
+                    CircularWaveformView()
+                        .frame(width: 40, height: 40)
+                        .allowsHitTesting(false)
+
                     // Play/Stop toggle button
                     Button {
                         togglePlayback()

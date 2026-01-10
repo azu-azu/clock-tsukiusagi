@@ -53,9 +53,6 @@ struct TrackListView: View {
                         controlSection
                             .padding(.top, 12)
 
-                        // Waveform
-                        Spacer()
-                        waveformSection
                         Spacer()
 
                         // Status section
@@ -204,16 +201,6 @@ struct TrackListView: View {
             .frame(maxWidth: 200)
             Spacer()
         }
-    }
-
-    private var waveformSection: some View {
-        HStack {
-            Spacer()
-            CircularWaveformView()
-                .frame(width: 100, height: 100)
-            Spacer()
-        }
-        .padding(.vertical, 8)
     }
 
     private var statusSection: some View {
