@@ -112,7 +112,7 @@ struct CircularWaveformView: View {
             .animation(.easeInOut(duration: 0.3), value: audioService.isPlaying)
         }
         .background(.clear)
-        .drawingGroup() // Metal acceleration for better performance
+        .compositingGroup() // Group layers without creating opaque background
         .onChange(of: audioService.isPlaying) { oldValue, newValue in
             if newValue {
                 // Started playing
@@ -300,5 +300,33 @@ struct CircularWaveformView: View {
             .frame(width: 280, height: 280)
             .shadow(color: DesignTokens.SettingsColors.accent.opacity(0.5), radius: 10)
             .shadow(color: DesignTokens.SettingsColors.accent.opacity(0.3), radius: 20)
+    }
+}
+
+#Preview("Background Test - Red") {
+    ZStack {
+        Color.red
+            .ignoresSafeArea()
+
+        CircularWaveformView()
+            .environmentObject(AudioService.shared)
+            .frame(width: 100, height: 100)
+            .border(Color.green, width: 2)
+    }
+}
+
+#Preview("Background Test - Pattern") {
+    ZStack {
+        LinearGradient(colors: [.red, .blue, .green], startPoint: .topLeading, endPoint: .bottomTrailing)
+            .ignoresSafeArea()
+
+        VStack(spacing: 20) {
+            Text("If you see a square box, there's a background")
+                .foregroundColor(.white)
+
+            CircularWaveformView()
+                .environmentObject(AudioService.shared)
+                .frame(width: 100, height: 100)
+        }
     }
 }
