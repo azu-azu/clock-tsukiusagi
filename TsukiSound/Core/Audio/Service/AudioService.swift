@@ -16,6 +16,20 @@ public enum PauseReason: String, Codable {
     case routeSafetySpeaker     // イヤホン抜け→スピーカー（安全停止）
     case quietBreak             // 無音休憩（Phase 2）
     case interruption           // システム中断（電話など）
+
+    /// Display name for UI (localized)
+    var displayName: String {
+        switch self {
+        case .user:
+            return "audio.pauseReason.user".localized
+        case .routeSafetySpeaker:
+            return "audio.pauseReason.headphones".localized
+        case .quietBreak:
+            return "audio.pauseReason.break".localized
+        case .interruption:
+            return "audio.pauseReason.interruption".localized
+        }
+    }
 }
 
 /// オーディオエラー

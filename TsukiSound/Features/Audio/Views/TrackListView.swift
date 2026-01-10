@@ -52,11 +52,6 @@ struct TrackListView: View {
                         // Play button
                         controlSection
                             .padding(.top, 12)
-
-                        Spacer()
-
-                        // Status section
-                        statusSection
                     }
                     .padding(.top, 16)
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
@@ -214,100 +209,6 @@ struct TrackListView: View {
             .frame(maxWidth: 200)
             Spacer()
         }
-    }
-
-    private var statusSection: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.SettingsSpacing.verticalSmall) {
-            Text("audio.status".localized)
-                .dynamicFont(
-                    size: DynamicTheme.AudioTestTypography.statusTitleSize,
-                    weight: DynamicTheme.AudioTestTypography.statusTitleWeight
-                )
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-
-            HStack {
-                Circle()
-                    .fill(
-                        audioService.isPlaying
-                            ? DesignTokens.SettingsColors.success
-                            : DesignTokens.SettingsColors.inactive
-                    )
-                    .frame(width: 10, height: 10)
-                Text(audioService.isPlaying ? "audio.playing".localized : "audio.stopped".localized)
-                    .dynamicFont(
-                        size: DynamicTheme.AudioTestTypography.statusTextSize,
-                        weight: DynamicTheme.AudioTestTypography.statusTextWeight
-                    )
-                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-            }
-
-            if let reason = audioService.pauseReason {
-                HStack {
-                    Text("audio.pauseReason".localized)
-                        .dynamicFont(
-                            size: DynamicTheme.AudioTestTypography.statusCaptionSize,
-                            weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
-                        )
-                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                    Text(reason.rawValue)
-                        .dynamicFont(
-                            size: DynamicTheme.AudioTestTypography.statusCaptionSize,
-                            weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
-                        )
-                        .foregroundColor(DesignTokens.SettingsColors.warning)
-                }
-            }
-
-            // Current track
-            if let currentPreset = playlistState.presetForCurrentIndex() {
-                HStack(spacing: 4) {
-                    Text("audio.selected".localized)
-                        .dynamicFont(
-                            size: DynamicTheme.AudioTestTypography.statusCaptionSize,
-                            weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
-                        )
-                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-
-                    Text(currentPreset.englishTitle)
-                        .dynamicFont(
-                            size: DynamicTheme.AudioTestTypography.statusCaptionSize,
-                            weight: DynamicTheme.AudioTestTypography.statusCaptionWeight
-                        )
-                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(DesignTokens.SettingsSpacing.cardPadding)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.08),
-                                Color.white.opacity(0.03)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                RoundedRectangle(cornerRadius: DesignTokens.SettingsLayout.cardCornerRadius)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.15),
-                                Color.white.opacity(0.02)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
-            }
-        )
-        .shadow(color: Color.black.opacity(0.4), radius: 8, x: 0, y: 4)
-        .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
     }
 
     // MARK: - Actions

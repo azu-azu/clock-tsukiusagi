@@ -13,8 +13,19 @@ struct MiniPlayerView: View {
     @EnvironmentObject var playlistState: PlaylistState
 
     /// Status text based on playback state
+    /// Shows pause reason with warning icon when applicable
     private var statusText: String {
-        audioService.isPlaying ? "audio.playing".localized : "audio.stopped".localized
+        if let reason = audioService.pauseReason {
+            return "⚠️ " + reason.displayName
+        }
+        return audioService.isPlaying ? "audio.playing".localized : "audio.stopped".localized
+    }
+
+    /// Text color based on state (warning for pause reason)
+    private var statusTextColor: Color {
+        audioService.pauseReason != nil
+            ? DesignTokens.SettingsColors.warning
+            : DesignTokens.SettingsColors.textSecondary
     }
 
     var body: some View {
@@ -42,7 +53,7 @@ struct MiniPlayerView: View {
                                 size: DesignTokens.SettingsTypography.captionSize,
                                 weight: DesignTokens.SettingsTypography.captionWeight
                             ))
-                            .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                            .foregroundColor(statusTextColor)
                     }
 
                     Spacer()
