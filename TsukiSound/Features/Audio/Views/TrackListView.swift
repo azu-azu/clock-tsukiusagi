@@ -75,10 +75,6 @@ struct TrackListView: View {
         } message: {
             Text(errorMessage ?? "不明なエラー")
         }
-        .onAppear {
-            // Set category when view appears
-            playlistState.setCategory(category)
-        }
     }
 
     // MARK: - Sections
@@ -182,6 +178,8 @@ struct TrackListView: View {
     /// Play from tapped preset
     private func playFromPreset(_ preset: UISoundPreset) {
         do {
+            // Set category before playing
+            playlistState.setCategory(category)
             try audioService.playPlaylist(startingFrom: preset)
         } catch {
             errorMessage = "再生エラー: \(error.localizedDescription)"
@@ -322,6 +320,8 @@ struct TrackListView: View {
 
     private func playAudio() {
         do {
+            // Set category before playing
+            playlistState.setCategory(category)
             try audioService.playPlaylist()
         } catch let error as NSError {
             let detailedMessage = """
