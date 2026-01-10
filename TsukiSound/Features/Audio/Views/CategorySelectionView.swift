@@ -42,6 +42,9 @@ struct CategorySelectionView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .simultaneousGesture(TapGesture().onEnded {
+                            playCategory(nil)
+                        })
 
                         // Category cards
                         ForEach(AudioCategory.allCases) { category in
@@ -55,6 +58,9 @@ struct CategorySelectionView: View {
                                 )
                             }
                             .buttonStyle(.plain)
+                            .simultaneousGesture(TapGesture().onEnded {
+                                playCategory(category)
+                            })
                         }
                     }
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
@@ -86,6 +92,14 @@ struct CategorySelectionView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Actions
+
+    /// Play the selected category starting from its first track
+    private func playCategory(_ category: AudioCategory?) {
+        playlistState.setCategory(category)
+        try? audioService.playPlaylist()
     }
 }
 
