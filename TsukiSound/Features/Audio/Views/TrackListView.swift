@@ -215,7 +215,7 @@ struct TrackListView: View {
 
     private func togglePlayback() {
         if audioService.isPlaying {
-            stopAudio()
+            audioService.stop()
         } else {
             playAudio()
         }
@@ -226,29 +226,10 @@ struct TrackListView: View {
             // Set category before playing
             playlistState.setCategory(category)
             try audioService.playPlaylist()
-        } catch let error as NSError {
-            let detailedMessage = """
-            再生エラー:
-            Code: \(error.code)
-            Domain: \(error.domain)
-            Description: \(error.localizedDescription)
-            """
-            #if DEBUG
-            print("🐛 TrackListView: \(detailedMessage)")
-            #endif
-            errorMessage = detailedMessage
-            showError = true
         } catch {
             errorMessage = "再生エラー: \(error.localizedDescription)"
-            #if DEBUG
-            print("🐛 TrackListView: \(errorMessage ?? "")")
-            #endif
             showError = true
         }
-    }
-
-    private func stopAudio() {
-        audioService.stop()
     }
 }
 

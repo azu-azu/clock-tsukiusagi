@@ -29,15 +29,12 @@
 "audio.volume" = "Volume";
 "audio.play" = "Play";
 "audio.stop" = "Stop";
-"audio.status" = "Status";
 "audio.playing" = "Playing";
 "audio.stopped" = "Stopped";
-"audio.pauseReason" = "Pause Reason:";
 "audio.pauseReason.user" = "Stopped by user";
 "audio.pauseReason.headphones" = "Headphones disconnected";
 "audio.pauseReason.break" = "Quiet break";
 "audio.pauseReason.interruption" = "Interrupted";
-"audio.selected" = "Selected:";
 "audio.edit" = "Edit";
 "audio.done" = "Done";
 "audio.repeat.one" = "Repeat One";

@@ -29,15 +29,12 @@
 "audio.volume" = "音量";
 "audio.play" = "再生";
 "audio.stop" = "停止";
-"audio.status" = "ステータス";
 "audio.playing" = "再生中";
 "audio.stopped" = "停止中";
-"audio.pauseReason" = "停止理由:";
 "audio.pauseReason.user" = "ユーザー操作で停止";
 "audio.pauseReason.headphones" = "ヘッドフォンが外れました";
 "audio.pauseReason.break" = "静音休憩";
 "audio.pauseReason.interruption" = "中断されました";
-"audio.selected" = "選択中:";
 "audio.edit" = "編集";
 "audio.done" = "完了";
 "audio.repeat.one" = "1曲リピート";
