@@ -130,38 +130,51 @@ struct TrackListView: View {
             repeatModeToggle
 
             // Playlist with List + onMove
-            List {
-                ForEach(Array(displayedPresets.enumerated()), id: \.element.id) { index, preset in
-                    let isCurrentlyPlaying = playlistState.presetForCurrentIndex() == preset && audioService.isPlaying
+            ScrollViewReader { proxy in
+                List {
+                    ForEach(Array(displayedPresets.enumerated()), id: \.element.id) { index, preset in
+                        // Only highlight if currently playing AND in current category
+                        let currentPreset = playlistState.presetForCurrentIndex()
+                        let isInCurrentCategory = currentPreset.map { displayedPresets.contains($0) } ?? false
+                        let isCurrentlyPlaying = currentPreset == preset && audioService.isPlaying && isInCurrentCategory
 
-                    PlaylistRowView(preset: preset)
-                        .listRowBackground(
-                            Rectangle()
-                                .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
-                                .overlay(
-                                    Rectangle()
-                                        .stroke(
-                                            isCurrentlyPlaying
-                                                ? DesignTokens.SettingsColors.accent
-                                                : Color.white.opacity(0.1),
-                                            lineWidth: isCurrentlyPlaying ? 1.5 : 0.5
-                                        )
-                                )
-                        )
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        .onTapGesture {
-                            playFromPreset(preset)
-                        }
+                        PlaylistRowView(preset: preset)
+                            .listRowBackground(
+                                Rectangle()
+                                    .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
+                                    .overlay(
+                                        Rectangle()
+                                            .stroke(
+                                                isCurrentlyPlaying
+                                                    ? DesignTokens.SettingsColors.accent
+                                                    : Color.white.opacity(0.1),
+                                                lineWidth: isCurrentlyPlaying ? 1.5 : 0.5
+                                            )
+                                    )
+                            )
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                            .onTapGesture {
+                                playFromPreset(preset)
+                            }
+                            .id(preset.id) // Required for scrollTo
+                    }
+                    .onMove { from, to in
+                        playlistState.move(from: from, to: to)
+                    }
                 }
-                .onMove { from, to in
-                    playlistState.move(from: from, to: to)
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .frame(height: CGFloat(displayedPresets.count) * 44)
+                .environment(\.editMode, .constant(.active))
+                .onAppear {
+                    // Scroll to currently playing track if it exists in this category
+                    if let currentPreset = playlistState.presetForCurrentIndex(),
+                       displayedPresets.contains(currentPreset) {
+                        proxy.scrollTo(currentPreset.id, anchor: .center)
+                    }
                 }
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .frame(height: CGFloat(displayedPresets.count) * 44)
-            .environment(\.editMode, .constant(.active))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
