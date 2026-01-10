@@ -105,14 +105,12 @@ struct CircularWaveformView: View {
                     }
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
-                .background(.clear)
             }
-            .background(.clear)
             .opacity(barOpacity)
             .animation(.easeInOut(duration: 0.3), value: audioService.isPlaying)
         }
-        .background(.clear)
-        .compositingGroup() // Group layers without creating opaque background
+        .compositingGroup() // Preserve transparency through compositing
+        .background(.clear) // Ensure transparent background
         .onChange(of: audioService.isPlaying) { oldValue, newValue in
             if newValue {
                 // Started playing
