@@ -58,6 +58,12 @@ struct MiniPlayerView: View {
 
                     Spacer()
 
+                    // Output route indicator (icon only)
+                    Text(audioService.outputRoute.icon)
+                        .font(.system(size: 18))
+                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                        .allowsHitTesting(false)
+
                     // Waveform visualization
                     CircularWaveformView()
                         .frame(width: 40, height: 40)

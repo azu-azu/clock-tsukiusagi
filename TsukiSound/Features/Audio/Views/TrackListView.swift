@@ -42,12 +42,8 @@ struct TrackListView: View {
             GeometryReader { geometry in
                 ScrollView {
                     VStack(spacing: 0) {
-                        // Bluetooth status
-                        bluetoothStatusIndicator
-
                         // Sound selection section
                         soundSelectionSection
-                            .padding(.top, 8)
 
                         // Play button
                         controlSection
@@ -92,27 +88,6 @@ struct TrackListView: View {
                     .fill(Color.white.opacity(0.08))
             )
         }
-    }
-
-    @ViewBuilder
-    private var bluetoothStatusIndicator: some View {
-        HStack(spacing: 8) {
-            Spacer()
-
-            Text(audioService.outputRoute.icon)
-                .font(.system(size: 20))
-
-            Text(audioService.outputRoute.displayName)
-                .dynamicFont(
-                    size: DynamicTheme.AudioTestTypography.statusIndicatorSize,
-                    weight: DynamicTheme.AudioTestTypography.statusIndicatorWeight
-                )
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-
-            Spacer()
-        }
-        .padding(.horizontal, DesignTokens.SettingsSpacing.cardPadding)
-        .padding(.vertical, 6)
     }
 
     private var soundSelectionSection: some View {

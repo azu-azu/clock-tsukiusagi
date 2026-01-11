@@ -95,6 +95,19 @@ struct CategorySelectionView: View {
                 selectedTab = .clock
             }
             .toolbar {
+                // Output route fallback (only when MiniPlayer hidden)
+                if !showMiniPlayer {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        HStack(spacing: 4) {
+                            Text(audioService.outputRoute.icon)
+                                .font(.system(size: 16))
+                            Text(audioService.outputRoute.displayName)
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .foregroundColor(.white.opacity(0.6))
+                    }
+                }
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         selectedTab = .settings
