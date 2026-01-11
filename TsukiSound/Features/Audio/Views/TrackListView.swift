@@ -72,7 +72,7 @@ struct TrackListView: View {
 
     private var repeatModeToggle: some View {
         Button(action: {
-            playlistState.repeatMode = playlistState.repeatMode == .one ? .all : .one
+            playlistState.repeatMode = playlistState.repeatMode.next
         }) {
             HStack(spacing: 6) {
                 Image(systemName: playlistState.repeatMode.icon)
@@ -80,7 +80,11 @@ struct TrackListView: View {
                 Text(playlistState.repeatMode.displayName)
                     .font(.system(size: 14, weight: .medium))
             }
-            .foregroundColor(DesignTokens.SettingsColors.accent)
+            .foregroundColor(
+                playlistState.repeatMode == .off
+                    ? DesignTokens.SettingsColors.textSecondary
+                    : DesignTokens.SettingsColors.accent
+            )
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
@@ -88,7 +92,12 @@ struct TrackListView: View {
                     .fill(Color.white.opacity(0.08))
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(DesignTokens.SettingsColors.accent.opacity(0.3), lineWidth: 1)
+                            .stroke(
+                                playlistState.repeatMode == .off
+                                    ? Color.white.opacity(0.1)
+                                    : DesignTokens.SettingsColors.accent.opacity(0.3),
+                                lineWidth: 1
+                            )
                     )
             )
         }

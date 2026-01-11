@@ -794,6 +794,15 @@ public final class AudioService: ObservableObject {
     private func handleTrackFinished() {
         guard isPlaying else { return }  // Ignore if already stopped
 
+        // Check repeat mode - if .off, stop playback
+        if playlistState.repeatMode == .off {
+            #if DEBUG
+            print("🎵 [AudioService] Track finished, repeat mode is .off, stopping playback")
+            #endif
+            stop()
+            return
+        }
+
         let nextPreset = playlistState.advanceToNext()
         #if DEBUG
         print("🎵 [AudioService] Track finished, advancing to: \(nextPreset)")

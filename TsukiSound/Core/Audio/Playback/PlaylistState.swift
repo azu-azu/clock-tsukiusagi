@@ -10,11 +10,13 @@ import Foundation
 
 /// リピートモード
 public enum RepeatMode: String, CaseIterable {
+    case off = "off"    // リピートなし（1曲再生後停止）
     case one = "one"    // 一曲リピート
     case all = "all"    // 連続再生（全曲ループ）
 
     var icon: String {
         switch self {
+        case .off: return "repeat"
         case .one: return "repeat.1"
         case .all: return "repeat"
         }
@@ -22,8 +24,18 @@ public enum RepeatMode: String, CaseIterable {
 
     var displayName: String {
         switch self {
+        case .off: return "audio.repeat.off".localized
         case .one: return "audio.repeat.one".localized
         case .all: return "audio.repeat.all".localized
+        }
+    }
+
+    /// Next mode when toggling (cycles: off → one → all → off)
+    var next: RepeatMode {
+        switch self {
+        case .off: return .one
+        case .one: return .all
+        case .all: return .off
         }
     }
 }
@@ -79,6 +91,7 @@ public final class PlaylistState: ObservableObject {
     }
 
     /// 次の曲に進む（リピートモードに応じて動作、カテゴリフィルタを考慮）
+    /// - Returns: 次に再生すべきプリセット。.offモードの場合も現在の曲を返すが、呼び出し側で停止処理を行う
     public func advanceToNext() -> UISoundPreset {
         let activePresets = displayedPresets
         guard !activePresets.isEmpty else {
@@ -86,6 +99,9 @@ public final class PlaylistState: ObservableObject {
         }
 
         switch repeatMode {
+        case .off:
+            // リピートなし: 現在の曲を返す（呼び出し側で停止）
+            return activePresets[currentIndex]
         case .one:
             // 一曲リピート: 同じ曲を返す
             return activePresets[currentIndex]

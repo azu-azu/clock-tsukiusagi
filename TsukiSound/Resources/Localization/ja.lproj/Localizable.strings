@@ -37,6 +37,7 @@
 "audio.pauseReason.interruption" = "中断されました";
 "audio.edit" = "編集";
 "audio.done" = "完了";
+"audio.repeat.off" = "オフ";
 "audio.repeat.one" = "1曲リピート";
 "audio.repeat.all" = "連続再生";
 
