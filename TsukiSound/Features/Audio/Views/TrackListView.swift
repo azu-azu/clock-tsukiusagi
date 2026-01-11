@@ -80,12 +80,16 @@ struct TrackListView: View {
                 Text(playlistState.repeatMode.displayName)
                     .font(.system(size: 14, weight: .medium))
             }
-            .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+            .foregroundColor(DesignTokens.SettingsColors.accent)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
                 RoundedRectangle(cornerRadius: 6)
                     .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(DesignTokens.SettingsColors.accent.opacity(0.3), lineWidth: 1)
+                    )
             )
         }
     }
