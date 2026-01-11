@@ -95,7 +95,7 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
         // Runtime graph reconfiguration causes -10868 crashes
         if engine.isRunning {
             #if DEBUG
-            print("🐛 [SafeVolumeLimiter] Engine is running, cannot reconfigure (would crash)")
+            print("[SafeVolumeLimiter] Engine is running, cannot reconfigure (would crash)")
             print("   Current format: \(configuredFormat?.sampleRate ?? 0)Hz/\(configuredFormat?.channelCount ?? 0)ch")
             print("   Requested format: \(format.sampleRate)Hz/\(format.channelCount)ch")
             #endif

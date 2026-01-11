@@ -66,35 +66,7 @@ struct DynamicTheme {
 
     // MARK: - AudioTest Typography
     enum AudioTestTypography {
-        /// Bluetooth/Status インジケーター
-        static let statusIndicatorSize: CGFloat = 15
-        static let statusIndicatorWeight: Font.Weight = .regular
-
-        /// サウンド選択メニュー
-        static let soundMenuSize: CGFloat = 17
-        static let soundMenuWeight: Font.Weight = .regular
-
-        /// 英語タイトル
-        static let englishTitleSize: CGFloat = 13
-        static let englishTitleWeight: Font.Weight = .regular
-
-        /// 音量ラベル・パーセンテージ
-        static let volumeLabelSize: CGFloat = 15
-        static let volumeLabelWeight: Font.Weight = .regular
-
-        /// ステータスセクションタイトル
-        static let statusTitleSize: CGFloat = 17
-        static let statusTitleWeight: Font.Weight = .semibold
-
-        /// ステータステキスト
-        static let statusTextSize: CGFloat = 15
-        static let statusTextWeight: Font.Weight = .regular
-
-        /// ステータスキャプション
-        static let statusCaptionSize: CGFloat = 13
-        static let statusCaptionWeight: Font.Weight = .regular
-
-        /// 見出し
+        /// 見出し（Play/Stop button等）
         static let headlineSize: CGFloat = 17
         static let headlineWeight: Font.Weight = .semibold
     }
