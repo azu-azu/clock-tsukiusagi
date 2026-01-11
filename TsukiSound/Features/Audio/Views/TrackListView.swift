@@ -52,7 +52,7 @@ struct TrackListView: View {
                     .padding(.top, 8)
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
                     .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
-                    .frame(minHeight: geometry.size.height)
+                    .frame(minHeight: geometry.size.height, alignment: .top)
                 }
             }
         }
