@@ -49,7 +49,7 @@ struct TrackListView: View {
                         controlSection
                             .padding(.top, 12)
                     }
-                    .padding(.top, 16)
+                    .padding(.top, 8)
                     .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
                     .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
                     .frame(minHeight: geometry.size.height)
