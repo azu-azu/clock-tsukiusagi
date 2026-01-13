@@ -43,8 +43,8 @@ struct CategoryCard: View {
                 Button(action: onPlayTapped) {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 32))
-                        .foregroundColor(.white)
-                        .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                        .foregroundColor(DesignTokens.CommonTextColors.primary)
+                        .shadow(color: DesignTokens.CommonBackgroundColors.shadow, radius: 4, x: 0, y: 2)
                 }
                 .buttonStyle(.borderless)
                 .frame(width: 44, height: 44)  // Minimum tap target
@@ -57,8 +57,8 @@ struct CategoryCard: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.08),
-                                Color.white.opacity(0.03)
+                                DesignTokens.CommonBackgroundColors.cardSubtle,
+                                DesignTokens.CommonBackgroundColors.cardMinimal
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -68,8 +68,8 @@ struct CategoryCard: View {
                     .stroke(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.15),
-                                Color.white.opacity(0.02)
+                                DesignTokens.CommonBackgroundColors.cardHighlight,
+                                DesignTokens.CommonBackgroundColors.cardMinimal
                             ],
                             startPoint: .top,
                             endPoint: .bottom
@@ -78,13 +78,13 @@ struct CategoryCard: View {
                     )
             }
         )
-        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
+        .shadow(color: DesignTokens.CommonBackgroundColors.shadow, radius: 8, x: 0, y: 4)
     }
 }
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        DesignTokens.CommonBackgroundColors.previewBackground.ignoresSafeArea()
         HStack(spacing: 16) {
             CategoryCard(title: "All", icon: "🎵", trackCount: 20, onPlayTapped: {
                 print("Play All")

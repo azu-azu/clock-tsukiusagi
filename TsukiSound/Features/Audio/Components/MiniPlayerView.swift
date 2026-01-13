@@ -12,22 +12,6 @@ struct MiniPlayerView: View {
     @EnvironmentObject var audioService: AudioService
     @EnvironmentObject var playlistState: PlaylistState
 
-    /// Status text based on playback state
-    /// Shows pause reason with warning icon when applicable
-    private var statusText: String {
-        if let reason = audioService.pauseReason {
-            return "⚠️ " + reason.displayName
-        }
-        return audioService.isPlaying ? "audio.playing".localized : "audio.stopped".localized
-    }
-
-    /// Text color based on state (warning for pause reason)
-    private var statusTextColor: Color {
-        audioService.pauseReason != nil
-            ? DesignTokens.SettingsColors.warning
-            : DesignTokens.SettingsColors.textSecondary
-    }
-
     var body: some View {
         if let preset = playlistState.presetForCurrentIndex() {
             NavigationLink {
@@ -48,18 +32,21 @@ struct MiniPlayerView: View {
                             .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                             .lineLimit(1)
 
-                        Text(statusText)
-                            .font(.system(
-                                size: DesignTokens.SettingsTypography.captionSize,
-                                weight: DesignTokens.SettingsTypography.captionWeight
-                            ))
-                            .foregroundColor(statusTextColor)
+                        // Only show pause reason warning (not normal playing/stopped status)
+                        if let reason = audioService.pauseReason {
+                            Text("⚠️ " + reason.displayName)
+                                .font(.system(
+                                    size: DesignTokens.SettingsTypography.captionSize,
+                                    weight: DesignTokens.SettingsTypography.captionWeight
+                                ))
+                                .foregroundColor(DesignTokens.SettingsColors.warning)
+                        }
                     }
 
                     Spacer()
 
-                    // Output route indicator (icon only)
-                    Text(audioService.outputRoute.icon)
+                    // Output route indicator (SF Symbol)
+                    Image(systemName: audioService.outputRoute.systemImageName)
                         .font(.system(size: 18))
                         .foregroundColor(DesignTokens.SettingsColors.textSecondary)
                         .allowsHitTesting(false)
@@ -77,7 +64,7 @@ struct MiniPlayerView: View {
                             .font(.system(size: 20, weight: .medium))
                             .foregroundColor(DesignTokens.SettingsColors.textPrimary)
                             .frame(width: 44, height: 44)
-                            .background(Color.white.opacity(0.1))
+                            .background(DesignTokens.CommonBackgroundColors.card)
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
@@ -87,11 +74,11 @@ struct MiniPlayerView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 16)
                         .fill(.ultraThinMaterial)
-                        .shadow(color: Color.black.opacity(0.4), radius: 12, x: 0, y: -4)
+                        .shadow(color: DesignTokens.CommonBackgroundColors.shadowStrong, radius: 12, x: 0, y: -4)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        .stroke(DesignTokens.CommonBackgroundColors.cardBorderSubtle, lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
@@ -112,40 +99,44 @@ struct MiniPlayerView: View {
 
 #Preview {
     ZStack(alignment: .bottom) {
-        Color.black.ignoresSafeArea()
+        DesignTokens.CommonBackgroundColors.previewBackground.ignoresSafeArea()
 
         // Simulated mini player preview
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Text("🪐")
-                    .font(.system(size: 28))
+        HStack(spacing: 12) {
+            Text("🪐")
+                .font(.system(size: 28))
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Jupiter (Holst)")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.white)
+            Text("Jupiter (Holst)")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(DesignTokens.CommonTextColors.primary)
+                .lineLimit(1)
 
-                    Text("Playing")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
-                }
+            Spacer()
 
-                Spacer()
+            // Output route indicator
+            Image(systemName: "headphones")
+                .font(.system(size: 18))
+                .foregroundColor(DesignTokens.SettingsColors.textSecondary)
 
-                Image(systemName: "stop.fill")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
-                    .background(Color.white.opacity(0.1))
-                    .clipShape(Circle())
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-            )
+            // Waveform placeholder
+            Circle()
+                .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
+                .frame(width: 40, height: 40)
+
+            // Play button
+            Image(systemName: "stop.fill")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundColor(DesignTokens.CommonTextColors.primary)
+                .frame(width: 44, height: 44)
+                .background(DesignTokens.CommonBackgroundColors.card)
+                .clipShape(Circle())
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+        )
         .padding(.horizontal, 20)
         .padding(.bottom, 8)
     }

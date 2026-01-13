@@ -99,12 +99,12 @@ struct CategorySelectionView: View {
                 if !showMiniPlayer {
                     ToolbarItem(placement: .navigationBarLeading) {
                         HStack(spacing: 4) {
-                            Text(audioService.outputRoute.icon)
+                            Image(systemName: audioService.outputRoute.systemImageName)
                                 .font(.system(size: 16))
                             Text(audioService.outputRoute.displayName)
                                 .font(.system(size: 14, weight: .medium))
                         }
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(DesignTokens.CommonTextColors.quaternary)
                     }
                 }
 
@@ -114,7 +114,7 @@ struct CategorySelectionView: View {
                     }) {
                         Image(systemName: "slider.horizontal.3")
                             .font(.system(size: 20))
-                            .foregroundColor(.white.opacity(0.6))
+                            .foregroundColor(DesignTokens.CommonTextColors.quaternary)
                     }
                 }
             }

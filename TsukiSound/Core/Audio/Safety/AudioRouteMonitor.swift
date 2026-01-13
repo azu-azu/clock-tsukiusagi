@@ -11,18 +11,20 @@ import Foundation
 
 /// オーディオ出力経路の種類
 public enum AudioOutputRoute: Equatable {
-    case headphones     // 有線ヘッドホン (.headphones)
-    case bluetooth      // Bluetooth (A2DP/LE)
-    case speaker        // 内蔵/外部スピーカー (.builtInSpeaker)
-    case unknown        // 不明
+    case headphones           // 有線ヘッドホン (.headphones)
+    case bluetoothHeadphones  // Bluetooth ヘッドホン (over-ear)
+    case bluetoothEarbuds     // Bluetooth イヤホン (AirPods等 in-ear)
+    case speaker              // 内蔵/外部スピーカー (.builtInSpeaker)
+    case unknown              // 不明
 
-    /// アイコン表示用の絵文字
-    public var icon: String {
+    /// SF Symbol name for the output route
+    public var systemImageName: String {
         switch self {
-        case .headphones: return "🎧"
-        case .bluetooth: return "🅱️"
-        case .speaker: return "🔊"
-        case .unknown: return "❓"
+        case .headphones: return "headphones"
+        case .bluetoothHeadphones: return "headphones"
+        case .bluetoothEarbuds: return "airpodspro"
+        case .speaker: return "speaker.wave.2.fill"
+        case .unknown: return "questionmark.circle"
         }
     }
 
@@ -30,7 +32,8 @@ public enum AudioOutputRoute: Equatable {
     private var localizationKey: String {
         switch self {
         case .headphones: return "route.headphones"
-        case .bluetooth: return "route.bluetooth"
+        case .bluetoothHeadphones: return "route.bluetooth"
+        case .bluetoothEarbuds: return "route.bluetooth"
         case .speaker: return "route.speaker"
         case .unknown: return "route.unknown"
         }
@@ -112,7 +115,7 @@ public final class AudioRouteMonitor: AudioRouteMonitoring {
         // 現在の経路を取得
         let newRoute = detectCurrentRoute()
         #if DEBUG
-        print("🎧 [AudioRouteMonitor] Current route: \(newRoute.displayName) \(newRoute.icon)")
+        print("🎧 [AudioRouteMonitor] Current route: \(newRoute.displayName) (\(newRoute.systemImageName))")
         #endif
 
         // 常に経路変更を通知（UIをリアルタイム更新）
@@ -166,12 +169,40 @@ public final class AudioRouteMonitor: AudioRouteMonitoring {
         case .headphones:
             return .headphones
         case .bluetoothA2DP, .bluetoothLE:
-            return .bluetooth
+            // Detect earbuds vs headphones based on device name
+            return detectBluetoothType(portName: output.portName)
         case .builtInSpeaker:
             return .speaker
         default:
             return .unknown
         }
+    }
+
+    /// Detect if Bluetooth device is earbuds or headphones based on port name
+    private func detectBluetoothType(portName: String) -> AudioOutputRoute {
+        let lowercaseName = portName.lowercased()
+
+        // Known earbuds patterns
+        let earbudsPatterns = [
+            "airpods",      // Apple AirPods
+            "earbuds",      // Generic earbuds
+            "buds",         // Samsung Galaxy Buds, etc.
+            "earpods",      // Apple EarPods (wired but just in case)
+            "wf-",          // Sony WF series (e.g., WF-1000XM4)
+            "jabra elite",  // Jabra earbuds
+            "pixel buds",   // Google Pixel Buds
+            "freebuds",     // Huawei FreeBuds
+            "liberty",      // Anker Soundcore Liberty
+        ]
+
+        for pattern in earbudsPatterns {
+            if lowercaseName.contains(pattern) {
+                return .bluetoothEarbuds
+            }
+        }
+
+        // Default to headphones for unknown Bluetooth devices
+        return .bluetoothHeadphones
     }
 }
 

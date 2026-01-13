@@ -52,6 +52,24 @@ struct DesignTokens {
 
         /// カードの枠線色
         static let cardBorder = Color.white.opacity(0.3)
+
+        /// カードの枠線色（控えめ）
+        static let cardBorderSubtle = Color.white.opacity(0.1)
+
+        /// カード背景色（最小）
+        static let cardSubtle = Color.white.opacity(0.08)
+
+        /// カード背景色（極薄）
+        static let cardMinimal = Color.white.opacity(0.03)
+
+        /// プレビュー背景色
+        static let previewBackground = Color.black
+
+        /// シャドウ色
+        static let shadow = Color.black.opacity(0.3)
+
+        /// シャドウ色（強め）
+        static let shadowStrong = Color.black.opacity(0.4)
     }
 
     // MARK: - Clock Colors

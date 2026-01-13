@@ -63,7 +63,6 @@ public final class SafeVolumeLimiter: SafeVolumeLimiting {
 
         self.engine = engine
 
-
         // Attach nodes to engine
         if !engine.attachedNodes.contains(masterBusMixer) {
             engine.attach(masterBusMixer)

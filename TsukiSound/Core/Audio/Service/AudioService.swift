@@ -262,7 +262,6 @@ public final class AudioService: ObservableObject {
         // Phase 3: Now Playingを更新
         updateNowPlaying()
         updateNowPlayingState()
-
     }
 
     /// 音声再生を停止して完了を待つ（モード切替用）
@@ -513,6 +512,12 @@ public final class AudioService: ObservableObject {
             guard let self = self else { return }
             Task { @MainActor in
                 self.outputRoute = route
+
+                // Clear pauseReason when headphones are reconnected
+                // (only if paused due to headphone removal)
+                if self.pauseReason == .routeSafetySpeaker && route != .speaker {
+                    self.pauseReason = nil
+                }
             }
         }
 

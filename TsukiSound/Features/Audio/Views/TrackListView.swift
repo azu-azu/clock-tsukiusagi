@@ -17,6 +17,11 @@ struct TrackListView: View {
     @State private var errorMessage: String?
     @State private var showError = false
 
+    /// Whether mini player should be visible (has a selected track)
+    private var showMiniPlayer: Bool {
+        playlistState.presetForCurrentIndex() != nil
+    }
+
     /// Presets to display based on category
     private var displayedPresets: [UISoundPreset] {
         guard let category = category else {
@@ -35,26 +40,28 @@ struct TrackListView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             DesignTokens.SettingsColors.backgroundGradient
                 .ignoresSafeArea()
 
-            GeometryReader { geometry in
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Sound selection section
-                        soundSelectionSection
-
-                        // Play button
-                        controlSection
-                            .padding(.top, 12)
-                    }
-                    .padding(.top, 8)
-                    .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
-                    .padding(.bottom, DesignTokens.SettingsSpacing.screenBottom)
-                    .frame(minHeight: geometry.size.height, alignment: .top)
+            VStack(spacing: 0) {
+                // Repeat mode toggle
+                HStack {
+                    repeatModeToggle
+                    Spacer()
                 }
+                .padding(.top, 8)
+                .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
+                .padding(.bottom, 12)
+
+                // Track list (fills remaining space)
+                trackListSection
+                    .padding(.bottom, showMiniPlayer ? 100 : 32)
             }
+
+            // Floating mini player
+            MiniPlayerView()
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showMiniPlayer)
         }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -65,6 +72,13 @@ struct TrackListView: View {
             Button("OK") { showError = false }
         } message: {
             Text(errorMessage ?? "不明なエラー")
+        }
+        .onAppear {
+            // Update category when entering (only if not playing)
+            // This ensures MiniPlayer shows a track from this category
+            if !audioService.isPlaying {
+                playlistState.setCategory(category)
+            }
         }
     }
 
@@ -89,12 +103,12 @@ struct TrackListView: View {
             .padding(.vertical, 5)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.white.opacity(0.08))
+                    .fill(DesignTokens.CommonBackgroundColors.cardSubtle)
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
                             .stroke(
                                 playlistState.repeatMode == .off
-                                    ? Color.white.opacity(0.1)
+                                    ? DesignTokens.CommonBackgroundColors.cardBorderSubtle
                                     : DesignTokens.SettingsColors.accent.opacity(0.3),
                                 lineWidth: 1
                             )
@@ -103,61 +117,53 @@ struct TrackListView: View {
         }
     }
 
-    private var soundSelectionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Repeat mode toggle
-            repeatModeToggle
+    private var trackListSection: some View {
+        ScrollViewReader { proxy in
+            // Calculate once outside ForEach for performance
+            let currentPreset = playlistState.presetForCurrentIndex()
+            let isCurrentPresetInCategory = currentPreset.map { displayedPresets.contains($0) } ?? false
 
-            // Playlist with List + onMove
-            ScrollViewReader { proxy in
-                // Calculate once outside ForEach for performance
-                let currentPreset = playlistState.presetForCurrentIndex()
-                let isCurrentPresetInCategory = currentPreset.map { displayedPresets.contains($0) } ?? false
+            List {
+                ForEach(displayedPresets) { preset in
+                    // Only highlight if currently playing AND in current category
+                    let isCurrentlyPlaying = currentPreset == preset && audioService.isPlaying && isCurrentPresetInCategory
 
-                List {
-                    ForEach(Array(displayedPresets.enumerated()), id: \.element.id) { index, preset in
-                        // Only highlight if currently playing AND in current category
-                        let isCurrentlyPlaying = currentPreset == preset && audioService.isPlaying && isCurrentPresetInCategory
-
-                        PlaylistRowView(preset: preset)
-                            .listRowBackground(
-                                Rectangle()
-                                    .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
-                                    .overlay(
-                                        Rectangle()
-                                            .stroke(
-                                                isCurrentlyPlaying
-                                                    ? DesignTokens.SettingsColors.accent
-                                                    : Color.white.opacity(0.1),
-                                                lineWidth: isCurrentlyPlaying ? 1.5 : 0.5
-                                            )
-                                    )
-                            )
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                            .onTapGesture {
-                                playFromPreset(preset)
-                            }
-                            .id(preset.id) // Required for scrollTo
-                    }
-                    .onMove { from, to in
-                        playlistState.move(from: from, to: to)
-                    }
+                    PlaylistRowView(preset: preset)
+                        .listRowBackground(
+                            Rectangle()
+                                .fill(DesignTokens.CommonBackgroundColors.cardHighlight)
+                                .overlay(
+                                    Rectangle()
+                                        .stroke(
+                                            isCurrentlyPlaying
+                                                ? DesignTokens.SettingsColors.accent
+                                                : DesignTokens.CommonBackgroundColors.cardBorderSubtle,
+                                            lineWidth: isCurrentlyPlaying ? 1.5 : 0.5
+                                        )
+                                )
+                        )
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .onTapGesture {
+                            playFromPreset(preset)
+                        }
+                        .id(preset.id) // Required for scrollTo
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .frame(height: CGFloat(displayedPresets.count) * 44)
-                .environment(\.editMode, .constant(.active))
-                .onAppear {
-                    // Scroll to currently playing track if it exists in this category
-                    if let currentPreset = playlistState.presetForCurrentIndex(),
-                       displayedPresets.contains(currentPreset) {
-                        proxy.scrollTo(currentPreset.id, anchor: .center)
-                    }
+                .onMove { from, to in
+                    playlistState.move(from: from, to: to)
+                }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .environment(\.editMode, .constant(.active))
+            .onAppear {
+                // Scroll to currently playing track if it exists in this category
+                if let currentPreset = playlistState.presetForCurrentIndex(),
+                   displayedPresets.contains(currentPreset) {
+                    proxy.scrollTo(currentPreset.id, anchor: .center)
                 }
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Play from tapped preset
@@ -172,53 +178,6 @@ struct TrackListView: View {
         }
     }
 
-    private var controlSection: some View {
-        HStack {
-            Spacer()
-            Button(action: togglePlayback) {
-                HStack {
-                    Image(systemName: audioService.isPlaying ? "stop.fill" : "play.fill")
-                    Text(audioService.isPlaying ? "audio.stop".localized : "audio.play".localized)
-                }
-                .dynamicFont(
-                    size: DynamicTheme.AudioTestTypography.headlineSize,
-                    weight: DynamicTheme.AudioTestTypography.headlineWeight
-                )
-                .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                .frame(maxWidth: .infinity)
-                .padding(DesignTokens.SettingsLayout.buttonPadding)
-                .background(
-                    audioService.isPlaying
-                        ? DesignTokens.SettingsColors.danger
-                        : DesignTokens.SettingsColors.accent
-                )
-                .cornerRadius(DesignTokens.SettingsLayout.buttonCornerRadius)
-            }
-            .frame(maxWidth: 200)
-            Spacer()
-        }
-    }
-
-    // MARK: - Actions
-
-    private func togglePlayback() {
-        if audioService.isPlaying {
-            audioService.stop()
-        } else {
-            playAudio()
-        }
-    }
-
-    private func playAudio() {
-        do {
-            // Set category before playing
-            playlistState.setCategory(category)
-            try audioService.playPlaylist()
-        } catch {
-            errorMessage = "再生エラー: \(error.localizedDescription)"
-            showError = true
-        }
-    }
 }
 
 #Preview {

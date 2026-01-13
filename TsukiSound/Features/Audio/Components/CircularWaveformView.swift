@@ -261,7 +261,7 @@ struct CircularWaveformView: View {
 
 #Preview("Playing State") {
     ZStack {
-        Color.black
+        DesignTokens.CommonBackgroundColors.previewBackground
             .ignoresSafeArea()
 
         CircularWaveformView()
@@ -287,7 +287,7 @@ struct CircularWaveformView: View {
 
 #Preview("With Glow Effect") {
     ZStack {
-        Color.black
+        DesignTokens.CommonBackgroundColors.previewBackground
             .ignoresSafeArea()
 
         CircularWaveformView()
