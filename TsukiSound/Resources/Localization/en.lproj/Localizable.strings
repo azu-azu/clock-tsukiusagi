@@ -40,6 +40,8 @@
 "audio.repeat.off" = "Off";
 "audio.repeat.one" = "Repeat One";
 "audio.repeat.all" = "Repeat All";
+"audio.goToCategory" = "Category";
+"audio.noTrack" = "No track selected";
 
 // MARK: - Categories
 "category.all" = "All";

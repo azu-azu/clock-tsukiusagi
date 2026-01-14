@@ -40,6 +40,8 @@
 "audio.repeat.off" = "オフ";
 "audio.repeat.one" = "1曲リピート";
 "audio.repeat.all" = "連続再生";
+"audio.goToCategory" = "カテゴリ";
+"audio.noTrack" = "曲が選択されていません";
 
 // MARK: - Categories
 "category.all" = "すべて";
