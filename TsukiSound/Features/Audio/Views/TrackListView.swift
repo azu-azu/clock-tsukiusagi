@@ -56,6 +56,7 @@ struct TrackListView: View {
 
                 // Track list (fills remaining space)
                 trackListSection
+                    .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
                     .padding(.bottom, showMiniPlayer ? 100 : 32)
             }
 
@@ -143,7 +144,7 @@ struct TrackListView: View {
                                 )
                         )
                         .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                         .onTapGesture {
                             playFromPreset(preset)
                         }

@@ -341,8 +341,6 @@ final class ClockScreenVM: ObservableObject {
     .background(.black)
 }
 
-
-
 #Preview("Fixed 10/13 左明,third") {
     var comps = DateComponents()
     comps.year = 2025; comps.month = 10; comps.day = 13
