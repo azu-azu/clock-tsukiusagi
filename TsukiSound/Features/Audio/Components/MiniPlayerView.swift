@@ -2,33 +2,28 @@
 //  MiniPlayerView.swift
 //  TsukiSound
 //
-//  Spotify-style floating mini player
+//  Spotify-style floating mini player.
+//  Tapping opens FullPlayerView via coordinator (no sheet ownership here).
 //
 
 import SwiftUI
 
 /// Floating mini player shown when a track is selected (Spotify-style)
+/// Sheet presentation is delegated to the parent via AudioPlayerCoordinator.
 struct MiniPlayerView: View {
     @EnvironmentObject var audioService: AudioService
     @EnvironmentObject var playlistState: PlaylistState
-
-    /// State for showing the full player sheet
-    @State private var showFullPlayer = false
+    @EnvironmentObject var coordinator: AudioPlayerCoordinator
 
     var body: some View {
         if let preset = playlistState.presetForCurrentIndex() {
             playerCard(preset: preset)
                 .onTapGesture {
-                    showFullPlayer = true
+                    coordinator.showFullPlayer()
                 }
                 .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
                 .padding(.bottom, 8)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .sheet(isPresented: $showFullPlayer) {
-                    FullPlayerView()
-                        .presentationDetents([.large])
-                        .presentationDragIndicator(.visible)
-                }
         }
     }
 

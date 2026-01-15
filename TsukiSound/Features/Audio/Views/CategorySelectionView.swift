@@ -2,16 +2,24 @@
 //  CategorySelectionView.swift
 //  TsukiSound
 //
-//  Category selection grid view with Spotify-style mini player
+//  Category selection grid view with Spotify-style mini player.
+//  This view owns the FullPlayerView sheet presentation (single source of truth).
 //
 
 import SwiftUI
 
 /// Category selection view with 2-column grid
+/// Sheet presentation for FullPlayerView is managed here to prevent nested sheets.
 struct CategorySelectionView: View {
     @EnvironmentObject var audioService: AudioService
     @EnvironmentObject var playlistState: PlaylistState
     @Binding var selectedTab: Tab
+
+    /// Coordinator for centralized sheet/navigation management
+    @StateObject private var coordinator = AudioPlayerCoordinator()
+
+    /// Navigation path for programmatic navigation
+    @State private var navigationPath = NavigationPath()
 
     private let columns = [
         GridItem(.flexible(), spacing: 16),
@@ -24,7 +32,7 @@ struct CategorySelectionView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ZStack(alignment: .bottom) {
                 DesignTokens.SettingsColors.backgroundGradient
                     .ignoresSafeArea()
@@ -87,6 +95,12 @@ struct CategorySelectionView: View {
                     .animation(.spring(response: 0.4, dampingFraction: 0.8), value: showMiniPlayer)
             }
             .navigationTitle("audio.title".localized)
+            .navigationDestination(for: AudioNavigation.self) { navigation in
+                switch navigation {
+                case .category(let category):
+                    TrackListView(category: category)
+                }
+            }
             .navigationBarTitleDisplayMode(.inline)
             .dynamicNavigationFont()
             .toolbarBackground(NavigationBarTokens.backgroundColor, for: .navigationBar)
@@ -118,7 +132,20 @@ struct CategorySelectionView: View {
                     }
                 }
             }
+            .sheet(isPresented: $coordinator.isFullPlayerPresented) {
+                // onDismiss: handle pending navigation
+                if let navigation = coordinator.pendingNavigation {
+                    navigationPath.append(navigation)
+                    coordinator.clearPendingNavigation()
+                }
+            } content: {
+                FullPlayerView()
+                    .environmentObject(coordinator)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
         }
+        .environmentObject(coordinator)  // Pass coordinator to all child views
     }
 
     // MARK: - Actions
@@ -134,4 +161,5 @@ struct CategorySelectionView: View {
     CategorySelectionView(selectedTab: .constant(.audioPlayback))
         .environmentObject(AudioService.shared)
         .environmentObject(AudioService.shared.playlistState)
+        .environmentObject(AudioPlayerCoordinator())
 }

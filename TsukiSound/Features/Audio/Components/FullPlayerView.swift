@@ -2,108 +2,118 @@
 //  FullPlayerView.swift
 //  TsukiSound
 //
-//  Full-screen player view shown as a sheet from MiniPlayer
+//  Full-screen player view shown as a sheet from MiniPlayer.
+//  This view does NOT own navigation - it notifies the coordinator.
 //
 
 import SwiftUI
 
 /// Full-screen player view (Spotify/Apple Music style)
+/// Navigation is delegated to AudioPlayerCoordinator to prevent nested sheets.
 struct FullPlayerView: View {
     @EnvironmentObject var audioService: AudioService
     @EnvironmentObject var playlistState: PlaylistState
+    @EnvironmentObject var coordinator: AudioPlayerCoordinator
     @Environment(\.dismiss) private var dismiss
 
-    /// Navigation to category detail
-    @State private var showCategoryDetail = false
-
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Background gradient
-                DesignTokens.SettingsColors.backgroundGradient
-                    .ignoresSafeArea()
+        ZStack {
+            // Background gradient
+            DesignTokens.SettingsColors.backgroundGradient
+                .ignoresSafeArea()
 
-                if let preset = playlistState.presetForCurrentIndex() {
-                    VStack(spacing: 0) {
-                        Spacer()
+            if let preset = playlistState.presetForCurrentIndex() {
+                VStack(spacing: 0) {
+                    // Header with close and category buttons
+                    headerBar
 
-                        // Track icon (large)
-                        Text(preset.icon)
-                            .font(.system(size: 120))
-                            .padding(.bottom, 24)
+                    Spacer()
 
-                        // Track name
-                        Text(preset.englishTitle)
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                            .padding(.bottom, 8)
+                    // Track icon (large)
+                    Text(preset.icon)
+                        .font(.system(size: 120))
+                        .padding(.bottom, 24)
 
-                        // Category name
-                        if let category = playlistState.selectedCategory {
-                            Text(category.displayName)
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                        } else {
-                            Text("category.all".localized)
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(DesignTokens.SettingsColors.textSecondary)
-                        }
+                    // Track name
+                    Text(preset.englishTitle)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                        .padding(.bottom, 8)
 
-                        Spacer()
+                    // Category name
+                    categoryLabel
 
-                        // Large waveform visualization
-                        CircularWaveformView()
-                            .frame(width: 200, height: 200)
-                            .padding(.bottom, 40)
+                    Spacer()
 
-                        // Playback controls
-                        playbackControls
-                            .padding(.bottom, 32)
+                    // Large waveform visualization
+                    CircularWaveformView()
+                        .frame(width: 200, height: 200)
+                        .padding(.bottom, 40)
 
-                        // Status bar (repeat mode + output route)
-                        statusBar
-                            .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
-                            .padding(.bottom, 40)
-                    }
-                } else {
-                    // No track selected
-                    Text("audio.noTrack".localized)
-                        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+                    // Playback controls
+                    playbackControls
+                        .padding(.bottom, 32)
+
+                    // Status bar (repeat mode + output route)
+                    statusBar
+                        .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
+                        .padding(.bottom, 40)
                 }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                // Close button (left)
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                    }
-                }
-
-                // Category navigation (right)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showCategoryDetail = true
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text("audio.goToCategory".localized)
-                                .font(.system(size: 14, weight: .medium))
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .medium))
-                        }
-                        .foregroundColor(DesignTokens.SettingsColors.accent)
-                    }
-                }
-            }
-            .toolbarBackground(Color.clear, for: .navigationBar)
-            .navigationDestination(isPresented: $showCategoryDetail) {
-                TrackListView(category: playlistState.selectedCategory)
+            } else {
+                // No track selected
+                Text("audio.noTrack".localized)
+                    .foregroundColor(DesignTokens.SettingsColors.textSecondary)
             }
         }
+    }
+
+    // MARK: - Header Bar
+
+    private var headerBar: some View {
+        HStack {
+            // Close button (left)
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                    .frame(width: 44, height: 44)
+            }
+
+            Spacer()
+
+            // Category navigation (right) - notifies coordinator instead of navigating
+            Button {
+                coordinator.dismissFullPlayer(
+                    navigateTo: .category(playlistState.selectedCategory)
+                )
+            } label: {
+                HStack(spacing: 4) {
+                    Text("audio.goToCategory".localized)
+                        .font(.system(size: 14, weight: .medium))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .foregroundColor(DesignTokens.SettingsColors.accent)
+            }
+        }
+        .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
+        .padding(.top, 16)
+    }
+
+    // MARK: - Category Label
+
+    private var categoryLabel: some View {
+        Group {
+            if let category = playlistState.selectedCategory {
+                Text(category.displayName)
+            } else {
+                Text("category.all".localized)
+            }
+        }
+        .font(.system(size: 16, weight: .medium))
+        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
     }
 
     // MARK: - Playback Controls
@@ -229,4 +239,5 @@ struct FullPlayerView: View {
     FullPlayerView()
         .environmentObject(AudioService.shared)
         .environmentObject(AudioService.shared.playlistState)
+        .environmentObject(AudioPlayerCoordinator())
 }

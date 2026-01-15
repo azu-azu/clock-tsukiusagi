@@ -13,6 +13,7 @@ struct TrackListView: View {
 
     @EnvironmentObject var audioService: AudioService
     @EnvironmentObject var playlistState: PlaylistState
+    @EnvironmentObject var coordinator: AudioPlayerCoordinator
 
     @State private var errorMessage: String?
     @State private var showError = false
@@ -80,6 +81,11 @@ struct TrackListView: View {
             if !audioService.isPlaying {
                 playlistState.setCategory(category)
             }
+            // Track current view for duplicate navigation prevention
+            coordinator.enterTrackListView(category: category)
+        }
+        .onDisappear {
+            coordinator.leaveTrackListView()
         }
     }
 
@@ -186,5 +192,6 @@ struct TrackListView: View {
         TrackListView(category: .tsukiSound)
             .environmentObject(AudioService.shared)
             .environmentObject(AudioService.shared.playlistState)
+            .environmentObject(AudioPlayerCoordinator())
     }
 }
