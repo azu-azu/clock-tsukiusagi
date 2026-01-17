@@ -40,7 +40,6 @@
 "audio.repeat.off" = "オフ";
 "audio.repeat.one" = "1曲リピート";
 "audio.repeat.all" = "連続再生";
-"audio.goToCategory" = "カテゴリ";
 "audio.noTrack" = "曲が選択されていません";
 
 // MARK: - Categories
@@ -83,6 +82,28 @@
 "preset.canonPianoStrings" = "Canon Piano & Strings (Pachelbel)";
 "preset.canon2" = "Canon 2 (Pachelbel)";
 "preset.canon3" = "Canon 3 (Pachelbel)";
+
+// MARK: - Sound Preset Descriptions
+"preset.jupiter.description" = "ホルストの代表作「惑星」より。壮大で力強い旋律が、宇宙の神秘を感じさせます。";
+"preset.gymnopedie.description" = "サティの代表作。オルゴール音色で奏でる、穏やかで夢想的な旋律。";
+"preset.acousticGymnopedie.description" = "ジムノペディをアコースティックギターでアレンジ。温かみのある音色が心を落ち着かせます。";
+"preset.gnossienne1.description" = "サティの神秘的な作品。独特の浮遊感と静謐な美しさが特徴です。";
+"preset.gnossienne3.description" = "グノシエンヌ第3番。瞑想的で内省的な雰囲気を持つ名曲。";
+"preset.gnossienne4Jazz.description" = "グノシエンヌ第4番をジャズアレンジ。モダンな解釈で新たな魅力を引き出しています。";
+"preset.clairDeLune.description" = "ドビュッシーの「月の光」。印象派の美しさが静かな夜にふさわしい一曲。";
+"preset.moonlightSonataHipHop.description" = "ベートーヴェンの月光ソナタをHip-Hopアレンジ。クラシックとモダンの融合。";
+"preset.bachAirOnGString.description" = "バッハの名曲。弦楽器の優美な響きが、深い安らぎをもたらします。";
+"preset.bachMinuet.description" = "バッハのメヌエット。優雅で軽やかな舞曲が心を和ませます。";
+"preset.chopinNocturneRain.description" = "ショパンのノクターンに雨音をプラス。ロマンティックな夜のひとときに。";
+"preset.canonOriginal.description" = "パッヘルベルの不朽の名作。穏やかに繰り返される旋律が心を落ち着かせます。";
+"preset.canonAmbient.description" = "カノンをアンビエントにアレンジ。空間的な広がりと静寂の美しさ。";
+"preset.canonSaxophone.description" = "サックスで奏でるカノン。温かく滑らかな音色が心地よい。";
+"preset.canonClassic.description" = "カノンの王道クラシックアレンジ。オーケストラの豊かな響き。";
+"preset.canonPiano.description" = "ピアノソロで聴くカノン。シンプルで美しい旋律。";
+"preset.canonPiano2.description" = "ピアノバリエーション第2弾。より表現豊かなアレンジ。";
+"preset.canonPianoStrings.description" = "ピアノと弦楽器の共演。優美なハーモニーが心に響きます。";
+"preset.canon2.description" = "カノンのバリエーション。新しい解釈で聴く名曲。";
+"preset.canon3.description" = "カノンのアレンジ第3弾。個性豊かな表現が楽しめます。";
 
 // MARK: - Audio Routes
 "route.headphones" = "ヘッドホン";

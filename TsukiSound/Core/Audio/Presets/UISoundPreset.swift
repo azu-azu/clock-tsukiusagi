@@ -199,4 +199,55 @@ public enum UISoundPreset: String, CaseIterable, Identifiable {
             return "Canon 3 (Pachelbel)"
         }
     }
+
+    /// Localization key for track description
+    private var descriptionKey: String {
+        switch self {
+        case .jupiter:
+            return "preset.jupiter.description"
+        case .moonlitGymnopedie:
+            return "preset.gymnopedie.description"
+        case .acousticGymnopedie:
+            return "preset.acousticGymnopedie.description"
+        case .gnossienne1:
+            return "preset.gnossienne1.description"
+        case .gnossienne3:
+            return "preset.gnossienne3.description"
+        case .gnossienne4Jazz:
+            return "preset.gnossienne4Jazz.description"
+        case .clairDeLune:
+            return "preset.clairDeLune.description"
+        case .moonlightSonataHipHop:
+            return "preset.moonlightSonataHipHop.description"
+        case .bachAirOnGString:
+            return "preset.bachAirOnGString.description"
+        case .bachMinuet:
+            return "preset.bachMinuet.description"
+        case .chopinNocturneRain:
+            return "preset.chopinNocturneRain.description"
+        case .canonOriginal:
+            return "preset.canonOriginal.description"
+        case .canonAmbient:
+            return "preset.canonAmbient.description"
+        case .canonSaxophone:
+            return "preset.canonSaxophone.description"
+        case .canonClassic:
+            return "preset.canonClassic.description"
+        case .canonPiano:
+            return "preset.canonPiano.description"
+        case .canonPiano2:
+            return "preset.canonPiano2.description"
+        case .canonPianoStrings:
+            return "preset.canonPianoStrings.description"
+        case .canon2:
+            return "preset.canon2.description"
+        case .canon3:
+            return "preset.canon3.description"
+        }
+    }
+
+    /// Track description for display (localized)
+    public var description: String {
+        return descriptionKey.localized
+    }
 }

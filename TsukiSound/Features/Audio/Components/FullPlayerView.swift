@@ -29,26 +29,19 @@ struct FullPlayerView: View {
 
                     Spacer()
 
-                    // Track icon (large)
-                    Text(preset.icon)
-                        .font(.system(size: 120))
-                        .padding(.bottom, 24)
-
                     // Track name
                     Text(preset.englishTitle)
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(DesignTokens.SettingsColors.textPrimary)
-                        .padding(.bottom, 8)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
+                        .padding(.bottom, 24)
 
-                    // Category name
-                    categoryLabel
+                    // Track description
+                    descriptionCard(preset: preset)
+                        .padding(.horizontal, DesignTokens.SettingsSpacing.screenHorizontal)
 
                     Spacer()
-
-                    // Large waveform visualization
-                    CircularWaveformView()
-                        .frame(width: 200, height: 200)
-                        .padding(.bottom, 40)
 
                     // Playback controls
                     playbackControls
@@ -83,14 +76,14 @@ struct FullPlayerView: View {
 
             Spacer()
 
-            // Category navigation (right) - notifies coordinator instead of navigating
+            // Category navigation (right) - shows category name, notifies coordinator
             Button {
                 coordinator.dismissFullPlayer(
                     navigateTo: .category(playlistState.selectedCategory)
                 )
             } label: {
                 HStack(spacing: 4) {
-                    Text("audio.goToCategory".localized)
+                    Text(categoryDisplayName)
                         .font(.system(size: 14, weight: .medium))
                     Image(systemName: "chevron.right")
                         .font(.system(size: 12, weight: .medium))
@@ -102,18 +95,31 @@ struct FullPlayerView: View {
         .padding(.top, 16)
     }
 
-    // MARK: - Category Label
+    // MARK: - Category Display Name
 
-    private var categoryLabel: some View {
-        Group {
-            if let category = playlistState.selectedCategory {
-                Text(category.displayName)
-            } else {
-                Text("category.all".localized)
-            }
+    private var categoryDisplayName: String {
+        if let category = playlistState.selectedCategory {
+            return category.displayName
+        } else {
+            return "category.all".localized
         }
-        .font(.system(size: 16, weight: .medium))
-        .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+    }
+
+    // MARK: - Description Card
+
+    private func descriptionCard(preset: UISoundPreset) -> some View {
+        Text(preset.description)
+            .font(.system(size: 15, weight: .regular))
+            .foregroundColor(DesignTokens.SettingsColors.textSecondary)
+            .multilineTextAlignment(.center)
+            .lineSpacing(4)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(DesignTokens.CommonBackgroundColors.cardSubtle)
+            )
     }
 
     // MARK: - Playback Controls

@@ -40,7 +40,6 @@
 "audio.repeat.off" = "Off";
 "audio.repeat.one" = "Repeat One";
 "audio.repeat.all" = "Repeat All";
-"audio.goToCategory" = "Category";
 "audio.noTrack" = "No track selected";
 
 // MARK: - Categories
@@ -83,6 +82,28 @@
 "preset.canonPianoStrings" = "Canon Piano & Strings (Pachelbel)";
 "preset.canon2" = "Canon 2 (Pachelbel)";
 "preset.canon3" = "Canon 3 (Pachelbel)";
+
+// MARK: - Sound Preset Descriptions
+"preset.jupiter.description" = "From Holst's masterpiece \"The Planets\". A majestic and powerful melody evoking the mystery of the cosmos.";
+"preset.gymnopedie.description" = "Satie's iconic work rendered in music box tones. A peaceful, dreamlike melody.";
+"preset.acousticGymnopedie.description" = "Gymnopédie arranged for acoustic guitar. Warm tones that soothe the soul.";
+"preset.gnossienne1.description" = "Satie's mystical composition. Characterized by its ethereal floating quality and serene beauty.";
+"preset.gnossienne3.description" = "Gnossienne No.3. A masterpiece with a meditative and introspective atmosphere.";
+"preset.gnossienne4Jazz.description" = "Gnossienne No.4 in jazz arrangement. A modern interpretation that brings out new charm.";
+"preset.clairDeLune.description" = "Debussy's \"Clair de Lune\". Impressionistic beauty perfect for quiet nights.";
+"preset.moonlightSonataHipHop.description" = "Beethoven's Moonlight Sonata in Hip-Hop style. A fusion of classical and modern.";
+"preset.bachAirOnGString.description" = "Bach's masterpiece. The elegant sound of strings brings deep tranquility.";
+"preset.bachMinuet.description" = "Bach's Minuet. A graceful and light dance that soothes the heart.";
+"preset.chopinNocturneRain.description" = "Chopin's Nocturne enhanced with rain sounds. Perfect for romantic evenings.";
+"preset.canonOriginal.description" = "Pachelbel's timeless masterpiece. Gently repeating melodies that calm the mind.";
+"preset.canonAmbient.description" = "Canon in ambient arrangement. Spatial expansiveness and the beauty of silence.";
+"preset.canonSaxophone.description" = "Canon performed on saxophone. A warm and smooth tone that comforts.";
+"preset.canonClassic.description" = "The classic Canon arrangement. Rich orchestral resonance.";
+"preset.canonPiano.description" = "Canon as a piano solo. Simple and beautiful melody.";
+"preset.canonPiano2.description" = "Piano variation No.2. A more expressive arrangement.";
+"preset.canonPianoStrings.description" = "Piano and strings together. Elegant harmonies that touch the heart.";
+"preset.canon2.description" = "Canon variation. A fresh interpretation of the classic.";
+"preset.canon3.description" = "Canon arrangement No.3. Enjoy its unique expression.";
 
 // MARK: - Audio Routes
 "route.headphones" = "Headphones";
