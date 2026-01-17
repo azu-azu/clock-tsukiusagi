@@ -2,8 +2,7 @@
 //  AppSettingsView.swift
 //  TsukiSound
 //
-//  Created by Claude Code on 2025-11-21.
-//  アプリ全般の設定UI（将来的な拡張用）
+//  App settings UI (appearance, language)
 //
 
 import SwiftUI
@@ -11,9 +10,14 @@ import SwiftUI
 public struct AppSettingsView: View {
     @Binding var selectedTab: Tab
     @AppStorage(FontStyle.userDefaultsKey) private var fontStyleRaw: String = FontStyle.rounded.rawValue
+    @ObservedObject private var languageProvider = LanguageProvider.shared
 
     private var fontStyle: FontStyle {
         FontStyle(rawValue: fontStyleRaw) ?? .rounded
+    }
+
+    private var language: AppLanguage {
+        languageProvider.language
     }
 
     public init(selectedTab: Binding<Tab>) {
@@ -23,11 +27,11 @@ public struct AppSettingsView: View {
     public var body: some View {
         NavigationView {
             ZStack {
-                // 背景グラデーション（DesignTokens使用）
+                // Background gradient
                 DesignTokens.SettingsColors.backgroundGradient
                     .ignoresSafeArea()
 
-                // 設定コンテンツ
+                // Settings content
                 ScrollView {
                     settingsContent
                 }
@@ -53,6 +57,7 @@ public struct AppSettingsView: View {
             }
         }
         .navigationViewStyle(.stack)
+        .id(languageProvider.language) // Force view refresh on language change
     }
 
     private var settingsContent: some View {
@@ -61,21 +66,36 @@ public struct AppSettingsView: View {
             // MARK: - Appearance Section
 
             SettingsSection(title: "settings.app.appearance".localized) {
-                            VStack(alignment: .leading, spacing: 16) {
-                                // Font Style
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("settings.app.fontStyle".localized)
-                                        .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
-                                        .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+                VStack(alignment: .leading, spacing: 16) {
+                    // Font Style
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("settings.app.fontStyle".localized)
+                            .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
+                            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
-                                    ForEach(FontStyle.allCases, id: \.self) { style in
-                                        fontStyleOption(style)
-                                    }
-                                }
-                                .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
-                            }
-                            .padding(DesignTokens.SettingsSpacing.cardPadding)
+                        ForEach(FontStyle.allCases, id: \.self) { style in
+                            fontStyleOption(style)
                         }
+                    }
+                    .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
+
+                    Divider()
+                        .background(DesignTokens.CommonBackgroundColors.cardBorderSubtle)
+
+                    // Language
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("settings.app.language".localized)
+                            .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: DesignTokens.SettingsTypography.itemTitleWeight)
+                            .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+
+                        ForEach(AppLanguage.allCases) { lang in
+                            languageOption(lang)
+                        }
+                    }
+                    .padding(.vertical, DesignTokens.SettingsSpacing.verticalSmall)
+                }
+                .padding(DesignTokens.SettingsSpacing.cardPadding)
+            }
 
             Spacer(minLength: 40)
         }
@@ -90,13 +110,37 @@ public struct AppSettingsView: View {
             fontStyleRaw = style.rawValue
         }) {
             HStack(spacing: 12) {
-                // 選択インジケーター
+                // Selection indicator
                 Image(systemName: fontStyle == style ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
                     .foregroundColor(fontStyle == style ? DesignTokens.SettingsColors.accent : DesignTokens.SettingsColors.textSecondary)
 
                 Text(style.displayName)
                     .font(fontForStyle(style))
+                    .foregroundColor(DesignTokens.SettingsColors.textPrimary)
+
+                Spacer()
+            }
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Language Option
+
+    private func languageOption(_ lang: AppLanguage) -> some View {
+        Button(action: {
+            languageProvider.language = lang
+        }) {
+            HStack(spacing: 12) {
+                // Selection indicator
+                Image(systemName: language == lang ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20))
+                    .foregroundColor(language == lang ? DesignTokens.SettingsColors.accent : DesignTokens.SettingsColors.textSecondary)
+
+                Text(lang.displayName)
+                    .dynamicFont(size: DesignTokens.SettingsTypography.itemTitleSize, weight: .regular)
                     .foregroundColor(DesignTokens.SettingsColors.textPrimary)
 
                 Spacer()

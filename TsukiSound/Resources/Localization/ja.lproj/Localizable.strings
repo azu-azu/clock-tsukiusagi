@@ -51,6 +51,8 @@
 "settings.app.title" = "アプリ設定";
 "settings.app.appearance" = "外観";
 "settings.app.fontStyle" = "フォントスタイル";
+"settings.app.language" = "言語";
+"settings.language.system" = "システム設定";
 
 // MARK: - Side Menu
 "menu.title" = "TsukiUsagi";
